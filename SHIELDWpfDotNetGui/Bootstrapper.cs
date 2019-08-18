@@ -43,6 +43,7 @@ namespace SHIELDGui
                 .ForEach(viewModelType =>
                          _container.RegisterPerRequest(viewModelType, viewModelType.ToString(), viewModelType));
         }
+
         protected override object GetInstance(Type service, string key)
         {
             return _container.GetInstance(service, key);
