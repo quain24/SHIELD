@@ -44,9 +44,9 @@
     <Compile Include="ITestClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestClass.cs" />
+    <Compile Include="Utilities\ComPortCommunicator.cs" />
+    <Compile Include="Utilities\IComPortCommunicator.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Utilities\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
