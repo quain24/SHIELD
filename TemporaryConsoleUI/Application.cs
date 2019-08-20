@@ -5,35 +5,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunicationManager;
-using CommunicationManager.Utilities;
 
 namespace TemporaryConsoleUI
 {
     public class Application : IApplication
     {
-        ITestClass _testClass;
-        IComPortCommunicator _comPortCommunicator;
+        private IComPortManager _comPortManager;
 
-        public Application(ITestClass testClass, IComPortCommunicator comPortCommunicator)
+        public Application(IComPortManager comPortManager )
         {
-            _testClass = testClass;
-            _comPortCommunicator = comPortCommunicator;
-            
+            _comPortManager = comPortManager;                
         }
         public void Run()
         {
-            _testClass.Test();
-
-            // przypisanie metody do sygnału z portu com6
-            _comPortCommunicator.GiveReceiver().DataReceived += test;
-
-            while (true)
-            {                               
-                 string Data = Console.ReadLine();
-                 _comPortCommunicator.SendData(Data);
-                Console.WriteLine("Wprowadź kolejne dane");                   
-            }
+            _comPortManager.Create();
+            SerialPort sp = _comPortManager.GetPort();
+            _comPortManager.Clear();
+            sp.Open();
+            Console.WriteLine(sp.IsOpen);
             
+            Console.ReadLine();
         }
 
         // Odbieram sygnał z portu com6

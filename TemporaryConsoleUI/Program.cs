@@ -19,8 +19,6 @@ namespace TemporaryConsoleUI
                 var app = scope.Resolve<IApplication>();
                 app.Run();
             }
-
-            Console.ReadLine();
         }
     }
 }
