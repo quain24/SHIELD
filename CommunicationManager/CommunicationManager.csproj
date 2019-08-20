@@ -46,11 +46,15 @@
   <ItemGroup>
     <Compile Include="CommunicationManagerAutoFacModule.cs" />
     <Compile Include="ComPortManager.cs" />
+    <Compile Include="ComPortSender.cs" />
     <Compile Include="IComPortManager.cs" />
+    <Compile Include="Models\CommandModel.cs" />
+    <Compile Include="Models\ICommandModel.cs" />
+    <Compile Include="Models\IMessageModel.cs" />
+    <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>

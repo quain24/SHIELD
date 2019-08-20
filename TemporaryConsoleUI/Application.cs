@@ -5,16 +5,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunicationManager;
+using CommunicationManager.Models;
 
 namespace TemporaryConsoleUI
 {
     public class Application : IApplication
     {
         private IComPortManager _comPortManager;
+        private IMessageModel _messageModel;
 
-        public Application(IComPortManager comPortManager )
+        public Application(IComPortManager comPortManager, IMessageModel messageModel )
         {
-            _comPortManager = comPortManager;                
+            _comPortManager = comPortManager;
+            _messageModel = messageModel;
         }
         public void Run()
         {
@@ -22,8 +25,26 @@ namespace TemporaryConsoleUI
             SerialPort sp = _comPortManager.GetPort();
             _comPortManager.Clear();
             sp.Open();
-            Console.WriteLine(sp.IsOpen);
+            Console.WriteLine(sp.IsOpen + " " + sp.PortName);
+            sp.Close();
+            _comPortManager.Create(6);
+            sp = _comPortManager.GetPort();
+            _comPortManager.Clear();
+            sp.Open();
+            Console.WriteLine(sp.IsOpen + " " + sp.PortName);
+
+            List<string> aa = _comPortManager.AvailablePorts;
+
+            foreach(string a in aa)
+            {
+                Console.WriteLine(a);
+            }
+
+            CommandModel command = new CommandModel("dddd");
+            _messageModel = new MessageModel(command);
+            Console.WriteLine(_messageModel.GetACommand());
             
+
             Console.ReadLine();
         }
 

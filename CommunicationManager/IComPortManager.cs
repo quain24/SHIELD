@@ -1,4 +1,5 @@
-﻿using System.IO.Ports;
+﻿using System.Collections.Generic;
+using System.IO.Ports;
 using System.Text;
 
 namespace CommunicationManager
@@ -8,6 +9,8 @@ namespace CommunicationManager
         Encoding Encoding { get; set; }
         int ReadTimeout { get; set; }
         int WriteTimeout { get; set; }
+
+        List<string> AvailablePorts { get; }
 
         void Create(int portNumber = 5, int baudRate = 19200, int dataBits = 8, Parity parity = Parity.None, StopBits stopBits = StopBits.One);
         SerialPort GetPort();

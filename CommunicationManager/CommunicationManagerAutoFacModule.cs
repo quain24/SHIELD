@@ -17,6 +17,8 @@ namespace CommunicationManager
                    .AsImplementedInterfaces()
                    .InstancePerDependency();
 
+            builder.RegisterType<System.IO.Ports.SerialPort>().AsSelf().InstancePerDependency();
+
             base.Load(builder);
         }
     }
