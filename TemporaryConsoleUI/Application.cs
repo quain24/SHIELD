@@ -13,11 +13,13 @@ namespace TemporaryConsoleUI
     {
         private IComPortManager _comPortManager;
         private IMessageModel _messageModel;
+        private ICommandModel _commamdModel;
 
-        public Application(IComPortManager comPortManager, IMessageModel messageModel )
+        public Application(IComPortManager comPortManager, IMessageModel messageModel, ICommandModel commandModel)
         {
             _comPortManager = comPortManager;
             _messageModel = messageModel;
+            _commamdModel = commandModel;
         }
         public void Run()
         {
@@ -40,18 +42,11 @@ namespace TemporaryConsoleUI
                 Console.WriteLine(a);
             }
 
-            CommandModel command = new CommandModel("dddd");
-            _messageModel = new MessageModel(command);
-            Console.WriteLine(_messageModel.GetACommand());
+
+            Console.WriteLine(_commamdModel.GetMessage());
             
 
             Console.ReadLine();
-        }
-
-        // Odbieram sygnał z portu com6
-        public void test(object sender, SerialDataReceivedEventArgs e)
-        {
-            Console.WriteLine("aaaa");
-        }
+        }       
     }
 }

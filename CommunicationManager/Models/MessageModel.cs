@@ -8,26 +8,16 @@ namespace CommunicationManager.Models
 {
     public class MessageModel : IMessageModel
     {
-        private ICommandModel _commandModel;
+        
 
 
-        //public MessageModel()
-        //{
-        //}
-
-        //public MessageModel(params ICommandModel[] commands)
-        //{
-        //    //_commandModel = commands[0];
-        //}
-
-        public MessageModel(ICommandModel command)
+        public MessageModel()
         {
-            _commandModel = command;
-        }
+        }       
 
         public string GetACommand()
         {
-            return _commandModel.GetMessage();
+            return "temp";
         }
     }
 }

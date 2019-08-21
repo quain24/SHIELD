@@ -3,5 +3,6 @@
     public interface ICommandModel
     {
         string GetMessage();
+
     }
 }
