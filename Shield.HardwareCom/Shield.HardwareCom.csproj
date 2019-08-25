@@ -44,12 +44,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComMessanger.cs" />
     <Compile Include="ComReceiver.cs" />
     <Compile Include="ComSender.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
     <Compile Include="Factories\ComPortFactory.cs" />
     <Compile Include="Factories\IComPortFactory.cs" />
     <Compile Include="HardwareComAfModule.cs" />
+    <Compile Include="IComMessanger.cs" />
+    <Compile Include="IComReceiver.cs" />
     <Compile Include="IComSender.cs" />
     <Compile Include="Models\Command.cs" />
     <Compile Include="Models\ICommand.cs" />

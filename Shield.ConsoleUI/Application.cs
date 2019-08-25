@@ -18,8 +18,9 @@ namespace Shield.ConsoleUI
         private ICommand _command;
         private IComPortFactory _comPortFactory;
         private IComSender _comSender;
+        private IComMessanger _comMessanger;
 
-        public Application(ICommand command, IComPortFactory comPortFactory, IComSender comSender/*IComPortManager comPortManager, IMessageModel messageModel, ICommandModel commandModel*/)
+        public Application(ICommand command, IComPortFactory comPortFactory, IComSender comSender, IComMessanger comMessanger/*IComPortManager comPortManager, IMessageModel messageModel, ICommandModel commandModel*/)
         {
             //_comPortManager = comPortManager;
             //_messageModel = messageModel;
@@ -27,6 +28,7 @@ namespace Shield.ConsoleUI
             _command = command;
             _comPortFactory = comPortFactory;
             _comSender = comSender;
+            _comMessanger = comMessanger;
         }
         public void Run()
         {
@@ -58,13 +60,13 @@ namespace Shield.ConsoleUI
             if (_comPortFactory.Create(5))
             {
                 portA = _comPortFactory.GivePort;
-                portA.Open();               
+                //portA.Open();    // Tymczasowo wylaczony do testow commesangera           
             }
             
 
             // receiver best dependency injection
             ComReceiver receiver = new ComReceiver();
-            receiver.Setup(_comPortFactory.GivePort);
+            receiver.Setup(_comPortFactory.GivePort, 17);
             _comSender.Setup(_comPortFactory.GivePort);
 
             // na szybko wiadomosc testowa
@@ -82,26 +84,40 @@ namespace Shield.ConsoleUI
             }
 
             // wyswietl porty w kompie
-            foreach (var availiblePort in _comPortFactory.AvailablePorts)
+            foreach (var availablePort in _comPortFactory.AvailablePorts)
             {
-                Console.WriteLine(availiblePort);
+                Console.WriteLine(availablePort);
             }           
 
-            //string a = receiver.RceiveAsync();
-
+            // test wstepny comMessanger
+            SerialPort portC = null;
+            _comPortFactory.Create(6);
+            portC = _comPortFactory.GivePort;
+            portC.Open();
+            _comMessanger.Port = portC;
+            _comMessanger.AddCommandTemp(mes);
+            //_comMessanger.Close();
+            List<string> aa;
             // --- petla obiorczo nadawcza do testow!
             while (true)
             {
-                string message = Console.ReadLine();                
+                aa = _comMessanger.ReceiveAsync().Result;
+                for(int i = 0 ; i < aa.Count ; i++) 
+                {
+                    Console.WriteLine(aa[i]);                    
+                }
+                aa = null;
+                //aa.Clear();
+                //string message = Console.ReadLine();                
                 //portA.Write(message);
-                _comSender.Message(mes);
-                _comSender.Send();
+                //_comSender.Command(mes);
+                //_comSender.Send();
                 //Console.WriteLine(portA.ReadExisting());
-                Console.WriteLine(portA.BytesToRead);
+                //Console.WriteLine(portA.BytesToRead);
             }
 
 
             Console.ReadLine();
-        }       
+        }             
     }
 }

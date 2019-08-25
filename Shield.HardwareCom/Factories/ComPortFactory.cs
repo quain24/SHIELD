@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
+using System.Windows;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -17,7 +18,7 @@ namespace Shield.HardwareCom.Factories
                            StopBits stopBits = StopBits.One)
         {
             string portName = "COM" + portNumber;
-
+            
             if (!AvailablePorts.Contains(portName))
                 return false;
 

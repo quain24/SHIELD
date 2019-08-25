@@ -123,5 +123,11 @@
   <ItemGroup>
     <Folder Include="Models\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
+      <Project>{AB6E510F-4637-43E1-AD1C-7CF056304021}</Project>
+      <Name>Shield.HardwareCom</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

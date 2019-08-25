@@ -19,19 +19,13 @@ namespace Shield.HardwareCom
             _port = port;
         }
 
-        public void Message(ICommand command)
+        public void Command(ICommand command)
         {
             _command = command;
         }        
 
         public bool Send()
-        {
-            if (_port == null || _command == null)
-                return false;
-
-            if (!_port.IsOpen)
-                _port.Open();
-
+        {  
             try
             {
                 if (_command.CommandType == CommandType.Data)
@@ -45,11 +39,11 @@ namespace Shield.HardwareCom
             {
                 if(ex is TimeoutException)
                 {
-                    Debug.WriteLine("Timeout exception: " + ex.Message);
+                    Debug.WriteLine("--- ComSender --- Timeout exception: " + ex.Message);
                 }
                 else
                 {
-                    Debug.WriteLine("Other exception: " + ex.Message);                   
+                    Debug.WriteLine("--- ComSender --- Other exception: " + ex.Message);                   
                 }
                 return false;
             }

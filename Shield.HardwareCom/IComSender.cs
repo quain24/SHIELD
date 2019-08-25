@@ -5,7 +5,7 @@ namespace Shield.HardwareCom
 {
     public interface IComSender
     {
-        void Message(ICommand command);
+        void Command(ICommand command);
         bool Send();
         void Setup(SerialPort port);
     }
