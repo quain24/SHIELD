@@ -4,13 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+//  Zawiera spis komend (command) i nimi operuje: dodaje nowe, usuwa, listuje itp
+//  Tego typu obiektem będziemy operować jako głównym przy wysyłaniu / odbieraniu 
+//  do urządzenia/ pliku
+
 namespace Shield.HardwareCom.Models
 {
     public class Message : IMessage
     {
         private Dictionary<int, Command> _commands = new Dictionary<int, Command>();
 
-        public void AddCommand(Command command)
+        public void Add(Command command)
         {
             int id;
             if (_commands.Count == 0)
@@ -19,7 +23,8 @@ namespace Shield.HardwareCom.Models
                 id = _commands.Keys.Max() + 1;
             _commands.Add(id, command);
         }
-        public bool RemoveCommand(int id)
+
+        public bool Remove(int id)
         {
             if (_commands.Remove(id))
             {
@@ -27,6 +32,18 @@ namespace Shield.HardwareCom.Models
                 return true;
             }
             return false;
+        }
+        
+        public bool Remove(Command command)
+        {
+            if(_commands.Values.Any(x => x == command))
+            {
+                var commandToRemove = _commands.First(cmd => cmd.Value == command);
+                _commands.Remove(commandToRemove.Key);
+                ResortCommands(commandToRemove.Key);
+                return true;
+            }
+            return false;           
         }
 
         private void ResortCommands(int fromWhichKey)

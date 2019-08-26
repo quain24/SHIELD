@@ -2,7 +2,8 @@
 {
     public interface IMessage
     {
-        void AddCommand(Command command);
-        bool RemoveCommand(int id);
+        void Add(Command command);
+        bool Remove(int id);
+        bool Remove(Command command);
     }
 }
