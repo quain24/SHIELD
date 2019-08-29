@@ -8,7 +8,7 @@ using Shield.HardwareCom.Enums;
 
 namespace Shield.HardwareCom.Models
 {
-    public class Command : ICommand
+    public class CommandModel : ICommandModel
     {
         private string _data = string.Empty;
         private CommandType _command = CommandType.none;

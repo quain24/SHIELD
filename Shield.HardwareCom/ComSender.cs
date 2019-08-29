@@ -13,13 +13,14 @@ namespace Shield.HardwareCom
     public class ComSender : IComSender
     {
         private SerialPort _port;
-        private ICommand _command;
+        private ICommandModel _command;
+              
         public void Setup(SerialPort port)
         {
             _port = port;
         }
 
-        public void Command(ICommand command)
+        public void Command(ICommandModel command)
         {
             _command = command;
         }        

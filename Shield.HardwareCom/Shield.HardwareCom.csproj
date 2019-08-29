@@ -44,20 +44,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ComMessanger.cs" />
+    <Compile Include="Adapters\SerialPortAdapter.cs" />
+    <Compile Include="Adapters\MoqAdapter.cs" />
+    <Compile Include="Enums\DeviceType.cs" />
+    <Compile Include="Factories\CommunicationDeviceFactory.cs" />
+    <Compile Include="Factories\IMoqAdapterFactory.cs" />
+    <Compile Include="Factories\ISerialPortAdapterFactory.cs" />
+    <Compile Include="Factories\MoqAdapterFactory.cs" />
+    <Compile Include="Factories\SerialPortAdapterFactory.cs" />
+    <Compile Include="Factories\ICommunicationDeviceFactory.cs" />
+    <Compile Include="Messanger.cs" />
+    <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="ComReceiver.cs" />
     <Compile Include="ComSender.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
-    <Compile Include="Factories\ComPortFactory.cs" />
-    <Compile Include="Factories\IComPortFactory.cs" />
     <Compile Include="HardwareComAfModule.cs" />
-    <Compile Include="IComMessanger.cs" />
+    <Compile Include="IMessanger.cs" />
     <Compile Include="IComReceiver.cs" />
     <Compile Include="IComSender.cs" />
-    <Compile Include="Models\Command.cs" />
-    <Compile Include="Models\ICommand.cs" />
-    <Compile Include="Models\IMessage.cs" />
-    <Compile Include="Models\Message.cs" />
+    <Compile Include="Models\CommandModel.cs" />
+    <Compile Include="Models\ICommandModel.cs" />
+    <Compile Include="Models\IMessageModel.cs" />
+    <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -73,5 +81,6 @@
       <Name>Shield</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

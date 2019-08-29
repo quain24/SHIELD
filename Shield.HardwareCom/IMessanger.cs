@@ -5,11 +5,11 @@ using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom
 {
-    public interface IComMessanger
+    public interface IMessanger
     {
         SerialPort Port { get; set; }
 
-        void AddCommandTemp(ICommand command);
+        void AddCommandTemp(ICommandModel command);
         Task Close();
         Task<List<string>> ReceiveAsync();
         void Send();

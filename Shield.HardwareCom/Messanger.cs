@@ -13,16 +13,20 @@ using Shield.HardwareCom.Models;
 //
 //     Obiekty sender i receiver powinny byc uzywane tylko tu, osobno jedynie do testow
 
+
+    //  Jak zmienic typ na dostep do dowolnego portu (serial, usb, podobne), tak, by nie trzeba bylo zmianaic tej klasy, a jedynie jej skladowe takie
+    // jak sender i receiver wysokopozioma obsluga wiadomosci powinna pozostac taka sama
+
 namespace Shield.HardwareCom
 {
-    public class ComMessanger : IComMessanger
+    public class Messanger : IMessanger
     {
         private SerialPort _port = null;
         private IComSender _comSender;
         private IComReceiver _comReceiver;
         private int _receivedBufferSize;
 
-        public ComMessanger(IComSender comSender, IComReceiver comReceiver, int messageSizeBytes = 17)
+        public Messanger(IComSender comSender, IComReceiver comReceiver, int messageSizeBytes = 17)
         {
             _comSender = comSender;
             _comReceiver = comReceiver;
@@ -83,7 +87,7 @@ namespace Shield.HardwareCom
             // await serialStream.Close();
         }
 
-        public void AddCommandTemp(ICommand command)
+        public void AddCommandTemp(ICommandModel command)
         {
             _comSender.Command(command);
         }       

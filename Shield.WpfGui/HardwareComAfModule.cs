@@ -14,7 +14,7 @@ namespace Shield.HardwareCom
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
-                .Except<ComPortFactory>(cpf => cpf.As<IComPortFactory>().SingleInstance())      
+                .Except<SerialPortAdapterFactory>(cpf => cpf.As<SerialPortAdapterFactory>().SingleInstance())      
                 .AsImplementedInterfaces()
                 .InstancePerDependency();
         }

@@ -7,6 +7,8 @@
         mc:Ignorable="d"
         Title="ShellView" Height="450" Width="800">
     <Grid>
-        
+        <Button x:Name="but" Content="Odpal" HorizontalAlignment="Left" Margin="352,206,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button x:Name="zacznij" Content="Startup" HorizontalAlignment="Left" Margin="220,206,0,0" VerticalAlignment="Top" Width="76"/>
+
     </Grid>
 </Window>

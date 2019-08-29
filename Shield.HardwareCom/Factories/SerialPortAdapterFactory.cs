@@ -5,20 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Windows;
+using Shield.HardwareCom.Adapters;
+using Shield.HardwareCom.CommonInterfaces;
 
 namespace Shield.HardwareCom.Factories
 {
-    public class ComPortFactory : IComPortFactory
+    public class SerialPortAdapterFactory : ISerialPortAdapterFactory
     {
-        SerialPort _port;
+        private SerialPortAdapter _portAdapter;
+        private SerialPort _port;
         public bool Create(int portNumber,
-                           int baudRate = 19200,
-                           int dataBits = 8,
-                           Parity parity = Parity.None,
-                           StopBits stopBits = StopBits.One)
+                           int baudRate,
+                           int dataBits,
+                           Parity parity,
+                           StopBits stopBits)
         {
             string portName = "COM" + portNumber;
-            
+
             if (!AvailablePorts.Contains(portName))
                 return false;
 
@@ -34,16 +37,13 @@ namespace Shield.HardwareCom.Factories
                 Encoding = Encoding.ASCII
             };
 
+            _portAdapter = new SerialPortAdapter(_port);
+
             return true;
         }
 
-        public SerialPort GivePort
-        {
-            get
-            {
-                return _port;
-            }
-        }
+        public SerialPortAdapter GivePort => _portAdapter;
+
         public List<string> AvailablePorts
         {
             get
@@ -60,8 +60,7 @@ namespace Shield.HardwareCom.Factories
         private void Clear()
         {
             _port = null;
+            _portAdapter = null;
         }
-
-
     }
 }

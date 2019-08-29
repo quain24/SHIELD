@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Models
 {
-    public class Message : IMessage
+    public class MessageModel : IMessageModel
     {
-        private Dictionary<int, Command> _commands = new Dictionary<int, Command>();
+        private Dictionary<int, CommandModel> _commands = new Dictionary<int, CommandModel>();
 
-        public void Add(Command command)
+        public void Add(CommandModel command)
         {
             int id;
             if (_commands.Count == 0)
@@ -34,7 +34,7 @@ namespace Shield.HardwareCom.Models
             return false;
         }
         
-        public bool Remove(Command command)
+        public bool Remove(CommandModel command)
         {
             if(_commands.Values.Any(x => x == command))
             {
@@ -52,7 +52,7 @@ namespace Shield.HardwareCom.Models
                 return;
             for (int i = fromWhichKey + 1; i < _commands.Count(); i++)
             {
-                Command tmpCommand = _commands[i];
+                CommandModel tmpCommand = _commands[i];
                 _commands.Remove(i);
                 _commands.Add(i - 1, tmpCommand);
             }

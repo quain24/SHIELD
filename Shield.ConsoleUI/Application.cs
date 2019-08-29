@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using Shield.HardwareCom.Models;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom;
+using Shield.HardwareCom.CommonInterfaces;
+using Shield.HardwareCom.Adapters;
+using System.Diagnostics;
 
 namespace Shield.ConsoleUI
 {
@@ -15,20 +18,22 @@ namespace Shield.ConsoleUI
         //private IComPortManager _comPortManager;
         //private IMessageModel _messageModel;
         //private ICommandModel _commamdModel;
-        private ICommand _command;
-        private IComPortFactory _comPortFactory;
+        private ICommandModel _command;
+        private ISerialPortAdapterFactory _serialPortFactory;
         private IComSender _comSender;
-        private IComMessanger _comMessanger;
+        private IMessanger _comMessanger;
+        ICommunicationDeviceFactory _deviceFactory;
 
-        public Application(ICommand command, IComPortFactory comPortFactory, IComSender comSender, IComMessanger comMessanger/*IComPortManager comPortManager, IMessageModel messageModel, ICommandModel commandModel*/)
+        public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, ISerialPortAdapterFactory comPortFactory, IComSender comSender, IMessanger comMessanger/*IComPortManager comPortManager, IMessageModel messageModel, ICommandModel commandModel*/)
         {
             //_comPortManager = comPortManager;
             //_messageModel = messageModel;
             //_commamdModel = commandModel;
             _command = command;
-            _comPortFactory = comPortFactory;
+            _serialPortFactory = comPortFactory;
             _comSender = comSender;
             _comMessanger = comMessanger;
+            _deviceFactory = deviceFactory;
         }
         public void Run()
         {
@@ -50,63 +55,81 @@ namespace Shield.ConsoleUI
             //{
             //    Console.WriteLine(a);
             //}
-
+            
 
             //Console.WriteLine(_commamdModel.GetMessage());
             Console.WriteLine( _command.CommandTypeString);
 
             // dzialajacy serial, do odbioru w putty na com6
-            SerialPort portA = null;
-            if (_comPortFactory.Create(5))
+            SerialPortAdapter portA = null;
+            if (_serialPortFactory.Create(5))
             {
-                portA = _comPortFactory.GivePort;
+                portA = _serialPortFactory.GivePort;
                 //portA.Open();    // Tymczasowo wylaczony do testow commesangera           
             }
             
 
             // receiver best dependency injection
             ComReceiver receiver = new ComReceiver();
-            receiver.Setup(_comPortFactory.GivePort, 17);
-            _comSender.Setup(_comPortFactory.GivePort);
+            //receiver.Setup(_serialPortFactory.GivePort, 17);
+            //_comSender.Setup(_serialPortFactory.GivePort);
 
             // na szybko wiadomosc testowa
-            Command mes = new Command();
+            CommandModel mes = new CommandModel();
             mes.CommandType = HardwareCom.Enums.CommandType.Data;
             mes.Data = "Test Data inside test command";
 
 
             // nie ma takiego portu, do testow
-            SerialPort portB = null;
-            if (_comPortFactory.Create(4))
+            SerialPortAdapter portB = null;
+            if (_serialPortFactory.Create(4))
             {
-                portB = _comPortFactory.GivePort;
+                portB = _serialPortFactory.GivePort;
                 portB.Open();
             }
 
             // wyswietl porty w kompie
-            foreach (var availablePort in _comPortFactory.AvailablePorts)
+            foreach (var availablePort in _serialPortFactory.AvailablePorts)
             {
                 Console.WriteLine(availablePort);
-            }           
+            }
 
             // test wstepny comMessanger
-            SerialPort portC = null;
-            _comPortFactory.Create(6);
-            portC = _comPortFactory.GivePort;
+            SerialPortAdapter portC = null;
+            _serialPortFactory.Create(6);
+            portC = _serialPortFactory.GivePort;
             portC.Open();
-            _comMessanger.Port = portC;
-            _comMessanger.AddCommandTemp(mes);
+            //portC.Close();
+            //portC.Close();
+            //_comMessanger.Port = portC;
+            //_comMessanger.AddCommandTemp(mes);
             //_comMessanger.Close();
             List<string> aa;
+
+            // test klasy serialportadapter
+            //ICommunicationDevice com = new SerialPortAdapter(portA);            
+            //com.DataReceived += eve;
+            //com.Open();
+
+            System.Diagnostics.Process.GetCurrentProcess().Threads.ToString();
+            int licznik = 0;
+
+            Console.WriteLine(System.Diagnostics.Process.GetCurrentProcess().Threads.Count);
+            Console.ReadLine();
             // --- petla obiorczo nadawcza do testow!
             while (true)
             {
-                aa = _comMessanger.ReceiveAsync().Result;
-                for(int i = 0 ; i < aa.Count ; i++) 
-                {
-                    Console.WriteLine(aa[i]);                    
-                }
-                aa = null;
+
+                portC.Write("aaaa");
+                Console.WriteLine(licznik++);
+                Console.WriteLine(System.Diagnostics.Process.GetCurrentProcess().Threads.Count);
+                //aa = _comMessanger.ReceiveAsync().Result;
+                //for(int i = 0 ; i < aa.Count ; i++) 
+                //{
+                //    Console.WriteLine(aa[i]);                    
+                //}
+                //aa = null;
+
                 //aa.Clear();
                 //string message = Console.ReadLine();                
                 //portA.Write(message);
@@ -116,8 +139,13 @@ namespace Shield.ConsoleUI
                 //Console.WriteLine(portA.BytesToRead);
             }
 
-
+            
             Console.ReadLine();
-        }             
+        }    
+        
+        void eve(object sender, EventArgs a)
+        {
+            //Console.WriteLine("Event został odpalony");
+        }
     }
 }
