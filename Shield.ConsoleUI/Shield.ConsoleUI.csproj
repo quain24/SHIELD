@@ -61,14 +61,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
-      <Project>{8fe1d19f-401c-48c7-88cb-b021714e77bb}</Project>
-      <Name>Shield.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
-      <Project>{ab6e510f-4637-43e1-ad1c-7cf056304021}</Project>
-      <Name>Shield.HardwareCom</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>

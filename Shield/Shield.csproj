@@ -30,12 +30,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=4.9.4.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <HintPath>..\packages\Autofac.4.9.4\lib\net45\Autofac.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,14 +48,46 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
+    <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
+    <Compile Include="CommonInterfaces\ISettings.cs" />
+    <Compile Include="Data\AppSettings.cs" />
+    <Compile Include="Data\DataAfModule.cs" />
+    <Compile Include="Data\Models\ISerialPortSettingsModel.cs" />
+    <Compile Include="Data\Models\SerialPortSettingModel.cs" />
+    <Compile Include="Enums\CommandTypes.cs" />
+    <Compile Include="Enums\DeviceType.cs" />
+    <Compile Include="Enums\SettingsType.cs" />
+    <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
+    <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
+    <Compile Include="HardwareCom\ComReceiver.cs" />
+    <Compile Include="HardwareCom\ComSender.cs" />
+    <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ICommunicationDeviceFactory.cs" />
+    <Compile Include="HardwareCom\Factories\IMoqAdapterFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ISerialPortAdapterFactory.cs" />
+    <Compile Include="HardwareCom\Factories\MoqAdapterFactory.cs" />
+    <Compile Include="HardwareCom\Factories\SerialPortAdapterFactory.cs" />
+    <Compile Include="HardwareCom\HardwareComAfModule.cs" />
+    <Compile Include="HardwareCom\IComReceiver.cs" />
+    <Compile Include="HardwareCom\IComSender.cs" />
+    <Compile Include="HardwareCom\IMessanger.cs" />
+    <Compile Include="HardwareCom\Messanger.cs" />
+    <Compile Include="HardwareCom\Models\CommandModel.cs" />
+    <Compile Include="HardwareCom\Models\ICommandModel.cs" />
+    <Compile Include="HardwareCom\Models\IMessageModel.cs" />
+    <Compile Include="HardwareCom\Models\ISerialPortSettingsModel.cs" />
+    <Compile Include="HardwareCom\Models\MessageModel.cs" />
+    <Compile Include="HardwareCom\Models\SerialPortSettingModel.cs" />
+    <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Enums\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Models\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Shield.HardwareCom;
+using Shield.Data;
 
 namespace Shield.ConsoleUI
 {
@@ -36,6 +37,8 @@ namespace Shield.ConsoleUI
 
             builder.RegisterModule<ConsoleUIAfModule>();
             builder.RegisterModule<HardwareComAfModule>();
+            builder.RegisterModule<DataAfModule>();
+            builder.RegisterModule<ShieldAfModule>();
 
 
 

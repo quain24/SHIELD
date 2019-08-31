@@ -10,11 +10,12 @@ using Autofac.Core;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.CommonInterfaces;
 using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.Enums;
+using Shield.Enums;
+using Shield.HardwareCom;
 
-namespace Shield.HardwareCom
+namespace Shield
 {
-    public class HardwareComAfModule : Autofac.Module
+    public class ShieldAfModule : Autofac.Module
     {
         protected override void Load(ContainerBuilder builder)
         {
@@ -43,23 +44,18 @@ namespace Shield.HardwareCom
 
 
             // Models registration (single interface per model)
-            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
+            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.Name.EndsWith("Model"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
-            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
-                   .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
+            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             
             // tymczasowo do wszystkiego innego
-            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
-                   .Except<IMessanger>()
-                   .Except<Messanger>()
-                   .Except<MoqAdapter>()
-                   .Except<SerialPortAdapter>()
+            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))              
                    .AsImplementedInterfaces()
                    .InstancePerDependency();
             

@@ -7,14 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
-using Shield.HardwareCom.Adapters;
-using Shield.HardwareCom.CommonInterfaces;
-using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.Enums;
 
-namespace Shield.HardwareCom
+namespace Shield.Data
 {
-    public class HardwareComAfModule : Autofac.Module
+    public class DataAfModule : Autofac.Module
     {
         protected override void Load(ContainerBuilder builder)
         {
@@ -43,25 +39,20 @@ namespace Shield.HardwareCom
 
 
             // Models registration (single interface per model)
-            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
+            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(Data)}"))
                    .Where(t => t.Name.EndsWith("Model"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
-            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
-                   .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
+            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(Data)}"))
                    .Where(t => t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             
             // tymczasowo do wszystkiego innego
-            builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
-                   .Except<IMessanger>()
-                   .Except<Messanger>()
-                   .Except<MoqAdapter>()
-                   .Except<SerialPortAdapter>()
-                   .AsImplementedInterfaces()
-                   .InstancePerDependency();
+            //builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(Data)}"))             
+            //       .AsImplementedInterfaces()
+            //       .InstancePerDependency();
             
             base.Load(builder);
         }

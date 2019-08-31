@@ -6,7 +6,7 @@ using System.IO.Ports;
 using System.Threading.Tasks;
 using Shield.HardwareCom.Models;
 using Shield.HardwareCom.CommonInterfaces;
-using Shield.HardwareCom.Enums;
+using Shield.Enums;
 
 //  Metody wysyłania i odbierania sa uproszczone, TODO:
 //  -- zmienic receiver na async

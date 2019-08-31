@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Shield.HardwareCom.Enums;
+using Shield.Enums;
 using Shield.HardwareCom.Adapters;
 using System.IO.Ports;
 

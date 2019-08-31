@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading.Tasks;
-using Shield.HardwareCom.Enums;
+using Shield.Enums;
 using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom

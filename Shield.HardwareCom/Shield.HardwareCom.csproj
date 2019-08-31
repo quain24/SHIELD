@@ -46,6 +46,8 @@
   <ItemGroup>
     <Compile Include="Adapters\SerialPortAdapter.cs" />
     <Compile Include="Adapters\MoqAdapter.cs" />
+    <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
+    <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
     <Compile Include="Enums\DeviceType.cs" />
     <Compile Include="Factories\CommunicationDeviceFactory.cs" />
     <Compile Include="Factories\IMoqAdapterFactory.cs" />
@@ -54,7 +56,6 @@
     <Compile Include="Factories\SerialPortAdapterFactory.cs" />
     <Compile Include="Factories\ICommunicationDeviceFactory.cs" />
     <Compile Include="Messanger.cs" />
-    <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="ComReceiver.cs" />
     <Compile Include="ComSender.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
@@ -63,6 +64,8 @@
     <Compile Include="IComReceiver.cs" />
     <Compile Include="IComSender.cs" />
     <Compile Include="Models\CommandModel.cs" />
+    <Compile Include="Models\ISerialPortSettingsModel.cs" />
+    <Compile Include="Models\SerialPortSettingModel.cs" />
     <Compile Include="Models\ICommandModel.cs" />
     <Compile Include="Models\IMessageModel.cs" />
     <Compile Include="Models\MessageModel.cs" />
@@ -70,16 +73,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
-      <Project>{8fe1d19f-401c-48c7-88cb-b021714e77bb}</Project>
-      <Name>Shield.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Shield\Shield.csproj">
-      <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
-      <Name>Shield</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
