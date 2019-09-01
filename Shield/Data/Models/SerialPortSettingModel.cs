@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
+using Shield.Enums;
 
 namespace Shield.Data.Models
 {
@@ -15,5 +16,6 @@ namespace Shield.Data.Models
         public int DataBits { get; set; }
         public Parity Parity { get; set; }
         public StopBits StopBits { get; set; }
+        public DeviceType DeviceType { get; set; }
     }
 }

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO.Ports;
-using System.Windows;
+﻿using Shield.Data.Models;
 using Shield.HardwareCom.Adapters;
-using Shield.HardwareCom.CommonInterfaces;
+using System.Collections.Generic;
+using System.IO.Ports;
+using System.Text;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -14,6 +10,16 @@ namespace Shield.HardwareCom.Factories
     {
         private SerialPortAdapter _portAdapter;
         private SerialPort _port;
+
+        public bool Create(ISerialPortSettingsModel settings)
+        {
+            return Create(settings.PortNumber,
+                          settings.BaudRate,
+                          settings.DataBits,
+                          settings.Parity,
+                          settings.StopBits);
+        }
+
         public bool Create(int portNumber,
                            int baudRate,
                            int dataBits,
@@ -23,7 +29,9 @@ namespace Shield.HardwareCom.Factories
             string portName = "COM" + portNumber;
 
             if (!AvailablePorts.Contains(portName))
+            {
                 return false;
+            }
 
             _port = new SerialPort
             {

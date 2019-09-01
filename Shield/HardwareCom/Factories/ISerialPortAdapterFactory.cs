@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO.Ports;
 using Shield.HardwareCom.Adapters;
+using Shield.Data.Models;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -14,5 +15,7 @@ namespace Shield.HardwareCom.Factories
                     int dataBits = 8,
                     Parity parity = Parity.None,
                     StopBits stopBits = StopBits.One);
+
+        bool Create(ISerialPortSettingsModel settings);
     }
 }

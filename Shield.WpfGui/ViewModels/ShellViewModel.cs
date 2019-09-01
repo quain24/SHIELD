@@ -21,34 +21,34 @@ namespace Shield.WpfGui.ViewModels
         int licznik = 0;
         public void zacznij()
         {
-            ISerialPortAdapterFactory _comPortFactory = new SerialPortAdapterFactory();
-            portA = null;
-            if (_comPortFactory.Create(5))
-            {
-                portA = _comPortFactory.GivePort;
-                //portA.Open();    // Tymczasowo wylaczony do testow commesangera           
-            }
+            //ISerialPortAdapterFactory _comPortFactory = new SerialPortAdapterFactory();
+            //portA = null;
+            //if (_comPortFactory.Create(5))
+            //{
+            //    portA = _comPortFactory.GivePort;
+            //    //portA.Open();    // Tymczasowo wylaczony do testow commesangera           
+            //}
 
-            ICommunicationDevice com = portA;            
-            com.DataReceived += eve;
-            com.Open();
+            //ICommunicationDevice com = portA;            
+            //com.DataReceived += eve;
+            //com.Open();
 
-            portC = null;
-            _comPortFactory.Create(6);
-            portC = _comPortFactory.GivePort;
-            portC.Open();
+            //portC = null;
+            //_comPortFactory.Create(6);
+            //portC = _comPortFactory.GivePort;
+            //portC.Open();
 
-            Task.Run( () => {
-                while (true)
-                {
-                    portC.Write("aaaa");
-                    //Thread.Sleep(5);
-                }
-                }
-            );
+            //Task.Run( () => {
+            //    while (true)
+            //    {
+            //        portC.Write("aaaa");
+            //        //Thread.Sleep(5);
+            //    }
+            //    }
+            //);
             
 
-            Debug.WriteLine("Rozpoczęto");
+            //Debug.WriteLine("Rozpoczęto");
         }
         //testy watkow - czy zawieszaja
        public void but()

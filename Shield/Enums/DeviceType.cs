@@ -11,7 +11,7 @@ namespace Shield.Enums
     /// </summary>
     public enum DeviceType
         {
-            serial,
-            moq
+            Serial,
+            Moq
         }
 }

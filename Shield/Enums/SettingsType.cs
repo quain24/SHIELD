@@ -8,8 +8,9 @@ namespace Shield.Enums
 {
     public enum SettingsType
     {
-        ComDevice,
-        App,
+        SerialDevice,
+        MoqDevice,
+        Application,
         User
     }
 }

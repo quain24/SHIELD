@@ -12,5 +12,7 @@ namespace Shield.HardwareCom.Factories
                                     int dataBits = 8,
                                     Parity parity = Parity.None,
                                     StopBits stopBits = StopBits.One);
+
+        ICommunicationDevice Device(DeviceType type);
     }
 }

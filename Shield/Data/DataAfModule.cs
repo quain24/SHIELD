@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
+using Shield.Data.Models;
 
 namespace Shield.Data
 {
@@ -38,7 +39,7 @@ namespace Shield.Data
                 //.InstancePerDependency();
 
 
-            // Models registration (single interface per model)
+            // Models registration (general)
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.Name.EndsWith("Model"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
@@ -47,8 +48,10 @@ namespace Shield.Data
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
-
             
+            // Application Settings Class - gives and keeps all the settings
+            builder.RegisterType<AppSettings>().As<IAppSettings>().SingleInstance();
+
             // tymczasowo do wszystkiego innego
             //builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(Data)}"))             
             //       .AsImplementedInterfaces()

@@ -11,37 +11,87 @@ using Shield.HardwareCom.CommonInterfaces;
 using Shield.HardwareCom.Adapters;
 using System.Diagnostics;
 using Shield.Enums;
+using Shield.Data;
+using Shield.Data.Models;
 
 namespace Shield.ConsoleUI
 {
     class Application : IApplication
     {
-        //private IComPortManager _comPortManager;
-        //private IMessageModel _messageModel;
-        //private ICommandModel _commamdModel;
         private ICommandModel _command;
         private ICommunicationDeviceFactory _deviceFactory;
         private IMessanger _comMessanger;
         private IComSender _comSender;
         private IComReceiver _comReceiver;
+        private IAppSettings _setman;
 
-        public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IComSender comSender, IComReceiver comReceiver)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IComSender comSender, IComReceiver comReceiver)
         {
            
             _command = command;           
             _deviceFactory = deviceFactory;
             _comSender = comSender;
             _comReceiver = comReceiver;
+            _setman = setman;
         }
         public void Run()
         {
+            // testowanie zapisywania i wczytywania ustawien - działa - tymczaasowo wygaszono, tylko wczytuje z pliku - automat
 
+            ISerialPortSettingsModel settings = new SerialPortSettingsModel();
+            settings.BaudRate = 19200;
+            settings.DataBits = 6;
+            settings.Parity = Parity.None;
+            settings.PortNumber = 5;
+            settings.StopBits = StopBits.One;
+
+            IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
+            settings2.PortNumber = 6;
+
+            //AppSettings setman = new AppSettings();
+            _setman.Add(SettingsType.SerialDevice, settings);
+            _setman.Add(SettingsType.MoqDevice, settings2);
+            _setman.SaveToFile();
+            
+            foreach (var item in _setman.GetAll())
+            {
+                Console.WriteLine("Pozycja sprzed wczytania:");
+                Console.WriteLine(item.Key.ToString() + " " + item.Value.ToString());
+            }
+
+            _setman.LoadFromFile();
+            
+
+            foreach (var item in _setman.GetAll())
+            {
+                if(item.Key == SettingsType.MoqDevice)
+                {
+                    Console.WriteLine("Pozycja po wczytaniu:");
+                    Console.WriteLine("klucz: " + item.Key.ToString());
+                    IMoqPortSettingsModel readed2 = (IMoqPortSettingsModel) item.Value;
+                    Console.WriteLine(readed2.PortNumber);
+                }
+                else
+                {
+                    Console.WriteLine("Pozycja po wczytaniu:");
+                    Console.WriteLine("klucz: " + item.Key.ToString());
+                    ISerialPortSettingsModel readed = (ISerialPortSettingsModel) item.Value;
+                    Console.WriteLine(readed.BaudRate);
+                    Console.WriteLine(readed.DataBits);
+                    Console.WriteLine(readed.Parity);
+                    Console.WriteLine(readed.PortNumber);
+                    Console.WriteLine(readed.StopBits);
+                }                
+            }
+            
             // ICommunicationDevice portXX = _deviceFactory.Device(DeviceType.serial, 5); - przeniesione do messangera
-            ICommunicationDevice portYY = _deviceFactory.Device(DeviceType.serial, 6);
+            ICommunicationDevice portYY = _deviceFactory.Device(DeviceType.Serial, 6);
             portYY.Open();
 
+            ICommunicationDevice portZZ = _deviceFactory.Device(DeviceType.Serial);
+
             _comMessanger = new Messanger(_deviceFactory, _comSender, _comReceiver);
-            _comMessanger.Setup(DeviceType.serial, 5);
+            _comMessanger.Setup(DeviceType.Serial, 5);
 
             // na szybko wiadomosc testowa
             CommandModel mes = new CommandModel();
@@ -55,10 +105,10 @@ namespace Shield.ConsoleUI
             }   
            
             
-            System.Diagnostics.Process.GetCurrentProcess().Threads.ToString();
+            Process.GetCurrentProcess().Threads.ToString();
             int licznik = 0;
 
-            Console.WriteLine(System.Diagnostics.Process.GetCurrentProcess().Threads.Count);
+            Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
             Console.ReadLine();
             // --- petla obiorczo nadawcza do testow!
             while (true)
@@ -67,7 +117,7 @@ namespace Shield.ConsoleUI
                 Console.WriteLine(portYY.Read());
                 
                 Console.WriteLine(licznik++);
-                Console.WriteLine(System.Diagnostics.Process.GetCurrentProcess().Threads.Count);
+                Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
                 
             }
         }    

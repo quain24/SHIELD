@@ -11,10 +11,10 @@ namespace Shield.HardwareCom.Models
     [Serializable]
     public class SerialPortSettingsModel : ISerialPortSettingsModel
     {
-        public int portNumber { get; set; }
-        public int baudRate { get; set; }
+        public int PortNumber { get; set; }
+        public int BaudRate { get; set; }
         public int DataBits { get; set; }
-        public Parity parity { get; set; }
-        public StopBits stopBits { get; set; }
+        public Parity Parity { get; set; }
+        public StopBits StopBits { get; set; }
     }
 }
