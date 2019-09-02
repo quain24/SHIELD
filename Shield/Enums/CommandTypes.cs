@@ -11,7 +11,7 @@ namespace Shield.Enums
     /// </summary>
     public enum CommandType
     {
-        none = -1,
+        Partial = -1,
         HandShake = 0,
         Confirm,
         Sending,

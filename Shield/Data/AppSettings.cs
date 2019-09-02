@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
-using Shield.Data.CommonInterfaces;
+using Shield.CommonInterfaces;
 using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.Models;

@@ -12,9 +12,9 @@ namespace Shield.HardwareCom.Models
 {
     public class MessageModel : IMessageModel
     {
-        private Dictionary<int, CommandModel> _commands = new Dictionary<int, CommandModel>();
+        private Dictionary<int, ICommandModel> _commands = new Dictionary<int, ICommandModel>();
 
-        public void Add(CommandModel command)
+        public void Add(ICommandModel command)
         {
             int id;
             if (_commands.Count == 0)
@@ -34,7 +34,7 @@ namespace Shield.HardwareCom.Models
             return false;
         }
         
-        public bool Remove(CommandModel command)
+        public bool Remove(ICommandModel command)
         {
             if(_commands.Values.Any(x => x == command))
             {
@@ -52,7 +52,7 @@ namespace Shield.HardwareCom.Models
                 return;
             for (int i = fromWhichKey + 1; i < _commands.Count(); i++)
             {
-                CommandModel tmpCommand = _commands[i];
+                ICommandModel tmpCommand = _commands[i];
                 _commands.Remove(i);
                 _commands.Add(i - 1, tmpCommand);
             }

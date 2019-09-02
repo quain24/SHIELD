@@ -14,6 +14,7 @@ namespace Shield.HardwareCom.Factories
         public bool Create(ISerialPortSettingsModel settings)
         {
             return Create(settings.PortNumber,
+                          settings.CommandSize,
                           settings.BaudRate,
                           settings.DataBits,
                           settings.Parity,
@@ -21,6 +22,7 @@ namespace Shield.HardwareCom.Factories
         }
 
         public bool Create(int portNumber,
+                           int commandSize,
                            int baudRate,
                            int dataBits,
                            Parity parity,
@@ -45,7 +47,7 @@ namespace Shield.HardwareCom.Factories
                 Encoding = Encoding.ASCII
             };
 
-            _portAdapter = new SerialPortAdapter(_port);
+            _portAdapter = new SerialPortAdapter(_port, commandSize);
 
             return true;
         }

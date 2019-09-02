@@ -1,5 +1,5 @@
 ﻿using Shield.HardwareCom.Adapters;
-using Shield.HardwareCom.CommonInterfaces;
+using Shield.CommonInterfaces;
 using Shield.HardwareCom.Factories;
 using System;
 using System.Collections.Generic;

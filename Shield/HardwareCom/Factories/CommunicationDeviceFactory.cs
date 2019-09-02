@@ -1,5 +1,5 @@
 ﻿using Autofac.Features.Indexed;
-using Shield.HardwareCom.CommonInterfaces;
+using Shield.CommonInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,7 +26,9 @@ namespace Shield.HardwareCom.Factories
         private readonly IMoqAdapterFactory _moqAdapterFactory;
         private IAppSettings _appSettings;
 
-        public CommunicationDeviceFactory(ISerialPortAdapterFactory serialAdapterFactory, IMoqAdapterFactory moqAdapterFactory, IAppSettings appSettings)
+        public CommunicationDeviceFactory(ISerialPortAdapterFactory serialAdapterFactory,
+                                          IMoqAdapterFactory moqAdapterFactory,
+                                          IAppSettings appSettings)
         {
             _serialAdapterFactory = serialAdapterFactory;
             _moqAdapterFactory = moqAdapterFactory;
@@ -34,26 +36,27 @@ namespace Shield.HardwareCom.Factories
         }
            
         public ICommunicationDevice Device(DeviceType type)
-        {
+        {                       // To trzeba przerobic po pozbyciu sie create bioracej parametry w konstruktorze - zbedne poza testami
             switch (type)
             {
                 case DeviceType.Serial:
                     ISerialPortSettingsModel settings = (ISerialPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.SerialDevice);
-                    return Device(type, settings.PortNumber, settings.BaudRate, settings.DataBits, settings.Parity, settings.StopBits);
+                    return Device(type, settings.PortNumber, settings.CommandSize, settings.BaudRate, settings.DataBits, settings.Parity, settings.StopBits);
                 
                 case DeviceType.Moq:
                     IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.MoqDevice);
-                    return Device(type, settings2.PortNumber, 0, 0, 0, 0);
+                    return Device(type, settings2.PortNumber, 0, 0, 0, 0, 0);
 
                 default:
-                    string err = "ERROR: CommunicationDeviceFactory - could not create a communication device - maybe bad enum value or additional data?";
+                    string err = "ERROR: CommunicationDeviceFactory Device - could not create a communication device - maybe bad enum value or additional data?";
                     Debug.WriteLine(err);
-                    throw new ArgumentException(err);                    
+                    return null;                    
             }
         }
 
         public ICommunicationDevice Device(DeviceType typeOfDevice,
                                            int portNumber,
+                                           int commandSize,
                                            int baudRate,
                                            int dataBits,
                                            Parity parity,
@@ -62,7 +65,7 @@ namespace Shield.HardwareCom.Factories
             switch (typeOfDevice)
             {
                 case DeviceType.Serial:
-                    if (_serialAdapterFactory.Create(portNumber, baudRate, dataBits, parity, stopBits))
+                    if (_serialAdapterFactory.Create(portNumber, commandSize, baudRate, dataBits, parity, stopBits))
                         return _serialAdapterFactory.GivePort;
                     break;
 
@@ -72,9 +75,9 @@ namespace Shield.HardwareCom.Factories
                     break;
             }
 
-            string err = "ERROR: CommunicationDeviceFactory - could not create a communication device - maybe bad enum value or additional data?";
+            string err = "ERROR: CommunicationDeviceFactory Device - could not create a communication device - maybe bad enum value or additional data?";
             Debug.WriteLine(err);
-            throw new ArgumentException(err);
+            return null;
         }        
     }
 }

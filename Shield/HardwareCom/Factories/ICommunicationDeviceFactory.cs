@@ -1,4 +1,4 @@
-﻿using Shield.HardwareCom.CommonInterfaces;
+﻿using Shield.CommonInterfaces;
 using Shield.Enums;
 using System.IO.Ports;
 
@@ -8,6 +8,7 @@ namespace Shield.HardwareCom.Factories
     {
         ICommunicationDevice Device(DeviceType typeOfDevice,
                                     int portNumber,
+                                    int commandSize,
                                     int baudRate = 19200,
                                     int dataBits = 8,
                                     Parity parity = Parity.None,

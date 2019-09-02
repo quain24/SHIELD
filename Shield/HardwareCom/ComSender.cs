@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Shield.Enums;
 using System.Diagnostics;
-using Shield.HardwareCom.CommonInterfaces;
+using Shield.CommonInterfaces;
 
 namespace Shield.HardwareCom
 {
@@ -28,13 +28,13 @@ namespace Shield.HardwareCom
         }        
 
         public bool Send(ICommandModel command)
-        {  
+        {  // do zmiany, ale ta klasa chyba wyleci
             try
             {
                 if (command.CommandType == CommandType.Data)
-                    _port.Write(command.Data);
+                    _port.Send(command);
                 else
-                    _port.Write(command.CommandTypeString);
+                    _port.Send(command);
 
                 return true;
             }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shield.Data.CommonInterfaces
+namespace Shield.CommonInterfaces
 {
     public interface ISettings
     {

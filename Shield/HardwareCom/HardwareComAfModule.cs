@@ -52,6 +52,7 @@ namespace Shield.HardwareCom
                    .Where(t => t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
+            builder.RegisterType<SerialPort>().AsSelf();
             
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

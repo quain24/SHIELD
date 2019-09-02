@@ -4,8 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Shield.HardwareCom.CommonInterfaces;
+using Shield.CommonInterfaces;
 using System.IO.Ports;
+using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom.Adapters
 {
@@ -47,23 +48,23 @@ namespace Shield.HardwareCom.Adapters
             _isOpen = true;
         }
 
-        public string Read()
+        public ICommandModel Receive()
         {
             Debug.WriteLine("Odczytano dane z obiektu - wybrany port plus dane wprowadzone  \"MoqAdapter\"");
-            return _portName + " " + _rawData;
+            return  new CommandModel {CommandType = Enums.CommandType.Data, Data =  _portName + " " + _rawData };            
         }
 
-        public void Write(string rawData)
+        public void Send(ICommandModel command)
         {
             Debug.WriteLine("Wysłano dane do portwu obiektu \"MoqAdapter\"");
             Debug.WriteLine("Odpalono event DataReceived \"MoqAdapter\"");
-            _rawData = rawData;
+            _rawData = command.CommandTypeString;
             DataReceived?.Invoke(this, new EventArgs());
         }
 
         private void PropagateDataReceivedEvent(object sender, EventArgs e)
         {
-            DataReceived.Invoke(sender, e);
+            DataReceived?.Invoke(sender, e);
             Debug.WriteLine("Odpalono event PropagateDataReceivedEvent z \"MoqAdapter\"");
         } 
     }

@@ -17,5 +17,6 @@ namespace Shield.Data.Models
         public Parity Parity { get; set; }
         public StopBits StopBits { get; set; }
         public DeviceType DeviceType { get; set; }
+        public int CommandSize { get; set;}
     }
 }

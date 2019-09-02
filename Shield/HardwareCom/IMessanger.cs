@@ -15,5 +15,7 @@ namespace Shield.HardwareCom
         Task<List<string>> ReceiveAsync();
         void Send(ICommandModel comand);
         bool Setup(DeviceType type, int additionalparameter);
+        bool Setup(DeviceType type);
+        int GetBuf {get; }
     }
 }

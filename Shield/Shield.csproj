@@ -55,7 +55,9 @@
     <Compile Include="Data\AppSettings.cs" />
     <Compile Include="Data\DataAfModule.cs" />
     <Compile Include="Data\IAppSettings.cs" />
+    <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
     <Compile Include="Data\Models\AppSettingsModel.cs" />
+    <Compile Include="Data\Models\IApplicationSettingsModel.cs" />
     <Compile Include="Data\Models\IAppSettingsModel.cs" />
     <Compile Include="Data\Models\IMoqPortSettingsModel.cs" />
     <Compile Include="Data\Models\ISerialPortSettingsModel.cs" />
@@ -85,8 +87,11 @@
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="_Backup\Messanger.cs" />
+    <None Include="_Backup\SerialPortAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

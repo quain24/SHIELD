@@ -6,29 +6,22 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Shield.CommonInterfaces;
+using Shield.HardwareCom.CommonInterfaces;
 using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom.Adapters
 {
     public class SerialPortAdapter : ICommunicationDevice
     {
-        /// <summary>
-        /// Wraps SerialPort for future use with interfaces
-        /// </summary>
-        private readonly SerialPort _port;
-        private readonly int _commandSize;
-        private string _receivedBuffer = string.Empty;
-
-        public event EventHandler DataReceived;
+        private  readonly SerialPort _port;
         
-        public SerialPortAdapter(SerialPort port, int commandSize)
+        public SerialPortAdapter(SerialPort port)
         {
             _port = port;
-            _commandSize = commandSize;
-            // zmienic na lokalna metode, ktora utworzy kompletny message i dopiero podniesie event na zewnatrz?
             _port.DataReceived += PropagateDataReceivedEvent;
-        }             
+        }        
+
+        public event EventHandler DataReceived;
 
         private void PropagateDataReceivedEvent(object sender, EventArgs e)
         {
@@ -54,7 +47,8 @@ namespace Shield.HardwareCom.Adapters
                 catch (IOException e)
                 {
                     // Port was not open
-                    Debug.WriteLine("MESSAGE: SerialPortAdapter Close - Port was not open! " + e.Message);
+                    Debug.WriteLine("Port was not open! " + e.Message);
+                    throw e;
                 }
             });
             closeTask.Start();
@@ -68,26 +62,17 @@ namespace Shield.HardwareCom.Adapters
         public void DiscardInBuffer()
         {
             _port.DiscardInBuffer();
-            _receivedBuffer = string.Empty;
         }        
 
-        public ICommandModel Receive()
-        {   
-            _receivedBuffer += _port.ReadExisting();
-
-
-
-
-
-
-            return new CommandModel {CommandType = Enums.CommandType.Data, Data = "Test data readed from SerialPortAdapter" };  // do testow, imoplementacja czeka!
+        public string Read()
+        {
+            return _port.ReadExisting();
         }
 
-        public void Send(ICommandModel command)
+        public void Write(string rawData)
         {
             // opracować co jeżeli nic nie zostanie zapisane - handle exceptions!
-            // przerobienie na typ string, wybór co ma wysłać i jak - tutaj czy w messanger?
-            _port.Write(command.CommandTypeString);
+            _port.Write(rawData);
         }
 
         

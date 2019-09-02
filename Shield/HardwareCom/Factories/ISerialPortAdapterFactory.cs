@@ -11,6 +11,7 @@ namespace Shield.HardwareCom.Factories
         SerialPortAdapter GivePort { get; }
 
         bool Create(int portNumber,
+                    int commandSize,
                     int baudRate = 19200,
                     int dataBits = 8,
                     Parity parity = Parity.None,

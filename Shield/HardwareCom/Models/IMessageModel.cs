@@ -2,8 +2,8 @@
 {
     public interface IMessageModel
     {
-        void Add(CommandModel command);
+        void Add(ICommandModel command);
         bool Remove(int id);
-        bool Remove(CommandModel command);
+        bool Remove(ICommandModel command);
     }
 }

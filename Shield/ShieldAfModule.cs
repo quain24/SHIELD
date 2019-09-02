@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
 using Shield.HardwareCom.Adapters;
-using Shield.HardwareCom.CommonInterfaces;
+using Shield.CommonInterfaces;
 using Shield.HardwareCom.Factories;
 using Shield.Enums;
 using Shield.HardwareCom;

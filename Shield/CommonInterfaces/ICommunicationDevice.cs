@@ -5,15 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shield.HardwareCom.CommonInterfaces
+namespace Shield.CommonInterfaces
 {
     public interface ICommunicationDevice : IDisposable
     {
         void Open();
         void Close();
         void DiscardInBuffer();
-        string Read();
-        void Write(string rawData);
+        ICommandModel Receive();
+        void Send(ICommandModel command);
         event EventHandler DataReceived;
     }
 }

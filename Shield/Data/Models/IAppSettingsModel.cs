@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Shield.Data.CommonInterfaces;
+using Shield.CommonInterfaces;
 using Shield.Enums;
 
 namespace Shield.Data.Models

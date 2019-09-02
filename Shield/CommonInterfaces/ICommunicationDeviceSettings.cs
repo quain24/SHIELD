@@ -1,8 +1,9 @@
-﻿using Shield.Data.CommonInterfaces;
-using Shield.Enums;
+﻿using Shield.Enums;
 
-namespace Shield.Data.Models
+namespace Shield.CommonInterfaces
 {
-    public interface ICommunicationDeviceSettings : ISettings{ }
-    
+    public interface ICommunicationDeviceSettings : ISettings
+    {
+
+    }
 }

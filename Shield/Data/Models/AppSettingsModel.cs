@@ -1,4 +1,4 @@
-﻿using Shield.Data.CommonInterfaces;
+﻿using Shield.CommonInterfaces;
 using Shield.Enums;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ namespace Shield.Data.Models
     // When adding new type to serialization, insert aother knowntype!
     [KnownType(typeof(SerialPortSettingsModel))]
     [KnownType(typeof(MoqPortSettingsModel))]
+    [KnownType(typeof(ApplicationSettingsModel))]
 
     [DataContract(Name = "Configuration", Namespace = "ShieldAppSettings")]
     [XmlRoot("ApplicationSettings")]

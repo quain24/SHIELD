@@ -5,22 +5,20 @@ using System.IO;
 using System.IO.Ports;
 using System.Threading.Tasks;
 using Shield.HardwareCom.Models;
-using Shield.HardwareCom.CommonInterfaces;
+using Shield.CommonInterfaces;
 using Shield.Enums;
+using Shield.Data;
+using Shield.Data.Models;
+using System;
 
 //  Metody wysyłania i odbierania sa uproszczone, TODO:
-//  -- zmienic receiver na async
-//  -- Do wysłania i odbierania ma dostac messagemodel, ktory bedzie obrabial i wywylal pojedyncze commandmodel
-//  -- Odbierac ma suche command z receiver, po czym zlaczyc w message i to oddac w razie czego
-//
-//     Obiekty sender i receiver powinny byc uzywane tylko tu, osobno jedynie do testow - lub zmiana koncepcji
+//  Po utworzeniu odpalamy setup, tam wybierany jest interfejs do komunikacji, konfigurowany jest automatycznie z danych z pliku setup.xml
+//  
+//  Send i receive beda pobierac i wysylac defaultowo jeden command - kazdy interfejs sam koduje i dekoduje raw data, messanger pracuje juz na gotowych commandach
+//  tak zostawic czy przerabiamy?
+//  
+//  Czy tu odbierac sygnaly o czesciowych danych czy tylko o kompletnej komendzie?
 
-// zmienic przyjety serial port na ICommunicationDevice - zmodyfikować sender i receiver,
-// bądź ogólnie przmyśleć tą koncepcję - zlikwidować?
-
-
-//  Jak zmienic typ na dostep do dowolnego portu (serial, usb, podobne), tak, by nie trzeba bylo zmianaic tej klasy, a jedynie jej skladowe takie
-// jak sender i receiver wysokopozioma obsluga wiadomosci powinna pozostac taka sama
 
 namespace Shield.HardwareCom
 {
@@ -30,21 +28,47 @@ namespace Shield.HardwareCom
         private ICommunicationDeviceFactory _communicationDeviceFactory;
         private IComSender _comSender;
         private IComReceiver _comReceiver;
-        private int _receivedBufferSize;
+        private int _bufferSize;
         private ICommunicationDevice _device;
+        private IAppSettings _appSettings;
 
-        public Messanger(ICommunicationDeviceFactory communicationDeviceFactory, IComSender comSender, IComReceiver comReceiver, int messageSizeBytes = 17)
+        public Messanger(IAppSettings appSettings, ICommunicationDeviceFactory communicationDeviceFactory)
+        {
+            _communicationDeviceFactory = communicationDeviceFactory;
+            _appSettings = appSettings;
+        }
+
+        public int GetBuf {get{ return _bufferSize; } }
+
+        public bool Setup(DeviceType type)
+        {
+            _device = _communicationDeviceFactory.Device(type);
+            IApplicationSettingsModel appSettings = (IApplicationSettingsModel) _appSettings.GetSettingsFor(SettingsType.Application);
+
+            if(_device is null || appSettings is null)
+                return false;
+                
+            _bufferSize = appSettings.MessageSize;
+            _device.DataReceived += DataReceivedEventHandler;
+            return true;
+        }
+
+        // Do wywalenia, poki co jest do testow
+        //
+        //
+        public Messanger(IAppSettings appSettings, ICommunicationDeviceFactory communicationDeviceFactory, IComSender comSender, IComReceiver comReceiver, int messageSizeBytes = 17)
         {
             _communicationDeviceFactory = communicationDeviceFactory;
             _comSender = comSender;
             _comReceiver = comReceiver;
-            _receivedBufferSize = messageSizeBytes;
+            _bufferSize = messageSizeBytes;
+            _appSettings = appSettings;
         }
 
         public bool Setup(DeviceType type, int additionalparameter)
         {
-            _device = _communicationDeviceFactory.Device(type, additionalparameter);            
-            if( _device != null )
+            _device = _communicationDeviceFactory.Device(type, 20, additionalparameter);            
+            if( _device is null )
             {
                 _comSender.Setup(_device);
                 return true;
@@ -52,6 +76,7 @@ namespace Shield.HardwareCom
             return false;
         }
 
+        //do wywalenia - do testow
         public SerialPort Port
         {
             get
@@ -61,10 +86,19 @@ namespace Shield.HardwareCom
             set
             {
                 _port = value;
-                _comReceiver.Setup(_port, _receivedBufferSize);
+                _comReceiver.Setup(_port, _bufferSize);
             }
         }
 
+        // odpalany jezeli jakiekolwiek dane wpadly do interfejsu komunikacji
+        // pomyslec nad zmianami - czy tu ma sie wlasciwie po co odpalac to, czy może w interfejsie partiale, 
+        // a ten dopiero jak interfejs uzbiera pelen command??
+        public void DataReceivedEventHandler(Object sender, EventArgs e )
+        {
+            _device.Receive();
+        }
+
+        //do wywalenia - testy - com receiver i sender wypadaja
         public List<string> Receive()
         {
             return _comReceiver.DataReceived;
@@ -78,7 +112,9 @@ namespace Shield.HardwareCom
 
         public void Send(ICommandModel command)
         {
-            _comSender.Send(command);
+            //_comSender.Send(command);
+            _device.Open();
+            _device.Send(command);
         }
 
         public Task Close()
@@ -105,6 +141,7 @@ namespace Shield.HardwareCom
             // await serialStream.Close();
         }
 
+        // do testow
         public void AddCommandTemp(ICommandModel command)
         {
             _comSender.Command(command);
