@@ -12,7 +12,7 @@ namespace Shield.HardwareCom.Adapters
 {
     public class MoqAdapter : ICommunicationDevice
     {
-        public event EventHandler DataReceived;
+        public event EventHandler<ICommandModel> DataReceived;
         private string _portName;
         private string _rawData;
         private bool _isOpen = false;
@@ -59,13 +59,13 @@ namespace Shield.HardwareCom.Adapters
             Debug.WriteLine("Wysłano dane do portwu obiektu \"MoqAdapter\"");
             Debug.WriteLine("Odpalono event DataReceived \"MoqAdapter\"");
             _rawData = command.CommandTypeString;
-            DataReceived?.Invoke(this, new EventArgs());
+            DataReceived?.Invoke(this, new CommandModel());
         }
 
-        private void PropagateDataReceivedEvent(object sender, EventArgs e)
+        private void PropagateDataReceivedEvent(object sender, ICommandModel e)
         {
             DataReceived?.Invoke(sender, e);
             Debug.WriteLine("Odpalono event PropagateDataReceivedEvent z \"MoqAdapter\"");
-        } 
+        }      
     }
 }

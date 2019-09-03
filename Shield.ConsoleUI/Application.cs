@@ -107,7 +107,7 @@ namespace Shield.ConsoleUI
             // na szybko wiadomosc testowa
             CommandModel mes = new CommandModel();
             mes.CommandType = CommandType.Data;
-            mes.Data = "Test Data inside test command";            
+            mes.Data = "asdfghjklopiuhssasasdadasdd";            
 
             // wyswietl porty w kompie
             foreach (var availablePort in SerialPort.GetPortNames())
@@ -121,14 +121,14 @@ namespace Shield.ConsoleUI
 
             Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
             Console.ReadLine();
-            _comMessanger.Setup(DeviceType.Serial);
+            //_comMessanger.Setup(DeviceType.Serial);
            
             // --- petla obiorczo nadawcza do testow!
             while (true)
             {
                 Console.WriteLine(  _comMessanger.GetBuf);
-                _comMessanger.Send(mes);
-                Console.WriteLine(portYY.Receive());
+                Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
+                Console.WriteLine(portYY.Receive());        // wywalalo je tutaj
                 
                 Console.WriteLine(licznik++);
                 Console.WriteLine(Process.GetCurrentProcess().Threads.Count);

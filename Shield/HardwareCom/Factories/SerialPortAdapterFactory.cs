@@ -1,5 +1,7 @@
 ﻿using Shield.Data.Models;
 using Shield.HardwareCom.Adapters;
+using Shield.HardwareCom.Models;
+using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Text;
@@ -10,6 +12,12 @@ namespace Shield.HardwareCom.Factories
     {
         private SerialPortAdapter _portAdapter;
         private SerialPort _port;
+        Func<ICommandModel> _commandModelFac;
+
+        public SerialPortAdapterFactory(Func<ICommandModel> commandModelFac)
+        {
+            _commandModelFac = commandModelFac;
+        }
 
         public bool Create(ISerialPortSettingsModel settings)
         {
@@ -47,7 +55,7 @@ namespace Shield.HardwareCom.Factories
                 Encoding = Encoding.ASCII
             };
 
-            _portAdapter = new SerialPortAdapter(_port, commandSize);
+            _portAdapter = new SerialPortAdapter(_port, commandSize, _commandModelFac);
 
             return true;
         }

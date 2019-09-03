@@ -90,12 +90,11 @@ namespace Shield.HardwareCom
             }
         }
 
-        // odpalany jezeli jakiekolwiek dane wpadly do interfejsu komunikacji
-        // pomyslec nad zmianami - czy tu ma sie wlasciwie po co odpalac to, czy może w interfejsie partiale, 
-        // a ten dopiero jak interfejs uzbiera pelen command??
-        public void DataReceivedEventHandler(Object sender, EventArgs e )
+        // do sprawdzenia!
+        public void DataReceivedEventHandler(object sender, ICommandModel e)
         {
-            _device.Receive();
+            //_device.Receive();
+            Console.WriteLine(e.CommandTypeString + e.Data);
         }
 
         //do wywalenia - testy - com receiver i sender wypadaja

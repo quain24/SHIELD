@@ -11,7 +11,7 @@ using Shield.HardwareCom.Adapters;
 using System.IO.Ports;
 using Shield.Data;
 using Shield.Data.Models;
-
+using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -25,14 +25,17 @@ namespace Shield.HardwareCom.Factories
         private readonly ISerialPortAdapterFactory _serialAdapterFactory;
         private readonly IMoqAdapterFactory _moqAdapterFactory;
         private IAppSettings _appSettings;
+        private Func<ICommandModel> _commandModelFac;
 
         public CommunicationDeviceFactory(ISerialPortAdapterFactory serialAdapterFactory,
                                           IMoqAdapterFactory moqAdapterFactory,
-                                          IAppSettings appSettings)
+                                          IAppSettings appSettings,
+                                          Func<ICommandModel> commandModelFac)
         {
             _serialAdapterFactory = serialAdapterFactory;
             _moqAdapterFactory = moqAdapterFactory;
             _appSettings = appSettings;
+            _commandModelFac = commandModelFac;
         }
            
         public ICommunicationDevice Device(DeviceType type)

@@ -14,6 +14,6 @@ namespace Shield.CommonInterfaces
         void DiscardInBuffer();
         ICommandModel Receive();
         void Send(ICommandModel command);
-        event EventHandler DataReceived;
+        event EventHandler<ICommandModel> DataReceived;
     }
 }
