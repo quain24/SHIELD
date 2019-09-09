@@ -9,7 +9,10 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Shield.CommonInterfaces;
 using Shield.HardwareCom.Models;
-using Shield.Enums; 
+using Shield.Enums;
+using Shield.Data.Models;
+using Shield.Data;
+using System.Threading;
 
 namespace Shield.HardwareCom.Adapters
 {
@@ -17,39 +20,136 @@ namespace Shield.HardwareCom.Adapters
     // -- przekazywanie eventu do messangera, tak samo danych do niego
     // -- wywala exception timeout przy receive - dlaczego tak długo odbiera prosty ciag znakow?
 
+    // Czy osobny receive jest potrzebny?
+    // constantreceiver po otwarciu portu moze dzialac lepiej, w koncu otwierasz, by nadawac i nasluchiwac ciagle.
+
+
+
     public class SerialPortAdapter : ICommunicationDevice
     {
         /// <summary>
         /// Wraps SerialPort for future use with interfaces
-        /// </summary>
+        /// Works on commandMNodel's, sends and receives them with translation from and into them
+        /// </summary>           
+
+        private const char SEPARATOR = '*';
+        private const char FILLER = '*';
+
+        private CancellationTokenSource ts = new CancellationTokenSource();   
+        private CancellationToken ct;
+
+        private object _lock = new object();
+        private object _lockStringBuilder = new object();
+
         private readonly SerialPort _port;
-        private readonly int _commandSize;
+        private int _commandSize;
+        private int _receiverInterval;
         private StringBuilder _receivedBuffer = new StringBuilder { Length = 0 };
-        private Func<ICommandModel> _commandModelFac;
+        private Func<ICommandModel> _commandModelFac;        
+        private IAppSettings _appSettings;
 
         public event EventHandler<ICommandModel> DataReceived;
-        
-        public SerialPortAdapter(SerialPort port, int commandSize, Func<ICommandModel> commandModelFac)
+
+        public SerialPortAdapter (SerialPort port, Func<ICommandModel> commandModelFac, IAppSettings appSettings)
         {
             _port = port;
-            _commandSize = commandSize; 
             _commandModelFac = commandModelFac;
-        }             
+            _appSettings = appSettings;
+        }        
 
-        // zmiana - wewnatrz tego obiektu bedzie przetwarzany sygnal odioru danych,
-        // nastepnie on wywola 
-        // sprawdzic, czy appendowanie nie zapycha nam tu bufora odbiorczego??
-
-        private void InternalDataReceived(object sender, SerialDataReceivedEventArgs e)
+        public bool Setup(ICommunicationDeviceSettings settings)
         {
-            _receivedBuffer.Append(_port.ReadExisting());
+            if(_port is null || !(settings is ISerialPortSettingsModel) || settings is null)
+                return false;
+
+            ISerialPortSettingsModel internalSettings = (ISerialPortSettingsModel) settings;
+
+            if(!SerialPort.GetPortNames().Contains($"COM{internalSettings.PortNumber}"))
+                return false;
+
+            _port.PortName = $"COM{internalSettings.PortNumber}";
+            _port.BaudRate = internalSettings.BaudRate;
+            _port.DataBits = internalSettings.DataBits;
+            _port.Parity = internalSettings.Parity;
+            _port.StopBits = internalSettings.StopBits;
+            _port.ReadTimeout = internalSettings.ReadTimeout;
+            _port.WriteTimeout = internalSettings.WriteTimeout;
+            _port.Encoding = Encoding.GetEncoding(internalSettings.Encoding);
             
-            if(_receivedBuffer.Length >= _commandSize)
-            {                
-                ICommandModel command = CommandTranslator(_receivedBuffer.ToString(0, _commandSize));
-                DataReceived?.Invoke(this, command);
+            _receiverInterval = (internalSettings.ReadTimeout / 10) <= 0 ? _receiverInterval = 0 : _receiverInterval = (internalSettings.ReadTimeout / 10);
+
+            IApplicationSettingsModel appSett = (IApplicationSettingsModel) _appSettings.GetSettingsFor(SettingsType.Application);
+
+            _commandSize = appSett.MessageSize;
+
+            return true;
+        }
+        
+        private void StartReceiving()
+        {
+            ct = ts.Token;
+            Task.Run(() => ConstantReceiverAsync(), ct);
+        }
+
+        // Do malego dopracowania / poprawek
+        private async Task ConstantReceiverAsync()
+        {
+            while (_port.IsOpen)
+            {               
+                if (ct.IsCancellationRequested)
+                {        
+                    Debug.WriteLine("constant receiver cancelled");
+                    break;
+                }
+                
+                if(_port.BytesToRead == 0 && _receivedBuffer.Length < _commandSize)
+                {
+                    await Task.Delay(_receiverInterval).ConfigureAwait(false);
+                    continue;
+                }
+
+                _receivedBuffer.Append(_port.ReadExisting());
+            
+                if(_receivedBuffer.Length >= _commandSize)
+                {
+                    lock (_lockStringBuilder)
+                    {                        
+                        int check = CheckRawData(_receivedBuffer.ToString(0, _commandSize));
+                        if(check == -1)
+                        {
+                            _receivedBuffer.Remove(0, _commandSize);
+                            continue;
+                        }
+                        else if(check > 0)
+                        {
+                            _receivedBuffer.Remove(0, check);  
+                            continue;
+                        }
+                    }
+
+                    ICommandModel command = CommandTranslator(_receivedBuffer.ToString(0, _commandSize));
+                    _receivedBuffer.Remove(0, _commandSize);
+                    DataReceived?.Invoke(this, command);
+                }
             }
         }
+
+        /// <summary>
+        /// Internal check of incoming data.
+        /// <para>takes raw data and returns either '0' if correct, '-1' if compleatly bad or '(int) index to which to remove' if another try could be succesfull</para> 
+        /// </summary>
+        /// <param name="data">Input string - typically a Command-sized part of received data</param>
+        /// <returns>Index to start a correction of received buffer or 0 when input is in correct format</returns>
+        private int CheckRawData(string data)
+        {                        
+            if(data.IndexOf(SEPARATOR, 1) < 5)
+                return  data.IndexOf(SEPARATOR, 1);
+
+            if(data[0] == SEPARATOR)
+                return 0;
+
+            return data.IndexOf(SEPARATOR);           
+        }      
 
         private ICommandModel CommandTranslator(string rawData)
         {           
@@ -59,11 +159,11 @@ namespace Shield.HardwareCom.Adapters
 
             if(rawData.Length >= 6)
             {
-                rawCom = rawData.Substring(0, 6);    // Command in *0123* format (including asterisc)
+                rawCom = rawData.Substring(0, 6);    // Command in *0123* format (including asterisc or other SEPARATOR)
                 rawDat = rawData.Substring(6);       // Data, lenght of _commandSize minus 6 (command type header) as asdffasdf... and so on            
             
-                if (rawCom.First() == '*' &&
-                    rawCom.Last() == '*')  
+                if (rawCom.First() == SEPARATOR &&
+                    rawCom.Last() == SEPARATOR)  
                 {
                     int rawComInt;
                     if(Int32.TryParse(rawCom.Substring(1, 4), out rawComInt))
@@ -78,31 +178,51 @@ namespace Shield.HardwareCom.Adapters
             if(command.CommandType == CommandType.Empty)
                 command.CommandType = CommandType.Error;
 
-            if(command.CommandType != CommandType.Error)
+            if(command.CommandType != CommandType.Error || command.CommandType != CommandType.Empty)
                 command.Data = rawDat;
 
             return command;            
+        }   
+
+        private string CommandTranslator(ICommandModel givenCommand)
+        {
+            if(givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
+                return string.Empty;
+
+            StringBuilder command = new StringBuilder(SEPARATOR.ToString());
+
+            command.Append(givenCommand.CommandType.ToString().PadLeft(4, '0')).Append(SEPARATOR);
+
+            if(givenCommand.CommandType == CommandType.Data)
+                command.Append(givenCommand.Data);
+            
+            if(command.Length < _commandSize)
+                command.Append(FILLER, _commandSize - command.Length);
+
+            return command.ToString();
         }
-        private void PropagateDataReceivedEvent(object sender, ICommandModel e)
-        {
-            this.DataReceived?.Invoke(sender, e);
-        }        
-        
+
+
+        // pomyslec nad tym
         public void Open()
-        {
-            if (_port != null && !_port.IsOpen)
-            {
-                _port.Open();
-                _port.DataReceived += InternalDataReceived;
+        {          
+            lock (_lock)
+            { 
+                if (_port != null && !_port.IsOpen)
+                {   
+                    _port.Open();
+                    StartReceiving();                  
+                } 
             }
         }
         public void Close()
         {
+            ts.Cancel();
             // Close the serial port in a new thread
             Task closeTask = new Task(() =>
             {
                 try
-                {
+                {                    
                     _port.Close();
                 }
                 catch (IOException e)
@@ -128,6 +248,7 @@ namespace Shield.HardwareCom.Adapters
         // Do sprawdzenia, do zobaczenia jak to złączyć z messangerem
         public ICommandModel Receive()
         {
+            //Czy to w ogole bedzie potrzebne, skoro nasluch jest caly czas?
 
             // Działa lepiej jako task, czyli zapycha watek?
             // jak to zmienic? Czy trzeba, jeżeli będzie działało z messangera - tam nowy watek?
@@ -148,6 +269,16 @@ namespace Shield.HardwareCom.Adapters
         {
             // opracować co jeżeli nic nie zostanie zapisane - handle exceptions!
             // przerobienie na typ string, wybór co ma wysłać i jak - tutaj czy w messanger?
+            // poprawić - na razie po macoszemu napisane
+            // co jezeli nie ma dokad wyslac - port odbiorczy jest zamkniety - handle exce
+
+            // czy tutaj ma byc wysylanie w osobnym watku, czy w miejscu wywołania????
+            
+           // Task.Run(() =>{
+
+
+            if(command is null)
+                return;
             bool err = false;
             int tmpRawCommandType = (int) command.CommandType;
             string rawCommandType = tmpRawCommandType.ToString();
@@ -156,21 +287,20 @@ namespace Shield.HardwareCom.Adapters
             else
             {            
                 rawCommandType = rawCommandType.PadLeft(4, '0');
-                rawCommandType = '*' + rawCommandType + '*';
+                rawCommandType = SEPARATOR + rawCommandType + SEPARATOR;
             }
 
             if(!err)
                 rawCommandType += command.Data;
-            Open();
             _port.Write(rawCommandType);
-
+        //});
         }
-
+        
         
 
         public void Dispose()
         {   
-            _port.DataReceived -= InternalDataReceived;
+            ts.Cancel();
             _port.Close();
         }
     }

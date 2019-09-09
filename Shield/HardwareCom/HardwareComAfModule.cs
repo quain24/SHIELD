@@ -10,6 +10,9 @@ using Autofac.Core;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Factories;
 using Shield.Enums;
+using Shield.CommonInterfaces;
+using Shield.HardwareCom.Models;
+using Shield.Data;
 
 namespace Shield.HardwareCom
 {
@@ -17,43 +20,54 @@ namespace Shield.HardwareCom
     {
         protected override void Load(ContainerBuilder builder)
         {
-            //builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(HardwareCom)}"))
-            //       .Except<ComPortFactory>(cpf => cpf.As<IComPortFactory>().SingleInstance())
-            //       .Except<CommunicationDeviceFactory>(cdf => cdf.As<ICommunicationDeviceFactory>().SingleInstance());
-                   //.Except<SerialPortAdapter>(spa => spa.As<ICommunicationDevice>()
-                   //                                     .Keyed<ICommunicationDevice>(DeviceType.serial)
-                   //                                     .WithParameter(new ResolvedParameter(                                                                 
-                   //                                                   (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
-                   //                                                   (pi, ctx) => new SerialPort())))
-                   //.Except<MoqAdapter>(moq => moq.As<ICommunicationDevice>()
-                   //                              .Keyed<ICommunicationDevice>(DeviceType.moq))
-                   
-                                      
-                //.Except<ComSender>(cs => cs.As<IComSender>()
-                //    .WithParameter(
-                //        new ResolvedParameter(
-                //            (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
-                //            (pi, ctx) => new SerialPort()
-                //            )
-                //        )
-                //    )
-                //.AsImplementedInterfaces()
-                //.InstancePerDependency();
-
-
             // Models registration (single interface per model)
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.Name.EndsWith("Model"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
+
+            // System internals registration - MicroSoft
+            builder.RegisterType<SerialPort>().AsSelf();
 
             // Factories registration (single interface per factory) both normal and autofac's factories
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Where(t => t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
-
-            builder.RegisterType<SerialPort>().AsSelf();
             
+            #region Communication Device Factory
+            //builder.RegisterType<SerialPortAdapter>()
+            //       .Keyed<ICommunicationDevice>(DeviceType.Serial)
+            //       .WithParameter(new ResolvedParameter(
+            //                     (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
+            //                     (pi, ctx) => ctx.Resolve<SerialPort>()))
+            //       .WithParameter(new ResolvedParameter(
+            //                     (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
+            //                     (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()))
+            //       .WithParameter(new ResolvedParameter(
+            //                     (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
+            //                     (pi, ctx) => ctx.Resolve<IAppSettings>()));
+            
+            builder.RegisterType<SerialPortAdapter>()
+                   .Keyed<ICommunicationDevice>(DeviceType.Serial)
+                   .WithParameters(new []{
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
+                                       (pi, ctx) => ctx.Resolve<SerialPort>()), 
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
+                                       (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
+                                       (pi, ctx) => ctx.Resolve<IAppSettings>())});
+
+            builder.RegisterType<MoqAdapter>()
+                   .Keyed<ICommunicationDevice>(DeviceType.Moq)
+                   .WithParameter(new ResolvedParameter(
+                                 (pi, ctx) => pi.ParameterType == typeof(string) && pi.Name == "portName",
+                                 (pi, ctx) => "1"));
+            #endregion
+
+
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Except<IMessanger>()

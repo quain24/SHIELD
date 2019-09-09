@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO.Ports;
 using Shield.Enums;
+using System.Runtime.Serialization;
 
 namespace Shield.Data.Models
 {
@@ -17,6 +18,8 @@ namespace Shield.Data.Models
         public Parity Parity { get; set; }
         public StopBits StopBits { get; set; }
         public DeviceType DeviceType { get; set; }
-        public int CommandSize { get; set;}
+        public int ReadTimeout { get; set; }
+        public int WriteTimeout { get; set; }
+        public int Encoding { get; set; }
     }
 }

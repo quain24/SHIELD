@@ -12,6 +12,7 @@ using System.Diagnostics;
 using Shield.Enums;
 using Shield.Data;
 using Shield.Data.Models;
+using System.Threading;
 
 namespace Shield.ConsoleUI
 {
@@ -20,16 +21,12 @@ namespace Shield.ConsoleUI
         private ICommandModel _command;
         private ICommunicationDeviceFactory _deviceFactory;
         private IMessanger _comMessanger;
-        private IComSender _comSender;
-        private IComReceiver _comReceiver;
         private IAppSettings _setman;
 
-        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IComSender comSender, IComReceiver comReceiver)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command)
         {           
             _command = command;           
             _deviceFactory = deviceFactory;
-            _comSender = comSender;
-            _comReceiver = comReceiver;
             _setman = setman;
         }
         public void Run()
@@ -38,15 +35,17 @@ namespace Shield.ConsoleUI
             appset.MessageSize = 20;
 
 
-            // testowanie zapisywania i wczytywania ustawien - działa - tymczaasowo wygaszono, tylko wczytuje z pliku - automat
+            // testowanie zapisywania ustawien - działa - 
 
             ISerialPortSettingsModel settings = new SerialPortSettingsModel();
             settings.BaudRate = 19200;
-            settings.DataBits = 6;
+            settings.DataBits = 8;
             settings.Parity = Parity.None;
             settings.PortNumber = 5;
             settings.StopBits = StopBits.One;
-            settings.CommandSize = 20;
+            settings.ReadTimeout = 2000;
+            settings.WriteTimeout = 2000;
+            settings.Encoding = Encoding.ASCII.CodePage;
 
             IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
             settings2.PortNumber = 6;
@@ -56,15 +55,18 @@ namespace Shield.ConsoleUI
             _setman.Add(SettingsType.MoqDevice, settings2);
             _setman.Add(SettingsType.Application, appset);
             _setman.SaveToFile();
-            
+
             foreach (var item in _setman.GetAll())
             {
                 Console.WriteLine("Pozycja sprzed wczytania:");
                 Console.WriteLine(item.Key.ToString() + " " + item.Value.ToString());
             }
 
+            // wczytywanie ustawien
             _setman.LoadFromFile();
             
+            
+
             // Prymityne wyswietlanie wartosci
             foreach (var item in _setman.GetAll())
             {
@@ -92,22 +94,27 @@ namespace Shield.ConsoleUI
                     Console.WriteLine(readed.Parity);
                     Console.WriteLine(readed.PortNumber);
                     Console.WriteLine(readed.StopBits);
+                    Console.WriteLine(readed.ReadTimeout);
+                    Console.WriteLine(readed.WriteTimeout);
+                    Console.WriteLine(readed.Encoding.ToString());
                 }                
             }
             
             // ICommunicationDevice portXX = _deviceFactory.Device(DeviceType.serial, 5); - przeniesione do messangera
-            ICommunicationDevice portYY = _deviceFactory.Device(DeviceType.Serial, 6, 20);
-            portYY.Open();
+            //ICommunicationDevice portYY = _deviceFactory.Device(DeviceType.Serial, 6, 20);
+            
+            //portYY.Open();
 
-            ICommunicationDevice portZZ = _deviceFactory.Device(DeviceType.Serial);
+            //ICommunicationDevice portZZ = _deviceFactory.Device(DeviceType.Serial);
 
             _comMessanger = new Messanger(_setman, _deviceFactory);
             _comMessanger.Setup(DeviceType.Serial);
 
-            // na szybko wiadomosc testowa
+            // na szybko wiadomosc testowa 
+
             CommandModel mes = new CommandModel();
             mes.CommandType = CommandType.Data;
-            mes.Data = "asdfghjklopiuhssasasdadasdd";            
+            mes.Data = "aaaaaaaaaaaaaa"; 
 
             // wyswietl porty w kompie
             foreach (var availablePort in SerialPort.GetPortNames())
@@ -120,22 +127,50 @@ namespace Shield.ConsoleUI
             int licznik = 0;
 
             Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
+
+
+
             Console.ReadLine();
             //_comMessanger.Setup(DeviceType.Serial);
-           
+
             // --- petla obiorczo nadawcza do testow!
+
+            //_comMessanger.Send(null);
+
+
+
+            //Task.Run(async () =>
+            //{
+            //    while (true)
+            //    {
+            //        _comMessanger.Send(mes);
+            //        await Task.Delay(1);
+            //        //Thread.Sleep(10);
+            //        licznik++;
+            //    }
+            //});
+
+            _comMessanger.Open();
+
+
             while (true)
             {
-                Console.WriteLine(  _comMessanger.GetBuf);
-                Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
-                Console.WriteLine(portYY.Receive());        // wywalalo je tutaj
-                
+                //Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
+
+                //_comMessanger.Send(mes);
                 Console.WriteLine(licznik++);
-                Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
-                
+                Thread.Sleep(10);       // Spowolnienie daje oddech i pozwala na wyswietlenie wiadomosci odbiorczej - inaczej przeciez glowny watek zapcha wszystko!
+                if(licznik > 100000)
+                    break;
+
+
             }
-        }    
-        
+            _comMessanger.Close();
+            Console.WriteLine("Waiting for signal...");
+            Console.ReadLine();
+            
+        }
+
         void eve(object sender, EventArgs a)
         {
             //Console.WriteLine("Event został odpalony");

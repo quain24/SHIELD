@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Shield.CommonInterfaces;
 using System.IO.Ports;
 using Shield.HardwareCom.Models;
+using Shield.Data.Models;
 
 namespace Shield.HardwareCom.Adapters
 {
@@ -66,6 +67,15 @@ namespace Shield.HardwareCom.Adapters
         {
             DataReceived?.Invoke(sender, e);
             Debug.WriteLine("Odpalono event PropagateDataReceivedEvent z \"MoqAdapter\"");
-        }      
+        }
+
+        public bool Setup(ICommunicationDeviceSettings settings)
+        {
+            IMoqPortSettingsModel internalSettings = (IMoqPortSettingsModel) settings;
+
+            _portName = internalSettings.PortNumber.ToString();
+
+            return true;
+        }
     }
 }

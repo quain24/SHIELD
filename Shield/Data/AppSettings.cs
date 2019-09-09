@@ -28,7 +28,7 @@ namespace Shield.Data
 
         private IAppSettingsModel _appSettingsModel;
         private bool _wasInitialized = false;
-        private Object _lock = new Object();
+        private object _lock = new object();
 
         public AppSettings(IAppSettingsModel AppSettingsModel)
         {

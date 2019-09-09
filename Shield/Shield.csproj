@@ -68,8 +68,6 @@
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
-    <Compile Include="HardwareCom\ComReceiver.cs" />
-    <Compile Include="HardwareCom\ComSender.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
     <Compile Include="HardwareCom\Factories\ICommunicationDeviceFactory.cs" />
     <Compile Include="HardwareCom\Factories\IMoqAdapterFactory.cs" />
@@ -77,8 +75,6 @@
     <Compile Include="HardwareCom\Factories\MoqAdapterFactory.cs" />
     <Compile Include="HardwareCom\Factories\SerialPortAdapterFactory.cs" />
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
-    <Compile Include="HardwareCom\IComReceiver.cs" />
-    <Compile Include="HardwareCom\IComSender.cs" />
     <Compile Include="HardwareCom\IMessanger.cs" />
     <Compile Include="HardwareCom\Messanger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />
@@ -87,6 +83,7 @@
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="_Backup\CommunicationDeviceFactory.cs" />
     <None Include="_Backup\Messanger.cs" />
     <None Include="_Backup\SerialPortAdapter.cs" />
   </ItemGroup>

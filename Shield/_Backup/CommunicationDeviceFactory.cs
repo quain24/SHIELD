@@ -26,10 +26,8 @@ namespace Shield.HardwareCom.Factories
         private readonly IMoqAdapterFactory _moqAdapterFactory;
         private IAppSettings _appSettings;
         private Func<ICommandModel> _commandModelFac;
-        private IIndex<DeviceType, ICommunicationDevice> _deviceFactory;
 
         public CommunicationDeviceFactory(ISerialPortAdapterFactory serialAdapterFactory,
-                                          IIndex<DeviceType, ICommunicationDevice> deviceFactory,
                                           IMoqAdapterFactory moqAdapterFactory,
                                           IAppSettings appSettings,
                                           Func<ICommandModel> commandModelFac)
@@ -38,40 +36,37 @@ namespace Shield.HardwareCom.Factories
             _moqAdapterFactory = moqAdapterFactory;
             _appSettings = appSettings;
             _commandModelFac = commandModelFac;
-            _deviceFactory = deviceFactory;
         }
            
         public ICommunicationDevice Device(DeviceType type)
-        {                       
+        {                       // To trzeba przerobic po pozbyciu sie create bioracej parametry w konstruktorze - zbedne poza testami
             switch (type)
             {
-               case DeviceType.Serial:
+                case DeviceType.Serial:
                     ISerialPortSettingsModel settings = (ISerialPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.SerialDevice);
-                    ICommunicationDevice device = _deviceFactory[type];
-                    if(device.Setup(settings))
-                        return device;
+                    if(_serialAdapterFactory.Create(settings))
+                        return _serialAdapterFactory.GivePort;
                     else
-                        break;                    
-               
-               case DeviceType.Moq:
+                        break;
+
+                    //return Device(type, settings.PortNumber, settings.CommandSize, settings.BaudRate, settings.DataBits, settings.Parity, settings.StopBits);
+                
+                case DeviceType.Moq:
                     IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.MoqDevice);
-                    ICommunicationDevice device2 = _deviceFactory[type];
-                    if(device2.Setup(settings2))
-                       return device2;
-                    else
-                       break;
+                    return Device(type, settings2.PortNumber, 0, 0, 0, 0, 0);
 
                 default:
                     string err = $@"ERROR: CommunicationDeviceFactory Device - no device at ""{type}"" position in deviceType enum";
                     Debug.WriteLine(err);
                     return null;                    
             }
+
             return null;
         }
 
-        // do usuniecia - kiedy bedzie koniec testow!
         public ICommunicationDevice Device(DeviceType typeOfDevice,
                                            int portNumber,
+                                           int commandSize,
                                            int baudRate,
                                            int dataBits,
                                            Parity parity,
@@ -80,7 +75,7 @@ namespace Shield.HardwareCom.Factories
             switch (typeOfDevice)
             {
                 case DeviceType.Serial:
-                    if (_serialAdapterFactory.Create(portNumber, baudRate, dataBits, parity, stopBits))
+                    if (_serialAdapterFactory.Create(portNumber, commandSize, baudRate, dataBits, parity, stopBits))
                         return _serialAdapterFactory.GivePort;
                     break;
 

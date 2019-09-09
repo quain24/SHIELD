@@ -1,4 +1,6 @@
-﻿using Shield.Data.Models;
+﻿using Shield.CommonInterfaces;
+using Shield.Data;
+using Shield.Data.Models;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Models;
 using System;
@@ -22,7 +24,6 @@ namespace Shield.HardwareCom.Factories
         public bool Create(ISerialPortSettingsModel settings)
         {
             return Create(settings.PortNumber,
-                          settings.CommandSize,
                           settings.BaudRate,
                           settings.DataBits,
                           settings.Parity,
@@ -30,7 +31,6 @@ namespace Shield.HardwareCom.Factories
         }
 
         public bool Create(int portNumber,
-                           int commandSize,
                            int baudRate,
                            int dataBits,
                            Parity parity,
@@ -55,12 +55,12 @@ namespace Shield.HardwareCom.Factories
                 Encoding = Encoding.ASCII
             };
 
-            _portAdapter = new SerialPortAdapter(_port, commandSize, _commandModelFac);
+            _portAdapter = new SerialPortAdapter(_port, _commandModelFac, null);
 
             return true;
         }
 
-        public SerialPortAdapter GivePort => _portAdapter;
+        public ICommunicationDevice GivePort => _portAdapter;
 
         public List<string> AvailablePorts
         {

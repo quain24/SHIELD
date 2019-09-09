@@ -10,7 +10,12 @@ using System.Xml.Serialization;
 
 namespace Shield.Data.Models
 {
-    // When adding new type to serialization, insert aother knowntype!
+    /// <summary>
+    /// Contains all of the availible settings, for serialization and deserialization. Is used by AppSettings object to give and store settings
+    /// not to be used alone
+    /// </summary>
+
+    // When adding new type to serialization, insert another knowntype!
     [KnownType(typeof(SerialPortSettingsModel))]
     [KnownType(typeof(MoqPortSettingsModel))]
     [KnownType(typeof(ApplicationSettingsModel))]

@@ -24,10 +24,7 @@ namespace Shield.HardwareCom
 {
     public class Messanger : IMessanger
     {
-        private SerialPort _port = null;
         private ICommunicationDeviceFactory _communicationDeviceFactory;
-        private IComSender _comSender;
-        private IComReceiver _comReceiver;
         private int _bufferSize;
         private ICommunicationDevice _device;
         private IAppSettings _appSettings;
@@ -37,8 +34,6 @@ namespace Shield.HardwareCom
             _communicationDeviceFactory = communicationDeviceFactory;
             _appSettings = appSettings;
         }
-
-        public int GetBuf {get{ return _bufferSize; } }
 
         public bool Setup(DeviceType type)
         {
@@ -53,97 +48,28 @@ namespace Shield.HardwareCom
             return true;
         }
 
-        // Do wywalenia, poki co jest do testow
-        //
-        //
-        public Messanger(IAppSettings appSettings, ICommunicationDeviceFactory communicationDeviceFactory, IComSender comSender, IComReceiver comReceiver, int messageSizeBytes = 17)
+        public void Open()
         {
-            _communicationDeviceFactory = communicationDeviceFactory;
-            _comSender = comSender;
-            _comReceiver = comReceiver;
-            _bufferSize = messageSizeBytes;
-            _appSettings = appSettings;
+            _device.Open();
         }
 
-        public bool Setup(DeviceType type, int additionalparameter)
-        {
-            _device = _communicationDeviceFactory.Device(type, 20, additionalparameter);            
-            if( _device is null )
-            {
-                _comSender.Setup(_device);
-                return true;
-            }
-            return false;
-        }
 
-        //do wywalenia - do testow
-        public SerialPort Port
+        public void Close()
         {
-            get
-            {
-                return _port;
-            }
-            set
-            {
-                _port = value;
-                _comReceiver.Setup(_port, _bufferSize);
-            }
+            _device.Close();
         }
 
         // do sprawdzenia!
         public void DataReceivedEventHandler(object sender, ICommandModel e)
         {
-            //_device.Receive();
-            Console.WriteLine(e.CommandTypeString + e.Data);
-        }
-
-        //do wywalenia - testy - com receiver i sender wypadaja
-        public List<string> Receive()
-        {
-            return _comReceiver.DataReceived;
-        }
-
-        // Testowa wersja metody async, domyslnie i tak caly com receiver bedzie async!
-        public async Task<List<string>> ReceiveAsync()
-        {
-            return await Task.Run(() => _comReceiver.DataReceived).ConfigureAwait(false);
+            // tutaj zmiana do listy powiedzmy wiadomosci, ogolnie pomyslec co kiedy przejdziemy na gui - nie bedzie przeciez w konsoli wyswietlac
+            // obecnie tylko wywala dane do konsoli
+            Console.WriteLine(e.CommandTypeString + " " + e.Data + " received signal");
         }
 
         public void Send(ICommandModel command)
         {
-            //_comSender.Send(command);
-            _device.Open();
             _device.Send(command);
-        }
-
-        public Task Close()
-        {
-            // Close the serial port in a new thread
-            Task closeTask = new Task(() =>
-            {
-                try
-                {
-                    _port.Close();
-                }
-                catch (IOException e)
-                {
-                    // Port was not open
-                    Debug.WriteLine("Port was not open! " + e.Message);
-                    throw e;
-                }
-            });
-            closeTask.Start();
-
-            return closeTask;
-
-            // odniorca:
-            // await serialStream.Close();
-        }
-
-        // do testow
-        public void AddCommandTemp(ICommandModel command)
-        {
-            _comSender.Command(command);
-        }       
+        }  
     }
 }

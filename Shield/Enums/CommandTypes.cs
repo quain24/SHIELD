@@ -23,6 +23,7 @@ namespace Shield.Enums
         Completed,
         Correct,
         Error,
+        Partial,
         Data
     }
 }

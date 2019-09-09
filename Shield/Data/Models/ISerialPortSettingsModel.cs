@@ -1,4 +1,5 @@
 ﻿using System.IO.Ports;
+using System.Text;
 using Shield.CommonInterfaces;
 
 namespace Shield.Data.Models
@@ -10,6 +11,8 @@ namespace Shield.Data.Models
         Parity Parity { get; set; }
         int PortNumber { get; set; }
         StopBits StopBits { get; set; }
-        int CommandSize { get; set;}
+        int ReadTimeout { get; set; }
+        int WriteTimeout { get; set; }
+        int Encoding { get; set; }
     }
 }
