@@ -13,15 +13,24 @@ using System.Reflection;
 using Autofac.Extras.Moq;
 using Shield.Data.Models;
 using Shield.Data;
+using Autofac.Core;
 
 namespace ShieldTests.HardwareCom.Adapters
 {  
 
     public class SerialPortAdapterTests
     {
+        IAppSettings _appsettings;
+        SerialPortAdapter _adapter;
+
+        public SerialPortAdapterTests(IAppSettings appsettings)
+        {
+            _appsettings = appsettings;
+            _adapter = new SerialPortAdapter(new SerialPort("COM5"), new Func<ICommandModel>(() => new CommandModel()), _appsettings);
+        }
 
         static IAppSettings appSettings = new AppSettings(new AppSettingsModel());
-        SerialPortAdapter adapter = new SerialPortAdapter(new SerialPort("COM5"), 20, new Func<ICommandModel>(() => new CommandModel()));
+         
         ICommandModel properCommandTypeHandhake = new CommandModel{ CommandType = CommandType.HandShake, Data = "00000000000000" };
 
 
@@ -33,6 +42,7 @@ namespace ShieldTests.HardwareCom.Adapters
         [InlineData(@"*0002*", CommandType.Confirm, @"")]
         public void CommandTranslator_returnsValidCommandObjectGivenValidData(string rawData, CommandType expectedType, string expectedData) 
         {
+            _adapter = new SerialPortAdapter(new SerialPort("COM5"), new Func<ICommandModel>(() => new CommandModel()), _appsettings);
             MethodInfo methodInfo = typeof(SerialPortAdapter).GetMethod("CommandTranslator", 
                                     BindingFlags.NonPublic | BindingFlags.Instance,
                                     null,
@@ -40,7 +50,7 @@ namespace ShieldTests.HardwareCom.Adapters
                                     null);
 
             object[] parameters = {rawData};
-            ICommandModel aa = (ICommandModel) methodInfo.Invoke(adapter, parameters);
+            ICommandModel aa = (ICommandModel) methodInfo.Invoke(_adapter, parameters);
 
             Assert.Equal(aa.CommandType, expectedType);
             Assert.Equal(aa.Data, expectedData);           
@@ -61,7 +71,7 @@ namespace ShieldTests.HardwareCom.Adapters
                                     null);
 
             object[] parameters = {rawData};
-            ICommandModel aa = (ICommandModel) methodInfo.Invoke(adapter, parameters);
+            ICommandModel aa = (ICommandModel) methodInfo.Invoke(_adapter, parameters);
 
             Assert.Equal(aa.CommandType, expectedType);
             Assert.Equal(aa.Data, expectedData);
@@ -82,7 +92,7 @@ namespace ShieldTests.HardwareCom.Adapters
 
             object[] parameters = {properCommandTypeData };
 
-            string aa = (string) methodInfo.Invoke(adapter, parameters);
+            string aa = (string) methodInfo.Invoke(_adapter, parameters);
             string comType = givenType.ToString().PadLeft(4, '0');
             comType = '*' + comType + '*';
 

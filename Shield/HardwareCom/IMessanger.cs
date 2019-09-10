@@ -8,7 +8,8 @@ namespace Shield.HardwareCom
 {
     public interface IMessanger
     {
-        void Send(ICommandModel comand);
+        Task SendAsync(ICommandModel comand);
+        void Send(ICommandModel command);
         bool Setup(DeviceType type);
 
         void Open();

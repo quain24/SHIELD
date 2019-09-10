@@ -56,7 +56,7 @@ namespace Shield.HardwareCom
 
         public void Close()
         {
-            _device.Close();
+            _device.Dispose();
         }
 
         // do sprawdzenia!
@@ -67,9 +67,18 @@ namespace Shield.HardwareCom
             Console.WriteLine(e.CommandTypeString + " " + e.Data + " received signal");
         }
 
+        // w domysle bedzie chyba wysylalo paczke wiadomosci po utworzeniu, albo pojedyncza wiadomosc - zalezy, 
+        // czy plan jest taki, by komunikacja byla widomosc - odpowiedz - wiadomosc - itd...
+        // czy wiadomosc, wiadomosc, wiadomosc - odpowiedz
+        public async Task SendAsync(ICommandModel command)
+        {
+            await _device.SendAsync(command);
+        }
+
+        // do zrobienia - sprawdzenia?
         public void Send(ICommandModel command)
         {
             _device.Send(command);
-        }  
+        }
     }
 }

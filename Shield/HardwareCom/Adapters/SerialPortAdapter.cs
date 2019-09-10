@@ -32,6 +32,8 @@ namespace Shield.HardwareCom.Adapters
         /// Works on commandMNodel's, sends and receives them with translation from and into them
         /// </summary>           
 
+        #region Internal variables and events
+
         private const char SEPARATOR = '*';
         private const char FILLER = '*';
 
@@ -40,6 +42,7 @@ namespace Shield.HardwareCom.Adapters
 
         private object _lock = new object();
         private object _lockStringBuilder = new object();
+        private object _lockSender = new object();
 
         private readonly SerialPort _port;
         private int _commandSize;
@@ -50,6 +53,8 @@ namespace Shield.HardwareCom.Adapters
 
         public event EventHandler<ICommandModel> DataReceived;
 
+        #endregion
+
         public SerialPortAdapter (SerialPort port, Func<ICommandModel> commandModelFac, IAppSettings appSettings)
         {
             _port = port;
@@ -57,6 +62,11 @@ namespace Shield.HardwareCom.Adapters
             _appSettings = appSettings;
         }        
 
+        /// <summary>
+        /// MANDATORY setup, without it this instance will not work.
+        /// </summary>
+        /// <param name="settings">Configuration from AppSettings for this type of device</param>
+        /// <returns>True if successfull</returns>
         public bool Setup(ICommunicationDeviceSettings settings)
         {
             if(_port is null || !(settings is ISerialPortSettingsModel) || settings is null)
@@ -85,13 +95,27 @@ namespace Shield.HardwareCom.Adapters
             return true;
         }
         
-        private void StartReceiving()
+        /// <summary>
+        /// Starts a receiving task in the background to constantly monitor incoming data.
+        /// </summary>
+        private async void StartReceiving()
         {
             ct = ts.Token;
-            Task.Run(() => ConstantReceiverAsync(), ct);
+            try
+            {
+                await Task.Run(() => ConstantReceiverAsync(), ct);
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(@"INFO - SerialPortAdapter - StartReceiving: Thread of ConstantReceiverAsync was cancelled");
+            }
         }
 
-        // Do malego dopracowania / poprawek
+        /// <summary>
+        /// Designed to be put in a seprate Task, constantly reading bytes from serial port,
+        /// initially correcting data if needed and outputting a CommandModel when raw command is received.
+        /// </summary>
+        /// <returns></returns>
         private async Task ConstantReceiverAsync()
         {
             while (_port.IsOpen)
@@ -104,17 +128,24 @@ namespace Shield.HardwareCom.Adapters
                 
                 if(_port.BytesToRead == 0 && _receivedBuffer.Length < _commandSize)
                 {
-                    await Task.Delay(_receiverInterval).ConfigureAwait(false);
+                    await Task.Delay(_receiverInterval, ct);
                     continue;
                 }
 
-                _receivedBuffer.Append(_port.ReadExisting());
+                lock(_lockStringBuilder)
+                {
+                    _receivedBuffer.Append(_port.ReadExisting());
+                }                               
             
                 if(_receivedBuffer.Length >= _commandSize)
                 {
                     lock (_lockStringBuilder)
-                    {                        
-                        int check = CheckRawData(_receivedBuffer.ToString(0, _commandSize));
+                    {         
+                        _receivedBuffer = RemoveNonAsciiChars(_receivedBuffer.ToString());
+                        if(_receivedBuffer.Length < _commandSize)
+                            continue;
+
+                        int check = CheckRawData(_receivedBuffer.ToString());
                         if(check == -1)
                         {
                             _receivedBuffer.Remove(0, _commandSize);
@@ -141,7 +172,7 @@ namespace Shield.HardwareCom.Adapters
         /// <param name="data">Input string - typically a Command-sized part of received data</param>
         /// <returns>Index to start a correction of received buffer or 0 when input is in correct format</returns>
         private int CheckRawData(string data)
-        {                        
+        {        
             if(data.IndexOf(SEPARATOR, 1) < 5)
                 return  data.IndexOf(SEPARATOR, 1);
 
@@ -149,8 +180,25 @@ namespace Shield.HardwareCom.Adapters
                 return 0;
 
             return data.IndexOf(SEPARATOR);           
-        }      
+        }    
+        
+        private StringBuilder RemoveNonAsciiChars(string data)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in data) 
+            {
+               if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == SEPARATOR || c == FILLER)
+                   sb.Append(c);               
+            }
 
+            return sb;            
+        }
+
+        /// <summary>
+        /// Takes a preformatted string of raw data and translates it to a single CommandModel
+        /// </summary>
+        /// <param name="rawData">preformatted string, typically from received buffer</param>
+        /// <returns>Single command in CommandModel format</returns>
         private ICommandModel CommandTranslator(string rawData)
         {           
             ICommandModel command = _commandModelFac();
@@ -184,6 +232,11 @@ namespace Shield.HardwareCom.Adapters
             return command;            
         }   
 
+        /// <summary>
+        /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
+        /// </summary>
+        /// <param name="givenCommand">Command to be trasformed into raw string</param>
+        /// <returns>Raw formatted string that can be understood by connected machine</returns>
         private string CommandTranslator(ICommandModel givenCommand)
         {
             if(givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
@@ -237,13 +290,7 @@ namespace Shield.HardwareCom.Adapters
 
             // odniorca:
             // await serialStream.Close();
-        }
-
-        public void DiscardInBuffer()
-        {
-            _port.DiscardInBuffer();
-            _receivedBuffer.Clear().Length = 0;
-        }        
+        }       
 
         // Do sprawdzenia, do zobaczenia jak to złączyć z messangerem
         public ICommandModel Receive()
@@ -265,43 +312,85 @@ namespace Shield.HardwareCom.Adapters
             return new CommandModel {CommandType = Enums.CommandType.Data, Data = "Test data readed from SerialPortAdapter" };  // do testow, imoplementacja czeka!
         }
 
-        public void Send(ICommandModel command)
+        /// <summary>
+        /// Sends a raw command string taken from input CommandModel to the receiving device.
+        /// </summary>
+        /// <param name="command">Single command to transfer</param>
+        /// <returns>Task<bool> if sends or failes</bool></returns>
+        public async Task<bool> SendAsync(ICommandModel command)
         {
-            // opracować co jeżeli nic nie zostanie zapisane - handle exceptions!
-            // przerobienie na typ string, wybór co ma wysłać i jak - tutaj czy w messanger?
-            // poprawić - na razie po macoszemu napisane
-            // co jezeli nie ma dokad wyslac - port odbiorczy jest zamkniety - handle exce
+            return await Task.Run((Func<bool>) ( () => 
+            {
+                if(command is null)
+                    return false;
 
-            // czy tutaj ma byc wysylanie w osobnym watku, czy w miejscu wywołania????
-            
-           // Task.Run(() =>{
+                string raw = CommandTranslator(command);
 
+                if(!string.IsNullOrEmpty(raw))
+                {
+                    try
+                    {                    
+                        _port.Write(raw);
+                        return true; 
+                    }
+                    catch(Exception ex)
+                    {
+                        Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible?");
+                        return false;
+                    }                                       
+                }
+                return false;
+            }), ct);
+        }
 
+        public bool Send(ICommandModel command)
+        {
             if(command is null)
-                return;
-            bool err = false;
-            int tmpRawCommandType = (int) command.CommandType;
-            string rawCommandType = tmpRawCommandType.ToString();
-            if(rawCommandType.Length > 4 || rawCommandType.Length == 0)
-                err = true;
-            else
-            {            
-                rawCommandType = rawCommandType.PadLeft(4, '0');
-                rawCommandType = SEPARATOR + rawCommandType + SEPARATOR;
-            }
+                return false;
 
-            if(!err)
-                rawCommandType += command.Data;
-            _port.Write(rawCommandType);
-        //});
+            string raw = CommandTranslator(command);
+
+            if(!string.IsNullOrEmpty(raw))
+            {
+                try
+                {
+                    _port.Write(raw);
+                    return true;
+                }
+                catch(Exception ex)
+                {
+                    Debug.WriteLine($@"ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailible?");
+                    return false;
+                }
+            }
+            return false;
         }
         
-        
+        /// <summary>
+        /// Clears data in 'received' buffer
+        /// </summary>
+        public void DiscardInBuffer()
+        {
+            try
+            {
+                _port.DiscardInBuffer();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(@"ERROR - SerialPortAdaper - DiscardBuffer: Port was allready closed, nothing to discard.");
+            }
+            
+            _receivedBuffer.Clear().Length = 0;
+        }        
 
         public void Dispose()
         {   
             ts.Cancel();
+            DiscardInBuffer();
             _port.Close();
+
+            // Added for port to close in peace, otherwise there could be a problem with opening it again.
+            Thread.Sleep(100);
         }
     }
 }

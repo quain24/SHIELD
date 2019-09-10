@@ -55,13 +55,26 @@ namespace Shield.HardwareCom.Adapters
             return  new CommandModel {CommandType = Enums.CommandType.Data, Data =  _portName + " " + _rawData };            
         }
 
-        public void Send(ICommandModel command)
+        public async Task<bool> SendAsync(ICommandModel command)
         {
+            Debug.WriteLine("ASYNC Wysłano dane do portwu obiektu \"MoqAdapter\"");
+            Debug.WriteLine("ASYNC Odpalono event DataReceived \"MoqAdapter\"");
+            _rawData = command.CommandTypeString;
+            DataReceived?.Invoke(this, new CommandModel());
+            return true;
+        }
+
+        public bool Send(ICommandModel command)
+        {            
             Debug.WriteLine("Wysłano dane do portwu obiektu \"MoqAdapter\"");
             Debug.WriteLine("Odpalono event DataReceived \"MoqAdapter\"");
             _rawData = command.CommandTypeString;
             DataReceived?.Invoke(this, new CommandModel());
+            return true;
         }
+
+
+
 
         private void PropagateDataReceivedEvent(object sender, ICommandModel e)
         {
@@ -76,6 +89,6 @@ namespace Shield.HardwareCom.Adapters
             _portName = internalSettings.PortNumber.ToString();
 
             return true;
-        }
+        }        
     }
 }

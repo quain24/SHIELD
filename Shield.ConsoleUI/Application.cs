@@ -137,43 +137,72 @@ namespace Shield.ConsoleUI
 
             //_comMessanger.Send(null);
 
-
-
-            //Task.Run(async () =>
-            //{
-            //    while (true)
-            //    {
-            //        _comMessanger.Send(mes);
-            //        await Task.Delay(1);
-            //        //Thread.Sleep(10);
-            //        licznik++;
-            //    }
-            //});
-
             _comMessanger.Open();
 
 
-            while (true)
+            // wysyla bardzo duzo, jednak przy debugowaniu ma problem z odbiorem - odbiera bezproblemowe
+            // po uruchomieniu z exe. Do testow, nigdy takiego natezenia nie bedzie.
+
+            //Task.Run(async () =>
+            //{
+            //while (true)
+            //{
+            //    mes = new CommandModel();
+            //    mes.CommandType = CommandType.Data;
+            //    mes.Data = licznik.ToString();
+            //    _comMessanger.Send(mes);
+            //    if (licznik % 1000 == 0)
+            //        GC.Collect();
+            //    //Thread.Sleep(1);
+            //    //await Task.Delay(1);
+
+            //    licznik++;
+            //}
+            //});
+
+
+
+
+            //while (true)
+            //{
+            //    //Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
+
+            //    //_comMessanger.Send(mes);
+            //    //Console.WriteLine(licznik++);
+            //    //licznik++;
+            //    //mes = new CommandModel();
+            //    //mes.CommandType = CommandType.Data;
+            //    //mes.Data = licznik.ToString();
+            //    //_comMessanger.Send(mes);
+            //    //Thread.Sleep(1);       // Spowolnienie daje oddech i pozwala na wyswietlenie wiadomosci odbiorczej - inaczej przeciez glowny watek zapcha wszystko!
+            //    if(licznik > 10000)
+            //        {
+            //        Thread.Sleep(5000);
+            //        licznik = 0;
+            //    }
+
+
+            //}
+
+            while (licznik < 8000000)
             {
-                //Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
+                mes = new CommandModel();
+                mes.CommandType = CommandType.Data;
+                mes.Data = licznik.ToString();
+                _comMessanger.SendAsync(mes);
+                //if (licznik % 1000 == 0)
+                    //GC.Collect();
+                //Thread.Sleep(1);
+                //await Task.Delay(1);
 
-                //_comMessanger.Send(mes);
-                Console.WriteLine(licznik++);
-                Thread.Sleep(10);       // Spowolnienie daje oddech i pozwala na wyswietlenie wiadomosci odbiorczej - inaczej przeciez glowny watek zapcha wszystko!
-                if(licznik > 100000)
-                    break;
-
-
+                licznik++;
             }
-            _comMessanger.Close();
+
+
+                _comMessanger.Close();
             Console.WriteLine("Waiting for signal...");
             Console.ReadLine();
             
-        }
-
-        void eve(object sender, EventArgs a)
-        {
-            //Console.WriteLine("Event został odpalony");
         }
     }
 }
