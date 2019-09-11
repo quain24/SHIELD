@@ -13,9 +13,13 @@ namespace Shield.CommonInterfaces
         void Close();
         void DiscardInBuffer();
         ICommandModel Receive();
+        Task StartReceiving();
+        Task StartReceivingAsync();
         Task<bool> SendAsync(ICommandModel command);
         bool Send(ICommandModel command);
         bool Setup(ICommunicationDeviceSettings settings);
+
+        Task<int> ReadUsingStream();
 
         event EventHandler<ICommandModel> DataReceived;
     }

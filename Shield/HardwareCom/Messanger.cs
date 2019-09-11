@@ -60,25 +60,38 @@ namespace Shield.HardwareCom
         }
 
         // do sprawdzenia!
+        int i = 0;
+
         public void DataReceivedEventHandler(object sender, ICommandModel e)
         {
             // tutaj zmiana do listy powiedzmy wiadomosci, ogolnie pomyslec co kiedy przejdziemy na gui - nie bedzie przeciez w konsoli wyswietlac
             // obecnie tylko wywala dane do konsoli
-            Console.WriteLine(e.CommandTypeString + " " + e.Data + " received signal");
+            i++;
+            if (i % 1000 == 0)
+                Console.WriteLine(e.CommandTypeString + " " + e.Data + " received signal");
         }
 
-        // w domysle bedzie chyba wysylalo paczke wiadomosci po utworzeniu, albo pojedyncza wiadomosc - zalezy, 
-        // czy plan jest taki, by komunikacja byla widomosc - odpowiedz - wiadomosc - itd...
-        // czy wiadomosc, wiadomosc, wiadomosc - odpowiedz
-        public async Task SendAsync(ICommandModel command)
+        public void ConstantReceive()
         {
-            await _device.SendAsync(command);
+            //_device.StartReceivingAsync();
+            Task.Run(async () => await _device.ReadUsingStream());
+        }   
+        
+        public async Task ConstantReceiveAsync()
+        {
+            await _device.StartReceivingAsync();
+        }
+
+        public async Task<bool> SendAsync(ICommandModel command)
+        {
+            bool result = await _device.SendAsync(command);
+            return result;
         }
 
         // do zrobienia - sprawdzenia?
-        public void Send(ICommandModel command)
+        public bool Send(ICommandModel command)
         {
-            _device.Send(command);
+            return _device.Send(command);
         }
     }
 }

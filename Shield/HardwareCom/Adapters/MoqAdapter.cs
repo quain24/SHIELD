@@ -89,6 +89,26 @@ namespace Shield.HardwareCom.Adapters
             _portName = internalSettings.PortNumber.ToString();
 
             return true;
-        }        
+        }
+
+        public void StartReceiving()
+        {
+            throw new NotImplementedException();
+        }
+
+        Task ICommunicationDevice.StartReceiving()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StartReceivingAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<int> ReadUsingStream()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

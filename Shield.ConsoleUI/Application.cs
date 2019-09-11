@@ -98,14 +98,7 @@ namespace Shield.ConsoleUI
                     Console.WriteLine(readed.WriteTimeout);
                     Console.WriteLine(readed.Encoding.ToString());
                 }                
-            }
-            
-            // ICommunicationDevice portXX = _deviceFactory.Device(DeviceType.serial, 5); - przeniesione do messangera
-            //ICommunicationDevice portYY = _deviceFactory.Device(DeviceType.Serial, 6, 20);
-            
-            //portYY.Open();
-
-            //ICommunicationDevice portZZ = _deviceFactory.Device(DeviceType.Serial);
+            }            
 
             _comMessanger = new Messanger(_setman, _deviceFactory);
             _comMessanger.Setup(DeviceType.Serial);
@@ -120,10 +113,8 @@ namespace Shield.ConsoleUI
             foreach (var availablePort in SerialPort.GetPortNames())
             {
                 Console.WriteLine(availablePort);
-            }   
-           
-            
-            Process.GetCurrentProcess().Threads.ToString();
+            }
+
             int licznik = 0;
 
             Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
@@ -131,6 +122,25 @@ namespace Shield.ConsoleUI
 
 
             Console.ReadLine();
+
+            // Stworz kilka komend do testow
+
+            Console.WriteLine("Generating commands...");
+            var messageList = new List<ICommandModel>();
+            for(int i = 0 ; i <= 5000 ; i++)
+            {
+                var a = new CommandModel {CommandType = CommandType.Data, Data = i.ToString().PadLeft(14, '*')};
+
+                messageList.Add(a);
+
+            }
+            
+            Console.WriteLine("Commands complete.");
+
+
+
+
+
             //_comMessanger.Setup(DeviceType.Serial);
 
             // --- petla obiorczo nadawcza do testow!
@@ -138,29 +148,42 @@ namespace Shield.ConsoleUI
             //_comMessanger.Send(null);
 
             _comMessanger.Open();
+            //_comMessanger.ConstantReceiveAsync();
+            _comMessanger.ConstantReceive();
 
 
             // wysyla bardzo duzo, jednak przy debugowaniu ma problem z odbiorem - odbiera bezproblemowe
             // po uruchomieniu z exe. Do testow, nigdy takiego natezenia nie bedzie.
 
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    mes = new CommandModel();
+                    mes.CommandType = CommandType.Data;
+                    mes.Data = licznik.ToString();
+                    await _comMessanger.SendAsync(mes);
+                    //    await Task.Delay(100);
+                    //if (licznik % 1000 == 0)
+                    //  GC.Collect();
+                    //Thread.Sleep(1);
+                    //await Task.Delay(1);
+
+                    licznik++;
+                }
+            });
+
             //Task.Run(async () =>
             //{
-            //while (true)
-            //{
-            //    mes = new CommandModel();
-            //    mes.CommandType = CommandType.Data;
-            //    mes.Data = licznik.ToString();
-            //    _comMessanger.Send(mes);
-            //    if (licznik % 1000 == 0)
-            //        GC.Collect();
-            //    //Thread.Sleep(1);
-            //    //await Task.Delay(1);
-
-            //    licznik++;
-            //}
+            //    while (true)
+            //    {
+            //        foreach (var command in messageList)
+            //        {
+            //            if (!_comMessanger.Send(command))
+            //                await Task.Delay(100);
+            //        }
+            //    }
             //});
-
-
 
 
             //while (true)
@@ -184,22 +207,23 @@ namespace Shield.ConsoleUI
 
             //}
 
-            while (licznik < 8000000)
-            {
-                mes = new CommandModel();
-                mes.CommandType = CommandType.Data;
-                mes.Data = licznik.ToString();
-                _comMessanger.SendAsync(mes);
-                //if (licznik % 1000 == 0)
-                    //GC.Collect();
-                //Thread.Sleep(1);
-                //await Task.Delay(1);
+            // o wiele bardziej zapycha niz powyzsze w task run - dlaczego? odpala mase gc
+            //while (licznik < 80000)
+            //{
+            //    mes = new CommandModel();
+            //    mes.CommandType = CommandType.Data;
+            //    mes.Data = licznik.ToString();
+            //    _comMessanger.SendAsync(mes);
+            //    //if (licznik % 1000 == 0)
+            //    //GC.Collect();
+            //    //Thread.Sleep(1);
+            //    //await Task.Delay(1);
 
-                licznik++;
-            }
+            //    licznik++;
+            //}
 
 
-                _comMessanger.Close();
+            // _comMessanger.Close();
             Console.WriteLine("Waiting for signal...");
             Console.ReadLine();
             

@@ -95,20 +95,41 @@ namespace Shield.HardwareCom.Adapters
             return true;
         }
         
+        public ICommandModel Receive()
+        {
+            //Czy to w ogole bedzie potrzebne, skoro nasluch jest caly czas?
+
+            // Działa lepiej jako task, czyli zapycha watek?
+            // jak to zmienic? Czy trzeba, jeżeli będzie działało z messangera - tam nowy watek?
+            // TODO
+          try{
+                Task.Run(() => Console.WriteLine(_port.ReadExisting()));
+            }
+            catch
+            {
+                Debug.WriteLine("ERROR: SerialPortAdapter Receive - receive time limit reached");
+            }
+
+
+            return new CommandModel {CommandType = Enums.CommandType.Data, Data = "Test data readed from SerialPortAdapter" };  // do testow, imoplementacja czeka!
+        }
+
+
+
         /// <summary>
         /// Starts a receiving task in the background to constantly monitor incoming data.
         /// </summary>
-        private async void StartReceiving()
+        public async Task StartReceivingAsync()
         {
             ct = ts.Token;
-            try
-            {
-                await Task.Run(() => ConstantReceiverAsync(), ct);
-            }
-            catch(Exception ex)
-            {
-                Debug.WriteLine(@"INFO - SerialPortAdapter - StartReceiving: Thread of ConstantReceiverAsync was cancelled");
-            }
+            //try
+            //{
+                await Task.Run(() => ConstantReceiver(ct), ct);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Debug.WriteLine(@"INFO - SerialPortAdapter - StartReceiving: Thread of ConstantReceiverAsync was cancelled");
+            //}
         }
 
         /// <summary>
@@ -116,8 +137,9 @@ namespace Shield.HardwareCom.Adapters
         /// initially correcting data if needed and outputting a CommandModel when raw command is received.
         /// </summary>
         /// <returns></returns>
-        private async Task ConstantReceiverAsync()
+        private void ConstantReceiver(CancellationToken ct)
         {
+            int loopCount = 0;
             while (_port.IsOpen)
             {               
                 if (ct.IsCancellationRequested)
@@ -128,24 +150,37 @@ namespace Shield.HardwareCom.Adapters
                 
                 if(_port.BytesToRead == 0 && _receivedBuffer.Length < _commandSize)
                 {
-                    await Task.Delay(_receiverInterval, ct);
+                    loopCount++;
+                    if(loopCount >= 1000)
+                    //await Task.Delay(_receiverInterval, ct);
+                        Thread.Sleep(/*_receiverInterval*/1000);
+                    //Console.WriteLine("waiting...");
                     continue;
                 }
 
-                lock(_lockStringBuilder)
-                {
+                //lock (_lockStringBuilder)
+                //{                    
                     _receivedBuffer.Append(_port.ReadExisting());
-                }                               
-            
-                if(_receivedBuffer.Length >= _commandSize)
-                {
-                    lock (_lockStringBuilder)
-                    {         
-                        _receivedBuffer = RemoveNonAsciiChars(_receivedBuffer.ToString());
-                        if(_receivedBuffer.Length < _commandSize)
-                            continue;
+                //}
 
-                        int check = CheckRawData(_receivedBuffer.ToString());
+                if (_receivedBuffer.Length >= _commandSize)
+                {
+                    //lock (_lockStringBuilder)
+                    //{
+                        string partOfBuffer = _receivedBuffer.ToString(0, _commandSize);
+                        partOfBuffer = RemoveNonAsciiChars(partOfBuffer);
+
+                        if(partOfBuffer.Length < _commandSize)
+                        {
+                            _receivedBuffer.Remove(0, _commandSize);
+                            _receivedBuffer.Insert(0, partOfBuffer);
+                            continue;
+                        }
+                        //_receivedBuffer = RemoveNonAsciiChars(partOfBuffer);
+                        //if (_receivedBuffer.Length < _commandSize)
+                        //    continue;
+
+                        int check = CheckRawData(partOfBuffer);
                         if(check == -1)
                         {
                             _receivedBuffer.Remove(0, _commandSize);
@@ -153,14 +188,15 @@ namespace Shield.HardwareCom.Adapters
                         }
                         else if(check > 0)
                         {
-                            _receivedBuffer.Remove(0, check);  
+                            _receivedBuffer.Remove(0, check);
                             continue;
                         }
-                    }
+                    //}
 
                     ICommandModel command = CommandTranslator(_receivedBuffer.ToString(0, _commandSize));
                     _receivedBuffer.Remove(0, _commandSize);
-                    DataReceived?.Invoke(this, command);
+                    
+                    DataReceived?.Invoke(this, command);                    
                 }
             }
         }
@@ -172,26 +208,40 @@ namespace Shield.HardwareCom.Adapters
         /// <param name="data">Input string - typically a Command-sized part of received data</param>
         /// <returns>Index to start a correction of received buffer or 0 when input is in correct format</returns>
         private int CheckRawData(string data)
-        {        
-            if(data.IndexOf(SEPARATOR, 1) < 5)
-                return  data.IndexOf(SEPARATOR, 1);
+        {     
+            // do zoptymalizowania? pewnie tak...
 
-            if(data[0] == SEPARATOR)
-                return 0;
+            int commandTypeStart = data.IndexOf(SEPARATOR, 0);
+            int commandTypeEnd = -1;
 
-            return data.IndexOf(SEPARATOR);           
-        }    
-        
-        private StringBuilder RemoveNonAsciiChars(string data)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in data) 
+            if(commandTypeStart != -1 && commandTypeStart < _commandSize - 6)
             {
-               if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == SEPARATOR || c == FILLER)
-                   sb.Append(c);               
+                commandTypeEnd = data.IndexOf(SEPARATOR, commandTypeStart + 1);
+
+                if(commandTypeEnd != -1)
+                {
+                    if(commandTypeStart == 0 && commandTypeEnd == 5)
+                        return 0;
+
+                    else if(commandTypeStart == 0)
+                        return 1;
+                    else
+                        return commandTypeStart;
+                }
             }
 
-            return sb;            
+            return commandTypeStart;          
+        }    
+        
+        private string RemoveNonAsciiChars(string data)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in data)
+            {
+                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == SEPARATOR || c == FILLER)
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
 
         /// <summary>
@@ -254,8 +304,7 @@ namespace Shield.HardwareCom.Adapters
 
             return command.ToString();
         }
-
-
+        
         // pomyslec nad tym
         public void Open()
         {          
@@ -263,8 +312,7 @@ namespace Shield.HardwareCom.Adapters
             { 
                 if (_port != null && !_port.IsOpen)
                 {   
-                    _port.Open();
-                    StartReceiving();                  
+                    _port.Open();                
                 } 
             }
         }
@@ -293,25 +341,7 @@ namespace Shield.HardwareCom.Adapters
         }       
 
         // Do sprawdzenia, do zobaczenia jak to złączyć z messangerem
-        public ICommandModel Receive()
-        {
-            //Czy to w ogole bedzie potrzebne, skoro nasluch jest caly czas?
-
-            // Działa lepiej jako task, czyli zapycha watek?
-            // jak to zmienic? Czy trzeba, jeżeli będzie działało z messangera - tam nowy watek?
-            // TODO
-          try{
-                Task.Run(() => Console.WriteLine(_port.ReadExisting()));
-            }
-            catch
-            {
-                Debug.WriteLine("ERROR: SerialPortAdapter Receive - receive time limit reached");
-            }
-
-
-            return new CommandModel {CommandType = Enums.CommandType.Data, Data = "Test data readed from SerialPortAdapter" };  // do testow, imoplementacja czeka!
-        }
-
+      
         /// <summary>
         /// Sends a raw command string taken from input CommandModel to the receiving device.
         /// </summary>
@@ -319,11 +349,11 @@ namespace Shield.HardwareCom.Adapters
         /// <returns>Task<bool> if sends or failes</bool></returns>
         public async Task<bool> SendAsync(ICommandModel command)
         {
-            return await Task.Run((Func<bool>) ( () => 
+            bool result = await Task.Run((Func<bool>) ( () => 
             {
                 if(command is null)
                     return false;
-
+                
                 string raw = CommandTranslator(command);
 
                 if(!string.IsNullOrEmpty(raw))
@@ -341,6 +371,8 @@ namespace Shield.HardwareCom.Adapters
                 }
                 return false;
             }), ct);
+
+            return result;
         }
 
         public bool Send(ICommandModel command)
@@ -392,5 +424,73 @@ namespace Shield.HardwareCom.Adapters
             // Added for port to close in peace, otherwise there could be a problem with opening it again.
             Thread.Sleep(100);
         }
+
+        public Task StartReceiving()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        // do przemianowania i bedzie używane jako główna i wlasciwie jedyna metoda działania - inne są niemiarodajne, niepewne.
+        // Do optymalizacji, do sprawdzenia czy nie blokuje, do dalszych testow, do wklepania w moqadapter
+        public async Task<int> ReadUsingStream()
+        {
+            StringBuilder internalBuffer = new StringBuilder();
+
+            while(_port.IsOpen && !ct.IsCancellationRequested)
+            {
+                byte[] mainBuffer = new byte[_commandSize];
+                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, _commandSize, ct);
+                ICommandModel command = _commandModelFac();
+
+                string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(mainBuffer);
+
+                internalBuffer.Append(RemoveNonAsciiChars(rawData));                
+
+                if(internalBuffer.Length >= _commandSize)
+                {
+                    string workPiece = internalBuffer.ToString(0, _commandSize);
+                    int whereToCut = CheckRawData(workPiece);
+
+                    if(whereToCut == -1)
+                    {
+                        internalBuffer.Remove(0, _commandSize);
+                        continue;
+                    }
+                        
+                    else if(whereToCut > 0)
+                    {
+                        internalBuffer.Remove(0, whereToCut);
+                        continue;
+                    }
+                        
+                    else
+                    {
+                        command = CommandTranslator(workPiece);
+                        internalBuffer.Remove(0, _commandSize);
+                        DataReceived?.Invoke(this, command);
+                    }                    
+                }
+                else
+                {
+                    continue;
+                }
+
+
+
+
+                //command = CommandTranslator(Encoding.ASCII.GetString(buffer));
+                //DataReceived?.Invoke(this, command); 
+                
+                
+            }
+            return 1;            
+        }
+
+
+
+
+
+
     }
 }
