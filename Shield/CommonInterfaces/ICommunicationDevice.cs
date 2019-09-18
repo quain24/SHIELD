@@ -9,17 +9,14 @@ namespace Shield.CommonInterfaces
 {
     public interface ICommunicationDevice : IDisposable
     {
+        bool Setup(ICommunicationDeviceSettings settings);
         void Open();
         void Close();
         void DiscardInBuffer();
-        ICommandModel Receive();
-        Task StartReceiving();
-        Task StartReceivingAsync();
         Task<bool> SendAsync(ICommandModel command);
-        bool Send(ICommandModel command);
-        bool Setup(ICommunicationDeviceSettings settings);
-
-        Task<int> ReadUsingStream();
+        bool Send(ICommandModel command);        
+        Task StartReceivingAsync();
+        void StopReceiving();
 
         event EventHandler<ICommandModel> DataReceived;
     }

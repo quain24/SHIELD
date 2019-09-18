@@ -20,13 +20,15 @@ namespace COM6TestSender
             Console.WriteLine("Naduś coś by zacząć");
             Console.ReadLine();
 
+            Random rand = new Random();
+
             Task.Run(() =>
             {
                 while (true)
                 {
                     //try
                     //{
-                    serial.Write($@"*0001*" + i.ToString().PadLeft(14, '*'));
+                    serial.Write($@"*{rand.Next(0, 17).ToString().PadLeft(4, '0')}*" + i.ToString().PadLeft(14, '.'));
                     Console.WriteLine(serial.ReadExisting());
                     //}
                     //catch 
@@ -62,6 +64,10 @@ namespace COM6TestSender
 
 
             Console.WriteLine("Wysyłanie trwa w tasku...");
+
+
+
+
             Console.ReadLine();
 
 

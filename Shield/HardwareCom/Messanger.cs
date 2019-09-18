@@ -25,9 +25,12 @@ namespace Shield.HardwareCom
     public class Messanger : IMessanger
     {
         private ICommunicationDeviceFactory _communicationDeviceFactory;
-        private int _bufferSize;
         private ICommunicationDevice _device;
         private IAppSettings _appSettings;
+
+        private List<ICommandModel> _tempCommandsList = new List<ICommandModel>();
+
+        private bool _setupSuccessufl = false;
 
         public Messanger(IAppSettings appSettings, ICommunicationDeviceFactory communicationDeviceFactory)
         {
@@ -41,46 +44,41 @@ namespace Shield.HardwareCom
             IApplicationSettingsModel appSettings = (IApplicationSettingsModel) _appSettings.GetSettingsFor(SettingsType.Application);
 
             if(_device is null || appSettings is null)
-                return false;
-                
-            _bufferSize = appSettings.MessageSize;
-            _device.DataReceived += DataReceivedEventHandler;
-            return true;
+                return _setupSuccessufl = false;
+
+            _device.DataReceived += OnDataReceived;
+            _setupSuccessufl = true;
+            return _setupSuccessufl;
         }
 
         public void Open()
         {
-            _device.Open();
+            if(_setupSuccessufl)
+                _device.Open();
         }
-
 
         public void Close()
         {
-            _device.Dispose();
+            _device?.Dispose();
         }
 
         // do sprawdzenia!
         int i = 0;
 
-        public void DataReceivedEventHandler(object sender, ICommandModel e)
+        public void OnDataReceived(object sender, ICommandModel e)
         {
             // tutaj zmiana do listy powiedzmy wiadomosci, ogolnie pomyslec co kiedy przejdziemy na gui - nie bedzie przeciez w konsoli wyswietlac
             // obecnie tylko wywala dane do konsoli
             i++;
-            if (i % 1000 == 0)
+            _tempCommandsList.Add(e);
+            //if (i % 1000 == 0)
                 Console.WriteLine(e.CommandTypeString + " " + e.Data + " received signal");
         }
 
-        public void ConstantReceive()
-        {
-            //_device.StartReceivingAsync();
-            Task.Run(async () => await _device.ReadUsingStream());
-        }   
-        
         public async Task ConstantReceiveAsync()
         {
-            await _device.StartReceivingAsync();
-        }
+           await Task.Run( () =>  _device.StartReceivingAsync());
+        } 
 
         public async Task<bool> SendAsync(ICommandModel command)
         {

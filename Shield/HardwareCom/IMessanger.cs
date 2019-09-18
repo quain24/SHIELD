@@ -14,7 +14,6 @@ namespace Shield.HardwareCom
 
         void Open();
         void Close();
-        void ConstantReceive();
         Task ConstantReceiveAsync();
     }
 }

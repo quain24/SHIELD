@@ -95,18 +95,18 @@ namespace Shield.HardwareCom.Adapters
         {
             throw new NotImplementedException();
         }
-
-        Task ICommunicationDevice.StartReceiving()
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public Task StartReceivingAsync()
         {
             throw new NotImplementedException();
         }
 
-        public async Task<int> ReadUsingStream()
+        async Task ICommunicationDevice.StartReceivingAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void StopReceiving()
         {
             throw new NotImplementedException();
         }

@@ -20,90 +20,54 @@ namespace ShieldTests.HardwareCom.Adapters
 
     public class SerialPortAdapterTests
     {
-        IAppSettings _appsettings;
-        SerialPortAdapter _adapter;
-
-        public SerialPortAdapterTests(IAppSettings appsettings)
-        {
-            _appsettings = appsettings;
-            _adapter = new SerialPortAdapter(new SerialPort("COM5"), new Func<ICommandModel>(() => new CommandModel()), _appsettings);
-        }
-
-        static IAppSettings appSettings = new AppSettings(new AppSettingsModel());
-         
-        ICommandModel properCommandTypeHandhake = new CommandModel{ CommandType = CommandType.HandShake, Data = "00000000000000" };
-
-
-
         [Theory]
-        [InlineData(@"*0001*asdfghjklqwer*", CommandType.HandShake, @"asdfghjklqwer*")]
-        [InlineData(@"*0002*asdfghjklqwe", CommandType.Confirm, @"asdfghjklqwe")]
-        [InlineData(@"*0002*asdfghjklqwehfgfhdgdh", CommandType.Confirm, @"asdfghjklqwehfgfhdgdh")]
-        [InlineData(@"*0002*", CommandType.Confirm, @"")]
-        public void CommandTranslator_returnsValidCommandObjectGivenValidData(string rawData, CommandType expectedType, string expectedData) 
+        [InlineData("*0001***************", 0)]
+        [InlineData("*0001*9987*09987****", 0)]
+        public void CheckRawData_GivenCorrectDataVariantReturns0(string input, int expected)
         {
-            _adapter = new SerialPortAdapter(new SerialPort("COM5"), new Func<ICommandModel>(() => new CommandModel()), _appsettings);
-            MethodInfo methodInfo = typeof(SerialPortAdapter).GetMethod("CommandTranslator", 
-                                    BindingFlags.NonPublic | BindingFlags.Instance,
-                                    null,
-                                    new Type[] { typeof(string) },
-                                    null);
-
-            object[] parameters = {rawData};
-            ICommandModel aa = (ICommandModel) methodInfo.Invoke(_adapter, parameters);
-
-            Assert.Equal(aa.CommandType, expectedType);
-            Assert.Equal(aa.Data, expectedData);           
-        }
-
-        [Theory]
-        [InlineData(@"*0101*asdfghjklqwer*", CommandType.Error, @"")]        
-        [InlineData(@"*0100*asdfghjklqwer*", CommandType.Error, @"")]
-        [InlineData(@"*010**asdfghjklqwer*", CommandType.Error, @"")]
-        [InlineData(@"010*asdfghjklqwer*",  CommandType.Error, @"")]
-        [InlineData(@"",  CommandType.Error, @"")]
-        public void CommandTranslator_returnsErrorCommandObjectGivenWrongData(string rawData, CommandType expectedType, string expectedData)
-        {
-            MethodInfo methodInfo = typeof(SerialPortAdapter).GetMethod("CommandTranslator", 
-                                    BindingFlags.NonPublic | BindingFlags.Instance,
-                                    null,
-                                    new Type[] { typeof(string) },
-                                    null);
-
-            object[] parameters = {rawData};
-            ICommandModel aa = (ICommandModel) methodInfo.Invoke(_adapter, parameters);
-
-            Assert.Equal(aa.CommandType, expectedType);
-            Assert.Equal(aa.Data, expectedData);
-        }
-
-        [Theory]
-        [InlineData(CommandType.Data, "12345678901234", "12345678901234")]
-        [InlineData(CommandType.Data, "1234567890", "1234567890****")]
-        public void CommandTranslator_toStringGivenProperData(CommandType givenType, string givenData, string expectedData)
-        {
-            MethodInfo methodInfo = typeof(SerialPortAdapter).GetMethod("CommandTranslator",
+            MethodInfo methodinfo = typeof(SerialPortAdapter).GetMethod("CheckRawData",
                                            BindingFlags.NonPublic | BindingFlags.Instance,
                                            null,
-                                           new Type[] {typeof(ICommandModel) },
+                                           new Type[] {typeof(string)},
                                            null);
 
-            ICommandModel properCommandTypeData = new CommandModel{ CommandType = givenType, Data = givenData };
+            string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
+                                                                    new Func<ICommandModel>(() => new CommandModel()),
+                                                                    new AppSettings(new AppSettingsModel())),
+                                              new object[] {input})
+                                      .ToString();
 
-            object[] parameters = {properCommandTypeData };
+            
 
-            string aa = (string) methodInfo.Invoke(_adapter, parameters);
-            string comType = givenType.ToString().PadLeft(4, '0');
-            comType = '*' + comType + '*';
+            Assert.Equal(expected.ToString(), result);
+        }
 
-            Assert.Equal(aa.Substring(0,6), comType);
-            Assert.Equal(aa.Substring(6), expectedData);
-            }
+        [Theory]
+        [InlineData("****0001***************", 3)]
+        [InlineData("****0002*09090909090992", 3)]
+        [InlineData("****0092*090*0003*90992", 3)]
+        [InlineData("12332132132132132131321", -1)]
+        [InlineData("89745*908798**908987888", 13)]
+        [InlineData("*9745*908798**908987888", 0)]
+        [InlineData("*99*11108798**908987888", 13)]
+        [InlineData("012311108798**908987888", 13)]
+        public void CheckRawData_GivenWrongInputReturnIndexToCutBufferFrom(string input, int expected)
+        {
+            MethodInfo methodinfo = typeof(SerialPortAdapter).GetMethod("CheckRawData",
+                                           BindingFlags.NonPublic | BindingFlags.Instance,
+                                           null,
+                                           new Type[] {typeof(string)},
+                                           null);
+
+            string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
+                                                                    new Func<ICommandModel>(() => new CommandModel()),
+                                                                    new AppSettings(new AppSettingsModel())),
+                                              new object[] {input})
+                                      .ToString();
+
+            Assert.Equal(expected.ToString(), result);
 
 
-
-
-
-
+        }
     }
 }

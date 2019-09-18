@@ -16,15 +16,6 @@ using System.Threading;
 
 namespace Shield.HardwareCom.Adapters
 {
-    // Sporo zmian - do zbadania po powrocie:
-    // -- przekazywanie eventu do messangera, tak samo danych do niego
-    // -- wywala exception timeout przy receive - dlaczego tak długo odbiera prosty ciag znakow?
-
-    // Czy osobny receive jest potrzebny?
-    // constantreceiver po otwarciu portu moze dzialac lepiej, w koncu otwierasz, by nadawac i nasluchiwac ciagle.
-
-
-
     public class SerialPortAdapter : ICommunicationDevice
     {
         /// <summary>
@@ -35,22 +26,27 @@ namespace Shield.HardwareCom.Adapters
         #region Internal variables and events
 
         private const char SEPARATOR = '*';
-        private const char FILLER = '*';
+        private const char FILLER = '.';
 
-        private CancellationTokenSource ts = new CancellationTokenSource();   
-        private CancellationToken ct;
+        private CancellationTokenSource _receiveTokenSource = new CancellationTokenSource();   
+        private CancellationToken _receiveToken;
+        private CancellationTokenSource _sendTokenSource = new CancellationTokenSource(); 
+        private CancellationToken _sendToken;
 
         private object _lock = new object();
         private object _lockStringBuilder = new object();
         private object _lockSender = new object();
 
         private readonly SerialPort _port;
-        private int _commandSize;
-        private int _receiverInterval;
-        private StringBuilder _receivedBuffer = new StringBuilder { Length = 0 };
         private Func<ICommandModel> _commandModelFac;        
         private IAppSettings _appSettings;
 
+        private StringBuilder _receivedBuffer = new StringBuilder { Length = 0 };
+        private int _commandSize; 
+        private bool _isLissening = false;
+        private static Regex commandPattern = new Regex($@"[{SEPARATOR}][0-9]{{4}}[{SEPARATOR}]");
+
+        // TODO zmienic na event args - ca1009 na stackoverflow - niekonieczne
         public event EventHandler<ICommandModel> DataReceived;
 
         #endregion
@@ -69,7 +65,7 @@ namespace Shield.HardwareCom.Adapters
         /// <returns>True if successfull</returns>
         public bool Setup(ICommunicationDeviceSettings settings)
         {
-            if(_port is null || !(settings is ISerialPortSettingsModel) || settings is null)
+            if(_port is null || settings is null || !(settings is ISerialPortSettingsModel) )
                 return false;
 
             ISerialPortSettingsModel internalSettings = (ISerialPortSettingsModel) settings;
@@ -85,227 +81,82 @@ namespace Shield.HardwareCom.Adapters
             _port.ReadTimeout = internalSettings.ReadTimeout;
             _port.WriteTimeout = internalSettings.WriteTimeout;
             _port.Encoding = Encoding.GetEncoding(internalSettings.Encoding);
-            
-            _receiverInterval = (internalSettings.ReadTimeout / 10) <= 0 ? _receiverInterval = 0 : _receiverInterval = (internalSettings.ReadTimeout / 10);
+
+            _port.DtrEnable = false;
+            _port.RtsEnable = false;
 
             IApplicationSettingsModel appSett = (IApplicationSettingsModel) _appSettings.GetSettingsFor(SettingsType.Application);
 
             _commandSize = appSett.MessageSize;
 
+            _sendToken = _sendTokenSource.Token;
+            _receiveToken = _receiveTokenSource.Token;
+
             return true;
         }
         
-        public ICommandModel Receive()
-        {
-            //Czy to w ogole bedzie potrzebne, skoro nasluch jest caly czas?
-
-            // Działa lepiej jako task, czyli zapycha watek?
-            // jak to zmienic? Czy trzeba, jeżeli będzie działało z messangera - tam nowy watek?
-            // TODO
-          try{
-                Task.Run(() => Console.WriteLine(_port.ReadExisting()));
-            }
-            catch
-            {
-                Debug.WriteLine("ERROR: SerialPortAdapter Receive - receive time limit reached");
-            }
-
-
-            return new CommandModel {CommandType = Enums.CommandType.Data, Data = "Test data readed from SerialPortAdapter" };  // do testow, imoplementacja czeka!
-        }
-
-
-
         /// <summary>
-        /// Starts a receiving task in the background to constantly monitor incoming data.
+        /// Constantly monitors incoming communication data, filters it and generates Commands (ICommandModel)
         /// </summary>
         public async Task StartReceivingAsync()
         {
-            ct = ts.Token;
-            //try
-            //{
-                await Task.Run(() => ConstantReceiver(ct), ct);
-            //}
-            //catch (Exception ex)
-            //{
-            //    Debug.WriteLine(@"INFO - SerialPortAdapter - StartReceiving: Thread of ConstantReceiverAsync was cancelled");
-            //}
-        }
+            _isLissening = true;
+            string errorData = string.Empty;
+            byte[] mainBuffer = new byte[_commandSize];
 
-        /// <summary>
-        /// Designed to be put in a seprate Task, constantly reading bytes from serial port,
-        /// initially correcting data if needed and outputting a CommandModel when raw command is received.
-        /// </summary>
-        /// <returns></returns>
-        private void ConstantReceiver(CancellationToken ct)
-        {
-            int loopCount = 0;
-            while (_port.IsOpen)
-            {               
-                if (ct.IsCancellationRequested)
-                {        
-                    Debug.WriteLine("constant receiver cancelled");
-                    break;
-                }
-                
-                if(_port.BytesToRead == 0 && _receivedBuffer.Length < _commandSize)
+            while(_port.IsOpen && !_receiveToken.IsCancellationRequested)
+            {                
+                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, _commandSize, _receiveToken);                
+
+                string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(mainBuffer);
+
+                if(_port.Encoding.CodePage == Encoding.ASCII.CodePage)
+                    _receivedBuffer.Append(RemoveNonAsciiChars(rawData));
+                else
+                    _receivedBuffer.Append(rawData);
+
+                ICommandModel command = _commandModelFac();
+
+                if(_receivedBuffer.Length >= _commandSize)
                 {
-                    loopCount++;
-                    if(loopCount >= 1000)
-                    //await Task.Delay(_receiverInterval, ct);
-                        Thread.Sleep(/*_receiverInterval*/1000);
-                    //Console.WriteLine("waiting...");
-                    continue;
-                }
+                    string workPiece = _receivedBuffer.ToString(0, _commandSize);
+                    int whereToCut = CheckRawData(workPiece);
 
-                //lock (_lockStringBuilder)
-                //{                    
-                    _receivedBuffer.Append(_port.ReadExisting());
-                //}
-
-                if (_receivedBuffer.Length >= _commandSize)
-                {
-                    //lock (_lockStringBuilder)
-                    //{
-                        string partOfBuffer = _receivedBuffer.ToString(0, _commandSize);
-                        partOfBuffer = RemoveNonAsciiChars(partOfBuffer);
-
-                        if(partOfBuffer.Length < _commandSize)
-                        {
-                            _receivedBuffer.Remove(0, _commandSize);
-                            _receivedBuffer.Insert(0, partOfBuffer);
-                            continue;
-                        }
-                        //_receivedBuffer = RemoveNonAsciiChars(partOfBuffer);
-                        //if (_receivedBuffer.Length < _commandSize)
-                        //    continue;
-
-                        int check = CheckRawData(partOfBuffer);
-                        if(check == -1)
-                        {
-                            _receivedBuffer.Remove(0, _commandSize);
-                            continue;
-                        }
-                        else if(check > 0)
-                        {
-                            _receivedBuffer.Remove(0, check);
-                            continue;
-                        }
-                    //}
-
-                    ICommandModel command = CommandTranslator(_receivedBuffer.ToString(0, _commandSize));
-                    _receivedBuffer.Remove(0, _commandSize);
-                    
-                    DataReceived?.Invoke(this, command);                    
-                }
-            }
-        }
-
-        /// <summary>
-        /// Internal check of incoming data.
-        /// <para>takes raw data and returns either '0' if correct, '-1' if compleatly bad or '(int) index to which to remove' if another try could be succesfull</para> 
-        /// </summary>
-        /// <param name="data">Input string - typically a Command-sized part of received data</param>
-        /// <returns>Index to start a correction of received buffer or 0 when input is in correct format</returns>
-        private int CheckRawData(string data)
-        {     
-            // do zoptymalizowania? pewnie tak...
-
-            int commandTypeStart = data.IndexOf(SEPARATOR, 0);
-            int commandTypeEnd = -1;
-
-            if(commandTypeStart != -1 && commandTypeStart < _commandSize - 6)
-            {
-                commandTypeEnd = data.IndexOf(SEPARATOR, commandTypeStart + 1);
-
-                if(commandTypeEnd != -1)
-                {
-                    if(commandTypeStart == 0 && commandTypeEnd == 5)
-                        return 0;
-
-                    else if(commandTypeStart == 0)
-                        return 1;
-                    else
-                        return commandTypeStart;
-                }
-            }
-
-            return commandTypeStart;          
-        }    
-        
-        private string RemoveNonAsciiChars(string data)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in data)
-            {
-                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == SEPARATOR || c == FILLER)
-                    sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Takes a preformatted string of raw data and translates it to a single CommandModel
-        /// </summary>
-        /// <param name="rawData">preformatted string, typically from received buffer</param>
-        /// <returns>Single command in CommandModel format</returns>
-        private ICommandModel CommandTranslator(string rawData)
-        {           
-            ICommandModel command = _commandModelFac();
-            string rawCom = string.Empty;
-            string rawDat = string.Empty;
-
-            if(rawData.Length >= 6)
-            {
-                rawCom = rawData.Substring(0, 6);    // Command in *0123* format (including asterisc or other SEPARATOR)
-                rawDat = rawData.Substring(6);       // Data, lenght of _commandSize minus 6 (command type header) as asdffasdf... and so on            
-            
-                if (rawCom.First() == SEPARATOR &&
-                    rawCom.Last() == SEPARATOR)  
-                {
-                    int rawComInt;
-                    if(Int32.TryParse(rawCom.Substring(1, 4), out rawComInt))
-                    {               
-                        if(Enum.IsDefined(typeof(CommandType), rawComInt))                
-                            command.CommandType = (CommandType) rawComInt;                    
+                    if(whereToCut == -1)
+                    {
+                        command.Data = workPiece;
+                        _receivedBuffer.Remove(0, _commandSize);
                     }
+                        
+                    else if(whereToCut > 0)
+                    {
+                        command.Data = _receivedBuffer.ToString(0, whereToCut);
+                        _receivedBuffer.Remove(0, whereToCut);
+                    }                   
+                    
+                    if (whereToCut != 0)                    
+                        command.CommandType = CommandType.Error;
+                        
+                    else
+                    {                        
+                        command = CommandTranslator(workPiece);
+                        _receivedBuffer.Remove(0, _commandSize);                        
+                    }   
+                    DataReceived?.Invoke(this, command);
                 }
-            }
-
-            // If command is still empty, then raw data was wrong - device cannot send empty, useless communication.
-            if(command.CommandType == CommandType.Empty)
-                command.CommandType = CommandType.Error;
-
-            if(command.CommandType != CommandType.Error || command.CommandType != CommandType.Empty)
-                command.Data = rawDat;
-
-            return command;            
-        }   
-
-        /// <summary>
-        /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
-        /// </summary>
-        /// <param name="givenCommand">Command to be trasformed into raw string</param>
-        /// <returns>Raw formatted string that can be understood by connected machine</returns>
-        private string CommandTranslator(ICommandModel givenCommand)
-        {
-            if(givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
-                return string.Empty;
-
-            StringBuilder command = new StringBuilder(SEPARATOR.ToString());
-
-            command.Append(givenCommand.CommandType.ToString().PadLeft(4, '0')).Append(SEPARATOR);
-
-            if(givenCommand.CommandType == CommandType.Data)
-                command.Append(givenCommand.Data);
-            
-            if(command.Length < _commandSize)
-                command.Append(FILLER, _commandSize - command.Length);
-
-            return command.ToString();
+                else
+                {
+                    continue;
+                }                
+            } 
+            _isLissening = false;
         }
-        
-        // pomyslec nad tym
+
+        public void StopReceiving()
+        {
+            _receiveTokenSource.Cancel();
+        }
+      
         public void Open()
         {          
             lock (_lock)
@@ -318,8 +169,8 @@ namespace Shield.HardwareCom.Adapters
         }
         public void Close()
         {
-            ts.Cancel();
-            // Close the serial port in a new thread
+            StopReceiving();
+            // Close the serial port in a new thread to avoid freezes
             Task closeTask = new Task(() =>
             {
                 try
@@ -334,14 +185,15 @@ namespace Shield.HardwareCom.Adapters
             });
             closeTask.Start();
 
+
+
+
             //return closeTask;
 
             // odniorca:
             // await serialStream.Close();
         }       
-
-        // Do sprawdzenia, do zobaczenia jak to złączyć z messangerem
-      
+              
         /// <summary>
         /// Sends a raw command string taken from input CommandModel to the receiving device.
         /// </summary>
@@ -356,7 +208,7 @@ namespace Shield.HardwareCom.Adapters
                 
                 string raw = CommandTranslator(command);
 
-                if(!string.IsNullOrEmpty(raw))
+                if(!string.IsNullOrEmpty(raw) && !_sendToken.IsCancellationRequested)
                 {
                     try
                     {                    
@@ -370,7 +222,7 @@ namespace Shield.HardwareCom.Adapters
                     }                                       
                 }
                 return false;
-            }), ct);
+            }), _sendToken);
 
             return result;
         }
@@ -409,15 +261,18 @@ namespace Shield.HardwareCom.Adapters
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(@"ERROR - SerialPortAdaper - DiscardBuffer: Port was allready closed, nothing to discard.");
+                Debug.WriteLine(@"ERROR - SerialPortAdaper - DiscardBuffer: Port was closed, nothing to discard.");
             }
             
-            _receivedBuffer.Clear().Length = 0;
+            lock(_lock)
+            {
+                _receivedBuffer.Clear().Length = 0;
+            }
         }        
 
         public void Dispose()
         {   
-            ts.Cancel();
+            _receiveTokenSource.Cancel();
             DiscardInBuffer();
             _port.Close();
 
@@ -425,72 +280,100 @@ namespace Shield.HardwareCom.Adapters
             Thread.Sleep(100);
         }
 
-        public Task StartReceiving()
+        #region Helpers - raw data checking and transformation
+
+        /// <summary>
+        /// Internal check of incoming data.
+        /// <para>takes raw data and returns either '0' if correct, '-1' if compleatly bad or '(int) index to which to remove if another try could be succesfull</para> 
+        /// </summary>
+        /// <param name="data">Input string - typically a Command-sized part of received data</param>
+        /// <returns>Index to start a correction from, '-1' if data is all wrong or 0 when input is in correct format</returns>
+        private int CheckRawData(string data)
         {
-            throw new NotImplementedException();
-        }
+            // First, a basic check to find a command type
+            Match match = commandPattern.Match(data);
 
+            if(match.Success)
+                return match.Index;
 
-        // do przemianowania i bedzie używane jako główna i wlasciwie jedyna metoda działania - inne są niemiarodajne, niepewne.
-        // Do optymalizacji, do sprawdzenia czy nie blokuje, do dalszych testow, do wklepania w moqadapter
-        public async Task<int> ReadUsingStream()
+            // If failed, then find last thing that can be transformed later into full command
+            return data.LastIndexOf(SEPARATOR); 
+        }    
+        
+        private string RemoveNonAsciiChars(string data)
         {
-            StringBuilder internalBuffer = new StringBuilder();
-
-            while(_port.IsOpen && !ct.IsCancellationRequested)
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in data)
             {
-                byte[] mainBuffer = new byte[_commandSize];
-                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, _commandSize, ct);
-                ICommandModel command = _commandModelFac();
-
-                string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(mainBuffer);
-
-                internalBuffer.Append(RemoveNonAsciiChars(rawData));                
-
-                if(internalBuffer.Length >= _commandSize)
-                {
-                    string workPiece = internalBuffer.ToString(0, _commandSize);
-                    int whereToCut = CheckRawData(workPiece);
-
-                    if(whereToCut == -1)
-                    {
-                        internalBuffer.Remove(0, _commandSize);
-                        continue;
-                    }
-                        
-                    else if(whereToCut > 0)
-                    {
-                        internalBuffer.Remove(0, whereToCut);
-                        continue;
-                    }
-                        
-                    else
-                    {
-                        command = CommandTranslator(workPiece);
-                        internalBuffer.Remove(0, _commandSize);
-                        DataReceived?.Invoke(this, command);
-                    }                    
-                }
-                else
-                {
-                    continue;
-                }
-
-
-
-
-                //command = CommandTranslator(Encoding.ASCII.GetString(buffer));
-                //DataReceived?.Invoke(this, command); 
-                
-                
+                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == SEPARATOR || c == FILLER)
+                    sb.Append(c);
             }
-            return 1;            
+            return sb.ToString();
         }
 
+        /// <summary>
+        /// Takes a preformatted string of raw data and translates it to a single CommandModel
+        /// </summary>
+        /// <param name="rawData">preformatted string, typically from received buffer</param>
+        /// <returns>Single command in CommandModel format</returns>
+        private ICommandModel CommandTranslator(string rawData)
+        {           
+            ICommandModel command = _commandModelFac();
+            string rawCom = string.Empty;
+            string rawDat = string.Empty;
 
+            if(rawData.Length >= 6)
+            {
+                rawCom = rawData.Substring(0, 6);    // Command in *0123* format (including asterisc or other SEPARATOR)
+                rawDat = rawData.Substring(6);       // Data, lenght of _commandSize minus 6 (command type header) as asdffasdf... and so on            
+            
+                if (rawCom.First() == SEPARATOR &&
+                    rawCom.Last() == SEPARATOR)  
+                {
+                    int rawComInt;
+                    if(Int32.TryParse(rawCom.Substring(1, 4), out rawComInt))
+                    {               
+                        if(Enum.IsDefined(typeof(CommandType), rawComInt))                
+                            command.CommandType = (CommandType) rawComInt;     
+                        else
+                            command.CommandType = CommandType.Unknown;
+                    }
+                }
+            }
 
+            // If command is still empty, then raw data was wrong - device cannot send empty, useless communication.
+            if(command.CommandType == CommandType.Empty)
+                command.CommandType = CommandType.Error;
 
+            if(command.CommandType == CommandType.Error || command.CommandType == CommandType.Unknown || command.CommandType == CommandType.Data)
+                command.Data = rawDat;
 
+            return command;            
+        }   
 
+        /// <summary>
+        /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
+        /// </summary>
+        /// <param name="givenCommand">Command to be trasformed into raw string</param>
+        /// <returns>Raw formatted string that can be understood by connected machine</returns>
+        private string CommandTranslator(ICommandModel givenCommand)
+        {
+            if(givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
+                return string.Empty;
+
+            StringBuilder command = new StringBuilder(SEPARATOR.ToString());
+
+            command.Append(givenCommand.CommandType.ToString().PadLeft(4, '0')).Append(SEPARATOR);
+
+            if(givenCommand.CommandType == CommandType.Data)
+                command.Append(givenCommand.Data);
+            
+            if(command.Length < _commandSize)
+                command.Append(FILLER, _commandSize - command.Length);
+
+            return command.ToString();
+        }
+
+        #endregion
     }
 }

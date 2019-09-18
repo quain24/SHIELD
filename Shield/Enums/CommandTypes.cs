@@ -13,7 +13,8 @@ namespace Shield.Enums
     {
         Empty = 0,
         HandShake,
-        Confirm,
+        Confirm, 
+        Cancel,
         Sending,
         StartSending,
         StopSending,
@@ -23,6 +24,7 @@ namespace Shield.Enums
         Completed,
         Correct,
         Error,
+        Unknown,
         Partial,
         Data
     }

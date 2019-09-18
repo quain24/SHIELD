@@ -148,13 +148,10 @@ namespace Shield.ConsoleUI
             //_comMessanger.Send(null);
 
             _comMessanger.Open();
-            //_comMessanger.ConstantReceiveAsync();
-            _comMessanger.ConstantReceive();
+            _comMessanger.ConstantReceiveAsync();
 
 
-            // wysyla bardzo duzo, jednak przy debugowaniu ma problem z odbiorem - odbiera bezproblemowe
-            // po uruchomieniu z exe. Do testow, nigdy takiego natezenia nie bedzie.
-
+           
             Task.Run(async () =>
             {
                 while (true)
@@ -225,6 +222,8 @@ namespace Shield.ConsoleUI
 
             // _comMessanger.Close();
             Console.WriteLine("Waiting for signal...");
+            //Thread.Sleep(5000);
+            //_comMessanger.Close();
             Console.ReadLine();
             
         }
