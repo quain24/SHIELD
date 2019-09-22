@@ -14,6 +14,8 @@ namespace Shield.Data.Models
     [Serializable]
     public class ApplicationSettingsModel : IApplicationSettingsModel
     {
-        public int MessageSize { get; set; }
+        public int DataSize { get; set; }
+        public int IdSize { get; set; }
+        public int CommandTypeSize { get; set; }
     }
 }

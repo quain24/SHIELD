@@ -71,8 +71,8 @@ namespace Shield.HardwareCom
             // obecnie tylko wywala dane do konsoli
             i++;
             _tempCommandsList.Add(e);
-            //if (i % 1000 == 0)
-                Console.WriteLine(e.CommandTypeString + " " + e.Data + " received signal");
+            if (i % 100 == 0)
+                Console.WriteLine(e.CommandTypeString + " " + e.Id + " " + e.Data + " received (" + i + ") messages" );
         }
 
         public async Task ConstantReceiveAsync()

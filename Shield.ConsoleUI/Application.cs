@@ -32,7 +32,9 @@ namespace Shield.ConsoleUI
         public void Run()
         {
             IApplicationSettingsModel appset = new ApplicationSettingsModel();
-            appset.MessageSize = 20;
+            appset.DataSize = 30;
+            appset.IdSize = 4;
+            appset.CommandTypeSize = 4;
 
 
             // testowanie zapisywania ustawien - działa - 
@@ -41,10 +43,10 @@ namespace Shield.ConsoleUI
             settings.BaudRate = 19200;
             settings.DataBits = 8;
             settings.Parity = Parity.None;
-            settings.PortNumber = 5;
+            settings.PortNumber = 4;
             settings.StopBits = StopBits.One;
-            settings.ReadTimeout = 2000;
-            settings.WriteTimeout = 2000;
+            settings.ReadTimeout = -1;
+            settings.WriteTimeout = -1;
             settings.Encoding = Encoding.ASCII.CodePage;
 
             IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
@@ -82,7 +84,7 @@ namespace Shield.ConsoleUI
                     Console.WriteLine("Pozycja po wczytaniu:");
                     Console.WriteLine("klucz: " + item.Key.ToString());
                     IApplicationSettingsModel readed3 = (IApplicationSettingsModel) item.Value;
-                    Console.WriteLine(readed3.MessageSize);
+                    Console.WriteLine(readed3.DataSize);
                 }
                 else
                 {
@@ -103,11 +105,7 @@ namespace Shield.ConsoleUI
             _comMessanger = new Messanger(_setman, _deviceFactory);
             _comMessanger.Setup(DeviceType.Serial);
 
-            // na szybko wiadomosc testowa 
-
-            CommandModel mes = new CommandModel();
-            mes.CommandType = CommandType.Data;
-            mes.Data = "aaaaaaaaaaaaaa"; 
+            
 
             // wyswietl porty w kompie
             foreach (var availablePort in SerialPort.GetPortNames())
@@ -123,24 +121,6 @@ namespace Shield.ConsoleUI
 
             Console.ReadLine();
 
-            // Stworz kilka komend do testow
-
-            Console.WriteLine("Generating commands...");
-            var messageList = new List<ICommandModel>();
-            for(int i = 0 ; i <= 5000 ; i++)
-            {
-                var a = new CommandModel {CommandType = CommandType.Data, Data = i.ToString().PadLeft(14, '*')};
-
-                messageList.Add(a);
-
-            }
-            
-            Console.WriteLine("Commands complete.");
-
-
-
-
-
             //_comMessanger.Setup(DeviceType.Serial);
 
             // --- petla obiorczo nadawcza do testow!
@@ -151,15 +131,18 @@ namespace Shield.ConsoleUI
             _comMessanger.ConstantReceiveAsync();
 
 
-           
+
             Task.Run(async () =>
             {
                 while (true)
                 {
-                    mes = new CommandModel();
+                    CommandModel mes = new CommandModel();
                     mes.CommandType = CommandType.Data;
                     mes.Data = licznik.ToString();
-                    await _comMessanger.SendAsync(mes);
+                    mes.Id = Helpers.IdGenerator.GetId(appset.IdSize);
+
+                    _comMessanger.SendAsync(mes);
+                    await Task.Delay(500);
                     //    await Task.Delay(100);
                     //if (licznik % 1000 == 0)
                     //  GC.Collect();

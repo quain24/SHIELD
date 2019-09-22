@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shield.Helpers;
 
 //  Zawiera spis komend (command) i nimi operuje: dodaje nowe, usuwa, listuje itp
 //  Tego typu obiektem będziemy operować jako głównym przy wysyłaniu / odbieraniu 
@@ -12,7 +13,21 @@ namespace Shield.HardwareCom.Models
 {
     public class MessageModel : IMessageModel
     {
+        private const int ID_LENGTH = 4;        
+        
+        private readonly string _messageId;
+
         private Dictionary<int, ICommandModel> _commands = new Dictionary<int, ICommandModel>();
+
+
+        public MessageModel()
+        {
+            _messageId = IdGenerator.GetId(ID_LENGTH);
+        }
+
+        public bool IsBeingSent { get; private set; } = false;
+        public bool IsIncoming { get; private set; } = false;
+        public bool IsOutgoing { get; private set; } = false;
 
         public void Add(ICommandModel command)
         {
@@ -21,6 +36,7 @@ namespace Shield.HardwareCom.Models
                 id = 0;
             else
                 id = _commands.Keys.Max() + 1;
+            command.Id = _messageId;
             _commands.Add(id, command);
         }
 
@@ -44,8 +60,14 @@ namespace Shield.HardwareCom.Models
                 return true;
             }
             return false;           
+        }       
+
+        public int CommandCount
+        {
+            get { return _commands.Count(); }
         }
 
+        #region internal helpers
         private void ResortCommands(int fromWhichKey)
         {
             if (_commands.Count == 0 || fromWhichKey > _commands.Keys.Max())
@@ -58,15 +80,6 @@ namespace Shield.HardwareCom.Models
             }
         }
 
-        public int CommandCount
-        {
-            get
-            {
-                return _commands.Count();
-            }
-        }
-
+        #endregion
     }
-
-
 }

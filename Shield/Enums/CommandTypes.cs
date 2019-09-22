@@ -26,6 +26,6 @@ namespace Shield.Enums
         Error,
         Unknown,
         Partial,
-        Data
+        Data    //15
     }
 }

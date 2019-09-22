@@ -14,30 +14,29 @@ namespace Shield.HardwareCom.Models
     public class CommandModel : ICommandModel
     {
         private string _data = string.Empty;
-        private CommandType _command;
+        private string _id;
+        private CommandType _command;        
+
+        public string Id
+        {
+            get { return _id; }
+            set { _id = value; }
+        }
 
         public string Data
         {
             get { return _data; }
             set { _data = value; }
         }
-        public CommandType CommandType {
-            get
-            {
-                return _command;
-            }
-            set
-            {
-                _command = value;
-            }
+        public CommandType CommandType
+        {
+            get { return _command; }
+            set { _command = value; }
         }
 
         public string CommandTypeString
         {
-            get
-            {
-                return Enum.GetName(typeof(CommandType), CommandType);
-            }
+            get { return Enum.GetName(typeof(CommandType), CommandType); }
         }
 
     }

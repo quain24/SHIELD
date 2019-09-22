@@ -4,6 +4,8 @@ namespace Shield.Data.Models
 {
     public interface IApplicationSettingsModel : ISettings
     {
-        int MessageSize { get; set; }
+        int DataSize { get; set; }
+        int IdSize { get; set; }
+        int CommandTypeSize { get; set; }
     }
 }
