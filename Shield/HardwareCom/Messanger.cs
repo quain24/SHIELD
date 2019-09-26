@@ -87,9 +87,54 @@ namespace Shield.HardwareCom
         }
 
         // do zrobienia - sprawdzenia?
-        public bool Send(ICommandModel command)
+        public bool Send(IMessageModel message)
         {
-            return _device.Send(command);
+            foreach(ICommandModel c in message)
+            {
+                if(_device.Send(c))
+                    continue;
+                else
+                    return false;
+            }
+            return true;
+        }
+        public async Task<bool> SendAsync(IMessageModel message)
+        {
+            // tak sobie na szybko, do przemyslenia, do poprawy
+
+            return await Task.Run(async () =>
+            {
+                List<bool> results = new List<bool>();
+
+                foreach(ICommandModel c in message)
+                {
+                    results.Add(await _device.SendAsync(c).ConfigureAwait(false)); 
+                }
+
+                if(results.Contains(false))
+                    return false;
+                return true;
+            });
+
+
+
+            //List<Task<bool>> tmp = new List<Task<bool>>();            
+
+            //foreach(ICommandModel c in message)
+            //{
+            //    tmp.Add(_device.SendAsync(c));   
+            //}
+
+            //bool[] tmpbool = new bool[message.CommandCount];
+
+            //tmpbool = await Task.WhenAll<bool>(tmp);
+            //foreach(bool b in tmpbool)
+            //{
+            //    if(!b)
+            //        return false;
+            //}
+
+            //return true;
         }
     }
 }

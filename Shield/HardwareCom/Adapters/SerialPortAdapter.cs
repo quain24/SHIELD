@@ -15,8 +15,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
 {
-    // Ogolnie przemyslec protokol - czy w rozmiarze uwzgledniamy separatory????
-    // skoro dodano id, to pomyslec nad korekcja bledow
+    // Przeanalizować tą klasę, popoprawiać i zoptymalizować co jest, upewnić się, że nie ma potrzeby niczego dodatkowego i zakończyć!
 
     public class SerialPortAdapter : ICommunicationDevice
     {
@@ -49,17 +48,19 @@ namespace Shield.HardwareCom.Adapters
         private int _commandTypeSize;
         private int _completeCommandSizeWithSep;
         private bool _isLissening = false;
+        private ICommandTranslator _translator;
         private Regex CommandPattern;
 
         public event EventHandler<ICommandModel> DataReceived;
 
         #endregion Internal variables and events
 
-        public SerialPortAdapter(SerialPort port, Func<ICommandModel> commandModelFac, IAppSettings appSettings)
+        public SerialPortAdapter(SerialPort port, Func<ICommandModel> commandModelFac, IAppSettings appSettings, ICommandTranslator commandTranslator)
         {
             _port = port;
             _commandModelFac = commandModelFac;
-            _appSettings = appSettings;            
+            _appSettings = appSettings;
+            _translator = commandTranslator;
         }
 
         /// <summary>
@@ -103,8 +104,43 @@ namespace Shield.HardwareCom.Adapters
 
             string pattern = $@"[{SEPARATOR}][0-9]{{{_commandTypeSize}}}[{SEPARATOR}][a-zA-Z0-9]{{{_idSize}}}[{SEPARATOR}]";
             CommandPattern = new Regex(pattern);
-            
+
             return true;
+        }
+
+        public void Open()
+        {
+            lock (_lock)
+            {
+                if (_port != null && !_port.IsOpen)
+                {
+                    _port.Open();
+                }
+            }
+        }
+
+        public void Close()
+        {
+            StopReceiving();
+            // Close the serial port in a new thread to avoid freezes
+            Task closeTask = new Task(() =>
+            {
+                try
+                {
+                    _port.Close();
+                }
+                catch (IOException e)
+                {
+                    // Port was not open
+                    Debug.WriteLine("MESSAGE: SerialPortAdapter Close - Port was not open! " + e.Message);
+                }
+            });
+            closeTask.Start();
+
+            //return closeTask;
+
+            // odniorca:
+            // await serialStream.Close();
         }
 
         /// <summary>
@@ -159,46 +195,11 @@ namespace Shield.HardwareCom.Adapters
                 }
             }
             _isLissening = false;
-        }
+        }        
 
         public void StopReceiving()
         {
             _receiveTokenSource.Cancel();
-        }
-
-        public void Open()
-        {
-            lock (_lock)
-            {
-                if (_port != null && !_port.IsOpen)
-                {
-                    _port.Open();
-                }
-            }
-        }
-
-        public void Close()
-        {
-            StopReceiving();
-            // Close the serial port in a new thread to avoid freezes
-            Task closeTask = new Task(() =>
-            {
-                try
-                {
-                    _port.Close();
-                }
-                catch (IOException e)
-                {
-                    // Port was not open
-                    Debug.WriteLine("MESSAGE: SerialPortAdapter Close - Port was not open! " + e.Message);
-                }
-            });
-            closeTask.Start();
-
-            //return closeTask;
-
-            // odniorca:
-            // await serialStream.Close();
         }
 
         /// <summary>
@@ -206,34 +207,63 @@ namespace Shield.HardwareCom.Adapters
         /// </summary>
         /// <param name="command">Single command to transfer</param>
         /// <returns>Task<bool> if sends or failes</bool></returns>
-        public async Task<bool> SendAsync(ICommandModel command)
+        public Task<bool> SendAsync(ICommandModel command)
         {
-            bool result = await Task.Run((Func<bool>)(() =>
-          {
-              if (command is null)
-                  return false;
+            // która wersja lepsza??
 
-              string raw = CommandTranslator(command);
+            return Task.Run((Func<bool>)(() =>
+            {
+                if (command is null)
+                    return false;
 
-              if (!string.IsNullOrEmpty(raw) && !_sendToken.IsCancellationRequested)
-              {
-                  try
-                  {
-                      _port.Write(raw);
-                      return true;
-                  }
-                  catch (Exception ex)
-                  {
-                      Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible?");
-                      return false;
-                  }
-              }
-              return false;
-          }), _sendToken);
+                string raw = CommandTranslator(command);
 
-            return result;
+                if (!string.IsNullOrEmpty(raw) && !_sendToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        _port.Write(raw);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible?");
+                        return false;
+                    }
+                }
+                return false;
+            }), _sendToken);
+            //bool result = await Task.Run((Func<bool>)(() =>
+            //{
+            //    if (command is null)
+            //        return false;
+
+            //    string raw = CommandTranslator(command);
+
+            //    if (!string.IsNullOrEmpty(raw) && !_sendToken.IsCancellationRequested)
+            //    {
+            //        try
+            //        {
+            //            _port.Write(raw);
+            //            return true;
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible?");
+            //            return false;
+            //        }
+            //    }
+            //    return false;
+            //}), _sendToken);
+
+            //return result;
         }
 
+        /// <summary>
+        /// Sends a raw command string taken from input CommandModel to the receiving device.
+        /// </summary>
+        /// <param name="command">Single command to transfer</param>
+        /// <returns>bool if sends or failes</bool></returns>
         public bool Send(ICommandModel command)
         {
             if (command is null)
@@ -309,9 +339,7 @@ namespace Shield.HardwareCom.Adapters
             if (firsIndexOfSepprarator == 0)
                 return 1;
             else
-            {
                 return firsIndexOfSepprarator;
-            }
         }
 
         private string RemoveNonAsciiChars(string data)
@@ -382,7 +410,7 @@ namespace Shield.HardwareCom.Adapters
 
             StringBuilder command = new StringBuilder(SEPARATOR.ToString());
 
-            command.Append(givenCommand.CommandType.ToString().PadLeft(_commandTypeSize, '0')).Append(SEPARATOR);
+            command.Append(((int)givenCommand.CommandType).ToString().PadLeft(_commandTypeSize, '0')).Append(SEPARATOR);
             command.Append(givenCommand.Id).Append(SEPARATOR);
 
             if (givenCommand.CommandType == CommandType.Data)

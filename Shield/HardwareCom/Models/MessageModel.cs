@@ -1,33 +1,40 @@
-﻿using System;
+﻿using Shield.Data;
+using Shield.Data.Models;
+using Shield.Helpers;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.Helpers;
 
-//  Zawiera spis komend (command) i nimi operuje: dodaje nowe, usuwa, listuje itp
-//  Tego typu obiektem będziemy operować jako głównym przy wysyłaniu / odbieraniu 
-//  do urządzenia/ pliku
+/// <summary>
+/// Contains list of commands that will be sent or were received
+/// Single message is preffered unit of communication between devices
+/// </summary>
 
 namespace Shield.HardwareCom.Models
 {
+    [Serializable]
     public class MessageModel : IMessageModel
     {
-        private const int ID_LENGTH = 4;        
-        
         private readonly string _messageId;
+        private IAppSettings _appSettings;
+        private IApplicationSettingsModel _applicationSettingsModel;
 
         private Dictionary<int, ICommandModel> _commands = new Dictionary<int, ICommandModel>();
 
-
-        public MessageModel()
+        public MessageModel(IAppSettings appSettings)
         {
-            _messageId = IdGenerator.GetId(ID_LENGTH);
+            _appSettings = appSettings;
+            _applicationSettingsModel = (IApplicationSettingsModel)_appSettings.GetSettingsFor(Enums.SettingsType.Application);
+            // Every message gets unique ID that cannot be changed
+            _messageId = IdGenerator.GetId(_applicationSettingsModel.IdSize);
         }
 
-        public bool IsBeingSent { get; private set; } = false;
-        public bool IsIncoming { get; private set; } = false;
-        public bool IsOutgoing { get; private set; } = false;
+        public bool IsBeingSent { get; set; } = false;
+        public bool IsBeingReceived { get; set; } = false;
+        public bool IsIncoming { get; set; } = false;
+        public bool IsOutgoing { get; set; } = false;
+        public int CommandCount { get { return _commands.Count(); } }
 
         public void Add(ICommandModel command)
         {
@@ -49,25 +56,21 @@ namespace Shield.HardwareCom.Models
             }
             return false;
         }
-        
+
         public bool Remove(ICommandModel command)
         {
-            if(_commands.Values.Any(x => x == command))
+            if (_commands.Values.Any(x => x == command))
             {
                 var commandToRemove = _commands.First(cmd => cmd.Value == command);
                 _commands.Remove(commandToRemove.Key);
                 ResortCommands(commandToRemove.Key);
                 return true;
             }
-            return false;           
-        }       
-
-        public int CommandCount
-        {
-            get { return _commands.Count(); }
+            return false;
         }
 
         #region internal helpers
+
         private void ResortCommands(int fromWhichKey)
         {
             if (_commands.Count == 0 || fromWhichKey > _commands.Keys.Max())
@@ -80,6 +83,21 @@ namespace Shield.HardwareCom.Models
             }
         }
 
-        #endregion
+        #endregion internal helpers
+
+        #region IEnumerable implementation
+
+        public IEnumerator<ICommandModel> GetEnumerator()
+        {
+            for (int i = 0; i < _commands.Count; i++)
+                yield return _commands[i];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion IEnumerable implementation
     }
 }

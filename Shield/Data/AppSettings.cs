@@ -161,6 +161,5 @@ namespace Shield.Data
                 return _appSettingsModel.Settings[type];
             return null;
         }
-
     }
 }

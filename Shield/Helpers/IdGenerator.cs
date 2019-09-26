@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.Helpers
 {
@@ -13,7 +10,7 @@ namespace Shield.Helpers
         private static string _lastId = string.Empty;
 
         /// <summary>
-        /// Generate alpha-numeric random id of given length. Static class.        
+        /// Generate alpha-numeric random id of given length. Static class.
         /// </summary>
         /// <param name="length">how many chars should be generated</param>
         /// <returns></returns>
@@ -28,8 +25,8 @@ namespace Shield.Helpers
             {
                 result = new string(Enumerable.Range(1, length).Select(_ => CHARS[idGenerator.Next(CHARS.Length)]).ToArray()).ToUpper();
             }
-            while(result == _lastId);
-            
+            while (result == _lastId);
+
             _lastId = result;
 
             return result;

@@ -22,22 +22,13 @@ namespace Shield.HardwareCom.Factories
 
     public class CommunicationDeviceFactory : ICommunicationDeviceFactory
     {
-        private readonly ISerialPortAdapterFactory _serialAdapterFactory;
-        private readonly IMoqAdapterFactory _moqAdapterFactory;
         private IAppSettings _appSettings;
-        private Func<ICommandModel> _commandModelFac;
         private IIndex<DeviceType, ICommunicationDevice> _deviceFactory;
 
-        public CommunicationDeviceFactory(ISerialPortAdapterFactory serialAdapterFactory,
-                                          IIndex<DeviceType, ICommunicationDevice> deviceFactory,
-                                          IMoqAdapterFactory moqAdapterFactory,
-                                          IAppSettings appSettings,
-                                          Func<ICommandModel> commandModelFac)
+        public CommunicationDeviceFactory(IIndex<DeviceType, ICommunicationDevice> deviceFactory,
+                                          IAppSettings appSettings)
         {
-            _serialAdapterFactory = serialAdapterFactory;
-            _moqAdapterFactory = moqAdapterFactory;
             _appSettings = appSettings;
-            _commandModelFac = commandModelFac;
             _deviceFactory = deviceFactory;
         }
            
@@ -67,32 +58,6 @@ namespace Shield.HardwareCom.Factories
                     return null;                    
             }
             return null;
-        }
-
-        // do usuniecia - kiedy bedzie koniec testow!
-        public ICommunicationDevice Device(DeviceType typeOfDevice,
-                                           int portNumber,
-                                           int baudRate,
-                                           int dataBits,
-                                           Parity parity,
-                                           StopBits stopBits)
-        {
-            switch (typeOfDevice)
-            {
-                case DeviceType.Serial:
-                    if (_serialAdapterFactory.Create(portNumber, baudRate, dataBits, parity, stopBits))
-                        return _serialAdapterFactory.GivePort;
-                    break;
-
-                case DeviceType.Moq:
-                    if (_moqAdapterFactory.Create(portNumber))
-                        return _moqAdapterFactory.GivePort;   
-                    break;
-            }
-
-            string err = "ERROR: CommunicationDeviceFactory Device - could not create a communication device - maybe bad enum value or additional data?";
-            Debug.WriteLine(err);
-            return null;
-        }        
+        }    
     }
 }

@@ -70,13 +70,11 @@
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
+    <Compile Include="HardwareCom\CommandTranslator.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
     <Compile Include="HardwareCom\Factories\ICommunicationDeviceFactory.cs" />
-    <Compile Include="HardwareCom\Factories\IMoqAdapterFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ISerialPortAdapterFactory.cs" />
-    <Compile Include="HardwareCom\Factories\MoqAdapterFactory.cs" />
-    <Compile Include="HardwareCom\Factories\SerialPortAdapterFactory.cs" />
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
+    <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\IMessanger.cs" />
     <Compile Include="HardwareCom\Messanger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />

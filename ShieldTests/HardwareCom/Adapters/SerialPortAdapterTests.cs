@@ -14,6 +14,7 @@ using Autofac.Extras.Moq;
 using Shield.Data.Models;
 using Shield.Data;
 using Autofac.Core;
+using Shield.HardwareCom;
 
 namespace ShieldTests.HardwareCom.Adapters
 {  
@@ -33,7 +34,8 @@ namespace ShieldTests.HardwareCom.Adapters
 
             string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
                                                                     new Func<ICommandModel>(() => new CommandModel()),
-                                                                    new AppSettings(new AppSettingsModel())),
+                                                                    new AppSettings(new AppSettingsModel()),
+                                                                    new CommandTranslator(new AppSettings(new AppSettingsModel()), new Func<ICommandModel>(() => new CommandModel()))),
                                               new object[] {input})
                                       .ToString();
 
@@ -61,7 +63,8 @@ namespace ShieldTests.HardwareCom.Adapters
 
             string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
                                                                     new Func<ICommandModel>(() => new CommandModel()),
-                                                                    new AppSettings(new AppSettingsModel())),
+                                                                    new AppSettings(new AppSettingsModel()),
+                                                                    new CommandTranslator(new AppSettings(new AppSettingsModel()), new Func<ICommandModel>(() => new CommandModel()))),
                                               new object[] {input})
                                       .ToString();
 

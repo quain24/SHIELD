@@ -22,12 +22,14 @@ namespace Shield.ConsoleUI
         private ICommunicationDeviceFactory _deviceFactory;
         private IMessanger _comMessanger;
         private IAppSettings _setman;
+        private IMessageModel _message;
 
-        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message)
         {           
             _command = command;           
             _deviceFactory = deviceFactory;
             _setman = setman;
+            _message = message;
         }
         public void Run()
         {
@@ -113,11 +115,30 @@ namespace Shield.ConsoleUI
                 Console.WriteLine(availablePort);
             }
 
+            _comMessanger.Open();
+            _comMessanger.ConstantReceiveAsync();
+
             int licznik = 0;
 
             Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
 
+            Console.WriteLine("Press enter to send test message");
+            Console.ReadLine();
+            Console.WriteLine("Send a test IMessage model");
+            ICommandModel com1 = new CommandModel{CommandType = CommandType.HandShake};            
+            ICommandModel com2 = new CommandModel{CommandType = CommandType.Sending};            
+            ICommandModel com3 = new CommandModel{CommandType = CommandType.Data, Data = "123456789123456789123456789123"};            
+            ICommandModel com4 = new CommandModel{CommandType = CommandType.Completed};
 
+            IMessageModel message = new MessageModel(_setman);
+            message.Add(com1);
+            message.Add(com2);
+            message.Add(com3);
+            message.Add(com4);
+
+            _comMessanger.SendAsync(message);
+
+            Console.WriteLine("Message sent.");
 
             Console.ReadLine();
 
@@ -127,8 +148,7 @@ namespace Shield.ConsoleUI
 
             //_comMessanger.Send(null);
 
-            _comMessanger.Open();
-            _comMessanger.ConstantReceiveAsync();
+            
 
 
 
@@ -141,8 +161,8 @@ namespace Shield.ConsoleUI
                     mes.Data = licznik.ToString();
                     mes.Id = Helpers.IdGenerator.GetId(appset.IdSize);
 
-                    _comMessanger.SendAsync(mes);
-                    await Task.Delay(500);
+                    await _comMessanger.SendAsync(mes);
+                    //await Task.Delay(500);
                     //    await Task.Delay(100);
                     //if (licznik % 1000 == 0)
                     //  GC.Collect();

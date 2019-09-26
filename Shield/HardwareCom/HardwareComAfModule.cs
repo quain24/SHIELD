@@ -35,17 +35,6 @@ namespace Shield.HardwareCom
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
             
             #region Communication Device Factory
-            //builder.RegisterType<SerialPortAdapter>()
-            //       .Keyed<ICommunicationDevice>(DeviceType.Serial)
-            //       .WithParameter(new ResolvedParameter(
-            //                     (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
-            //                     (pi, ctx) => ctx.Resolve<SerialPort>()))
-            //       .WithParameter(new ResolvedParameter(
-            //                     (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
-            //                     (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()))
-            //       .WithParameter(new ResolvedParameter(
-            //                     (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
-            //                     (pi, ctx) => ctx.Resolve<IAppSettings>()));
             
             builder.RegisterType<SerialPortAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Serial)
@@ -58,7 +47,10 @@ namespace Shield.HardwareCom
                                        (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
                                    new ResolvedParameter(
                                        (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
-                                       (pi, ctx) => ctx.Resolve<IAppSettings>())});
+                                       (pi, ctx) => ctx.Resolve<IAppSettings>()),
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
+                                       (pi, ctx) => ctx.Resolve<ICommandTranslator>())});
 
             builder.RegisterType<MoqAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Moq)
@@ -67,6 +59,16 @@ namespace Shield.HardwareCom
                                  (pi, ctx) => "1"));
             #endregion
 
+            // Working classes
+            builder.RegisterType<CommandTranslator>()
+                   .As<ICommandTranslator>()
+                   .WithParameters(new[]{
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
+                                       (pi, ctx) => ctx.Resolve<IAppSettings>()),
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
+                                       (pi, ctx) => ctx.Resolve<Func<ICommandModel>>())});
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
@@ -74,6 +76,8 @@ namespace Shield.HardwareCom
                    .Except<Messanger>()
                    .Except<MoqAdapter>()
                    .Except<SerialPortAdapter>()
+                   .Except<CommandTranslator>()
+                   .Except<CommunicationDeviceFactory>()
                    .AsImplementedInterfaces()
                    .InstancePerDependency();
             

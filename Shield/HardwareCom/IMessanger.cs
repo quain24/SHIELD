@@ -9,7 +9,8 @@ namespace Shield.HardwareCom
     public interface IMessanger
     {
         Task<bool> SendAsync(ICommandModel comand);
-        bool Send(ICommandModel command);
+        Task<bool> SendAsync(IMessageModel message);
+        bool Send(IMessageModel message);
         bool Setup(DeviceType type);
 
         void Open();
