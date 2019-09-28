@@ -10,6 +10,7 @@ namespace Shield.Data
         void Flush();
         Dictionary<SettingsType, ISettings> GetAll();
         ISettings GetSettingsFor(SettingsType type);
+        T GetSettingsFor<T>() where T : class, ISettings;
         bool LoadFromFile();
         bool Remove(SettingsType type);
         bool SaveToFile();

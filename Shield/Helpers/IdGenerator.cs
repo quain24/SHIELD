@@ -14,16 +14,16 @@ namespace Shield.Helpers
         /// </summary>
         /// <param name="length">how many chars should be generated</param>
         /// <returns></returns>
-        public static string GetId(int length)
+        public static string GetId(int? length)
         {
-            if (length < 1)
+            if (length < 1 || length is null)
                 return null;
 
             string result;
 
             do
             {
-                result = new string(Enumerable.Range(1, length).Select(_ => CHARS[idGenerator.Next(CHARS.Length)]).ToArray()).ToUpper();
+                result = new string(Enumerable.Range(1, (int)length).Select(A => CHARS[idGenerator.Next(CHARS.Length)]).ToArray()).ToUpper();
             }
             while (result == _lastId);
 

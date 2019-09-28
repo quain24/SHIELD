@@ -13,7 +13,7 @@ namespace Shield.HardwareCom.Adapters
 {
     public class MoqAdapter : ICommunicationDevice
     {
-        public event EventHandler<ICommandModel> DataReceived;
+        public event EventHandler<string> DataReceived;
         private string _portName;
         private string _rawData;
         private bool _isOpen = false;
@@ -55,28 +55,28 @@ namespace Shield.HardwareCom.Adapters
             return  new CommandModel {CommandType = Enums.CommandType.Data, Data =  _portName + " " + _rawData };            
         }
 
-        public async Task<bool> SendAsync(ICommandModel command)
+        public async Task<bool> SendAsync(string command)
         {
             Debug.WriteLine("ASYNC Wysłano dane do portwu obiektu \"MoqAdapter\"");
             Debug.WriteLine("ASYNC Odpalono event DataReceived \"MoqAdapter\"");
-            _rawData = command.CommandTypeString;
-            DataReceived?.Invoke(this, new CommandModel());
+            _rawData = command;
+            DataReceived?.Invoke(this, "");
             return true;
         }
 
-        public bool Send(ICommandModel command)
+        public bool Send(string command)
         {            
             Debug.WriteLine("Wysłano dane do portwu obiektu \"MoqAdapter\"");
             Debug.WriteLine("Odpalono event DataReceived \"MoqAdapter\"");
-            _rawData = command.CommandTypeString;
-            DataReceived?.Invoke(this, new CommandModel());
+            _rawData = command;
+            DataReceived?.Invoke(this, "");
             return true;
         }
 
 
 
 
-        private void PropagateDataReceivedEvent(object sender, ICommandModel e)
+        private void PropagateDataReceivedEvent(object sender, string e)
         {
             DataReceived?.Invoke(sender, e);
             Debug.WriteLine("Odpalono event PropagateDataReceivedEvent z \"MoqAdapter\"");

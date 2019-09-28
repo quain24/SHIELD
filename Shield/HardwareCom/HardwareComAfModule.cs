@@ -41,16 +41,10 @@ namespace Shield.HardwareCom
                    .WithParameters(new []{
                                    new ResolvedParameter(
                                        (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
-                                       (pi, ctx) => ctx.Resolve<SerialPort>()), 
-                                   new ResolvedParameter(
-                                       (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
-                                       (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
+                                       (pi, ctx) => ctx.Resolve<SerialPort>()),
                                    new ResolvedParameter(
                                        (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
-                                       (pi, ctx) => ctx.Resolve<IAppSettings>()),
-                                   new ResolvedParameter(
-                                       (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
-                                       (pi, ctx) => ctx.Resolve<ICommandTranslator>())});
+                                       (pi, ctx) => ctx.Resolve<IAppSettings>())});
 
             builder.RegisterType<MoqAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Moq)
@@ -68,7 +62,10 @@ namespace Shield.HardwareCom
                                        (pi, ctx) => ctx.Resolve<IAppSettings>()),
                                    new ResolvedParameter(
                                        (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
-                                       (pi, ctx) => ctx.Resolve<Func<ICommandModel>>())});
+                                       (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
+                                   new ResolvedParameter(
+                                       (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
+                                       (pi, ctx) => ctx.Resolve<ICommandTranslator>())});
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

@@ -33,9 +33,7 @@ namespace ShieldTests.HardwareCom.Adapters
                                            null);
 
             string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
-                                                                    new Func<ICommandModel>(() => new CommandModel()),
-                                                                    new AppSettings(new AppSettingsModel()),
-                                                                    new CommandTranslator(new AppSettings(new AppSettingsModel()), new Func<ICommandModel>(() => new CommandModel()))),
+                                                                    new AppSettings(new AppSettingsModel())),
                                               new object[] {input})
                                       .ToString();
 
@@ -62,9 +60,7 @@ namespace ShieldTests.HardwareCom.Adapters
                                            null);
 
             string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
-                                                                    new Func<ICommandModel>(() => new CommandModel()),
-                                                                    new AppSettings(new AppSettingsModel()),
-                                                                    new CommandTranslator(new AppSettings(new AppSettingsModel()), new Func<ICommandModel>(() => new CommandModel()))),
+                                                                    new AppSettings(new AppSettingsModel())),
                                               new object[] {input})
                                       .ToString();
 

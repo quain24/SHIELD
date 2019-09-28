@@ -13,56 +13,55 @@ namespace Shield.HardwareCom
     /// </summary>
     public class CommandTranslator : ICommandTranslator
     {
-        private const char SEPARATOR = '*';
-        private const char FILLER = '.';
+        private readonly char _separator;
+        private readonly char _filler;
 
-        private IAppSettings _appSettings;
         private Func<ICommandModel> _commandModelFac;
         private IApplicationSettingsModel _appSettingsModel;
 
         public CommandTranslator(IAppSettings appSettings, Func<ICommandModel> commandModelFac)
         {
-            _appSettings = appSettings;
-            _commandModelFac = commandModelFac; // Autofac auutofactory
-            _appSettingsModel = (IApplicationSettingsModel)_appSettings.GetSettingsFor(SettingsType.Application);
+            _commandModelFac = commandModelFac; // Autofac autofactory
+            _appSettingsModel = appSettings.GetSettingsFor<IApplicationSettingsModel>();
+            _separator = _appSettingsModel.Separator;
+            _filler = _appSettingsModel.Filler;
         }
 
         public ICommandModel FromString(string rawData)
         {
             ICommandModel command = _commandModelFac();
-            string rawCom;
-            string rawDat = string.Empty;
-            string rawId = string.Empty;
+            string rawCommandTypeString;
+            string rawDataString;
+            string rawIdString;
 
-            int commandSizeWithSepparators = _appSettingsModel.CommandTypeSize + 2;
-            int idWithSepparator = _appSettingsModel.IdSize + 1;
+            int wholeCommandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + _appSettingsModel.DataSize + 3;
 
-            if (rawData.Length >= _appSettingsModel.CommandTypeSize + 2)
+            if (rawData.Length == wholeCommandLength)
             {
-                rawCom = rawData.Substring(0, commandSizeWithSepparators);    // Command in *0123* format (including asterisc or other SEPARATOR)
-                rawDat = rawData.Substring(commandSizeWithSepparators + idWithSepparator); // Data starts after command type and id. Example: *0001*A8DD*12345678912345
-                rawId = rawData.Substring(commandSizeWithSepparators, idWithSepparator); // Get it with sepparator
-
-                if (rawCom.First() == SEPARATOR &&
-                    rawCom.Last() == SEPARATOR)
+                rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
+                rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
+                rawDataString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
+                //Example: *0001*A8DD*12345678912345  
+                
+                int rawComInt;
+                if (Int32.TryParse(rawCommandTypeString, out rawComInt))
                 {
-                    int rawComInt;
-                    if (Int32.TryParse(rawCom.Substring(1, _appSettingsModel.CommandTypeSize), out rawComInt))
-                    {
-                        if (Enum.IsDefined(typeof(CommandType), rawComInt))
-                            command.CommandType = (CommandType)rawComInt;
-                        else
-                            command.CommandType = CommandType.Unknown;
-                    }
-                }
+                    if (Enum.IsDefined(typeof(CommandType), rawComInt))
+                        command.CommandType = (CommandType)rawComInt;
+                    else
+                        command.CommandType = CommandType.Unknown;
+                }  
+                
+                command.Id = rawIdString;
+                command.Data = rawDataString;
             }
 
-            // If command is still empty, then raw data was wrong - device cannot send empty, useless communication.
-            if (command.CommandType == CommandType.Empty)
+            else
+            {
                 command.CommandType = CommandType.Error;
-
-            command.Id = rawId.Substring(0, _appSettingsModel.IdSize);
-            command.Data = rawDat;
+                command.Id = string.Empty.PadLeft(_appSettingsModel.IdSize, _filler);
+                command.Data = string.Empty.PadLeft(_appSettingsModel.DataSize, _filler);                
+            }            
 
             return command;
         }
@@ -79,16 +78,16 @@ namespace Shield.HardwareCom
             if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
                 return null;
 
-            StringBuilder command = new StringBuilder(SEPARATOR.ToString());
+            StringBuilder command = new StringBuilder(_separator.ToString());
 
-            command.Append(((int)givenCommand.CommandType).ToString().PadLeft(_appSettingsModel.CommandTypeSize, '0')).Append(SEPARATOR);
-            command.Append(givenCommand.Id).Append(SEPARATOR);
+            command.Append(((int)givenCommand.CommandType).ToString().PadLeft(_appSettingsModel.CommandTypeSize, '0')).Append(_separator);
+            command.Append(givenCommand.Id).Append(_separator);
 
             if (givenCommand.CommandType == CommandType.Data)
                 command.Append(givenCommand.Data);
 
             if (command.Length < completeCommandSizeWithSep)
-                command.Append(FILLER, completeCommandSizeWithSep - command.Length);
+                command.Append(_filler, completeCommandSizeWithSep - command.Length);
 
             return command.ToString();
         }

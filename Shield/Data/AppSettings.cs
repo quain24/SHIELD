@@ -1,18 +1,12 @@
-﻿using System;
+﻿using Shield.CommonInterfaces;
+using Shield.Data.Models;
+using Shield.Enums;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Serialization;
-using Shield.CommonInterfaces;
-using Shield.Data.Models;
-using Shield.Enums;
-using Shield.HardwareCom.Models;
-
 
 namespace Shield.Data
 {
@@ -28,6 +22,7 @@ namespace Shield.Data
 
         private IAppSettingsModel _appSettingsModel;
         private bool _wasInitialized = false;
+        private bool _defaultsLoaded = false;
         private object _lock = new object();
 
         public AppSettings(IAppSettingsModel AppSettingsModel)
@@ -38,8 +33,7 @@ namespace Shield.Data
             {
                 if (!_wasInitialized)
                 {
-                    if (LoadFromFile())
-                        _wasInitialized = true;
+                    LoadFromFile();
                 }
             }
         }
@@ -99,10 +93,28 @@ namespace Shield.Data
                 _appSettingsModel = (IAppSettingsModel)ser.ReadObject(reader, true);
                 reader.Close();
                 fs.Close();
+                _defaultsLoaded = false;
                 return _wasInitialized = true;
             }
             catch (Exception ex)
             {
+                Debug.WriteLine("ERROR: AppSettings load - There was a problem with file loading.\nWill try to set default values instead and save them to file!");
+
+                _appSettingsModel = new AppSettingsModel();
+
+                IApplicationSettingsModel defaultApplicationSettings = new ApplicationSettingsModel();
+                ISerialPortSettingsModel defaultSerialPortSettings = new SerialPortSettingsModel();
+                IMoqPortSettingsModel defaultMoqPortSettings = new MoqPortSettingsModel();
+
+                _appSettingsModel.Settings.Add(SettingsType.Application, defaultApplicationSettings);
+                _appSettingsModel.Settings.Add(SettingsType.SerialDevice, defaultSerialPortSettings);
+                _appSettingsModel.Settings.Add(SettingsType.MoqDevice, defaultMoqPortSettings);
+
+                SaveToFile();
+
+                _defaultsLoaded = true;
+                _wasInitialized = true;
+
                 if (ex is DirectoryNotFoundException)
                 {
                     Debug.WriteLine("ERROR: AppSettings load - 'settings' directory not found and could not be created!");
@@ -118,6 +130,14 @@ namespace Shield.Data
                 if (ex is UnauthorizedAccessException)
                 {
                     Debug.WriteLine("ERROR: AppSettings load - cannot access settings file - dont have permissions?");
+                }
+                if (ex is NullReferenceException || ex is SerializationException)
+                {
+                    Debug.WriteLine("ERROR: AppSettings load - Something wrong with settings file - was it manually modified or one of config classes has changed?");
+                }
+                else
+                {
+                    Debug.WriteLine("ERROR: AppSettings load - Unknown error / unhandled NULL exception");
                 }
 
                 return false;
@@ -161,5 +181,15 @@ namespace Shield.Data
                 return _appSettingsModel.Settings[type];
             return null;
         }
+
+        public T GetSettingsFor<T>() where T : class, ISettings
+        {
+            foreach(var kvp in _appSettingsModel.Settings)
+            {
+                if(kvp.Value is T)
+                    return (T) kvp.Value;
+            }
+            return default;
+        }       
     }
 }

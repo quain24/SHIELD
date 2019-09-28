@@ -2,6 +2,7 @@
 using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
+using Shield.Extensions;
 using Shield.HardwareCom.Models;
 using System;
 using System.Diagnostics;
@@ -35,11 +36,8 @@ namespace Shield.HardwareCom.Adapters
         private CancellationToken _sendToken;
 
         private object _lock = new object();
-        private object _lockStringBuilder = new object();
-        private object _lockSender = new object();
 
         private readonly SerialPort _port;
-        private Func<ICommandModel> _commandModelFac;
         private IAppSettings _appSettings;
 
         private StringBuilder _receivedBuffer = new StringBuilder();
@@ -48,19 +46,17 @@ namespace Shield.HardwareCom.Adapters
         private int _commandTypeSize;
         private int _completeCommandSizeWithSep;
         private bool _isLissening = false;
-        private ICommandTranslator _translator;
         private Regex CommandPattern;
+        ISerialPortSettingsModel _internalSettings;
 
-        public event EventHandler<ICommandModel> DataReceived;
+        public event EventHandler<string> DataReceived;
 
         #endregion Internal variables and events
 
-        public SerialPortAdapter(SerialPort port, Func<ICommandModel> commandModelFac, IAppSettings appSettings, ICommandTranslator commandTranslator)
+        public SerialPortAdapter(SerialPort port, IAppSettings appSettings)
         {
             _port = port;
-            _commandModelFac = commandModelFac;
-            _appSettings = appSettings;
-            _translator = commandTranslator;
+            _appSettings = appSettings;            
         }
 
         /// <summary>
@@ -73,19 +69,19 @@ namespace Shield.HardwareCom.Adapters
             if (_port is null || settings is null || !(settings is ISerialPortSettingsModel))
                 return false;
 
-            ISerialPortSettingsModel internalSettings = (ISerialPortSettingsModel)settings;
+            _internalSettings = (ISerialPortSettingsModel)settings;
 
-            if (!SerialPort.GetPortNames().Contains($"COM{internalSettings.PortNumber}"))
+            if (!SerialPort.GetPortNames().Contains($"COM{_internalSettings.PortNumber}"))
                 return false;
 
-            _port.PortName = $"COM{internalSettings.PortNumber}";
-            _port.BaudRate = internalSettings.BaudRate;
-            _port.DataBits = internalSettings.DataBits;
-            _port.Parity = internalSettings.Parity;
-            _port.StopBits = internalSettings.StopBits;
-            _port.ReadTimeout = internalSettings.ReadTimeout;
-            _port.WriteTimeout = internalSettings.WriteTimeout;
-            _port.Encoding = Encoding.GetEncoding(internalSettings.Encoding);
+            _port.PortName = $"COM{_internalSettings.PortNumber}";
+            _port.BaudRate = _internalSettings.BaudRate;
+            _port.DataBits = _internalSettings.DataBits;
+            _port.Parity = _internalSettings.Parity;
+            _port.StopBits = _internalSettings.StopBits;
+            _port.ReadTimeout = _internalSettings.ReadTimeout;
+            _port.WriteTimeout = _internalSettings.WriteTimeout;
+            _port.Encoding = Encoding.GetEncoding(_internalSettings.Encoding);
 
             _port.DtrEnable = false;
             _port.RtsEnable = false;
@@ -150,44 +146,34 @@ namespace Shield.HardwareCom.Adapters
         {
             _isLissening = true;
             string errorData = string.Empty;
-            byte[] mainBuffer = new byte[_completeCommandSizeWithSep];
+            byte[] mainBuffer = new byte[_completeCommandSizeWithSep * 10]; // times ten gives sufficient overhead on high speed transmissions
 
             while (_port.IsOpen && !_receiveToken.IsCancellationRequested)
             {
-                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, _completeCommandSizeWithSep, _receiveToken);
+                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, mainBuffer.Length, _receiveToken);
                 string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(mainBuffer).Substring(0, bytesRead);
 
                 if (_port.Encoding.CodePage == Encoding.ASCII.CodePage)
-                    _receivedBuffer.Append(RemoveNonAsciiChars(rawData));
+                    _receivedBuffer.Append(rawData.RemoveASCIIChars());
                 else
                     _receivedBuffer.Append(rawData);
 
                 if (_receivedBuffer.Length >= _completeCommandSizeWithSep)
                 {
-                    ICommandModel command = _commandModelFac();
-
                     string workPiece = _receivedBuffer.ToString(0, _completeCommandSizeWithSep);
                     int whereToCut = CheckRawData(workPiece);
 
-                    if (whereToCut == -1)
+                    if (whereToCut > 0)
                     {
-                        command.Data = workPiece;
-                        _receivedBuffer.Remove(0, _completeCommandSizeWithSep);
-                    }
-                    else if (whereToCut > 0)
-                    {
-                        command.Data = _receivedBuffer.ToString(0, whereToCut);
                         _receivedBuffer.Remove(0, whereToCut);
+                        workPiece = workPiece.Substring(0, whereToCut);
                     }
 
-                    if (whereToCut != 0)
-                        command.CommandType = CommandType.Error;
+                    // All good or all bad
                     else
-                    {
-                        command = CommandTranslator(workPiece);
                         _receivedBuffer.Remove(0, _completeCommandSizeWithSep);
-                    }
-                    DataReceived?.Invoke(this, command);
+
+                    DataReceived?.Invoke(this, workPiece);
                 }
                 else
                 {
@@ -195,11 +181,13 @@ namespace Shield.HardwareCom.Adapters
                 }
             }
             _isLissening = false;
-        }        
+        }
 
         public void StopReceiving()
         {
             _receiveTokenSource.Cancel();
+            _receiveTokenSource = new CancellationTokenSource();
+            _receiveToken = _receiveTokenSource.Token;
         }
 
         /// <summary>
@@ -207,56 +195,22 @@ namespace Shield.HardwareCom.Adapters
         /// </summary>
         /// <param name="command">Single command to transfer</param>
         /// <returns>Task<bool> if sends or failes</bool></returns>
-        public Task<bool> SendAsync(ICommandModel command)
+        public async Task<bool> SendAsync(string command)
         {
-            // która wersja lepsza??
-
-            return Task.Run((Func<bool>)(() =>
-            {
-                if (command is null)
-                    return false;
-
-                string raw = CommandTranslator(command);
-
-                if (!string.IsNullOrEmpty(raw) && !_sendToken.IsCancellationRequested)
-                {
-                    try
-                    {
-                        _port.Write(raw);
-                        return true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible?");
-                        return false;
-                    }
-                }
+            if (string.IsNullOrEmpty(command) || _sendToken.IsCancellationRequested)
                 return false;
-            }), _sendToken);
-            //bool result = await Task.Run((Func<bool>)(() =>
-            //{
-            //    if (command is null)
-            //        return false;
 
-            //    string raw = CommandTranslator(command);
-
-            //    if (!string.IsNullOrEmpty(raw) && !_sendToken.IsCancellationRequested)
-            //    {
-            //        try
-            //        {
-            //            _port.Write(raw);
-            //            return true;
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible?");
-            //            return false;
-            //        }
-            //    }
-            //    return false;
-            //}), _sendToken);
-
-            //return result;
+            byte[] sendBuffer = Encoding.GetEncoding(_port.Encoding.CodePage).GetBytes(command);
+            try
+            {
+                await _port.BaseStream.WriteAsync(sendBuffer, 0, sendBuffer.Count(), _sendToken);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible / cancelled?");
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -264,12 +218,12 @@ namespace Shield.HardwareCom.Adapters
         /// </summary>
         /// <param name="command">Single command to transfer</param>
         /// <returns>bool if sends or failes</bool></returns>
-        public bool Send(ICommandModel command)
+        public bool Send(string command)
         {
             if (command is null)
                 return false;
 
-            string raw = CommandTranslator(command);
+            string raw = command;
 
             if (!string.IsNullOrEmpty(raw))
             {
@@ -340,86 +294,6 @@ namespace Shield.HardwareCom.Adapters
                 return 1;
             else
                 return firsIndexOfSepprarator;
-        }
-
-        private string RemoveNonAsciiChars(string data)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in data)
-            {
-                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == SEPARATOR || c == FILLER)
-                    sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Takes a preformatted string of raw data and translates it to a single CommandModel
-        /// </summary>
-        /// <param name="rawData">preformatted string, typically from received buffer</param>
-        /// <returns>Single command in CommandModel format</returns>
-        private ICommandModel CommandTranslator(string rawData)
-        {
-            ICommandModel command = _commandModelFac();
-            string rawCom;
-            string rawDat = string.Empty;
-            string rawId = string.Empty;
-
-            int commandSizeWithSepparators = _commandTypeSize + 2;
-            int idWithSepparator = _idSize + 1;
-
-            if (rawData.Length >= _commandTypeSize + 2)
-            {
-                rawCom = rawData.Substring(0, commandSizeWithSepparators);    // Command in *0123* format (including asterisc or other SEPARATOR)
-                rawDat = rawData.Substring(commandSizeWithSepparators + idWithSepparator); // Data starts after command type and id. Example: *0001*A8DD*12345678912345
-                rawId = rawData.Substring(commandSizeWithSepparators, idWithSepparator); // Get it with sepparator
-
-                if (rawCom.First() == SEPARATOR &&
-                    rawCom.Last() == SEPARATOR)
-                {
-                    int rawComInt;
-                    if (Int32.TryParse(rawCom.Substring(1, _commandTypeSize), out rawComInt))
-                    {
-                        if (Enum.IsDefined(typeof(CommandType), rawComInt))
-                            command.CommandType = (CommandType)rawComInt;
-                        else
-                            command.CommandType = CommandType.Unknown;
-                    }
-                }
-            }
-
-            // If command is still empty, then raw data was wrong - device cannot send empty, useless communication.
-            if (command.CommandType == CommandType.Empty)
-                command.CommandType = CommandType.Error;
-
-            command.Id = rawId.Substring(0, _idSize);
-            command.Data = rawDat;
-
-            return command;
-        }
-
-        /// <summary>
-        /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
-        /// </summary>
-        /// <param name="givenCommand">Command to be trasformed into raw string</param>
-        /// <returns>Raw formatted string that can be understood by connected machine</returns>
-        private string CommandTranslator(ICommandModel givenCommand)
-        {
-            if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
-                return null;
-
-            StringBuilder command = new StringBuilder(SEPARATOR.ToString());
-
-            command.Append(((int)givenCommand.CommandType).ToString().PadLeft(_commandTypeSize, '0')).Append(SEPARATOR);
-            command.Append(givenCommand.Id).Append(SEPARATOR);
-
-            if (givenCommand.CommandType == CommandType.Data)
-                command.Append(givenCommand.Data);
-
-            if (command.Length < _completeCommandSizeWithSep)
-                command.Append(FILLER, _completeCommandSizeWithSep - command.Length);
-
-            return command.ToString();
         }
 
         #endregion Helpers - raw data checking and transformation

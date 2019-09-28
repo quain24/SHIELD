@@ -23,13 +23,15 @@ namespace Shield.ConsoleUI
         private IMessanger _comMessanger;
         private IAppSettings _setman;
         private IMessageModel _message;
+        ICommandTranslator _commandTranslator;
 
-        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator)
         {           
             _command = command;           
             _deviceFactory = deviceFactory;
             _setman = setman;
             _message = message;
+            _commandTranslator = commandTranslator;
         }
         public void Run()
         {
@@ -37,74 +39,76 @@ namespace Shield.ConsoleUI
             appset.DataSize = 30;
             appset.IdSize = 4;
             appset.CommandTypeSize = 4;
+            appset.Filler = '.';
+            appset.Separator = '*';
 
 
-            // testowanie zapisywania ustawien - działa - 
+            //// testowanie zapisywania ustawien - działa - 
 
             ISerialPortSettingsModel settings = new SerialPortSettingsModel();
-            settings.BaudRate = 19200;
+            settings.BaudRate = 921600;//19200;
             settings.DataBits = 8;
             settings.Parity = Parity.None;
             settings.PortNumber = 4;
             settings.StopBits = StopBits.One;
             settings.ReadTimeout = -1;
-            settings.WriteTimeout = -1;
+            settings.WriteTimeout = 100;
             settings.Encoding = Encoding.ASCII.CodePage;
 
             IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
             settings2.PortNumber = 6;
 
-            //AppSettings setman = new AppSettings();
+            AppSettings setman = new AppSettings(new AppSettingsModel());
             _setman.Add(SettingsType.SerialDevice, settings);
             _setman.Add(SettingsType.MoqDevice, settings2);
             _setman.Add(SettingsType.Application, appset);
             _setman.SaveToFile();
 
-            foreach (var item in _setman.GetAll())
-            {
-                Console.WriteLine("Pozycja sprzed wczytania:");
-                Console.WriteLine(item.Key.ToString() + " " + item.Value.ToString());
-            }
+            //foreach (var item in _setman.GetAll())
+            //{
+            //    Console.WriteLine("Pozycja sprzed wczytania:");
+            //    Console.WriteLine(item.Key.ToString() + " " + item.Value.ToString());
+            //}
 
             // wczytywanie ustawien
             _setman.LoadFromFile();
             
             
 
-            // Prymityne wyswietlanie wartosci
-            foreach (var item in _setman.GetAll())
-            {
-                if(item.Key == SettingsType.MoqDevice)
-                {
-                    Console.WriteLine("Pozycja po wczytaniu:");
-                    Console.WriteLine("klucz: " + item.Key.ToString());
-                    IMoqPortSettingsModel readed2 = (IMoqPortSettingsModel) item.Value;
-                    Console.WriteLine(readed2.PortNumber);
-                }
-                else if(item.Key == SettingsType.Application)
-                {
-                    Console.WriteLine("Pozycja po wczytaniu:");
-                    Console.WriteLine("klucz: " + item.Key.ToString());
-                    IApplicationSettingsModel readed3 = (IApplicationSettingsModel) item.Value;
-                    Console.WriteLine(readed3.DataSize);
-                }
-                else
-                {
-                    Console.WriteLine("Pozycja po wczytaniu:");
-                    Console.WriteLine("klucz: " + item.Key.ToString());
-                    ISerialPortSettingsModel readed = (ISerialPortSettingsModel) item.Value;
-                    Console.WriteLine(readed.BaudRate);
-                    Console.WriteLine(readed.DataBits);
-                    Console.WriteLine(readed.Parity);
-                    Console.WriteLine(readed.PortNumber);
-                    Console.WriteLine(readed.StopBits);
-                    Console.WriteLine(readed.ReadTimeout);
-                    Console.WriteLine(readed.WriteTimeout);
-                    Console.WriteLine(readed.Encoding.ToString());
-                }                
-            }            
+            //// Prymityne wyswietlanie wartosci
+            //foreach (var item in _setman.GetAll())
+            //{
+            //    if(item.Key == SettingsType.MoqDevice)
+            //    {
+            //        Console.WriteLine("Pozycja po wczytaniu:");
+            //        Console.WriteLine("klucz: " + item.Key.ToString());
+            //        IMoqPortSettingsModel readed2 = (IMoqPortSettingsModel) item.Value;
+            //        Console.WriteLine(readed2.PortNumber);
+            //    }
+            //    else if(item.Key == SettingsType.Application)
+            //    {
+            //        Console.WriteLine("Pozycja po wczytaniu:");
+            //        Console.WriteLine("klucz: " + item.Key.ToString());
+            //        IApplicationSettingsModel readed3 = (IApplicationSettingsModel) item.Value;
+            //        Console.WriteLine(readed3.DataSize);
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine("Pozycja po wczytaniu:");
+            //        Console.WriteLine("klucz: " + item.Key.ToString());
+            //        ISerialPortSettingsModel readed = (ISerialPortSettingsModel) item.Value;
+            //        Console.WriteLine(readed.BaudRate);
+            //        Console.WriteLine(readed.DataBits);
+            //        Console.WriteLine(readed.Parity);
+            //        Console.WriteLine(readed.PortNumber);
+            //        Console.WriteLine(readed.StopBits);
+            //        Console.WriteLine(readed.ReadTimeout);
+            //        Console.WriteLine(readed.WriteTimeout);
+            //        Console.WriteLine(readed.Encoding.ToString());
+            //    }                
+            //}            
 
-            _comMessanger = new Messanger(_setman, _deviceFactory);
+            _comMessanger = new Messanger(_setman, _deviceFactory, _commandTranslator);
             _comMessanger.Setup(DeviceType.Serial);
 
             
@@ -159,7 +163,7 @@ namespace Shield.ConsoleUI
                     CommandModel mes = new CommandModel();
                     mes.CommandType = CommandType.Data;
                     mes.Data = licznik.ToString();
-                    mes.Id = Helpers.IdGenerator.GetId(appset.IdSize);
+                    mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel) _setman.GetSettingsFor(SettingsType.Application)).IdSize);
 
                     await _comMessanger.SendAsync(mes);
                     //await Task.Delay(500);

@@ -10,7 +10,7 @@ namespace COM6TestSender
     {
         private static void Main(string[] args)
         {
-            SerialPort serial = new SerialPort { BaudRate = 19200, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
+            SerialPort serial = new SerialPort { BaudRate = 921600, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
             serial.DtrEnable = false;
             serial.RtsEnable = false;
             serial.DiscardNull = true;
@@ -38,7 +38,7 @@ namespace COM6TestSender
                         }
                         while (commandType == 12);
 
-                        Thread.Sleep(10);
+                        //Thread.Sleep(10);
                         //serial.Write($@"*0015*ABCD*123456789101112131415161718192");
                         //serial.Write($@"*{15.ToString().PadLeft(4, '0')}*" + rand.Next(1000, 9999) + '*' + "A1B2C3D4E5F6G7H8I9J10K11L12M13");
                         string aa = $@"*{15.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
@@ -68,7 +68,7 @@ namespace COM6TestSender
                     string aa = $@"*0015*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
                     byte[] bak = new byte[aa.Length];
                     bak = Encoding.ASCII.GetBytes(aa);
-                    Thread.Sleep(1);
+                    //Thread.Sleep(1);
                     await serial.BaseStream.WriteAsync(bak, 0, 41);
 
                     Console.WriteLine(serial.ReadExisting());
