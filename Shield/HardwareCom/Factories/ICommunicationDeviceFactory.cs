@@ -1,6 +1,5 @@
 ﻿using Shield.CommonInterfaces;
 using Shield.Enums;
-using System.IO.Ports;
 
 namespace Shield.HardwareCom.Factories
 {

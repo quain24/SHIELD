@@ -1,19 +1,17 @@
-﻿using System;
+﻿using Caliburn.Micro;
+using Shield.WpfGui.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using Caliburn.Micro;
-using Shield.WpfGui.ViewModels;
 
 namespace Shield.WpfGui
 {
     public class Bootstrapper : BootstrapperBase
     {
-        // konf simple container, continued on bottom 
+        // konf simple container, continued on bottom
         private SimpleContainer _container = new SimpleContainer();
-        
+
         // Initialize - requires additional config in app.xaml (resourceDictionary... etc bootstrapper)
         public Bootstrapper()
         {
@@ -26,8 +24,8 @@ namespace Shield.WpfGui
             DisplayRootViewFor<ShellViewModel>();
         }
 
+        #region Simple Container configuration
 
-        #region Simple Container configuration 
         protected override void Configure()
         {
             _container.Instance(_container);
@@ -57,8 +55,8 @@ namespace Shield.WpfGui
         protected override void BuildUp(object instance)
         {
             _container.BuildUp(instance);
-        } 
-        #endregion
-    }
+        }
 
+        #endregion Simple Container configuration
+    }
 }

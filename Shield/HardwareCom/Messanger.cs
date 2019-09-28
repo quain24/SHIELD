@@ -30,7 +30,7 @@ namespace Shield.HardwareCom
         public bool Setup(DeviceType type)
         {
             _device = _communicationDeviceFactory.Device(type);
-            IApplicationSettingsModel appSettings = (IApplicationSettingsModel)_appSettings.GetSettingsFor(SettingsType.Application);
+            IApplicationSettingsModel appSettings = _appSettings.GetSettingsFor<IApplicationSettingsModel>();
 
             if (_device is null || appSettings is null)
                 return _setupSuccessufl = false;
@@ -57,7 +57,7 @@ namespace Shield.HardwareCom
         public void OnDataReceived(object sender, string e)
         {
             // tutaj zmiana do listy powiedzmy wiadomosci, ogolnie pomyslec co kiedy przejdziemy na gui - nie bedzie przeciez w konsoli wyswietlac
-            // obecnie tylko wywala dane do konsoli           
+            // obecnie tylko wywala dane do konsoli
 
             i++;
             _tempCommandsList.Add(_commandTranslator.FromString(e));
@@ -67,7 +67,8 @@ namespace Shield.HardwareCom
 
         public async Task ConstantReceiveAsync()
         {
-            await Task.Run(() => _device.StartReceivingAsync());
+            if(_setupSuccessufl)
+                await Task.Run(() => _device.StartReceivingAsync());
         }
 
         public async Task<bool> SendAsync(ICommandModel command)

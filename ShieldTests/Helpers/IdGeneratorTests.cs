@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 
 namespace ShieldTests.Helpers
 {
     public class IdGeneratorTests
     {
-        
         [Theory]
         [InlineData(10)]
         [InlineData(20)]
@@ -19,7 +12,7 @@ namespace ShieldTests.Helpers
         {
             string result = Shield.Helpers.IdGenerator.GetId(length);
             Assert.NotNull(result);
-            Assert.Equal(length, result.Length);     
+            Assert.Equal(length, result.Length);
         }
 
         [Theory]
@@ -31,8 +24,5 @@ namespace ShieldTests.Helpers
 
             Assert.Null(result);
         }
-
-
-
     }
 }

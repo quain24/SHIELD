@@ -37,28 +37,28 @@ namespace Shield.HardwareCom.Factories
             _appSettings = appSettings;
             _commandModelFac = commandModelFac;
         }
-           
+
         public ICommunicationDevice Device(DeviceType type)
         {                       // To trzeba przerobic po pozbyciu sie create bioracej parametry w konstruktorze - zbedne poza testami
             switch (type)
             {
                 case DeviceType.Serial:
-                    ISerialPortSettingsModel settings = (ISerialPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.SerialDevice);
-                    if(_serialAdapterFactory.Create(settings))
+                    ISerialPortSettingsModel settings = (ISerialPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.SerialDevice);
+                    if (_serialAdapterFactory.Create(settings))
                         return _serialAdapterFactory.GivePort;
                     else
                         break;
 
-                    //return Device(type, settings.PortNumber, settings.CommandSize, settings.BaudRate, settings.DataBits, settings.Parity, settings.StopBits);
-                
+                //return Device(type, settings.PortNumber, settings.CommandSize, settings.BaudRate, settings.DataBits, settings.Parity, settings.StopBits);
+
                 case DeviceType.Moq:
-                    IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.MoqDevice);
+                    IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.MoqDevice);
                     return Device(type, settings2.PortNumber, 0, 0, 0, 0, 0);
 
                 default:
                     string err = $@"ERROR: CommunicationDeviceFactory Device - no device at ""{type}"" position in deviceType enum";
                     Debug.WriteLine(err);
-                    return null;                    
+                    return null;
             }
 
             return null;
@@ -81,13 +81,13 @@ namespace Shield.HardwareCom.Factories
 
                 case DeviceType.Moq:
                     if (_moqAdapterFactory.Create(portNumber))
-                        return _moqAdapterFactory.GivePort;   
+                        return _moqAdapterFactory.GivePort;
                     break;
             }
 
             string err = "ERROR: CommunicationDeviceFactory Device - could not create a communication device - maybe bad enum value or additional data?";
             Debug.WriteLine(err);
             return null;
-        }        
+        }
     }
 }

@@ -11,7 +11,9 @@ namespace Shield.HardwareCom.Models
         int CommandCount { get; }
 
         void Add(ICommandModel command);
+
         bool Remove(int id);
+
         bool Remove(ICommandModel command);
     }
 }

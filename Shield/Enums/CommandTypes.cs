@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Shield.Enums
+﻿namespace Shield.Enums
 {
     /// <summary>
     /// Options for a command type when, for example, transmiting command to a device
@@ -13,7 +7,7 @@ namespace Shield.Enums
     {
         Empty = 0,
         HandShake,
-        Confirm, 
+        Confirm,
         Cancel,
         Sending,
         StartSending,

@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Autofac;
+using Autofac.Core;
+using Shield.CommonInterfaces;
+using Shield.Data;
+using Shield.Enums;
+using Shield.HardwareCom.Adapters;
+using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.Models;
+using System;
 using System.IO.Ports;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Autofac;
-using Autofac.Core;
-using Shield.HardwareCom.Adapters;
-using Shield.HardwareCom.Factories;
-using Shield.Enums;
-using Shield.CommonInterfaces;
-using Shield.HardwareCom.Models;
-using Shield.Data;
 
 namespace Shield.HardwareCom
 {
@@ -33,12 +30,12 @@ namespace Shield.HardwareCom
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Where(t => t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
-            
+
             #region Communication Device Factory
-            
+
             builder.RegisterType<SerialPortAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Serial)
-                   .WithParameters(new []{
+                   .WithParameters(new[]{
                                    new ResolvedParameter(
                                        (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
                                        (pi, ctx) => ctx.Resolve<SerialPort>()),
@@ -51,7 +48,8 @@ namespace Shield.HardwareCom
                    .WithParameter(new ResolvedParameter(
                                  (pi, ctx) => pi.ParameterType == typeof(string) && pi.Name == "portName",
                                  (pi, ctx) => "1"));
-            #endregion
+
+            #endregion Communication Device Factory
 
             // Working classes
             builder.RegisterType<CommandTranslator>()
@@ -77,7 +75,7 @@ namespace Shield.HardwareCom
                    .Except<CommunicationDeviceFactory>()
                    .AsImplementedInterfaces()
                    .InstancePerDependency();
-            
+
             base.Load(builder);
         }
     }

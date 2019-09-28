@@ -1,24 +1,15 @@
 ﻿using Shield.HardwareCom.Adapters;
-using Shield.CommonInterfaces;
-using Shield.HardwareCom.Factories;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Shield.WpfGui.ViewModels
 {
-  
-
     public class ShellViewModel
     {
-        SerialPortAdapter portC;
-        SerialPortAdapter portA;
-        int licznik = 0;
+        private SerialPortAdapter portC;
+        private SerialPortAdapter portA;
+        private int licznik = 0;
+
         public void zacznij()
         {
             //ISerialPortAdapterFactory _comPortFactory = new SerialPortAdapterFactory();
@@ -26,10 +17,10 @@ namespace Shield.WpfGui.ViewModels
             //if (_comPortFactory.Create(5))
             //{
             //    portA = _comPortFactory.GivePort;
-            //    //portA.Open();    // Tymczasowo wylaczony do testow commesangera           
+            //    //portA.Open();    // Tymczasowo wylaczony do testow commesangera
             //}
 
-            //ICommunicationDevice com = portA;            
+            //ICommunicationDevice com = portA;
             //com.DataReceived += eve;
             //com.Open();
 
@@ -46,27 +37,26 @@ namespace Shield.WpfGui.ViewModels
             //    }
             //    }
             //);
-            
 
             //Debug.WriteLine("Rozpoczęto");
         }
+
         //testy watkow - czy zawieszaja
-       public void but()
+        public void but()
         {
             Debug.WriteLine("kliknieto");
-             while (true)
+            while (true)
             {
-
                 Console.WriteLine(System.Diagnostics.Process.GetCurrentProcess().Threads.Count);
                 //aa = _comMessanger.ReceiveAsync().Result;
-                //for(int i = 0 ; i < aa.Count ; i++) 
+                //for(int i = 0 ; i < aa.Count ; i++)
                 //{
-                //    Console.WriteLine(aa[i]);                    
+                //    Console.WriteLine(aa[i]);
                 //}
                 //aa = null;
 
                 //aa.Clear();
-                //string message = Console.ReadLine();                
+                //string message = Console.ReadLine();
                 //portA.Write(message);
                 //_comSender.Command(mes);
                 //_comSender.Send();
@@ -75,15 +65,12 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-
-
-
-        void eve(object sender, EventArgs a)
+        private void eve(object sender, EventArgs a)
         {
             licznik++;
             //Console.WriteLine("Event został odpalony");
             //Debug.WriteLine("Odpalony event w wątku pobocznym?");
-             Debug.WriteLine(licznik);
+            Debug.WriteLine(licznik);
             portA.DiscardInBuffer();
         }
     }

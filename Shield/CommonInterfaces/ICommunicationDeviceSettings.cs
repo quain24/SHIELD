@@ -1,9 +1,6 @@
-﻿using Shield.Enums;
-
-namespace Shield.CommonInterfaces
+﻿namespace Shield.CommonInterfaces
 {
     public interface ICommunicationDeviceSettings : ISettings
     {
-
     }
 }

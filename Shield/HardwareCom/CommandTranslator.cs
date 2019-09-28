@@ -3,7 +3,6 @@ using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.Models;
 using System;
-using System.Linq;
 using System.Text;
 
 namespace Shield.HardwareCom
@@ -41,8 +40,8 @@ namespace Shield.HardwareCom
                 rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
                 rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
                 rawDataString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
-                //Example: *0001*A8DD*12345678912345  
-                
+                //Example: *0001*A8DD*12345678912345
+
                 int rawComInt;
                 if (Int32.TryParse(rawCommandTypeString, out rawComInt))
                 {
@@ -50,18 +49,17 @@ namespace Shield.HardwareCom
                         command.CommandType = (CommandType)rawComInt;
                     else
                         command.CommandType = CommandType.Unknown;
-                }  
-                
+                }
+
                 command.Id = rawIdString;
                 command.Data = rawDataString;
             }
-
             else
             {
                 command.CommandType = CommandType.Error;
                 command.Id = string.Empty.PadLeft(_appSettingsModel.IdSize, _filler);
-                command.Data = string.Empty.PadLeft(_appSettingsModel.DataSize, _filler);                
-            }            
+                command.Data = string.Empty.PadLeft(_appSettingsModel.DataSize, _filler);
+            }
 
             return command;
         }

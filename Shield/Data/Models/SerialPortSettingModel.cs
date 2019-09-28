@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Shield.Enums;
+using System;
 using System.IO.Ports;
-using Shield.Enums;
-using System.Runtime.Serialization;
 
 namespace Shield.Data.Models
 {

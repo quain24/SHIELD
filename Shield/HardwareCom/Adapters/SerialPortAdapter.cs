@@ -3,7 +3,6 @@ using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
 using Shield.Extensions;
-using Shield.HardwareCom.Models;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -47,7 +46,7 @@ namespace Shield.HardwareCom.Adapters
         private int _completeCommandSizeWithSep;
         private bool _isLissening = false;
         private Regex CommandPattern;
-        ISerialPortSettingsModel _internalSettings;
+        private ISerialPortSettingsModel _internalSettings;
 
         public event EventHandler<string> DataReceived;
 
@@ -56,7 +55,7 @@ namespace Shield.HardwareCom.Adapters
         public SerialPortAdapter(SerialPort port, IAppSettings appSettings)
         {
             _port = port;
-            _appSettings = appSettings;            
+            _appSettings = appSettings;
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace Shield.HardwareCom.Adapters
         {
             _isLissening = true;
             string errorData = string.Empty;
-            byte[] mainBuffer = new byte[_completeCommandSizeWithSep * 10]; // times ten gives sufficient overhead on high speed transmissions
+            byte[] mainBuffer = new byte[_completeCommandSizeWithSep * 100]; // times ten gives sufficient overhead on high speed transmissions
 
             while (_port.IsOpen && !_receiveToken.IsCancellationRequested)
             {

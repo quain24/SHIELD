@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.CommonInterfaces;
-using System.IO.Ports;
-using Shield.HardwareCom.Models;
+﻿using Shield.CommonInterfaces;
 using Shield.Data.Models;
+using Shield.HardwareCom.Models;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
 {
     public class MoqAdapter : ICommunicationDevice
     {
         public event EventHandler<string> DataReceived;
+
         private string _portName;
         private string _rawData;
         private bool _isOpen = false;
@@ -52,7 +49,7 @@ namespace Shield.HardwareCom.Adapters
         public ICommandModel Receive()
         {
             Debug.WriteLine("Odczytano dane z obiektu - wybrany port plus dane wprowadzone  \"MoqAdapter\"");
-            return  new CommandModel {CommandType = Enums.CommandType.Data, Data =  _portName + " " + _rawData };            
+            return new CommandModel { CommandType = Enums.CommandType.Data, Data = _portName + " " + _rawData };
         }
 
         public async Task<bool> SendAsync(string command)
@@ -65,16 +62,13 @@ namespace Shield.HardwareCom.Adapters
         }
 
         public bool Send(string command)
-        {            
+        {
             Debug.WriteLine("Wysłano dane do portwu obiektu \"MoqAdapter\"");
             Debug.WriteLine("Odpalono event DataReceived \"MoqAdapter\"");
             _rawData = command;
             DataReceived?.Invoke(this, "");
             return true;
         }
-
-
-
 
         private void PropagateDataReceivedEvent(object sender, string e)
         {
@@ -84,7 +78,7 @@ namespace Shield.HardwareCom.Adapters
 
         public bool Setup(ICommunicationDeviceSettings settings)
         {
-            IMoqPortSettingsModel internalSettings = (IMoqPortSettingsModel) settings;
+            IMoqPortSettingsModel internalSettings = (IMoqPortSettingsModel)settings;
 
             _portName = internalSettings.PortNumber.ToString();
 
@@ -95,7 +89,7 @@ namespace Shield.HardwareCom.Adapters
         {
             throw new NotImplementedException();
         }
-        
+
         public Task StartReceivingAsync()
         {
             throw new NotImplementedException();

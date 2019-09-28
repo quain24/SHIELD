@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace Shield.HardwareCom
 {
@@ -10,12 +6,8 @@ namespace Shield.HardwareCom
     {
         private StringBuilder _buffer = new StringBuilder();
 
-
-
         //public async Task StartReceivingAsync()
         //{
-            
-
         //        if (_port.Encoding.CodePage == Encoding.ASCII.CodePage)
         //            _receivedBuffer.Append(rawData.RemoveASCIIChars());
         //        else

@@ -18,7 +18,6 @@ using Shield.Enums;
 // zmienic przyjety serial port na ICommunicationDevice - zmodyfikować sender i receiver,
 // bądź ogólnie przmyśleć tą koncepcję - zlikwidować?
 
-
 //  Jak zmienic typ na dostep do dowolnego portu (serial, usb, podobne), tak, by nie trzeba bylo zmianaic tej klasy, a jedynie jej skladowe takie
 // jak sender i receiver wysokopozioma obsluga wiadomosci powinna pozostac taka sama
 
@@ -43,8 +42,8 @@ namespace Shield.HardwareCom
 
         public bool Setup(DeviceType type, int additionalparameter)
         {
-            _device = _communicationDeviceFactory.Device(type, additionalparameter);            
-            if( _device != null )
+            _device = _communicationDeviceFactory.Device(type, additionalparameter);
+            if (_device != null)
             {
                 _comSender.Setup(_device);
                 return true;
@@ -108,6 +107,6 @@ namespace Shield.HardwareCom
         public void AddCommandTemp(ICommandModel command)
         {
             _comSender.Command(command);
-        }       
+        }
     }
 }

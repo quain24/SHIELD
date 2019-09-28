@@ -1,38 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Shield.Data;
+using Shield.Data.Models;
+using Shield.Enums;
+using Shield.HardwareCom;
+using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.Models;
+using System;
+using System.Diagnostics;
 using System.IO.Ports;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Shield.HardwareCom.Models;
-using Shield.HardwareCom.Factories;
-using Shield.HardwareCom;
-using Shield.CommonInterfaces;
-using System.Diagnostics;
-using Shield.Enums;
-using Shield.Data;
-using Shield.Data.Models;
-using System.Threading;
 
 namespace Shield.ConsoleUI
 {
-    class Application : IApplication
+    internal class Application : IApplication
     {
         private ICommandModel _command;
         private ICommunicationDeviceFactory _deviceFactory;
         private IMessanger _comMessanger;
         private IAppSettings _setman;
         private IMessageModel _message;
-        ICommandTranslator _commandTranslator;
+        private ICommandTranslator _commandTranslator;
 
         public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator)
-        {           
-            _command = command;           
+        {
+            _command = command;
             _deviceFactory = deviceFactory;
             _setman = setman;
             _message = message;
             _commandTranslator = commandTranslator;
         }
+
         public void Run()
         {
             IApplicationSettingsModel appset = new ApplicationSettingsModel();
@@ -42,8 +39,7 @@ namespace Shield.ConsoleUI
             appset.Filler = '.';
             appset.Separator = '*';
 
-
-            //// testowanie zapisywania ustawien - działa - 
+            //// testowanie zapisywania ustawien - działa -
 
             ISerialPortSettingsModel settings = new SerialPortSettingsModel();
             settings.BaudRate = 921600;//19200;
@@ -72,8 +68,6 @@ namespace Shield.ConsoleUI
 
             // wczytywanie ustawien
             _setman.LoadFromFile();
-            
-            
 
             //// Prymityne wyswietlanie wartosci
             //foreach (var item in _setman.GetAll())
@@ -105,13 +99,11 @@ namespace Shield.ConsoleUI
             //        Console.WriteLine(readed.ReadTimeout);
             //        Console.WriteLine(readed.WriteTimeout);
             //        Console.WriteLine(readed.Encoding.ToString());
-            //    }                
-            //}            
+            //    }
+            //}
 
             _comMessanger = new Messanger(_setman, _deviceFactory, _commandTranslator);
             _comMessanger.Setup(DeviceType.Serial);
-
-            
 
             // wyswietl porty w kompie
             foreach (var availablePort in SerialPort.GetPortNames())
@@ -129,10 +121,10 @@ namespace Shield.ConsoleUI
             Console.WriteLine("Press enter to send test message");
             Console.ReadLine();
             Console.WriteLine("Send a test IMessage model");
-            ICommandModel com1 = new CommandModel{CommandType = CommandType.HandShake};            
-            ICommandModel com2 = new CommandModel{CommandType = CommandType.Sending};            
-            ICommandModel com3 = new CommandModel{CommandType = CommandType.Data, Data = "123456789123456789123456789123"};            
-            ICommandModel com4 = new CommandModel{CommandType = CommandType.Completed};
+            ICommandModel com1 = new CommandModel { CommandType = CommandType.HandShake };
+            ICommandModel com2 = new CommandModel { CommandType = CommandType.Sending };
+            ICommandModel com3 = new CommandModel { CommandType = CommandType.Data, Data = "123456789123456789123456789123" };
+            ICommandModel com4 = new CommandModel { CommandType = CommandType.Completed };
 
             IMessageModel message = new MessageModel(_setman);
             message.Add(com1);
@@ -152,10 +144,6 @@ namespace Shield.ConsoleUI
 
             //_comMessanger.Send(null);
 
-            
-
-
-
             Task.Run(async () =>
             {
                 while (true)
@@ -163,7 +151,7 @@ namespace Shield.ConsoleUI
                     CommandModel mes = new CommandModel();
                     mes.CommandType = CommandType.Data;
                     mes.Data = licznik.ToString();
-                    mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel) _setman.GetSettingsFor(SettingsType.Application)).IdSize);
+                    mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
 
                     await _comMessanger.SendAsync(mes);
                     //await Task.Delay(500);
@@ -189,7 +177,6 @@ namespace Shield.ConsoleUI
             //    }
             //});
 
-
             //while (true)
             //{
             //    //Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
@@ -208,7 +195,6 @@ namespace Shield.ConsoleUI
             //        licznik = 0;
             //    }
 
-
             //}
 
             // o wiele bardziej zapycha niz powyzsze w task run - dlaczego? odpala mase gc
@@ -226,13 +212,11 @@ namespace Shield.ConsoleUI
             //    licznik++;
             //}
 
-
             // _comMessanger.Close();
             Console.WriteLine("Waiting for signal...");
             //Thread.Sleep(5000);
             //_comMessanger.Close();
             Console.ReadLine();
-            
         }
     }
 }

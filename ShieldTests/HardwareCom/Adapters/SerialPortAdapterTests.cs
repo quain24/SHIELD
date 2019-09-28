@@ -1,24 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.HardwareCom.Adapters;
-using Shield.CommonInterfaces;
-using Shield.HardwareCom.Models;
-using System.IO.Ports;
-using Xunit;
-using Shield.Enums;
-using System.Reflection;
-using Autofac.Extras.Moq;
+﻿using Shield.Data;
 using Shield.Data.Models;
-using Shield.Data;
-using Autofac.Core;
-using Shield.HardwareCom;
+using Shield.HardwareCom.Adapters;
+using System;
+using System.IO.Ports;
+using System.Reflection;
+using Xunit;
 
 namespace ShieldTests.HardwareCom.Adapters
-{  
-
+{
     public class SerialPortAdapterTests
     {
         [Theory]
@@ -29,15 +18,13 @@ namespace ShieldTests.HardwareCom.Adapters
             MethodInfo methodinfo = typeof(SerialPortAdapter).GetMethod("CheckRawData",
                                            BindingFlags.NonPublic | BindingFlags.Instance,
                                            null,
-                                           new Type[] {typeof(string)},
+                                           new Type[] { typeof(string) },
                                            null);
 
             string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
                                                                     new AppSettings(new AppSettingsModel())),
-                                              new object[] {input})
+                                              new object[] { input })
                                       .ToString();
-
-            
 
             Assert.Equal(expected.ToString(), result);
         }
@@ -56,17 +43,15 @@ namespace ShieldTests.HardwareCom.Adapters
             MethodInfo methodinfo = typeof(SerialPortAdapter).GetMethod("CheckRawData",
                                            BindingFlags.NonPublic | BindingFlags.Instance,
                                            null,
-                                           new Type[] {typeof(string)},
+                                           new Type[] { typeof(string) },
                                            null);
 
             string result = methodinfo.Invoke(new SerialPortAdapter(new SerialPort("COM5"),
                                                                     new AppSettings(new AppSettingsModel())),
-                                              new object[] {input})
+                                              new object[] { input })
                                       .ToString();
 
             Assert.Equal(expected.ToString(), result);
-
-
         }
     }
 }

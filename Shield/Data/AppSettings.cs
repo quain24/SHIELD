@@ -184,12 +184,12 @@ namespace Shield.Data
 
         public T GetSettingsFor<T>() where T : class, ISettings
         {
-            foreach(var kvp in _appSettingsModel.Settings)
+            foreach (var kvp in _appSettingsModel.Settings)
             {
-                if(kvp.Value is T)
-                    return (T) kvp.Value;
+                if (kvp.Value is T)
+                    return (T)kvp.Value;
             }
             return default;
-        }       
+        }
     }
 }

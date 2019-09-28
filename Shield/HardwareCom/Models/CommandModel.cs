@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield;
-using Shield.Enums;
+﻿using Shield.Enums;
+using System;
 
 namespace Shield.HardwareCom.Models
 {
@@ -15,7 +10,7 @@ namespace Shield.HardwareCom.Models
     {
         private string _data = string.Empty;
         private string _id;
-        private CommandType _command;        
+        private CommandType _command;
 
         public string Id
         {
@@ -28,6 +23,7 @@ namespace Shield.HardwareCom.Models
             get { return _data; }
             set { _data = value; }
         }
+
         public CommandType CommandType
         {
             get { return _command; }
@@ -38,6 +34,5 @@ namespace Shield.HardwareCom.Models
         {
             get { return Enum.GetName(typeof(CommandType), CommandType); }
         }
-
     }
 }

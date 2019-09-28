@@ -1,17 +1,9 @@
 ﻿using Autofac.Features.Indexed;
 using Shield.CommonInterfaces;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.Enums;
-using Shield.HardwareCom.Adapters;
-using System.IO.Ports;
 using Shield.Data;
 using Shield.Data.Models;
-using Shield.HardwareCom.Models;
+using Shield.Enums;
+using System.Diagnostics;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -31,33 +23,33 @@ namespace Shield.HardwareCom.Factories
             _appSettings = appSettings;
             _deviceFactory = deviceFactory;
         }
-           
+
         public ICommunicationDevice Device(DeviceType type)
-        {                       
+        {
             switch (type)
             {
-               case DeviceType.Serial:
-                    ISerialPortSettingsModel settings = (ISerialPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.SerialDevice);
+                case DeviceType.Serial:
+                    ISerialPortSettingsModel settings = (ISerialPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.SerialDevice);
                     ICommunicationDevice device = _deviceFactory[type];
-                    if(device.Setup(settings))
+                    if (device.Setup(settings))
                         return device;
                     else
-                        break;                    
-               
-               case DeviceType.Moq:
-                    IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel) _appSettings.GetSettingsFor(SettingsType.MoqDevice);
+                        break;
+
+                case DeviceType.Moq:
+                    IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.MoqDevice);
                     ICommunicationDevice device2 = _deviceFactory[type];
-                    if(device2.Setup(settings2))
-                       return device2;
+                    if (device2.Setup(settings2))
+                        return device2;
                     else
-                       break;
+                        break;
 
                 default:
                     string err = $@"ERROR: CommunicationDeviceFactory Device - no device at ""{type}"" position in deviceType enum";
                     Debug.WriteLine(err);
-                    return null;                    
+                    return null;
             }
             return null;
-        }    
+        }
     }
 }

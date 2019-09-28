@@ -1,6 +1,5 @@
-﻿using System.IO.Ports;
-using System.Text;
-using Shield.CommonInterfaces;
+﻿using Shield.CommonInterfaces;
+using System.IO.Ports;
 
 namespace Shield.Data.Models
 {

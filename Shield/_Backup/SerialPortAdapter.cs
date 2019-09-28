@@ -13,21 +13,21 @@ namespace Shield.HardwareCom.Adapters
 {
     public class SerialPortAdapter : ICommunicationDevice
     {
-        private  readonly SerialPort _port;
-        
+        private readonly SerialPort _port;
+
         public SerialPortAdapter(SerialPort port)
         {
             _port = port;
             _port.DataReceived += PropagateDataReceivedEvent;
-        }        
+        }
 
         public event EventHandler DataReceived;
 
         private void PropagateDataReceivedEvent(object sender, EventArgs e)
         {
             this.DataReceived?.Invoke(sender, e);
-        }        
-        
+        }
+
         public void Open()
         {
             if (_port != null && !_port.IsOpen)
@@ -62,7 +62,7 @@ namespace Shield.HardwareCom.Adapters
         public void DiscardInBuffer()
         {
             _port.DiscardInBuffer();
-        }        
+        }
 
         public string Read()
         {
@@ -75,10 +75,8 @@ namespace Shield.HardwareCom.Adapters
             _port.Write(rawData);
         }
 
-        
-
         public void Dispose()
-        {   
+        {
             _port.DataReceived -= PropagateDataReceivedEvent;
             _port.Close();
         }
