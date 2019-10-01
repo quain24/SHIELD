@@ -20,6 +20,7 @@ namespace Shield.CommonInterfaces
         Task StartReceivingAsync();
 
         void StopReceiving();
+        void StopSending();
 
         event EventHandler<string> DataReceived;
     }

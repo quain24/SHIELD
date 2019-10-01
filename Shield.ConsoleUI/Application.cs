@@ -20,20 +20,22 @@ namespace Shield.ConsoleUI
         private IAppSettings _setman;
         private IMessageModel _message;
         private ICommandTranslator _commandTranslator;
+        private IIncomingDataPreparer _incomingDataPreparer;
 
-        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
             _command = command;
             _deviceFactory = deviceFactory;
             _setman = setman;
             _message = message;
             _commandTranslator = commandTranslator;
+            _incomingDataPreparer = incomingDataPreparer;
         }
 
         public void Run()
         {
             IApplicationSettingsModel appset = new ApplicationSettingsModel();
-            appset.DataSize = 30;
+            appset.DataSize = 300;
             appset.IdSize = 4;
             appset.CommandTypeSize = 4;
             appset.Filler = '.';
@@ -102,7 +104,7 @@ namespace Shield.ConsoleUI
             //    }
             //}
 
-            _comMessanger = new Messanger(_setman, _deviceFactory, _commandTranslator);
+            _comMessanger = new Messanger(_setman, _deviceFactory, _commandTranslator, _incomingDataPreparer);
             _comMessanger.Setup(DeviceType.Serial);
 
             // wyswietl porty w kompie
@@ -216,6 +218,8 @@ namespace Shield.ConsoleUI
             Console.WriteLine("Waiting for signal...");
             //Thread.Sleep(5000);
             //_comMessanger.Close();
+            Console.ReadLine();
+            _comMessanger.Close();
             Console.ReadLine();
         }
     }

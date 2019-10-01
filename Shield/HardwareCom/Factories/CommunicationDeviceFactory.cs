@@ -29,7 +29,7 @@ namespace Shield.HardwareCom.Factories
             switch (type)
             {
                 case DeviceType.Serial:
-                    ISerialPortSettingsModel settings = (ISerialPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.SerialDevice);
+                    ISerialPortSettingsModel settings = _appSettings.GetSettingsFor<ISerialPortSettingsModel>();
                     ICommunicationDevice device = _deviceFactory[type];
                     if (device.Setup(settings))
                         return device;
@@ -37,7 +37,7 @@ namespace Shield.HardwareCom.Factories
                         break;
 
                 case DeviceType.Moq:
-                    IMoqPortSettingsModel settings2 = (IMoqPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.MoqDevice);
+                    IMoqPortSettingsModel settings2 = _appSettings.GetSettingsFor<IMoqPortSettingsModel>();
                     ICommunicationDevice device2 = _deviceFactory[type];
                     if (device2.Setup(settings2))
                         return device2;

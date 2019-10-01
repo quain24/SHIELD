@@ -43,7 +43,7 @@ namespace Shield.HardwareCom.Factories
             switch (type)
             {
                 case DeviceType.Serial:
-                    ISerialPortSettingsModel settings = (ISerialPortSettingsModel)_appSettings.GetSettingsFor(SettingsType.SerialDevice);
+                    ISerialPortSettingsModel settings = _appSettings.GetSettingsFor<ISerialPortSettingsModel>();
                     if (_serialAdapterFactory.Create(settings))
                         return _serialAdapterFactory.GivePort;
                     else

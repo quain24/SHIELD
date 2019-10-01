@@ -26,9 +26,6 @@ namespace Shield.HardwareCom.Adapters
 
         #region Internal variables and events
 
-        private const char SEPARATOR = '*';
-        private const char FILLER = '.';
-
         private CancellationTokenSource _receiveTokenSource = new CancellationTokenSource();
         private CancellationToken _receiveToken;
         private CancellationTokenSource _sendTokenSource = new CancellationTokenSource();
@@ -37,25 +34,17 @@ namespace Shield.HardwareCom.Adapters
         private object _lock = new object();
 
         private readonly SerialPort _port;
-        private IAppSettings _appSettings;
-
-        private StringBuilder _receivedBuffer = new StringBuilder();
-        private int _dataSize;
-        private int _idSize;
-        private int _commandTypeSize;
-        private int _completeCommandSizeWithSep;
+        
         private bool _isLissening = false;
-        private Regex CommandPattern;
         private ISerialPortSettingsModel _internalSettings;
 
         public event EventHandler<string> DataReceived;
 
         #endregion Internal variables and events
 
-        public SerialPortAdapter(SerialPort port, IAppSettings appSettings)
+        public SerialPortAdapter(SerialPort port)
         {
             _port = port;
-            _appSettings = appSettings;
         }
 
         /// <summary>
@@ -85,20 +74,9 @@ namespace Shield.HardwareCom.Adapters
             _port.DtrEnable = false;
             _port.RtsEnable = false;
             _port.DiscardNull = true;
-
-            IApplicationSettingsModel appSett = (IApplicationSettingsModel)_appSettings.GetSettingsFor(SettingsType.Application);
-
-            // Size of command combines message size, id size and 1 separator after those
-            _idSize = appSett.IdSize;
-            _dataSize = appSett.DataSize;
-            _commandTypeSize = appSett.CommandTypeSize;
-            _completeCommandSizeWithSep = _commandTypeSize + 2 + _idSize + 1 + _dataSize;
-
+            
             _sendToken = _sendTokenSource.Token;
             _receiveToken = _receiveTokenSource.Token;
-
-            string pattern = $@"[{SEPARATOR}][0-9]{{{_commandTypeSize}}}[{SEPARATOR}][a-zA-Z0-9]{{{_idSize}}}[{SEPARATOR}]";
-            CommandPattern = new Regex(pattern);
 
             return true;
         }
@@ -122,6 +100,8 @@ namespace Shield.HardwareCom.Adapters
             {
                 try
                 {
+                    StopSending();
+                    StopReceiving();
                     _port.Close();
                 }
                 catch (IOException e)
@@ -145,39 +125,14 @@ namespace Shield.HardwareCom.Adapters
         {
             _isLissening = true;
             string errorData = string.Empty;
-            byte[] mainBuffer = new byte[_completeCommandSizeWithSep * 100]; // times ten gives sufficient overhead on high speed transmissions
+            byte[] mainBuffer = new byte[4096];
 
             while (_port.IsOpen && !_receiveToken.IsCancellationRequested)
             {
-                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, mainBuffer.Length, _receiveToken);
+                int bytesRead = await _port.BaseStream.ReadAsync(mainBuffer, 0, mainBuffer.Length, _receiveToken).ConfigureAwait(false);
                 string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(mainBuffer).Substring(0, bytesRead);
 
-                if (_port.Encoding.CodePage == Encoding.ASCII.CodePage)
-                    _receivedBuffer.Append(rawData.RemoveASCIIChars());
-                else
-                    _receivedBuffer.Append(rawData);
-
-                if (_receivedBuffer.Length >= _completeCommandSizeWithSep)
-                {
-                    string workPiece = _receivedBuffer.ToString(0, _completeCommandSizeWithSep);
-                    int whereToCut = CheckRawData(workPiece);
-
-                    if (whereToCut > 0)
-                    {
-                        _receivedBuffer.Remove(0, whereToCut);
-                        workPiece = workPiece.Substring(0, whereToCut);
-                    }
-
-                    // All good or all bad
-                    else
-                        _receivedBuffer.Remove(0, _completeCommandSizeWithSep);
-
-                    DataReceived?.Invoke(this, workPiece);
-                }
-                else
-                {
-                    continue;
-                }
+                DataReceived?.Invoke(this, rawData);
             }
             _isLissening = false;
         }
@@ -202,7 +157,7 @@ namespace Shield.HardwareCom.Adapters
             byte[] sendBuffer = Encoding.GetEncoding(_port.Encoding.CodePage).GetBytes(command);
             try
             {
-                await _port.BaseStream.WriteAsync(sendBuffer, 0, sendBuffer.Count(), _sendToken);
+                await _port.BaseStream.WriteAsync(sendBuffer, 0, sendBuffer.Count(), _sendToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -240,6 +195,13 @@ namespace Shield.HardwareCom.Adapters
             return false;
         }
 
+        public void StopSending()
+        {
+            _sendTokenSource.Cancel();
+            _sendTokenSource = new CancellationTokenSource();
+            _sendToken = _sendTokenSource.Token;
+        }
+
         /// <summary>
         /// Clears data in 'received' buffer
         /// </summary>
@@ -253,48 +215,19 @@ namespace Shield.HardwareCom.Adapters
             {
                 Debug.WriteLine(@"ERROR - SerialPortAdaper - DiscardBuffer: Port was closed, nothing to discard.");
             }
-
-            lock (_lock)
-            {
-                _receivedBuffer.Clear().Length = 0;
-            }
         }
 
         public void Dispose()
         {
             _receiveTokenSource.Cancel();
+            _sendTokenSource.Cancel();
+            _receiveTokenSource.Dispose();
+            _sendTokenSource.Dispose();
             DiscardInBuffer();
             _port.Close();
 
             // Added for port to close in peace, otherwise there could be a problem with opening it again.
             Thread.Sleep(100);
-        }
-
-        #region Helpers - raw data checking and transformation
-
-        /// <summary>
-        /// Internal check of incoming data.
-        /// <para>takes raw data and returns either '0' if correct, '-1' if compleatly bad or '(int) index to which to remove if another try could be succesfull</para>
-        /// </summary>
-        /// <param name="data">Input string - typically a Command-sized part of received data</param>
-        /// <returns>Index to start a correction from, '-1' if data is all wrong or 0 when input is in correct format</returns>
-        private int CheckRawData(string data)
-        {
-            Match match = CommandPattern.Match(data);
-            if (match.Success)
-                return match.Index;
-
-            int firsIndexOfSepprarator = data.IndexOf(SEPARATOR);
-
-            if (firsIndexOfSepprarator == -1)
-                return firsIndexOfSepprarator;
-
-            if (firsIndexOfSepprarator == 0)
-                return 1;
-            else
-                return firsIndexOfSepprarator;
-        }
-
-        #endregion Helpers - raw data checking and transformation
+        }     
     }
 }

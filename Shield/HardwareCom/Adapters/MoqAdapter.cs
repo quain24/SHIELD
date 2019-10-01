@@ -104,5 +104,10 @@ namespace Shield.HardwareCom.Adapters
         {
             throw new NotImplementedException();
         }
+
+        public void StopSending()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -40,7 +40,7 @@ namespace COM6TestSender
                         //Thread.Sleep(10);
                         //serial.Write($@"*0015*ABCD*123456789101112131415161718192");
                         //serial.Write($@"*{15.ToString().PadLeft(4, '0')}*" + rand.Next(1000, 9999) + '*' + "A1B2C3D4E5F6G7H8I9J10K11L12M13");
-                        string aa = $@"*{15.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                        string aa = $@"*{15.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(300, '.');
 
                         serial.Write(aa);
                         Console.WriteLine(aa);

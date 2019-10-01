@@ -39,7 +39,7 @@ namespace Shield.HardwareCom
             {
                 rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
                 rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
-                rawDataString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
+                rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
                 //Example: *0001*A8DD*12345678912345
 
                 int rawComInt;
