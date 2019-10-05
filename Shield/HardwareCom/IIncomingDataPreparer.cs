@@ -11,6 +11,7 @@ namespace Shield.HardwareCom
         int DataPackLength { get; set; }
         int IDLength { get; set; }
         char Separator { get; set; }
+
         List<string> DataSearch(string data);
     }
 }

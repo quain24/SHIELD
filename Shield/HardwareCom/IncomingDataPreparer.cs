@@ -43,7 +43,7 @@ namespace Shield.HardwareCom
 
         public List<string> DataSearch(string data)
         {
-            if (CommandLength < 0 && !string.IsNullOrEmpty(data))
+            if (CommandLength <= 0 && !string.IsNullOrEmpty(data))
                 return null;
 
             _internalBuffer.Append(data);
@@ -54,7 +54,7 @@ namespace Shield.HardwareCom
         private List<string> Extract()
         {
             _outputCollection = new List<string>();
-
+            
             while (_internalBuffer.Length >= CommandLength)
             {
                 int correctDataIndex = CheckRawData(_internalBuffer.ToString(0, CommandLength));
@@ -72,8 +72,7 @@ namespace Shield.HardwareCom
                     _outputCollection.Add(_internalBuffer.ToString(0, CommandLength));
                     _internalBuffer.Remove(0, CommandLength);
                 }
-            }
-
+            }            
             return _outputCollection;
         }
 

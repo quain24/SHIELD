@@ -3,6 +3,7 @@ using Shield.Data.Models;
 using Shield.HardwareCom.Models;
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
@@ -14,6 +15,8 @@ namespace Shield.HardwareCom.Adapters
         private string _portName;
         private string _rawData;
         private bool _isOpen = false;
+
+        public bool IsOpen { get; }
 
         public MoqAdapter(string portName)
         {
@@ -95,10 +98,10 @@ namespace Shield.HardwareCom.Adapters
             throw new NotImplementedException();
         }
 
-        async Task ICommunicationDevice.StartReceivingAsync()
-        {
-            throw new NotImplementedException();
-        }
+        //async Task ICommunicationDevice.StartReceivingAsync()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public void StopReceiving()
         {
@@ -106,6 +109,16 @@ namespace Shield.HardwareCom.Adapters
         }
 
         public void StopSending()
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<string> ICommunicationDevice.ReceiveAsync(CancellationToken cancellToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> StartReceivingAsync(CancellationToken cancellToken)
         {
             throw new NotImplementedException();
         }

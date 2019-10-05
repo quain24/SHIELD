@@ -31,7 +31,7 @@ namespace Shield.HardwareCom.Factories
                 case DeviceType.Serial:
                     ISerialPortSettingsModel settings = _appSettings.GetSettingsFor<ISerialPortSettingsModel>();
                     ICommunicationDevice device = _deviceFactory[type];
-                    if (device.Setup(settings))
+                    if (device.Setup(settings)) //-- can replace autofac parameters used when registering.
                         return device;
                     else
                         break;

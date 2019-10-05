@@ -17,7 +17,7 @@ namespace Shield.Data
     /// </summary>
     public class AppSettings : IAppSettings
     {
-        private const string SETTINGS_LOCATION = @".\Settings";
+        private const string SETTINGS_LOCATION = @".\Settings\";
         private const string FILE_NAME = @"settings.xml";
 
         private IAppSettingsModel _appSettingsModel;
@@ -53,7 +53,7 @@ namespace Shield.Data
                 if (!Directory.Exists(SETTINGS_LOCATION))
                     Directory.CreateDirectory(SETTINGS_LOCATION);
 
-                FileStream writer = new FileStream(SETTINGS_LOCATION + @"\" + FILE_NAME, FileMode.Create, FileAccess.Write);
+                FileStream writer = new FileStream(SETTINGS_LOCATION + FILE_NAME, FileMode.Create, FileAccess.Write);
                 DataContractSerializer ser = new DataContractSerializer(typeof(AppSettingsModel));
                 ser.WriteObject(writer, _appSettingsModel);
                 writer.Close();

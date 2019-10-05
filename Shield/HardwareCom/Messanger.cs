@@ -1,43 +1,36 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Data;
-using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
-using Shield.Extensions;
 
 namespace Shield.HardwareCom
 {
-    // TODO
-    // wywalilem na zewnatrz z serial port adaptera przeczesywanie stringow do tłumaczenia do messangera
-    // jest do tego urzyta nowa klasa - trzeba ja zoptymalizowac i wprowadzic cancelacje, teraz dziala non stop w innym watku
-    // sprawdzic, zoptymalizowac, sprawdzic, wywalic dokumentnie na koncu jak zadziala z serial port adapter 
-
-
     public class Messanger : IMessanger
     {
         private ICommunicationDeviceFactory _communicationDeviceFactory;
         private ICommunicationDevice _device;
-        private IAppSettings _appSettings;
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
 
-        private Regex _commandPattern;
+        private CancellationTokenSource _receiveCTS = new CancellationTokenSource();
+        private CancellationToken _receiveCT;
+
         private BlockingCollection<string> _rawDataBuffer = new BlockingCollection<string>();
-        private List<ICommandModel> _tempCommandsList = new List<ICommandModel>();
+
         private bool _setupSuccessufl = false;
+        private bool _disposed = false;
+        private bool _dataExtractorRunning = false;
 
-        //private IncomingDataPreparer _idp = new IncomingDataPreparer();
+        private object _dataExtractorLock = new object();
 
-        public Messanger(IAppSettings appSettings, ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
+        public Messanger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
             _communicationDeviceFactory = communicationDeviceFactory;
-            _appSettings = appSettings;
             _commandTranslator = commandTranslator;
             _incomingDataPreparer = incomingDataPreparer;
         }
@@ -45,14 +38,14 @@ namespace Shield.HardwareCom
         public bool Setup(DeviceType type)
         {
             _device = _communicationDeviceFactory.Device(type);
-            IApplicationSettingsModel appSettings = _appSettings.GetSettingsFor<IApplicationSettingsModel>();
-
-            if (_device is null || appSettings is null)
+            if (_device is null)
                 return _setupSuccessufl = false;
 
+            _receiveCT = _receiveCTS.Token;
+
             _device.DataReceived += OnDataReceived;
-            _setupSuccessufl = true;
-            return _setupSuccessufl;
+
+            return _setupSuccessufl = true;
         }
 
         public void Open()
@@ -63,64 +56,67 @@ namespace Shield.HardwareCom
 
         public void Close()
         {
+            StopReceiving();
+            _rawDataBuffer.Dispose();
+            _rawDataBuffer = new BlockingCollection<string>();
             _device?.Close();
         }
 
-        // testowanie nowej wersji (wyciagnietej z serialportadapter) extraktora danych
-
-        private async Task TestDataExtractor()
+        public Task StartReceiveAsync()
         {
-            int i = 0;
-            while (true)
+            if (_setupSuccessufl)
             {
-                if(_rawDataBuffer.Count > 0)
+                // Daemons, constantly running in background, hence Task.Run()'s
+                return Task.Run(async () =>
                 {
-                    List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
-                    foreach(string s in output)
+                    while (_device.IsOpen && !_receiveCT.IsCancellationRequested)
                     {
-                        ICommandModel com =  _commandTranslator.FromString(s);
-                        Console.WriteLine(com.CommandTypeString + " " + com.Id + " " + com.Data + " | Received by external data searcher (" + i++ + ")" );
+                        string toAdd = await _device.ReceiveAsync(_receiveCT).ConfigureAwait(false);
+                        if (!string.IsNullOrEmpty(toAdd))
+                        {
+                            _rawDataBuffer.Add(toAdd);
+                            if (!_dataExtractorRunning)
+                                // intentionally not awaited
+                                Task.Run(async () => await DataExtractor(_receiveCT)).ConfigureAwait(false);
+                        }
                     }
-                }
-                else
-                {
-                    await Task.Delay(50);
-                }
+                });
             }
+            return default;
         }
 
-        // do sprawdzenia!
-        private int i = 0;
-
-        public void OnDataReceived(object sender, string e)
+        public void StopReceiving()
         {
-            // tutaj zmiana do listy powiedzmy wiadomosci, ogolnie pomyslec co kiedy przejdziemy na gui - nie bedzie przeciez w konsoli wyswietlac
-            // obecnie tylko wywala dane do konsoli
-
-            i++;
-            //_tempCommandsList.Add(_commandTranslator.FromString(e));
-            _rawDataBuffer.Add(e.RemoveASCIIChars());
+            _receiveCTS.Cancel();
+            _receiveCTS.Dispose();
+            _receiveCTS = new CancellationTokenSource();
+            _receiveCT = _receiveCTS.Token;
         }
 
-        // napisac l;ogiczna metode cancelacji, jakis cancelation token, dodac using tak, by serialport adapter sam sie kasowal
-        public async Task ConstantReceiveAsync()
+        public Task<bool> SendAsync(ICommandModel command)
         {
-            if(_setupSuccessufl)
-            {   
-                Task.Run(() => TestDataExtractor()).ConfigureAwait(false);
-                await Task.Run(() => _device.StartReceivingAsync()).ConfigureAwait(true);
+            return _device.SendAsync(_commandTranslator.FromCommand(command));
+        }
+
+        public async Task<bool> SendAsync(IMessageModel message)
+        {
+            if(message is null)
+                return false;
+
+            List<bool> results = new List<bool>();
+
+            foreach (ICommandModel c in message)
+            {
+                results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
             }
+
+            if (results.Contains(false))
+                return false;
+            return true;
         }
 
-        public async Task<bool> SendAsync(ICommandModel command)
-        {
-            bool result = await _device.SendAsync(_commandTranslator.FromCommand(command)).ConfigureAwait(false);
-            return result;
-        }
-
-        // do zrobienia - sprawdzenia? dodac check czy jest open
         public bool Send(IMessageModel message)
-        {            
+        {
             foreach (ICommandModel c in message)
             {
                 if (_device.Send(_commandTranslator.FromCommand(c)))
@@ -131,23 +127,86 @@ namespace Shield.HardwareCom
             return true;
         }
 
-        public async Task<bool> SendAsync(IMessageModel message)
+        #region internal helpers
+
+        private async Task DataExtractor(CancellationToken cancellation)
         {
-            // tak sobie na szybko, do przemyslenia, do poprawy
-
-            return await Task.Run(async () =>
+            lock (_dataExtractorLock)
             {
-                List<bool> results = new List<bool>();
+                if (_dataExtractorRunning)
+                    return;
+                _dataExtractorRunning = true;
+            }
 
-                foreach (ICommandModel c in message)
+            int idleCounter = 0;
+            int i = 0;
+            while (!cancellation.IsCancellationRequested)
+            {
+                if (_rawDataBuffer.Count > 0 && !cancellation.IsCancellationRequested)
                 {
-                    results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
+                    idleCounter = 0;
+                    List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
+                    foreach (string s in output)
+                    {
+                        ICommandModel com = _commandTranslator.FromString(s);
+                        // Temporary display to console, in future - collection?
+                        Console.WriteLine(com.CommandTypeString + " " + com.Id + " " + com.Data + " | Received by external data searcher (" + i++ + ")");
+                    }
                 }
+                else
+                {
+                    if (idleCounter++ > 10)
+                        break;
+                    await Task.Delay(50).ConfigureAwait(false);
+                }
+            }
+            _dataExtractorRunning = false;
+        }
 
-                if (results.Contains(false))
-                    return false;
-                return true;
-            });
+        #endregion internal helpers
+
+        public void OnDataReceived(object sender, string e)
+        {
+            //_rawDataBuffer.Add(e.RemoveASCIIChars());
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                // free managed resources
+                if (_receiveCTS != null)
+                {
+                    _receiveCTS.Cancel();
+                    _receiveCTS.Dispose();
+                    _receiveCTS = null;
+                }
+                if (_rawDataBuffer != null)
+                {
+                    _rawDataBuffer.Dispose();
+                    _rawDataBuffer = null;
+                }
+                if (_device != null)
+                {
+                    _device.Dispose();
+                    _device = null;
+                }
+            }
+
+            _disposed = true;
+            // free native resources if there are any.
+            //if (nativeResource != IntPtr.Zero)
+            //{
+            //}
         }
     }
 }

@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.CommonInterfaces
 {
     public interface ICommunicationDevice : IDisposable
     {
+        bool IsOpen { get; }
+
         bool Setup(ICommunicationDeviceSettings settings);
 
         void Open();
@@ -17,9 +20,11 @@ namespace Shield.CommonInterfaces
 
         bool Send(string command);
 
-        Task StartReceivingAsync();
+        //Task StartReceivingAsync();
+        Task<string> ReceiveAsync(CancellationToken cancellToken);
 
         void StopReceiving();
+
         void StopSending();
 
         event EventHandler<string> DataReceived;

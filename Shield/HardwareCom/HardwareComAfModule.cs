@@ -8,7 +8,6 @@ using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using System;
-using System.IO.Ports;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -22,7 +21,7 @@ namespace Shield.HardwareCom
             // Models registration (single interface per model)
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Model"))
-                   .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));            
+                   .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
@@ -32,12 +31,14 @@ namespace Shield.HardwareCom
 
             #region Communication Device Factory
 
-            builder.RegisterType<SerialPortAdapter>()                    
+            builder.RegisterType<SerialPortAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Serial)
-                   .WithParameters(new[]{
-                                   new ResolvedParameter(
-                                       (pi, ctx) => pi.ParameterType == typeof(SerialPort) && pi.Name == "port",
-                                       (pi, ctx) => new SerialPort())});
+                   .UsingConstructor();  // use parameterless constructor when using setup in factory
+
+            // can be used when instead of additional call for setup method when creating this device in communicationDeviceFactory
+            //.WithParameter(new ResolvedParameter(
+            //              (pi, ctx) => pi.ParameterType == typeof(ISerialPortSettingsModel) && pi.Name == "settings",
+            //              (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<ISerialPortSettingsModel>()));
 
             builder.RegisterType<MoqAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Moq)
@@ -60,7 +61,7 @@ namespace Shield.HardwareCom
                                        new ResolvedParameter(
                                            (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
                                            (pi, ctx) => ctx.Resolve<ICommandTranslator>())});
- 
+
             // Alternate way to register IIncomingDataPreparer
             //builder.RegisterType<IncomingDataPreparer>()
             //       .As<IIncomingDataPreparer>()
@@ -82,18 +83,17 @@ namespace Shield.HardwareCom
             //                           (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().Separator)
             //           });
 
-            builder.Register(c => 
+            builder.Register(c =>
                                 {
                                     IApplicationSettingsModel appSet = c.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>();
                                     IIncomingDataPreparer incomingDataPreparer = new IncomingDataPreparer(appSet.CommandTypeSize,
                                                                                         appSet.IdSize,
                                                                                         appSet.DataSize,
-                                                                                        new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"), 
+                                                                                        new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
                                                                                         appSet.Separator);
                                     return incomingDataPreparer;
                                 })
                    .As<IIncomingDataPreparer>();
-
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

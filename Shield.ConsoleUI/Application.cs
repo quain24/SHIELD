@@ -5,7 +5,6 @@ using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using System;
-using System.Diagnostics;
 using System.IO.Ports;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,7 +34,7 @@ namespace Shield.ConsoleUI
         public void Run()
         {
             IApplicationSettingsModel appset = new ApplicationSettingsModel();
-            appset.DataSize = 300;
+            appset.DataSize = 30;
             appset.IdSize = 4;
             appset.CommandTypeSize = 4;
             appset.Filler = '.';
@@ -104,7 +103,7 @@ namespace Shield.ConsoleUI
             //    }
             //}
 
-            _comMessanger = new Messanger(_setman, _deviceFactory, _commandTranslator, _incomingDataPreparer);
+            _comMessanger = new Messanger(_deviceFactory, _commandTranslator, _incomingDataPreparer);
             _comMessanger.Setup(DeviceType.Serial);
 
             // wyswietl porty w kompie
@@ -113,30 +112,13 @@ namespace Shield.ConsoleUI
                 Console.WriteLine(availablePort);
             }
 
+            //_comMessanger.Setup(DeviceType.Serial);
             _comMessanger.Open();
-            _comMessanger.ConstantReceiveAsync();
+            _comMessanger.StartReceiveAsync().ConfigureAwait(false);
 
             int licznik = 0;
 
-            Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
-
-            Console.WriteLine("Press enter to send test message");
-            Console.ReadLine();
-            Console.WriteLine("Send a test IMessage model");
-            ICommandModel com1 = new CommandModel { CommandType = CommandType.HandShake };
-            ICommandModel com2 = new CommandModel { CommandType = CommandType.Sending };
-            ICommandModel com3 = new CommandModel { CommandType = CommandType.Data, Data = "123456789123456789123456789123" };
-            ICommandModel com4 = new CommandModel { CommandType = CommandType.Completed };
-
-            IMessageModel message = new MessageModel(_setman);
-            message.Add(com1);
-            message.Add(com2);
-            message.Add(com3);
-            message.Add(com4);
-
-            _comMessanger.SendAsync(message);
-
-            Console.WriteLine("Message sent.");
+            Console.WriteLine("Press enter to start sending test messages");
 
             Console.ReadLine();
 
@@ -156,70 +138,17 @@ namespace Shield.ConsoleUI
                     mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
 
                     await _comMessanger.SendAsync(mes);
-                    //await Task.Delay(500);
-                    //    await Task.Delay(100);
-                    //if (licznik % 1000 == 0)
-                    //  GC.Collect();
-                    //Thread.Sleep(1);
-                    //await Task.Delay(1);
-
                     licznik++;
                 }
             });
 
-            //Task.Run(async () =>
-            //{
-            //    while (true)
-            //    {
-            //        foreach (var command in messageList)
-            //        {
-            //            if (!_comMessanger.Send(command))
-            //                await Task.Delay(100);
-            //        }
-            //    }
-            //});
-
-            //while (true)
-            //{
-            //    //Task.Run(() => _comMessanger.Send(mes));    // To nam pomaga w wysylaniu - koniec exception timeout wspomnianych w serialportadapter - zobaczyc!
-
-            //    //_comMessanger.Send(mes);
-            //    //Console.WriteLine(licznik++);
-            //    //licznik++;
-            //    //mes = new CommandModel();
-            //    //mes.CommandType = CommandType.Data;
-            //    //mes.Data = licznik.ToString();
-            //    //_comMessanger.Send(mes);
-            //    //Thread.Sleep(1);       // Spowolnienie daje oddech i pozwala na wyswietlenie wiadomosci odbiorczej - inaczej przeciez glowny watek zapcha wszystko!
-            //    if(licznik > 10000)
-            //        {
-            //        Thread.Sleep(5000);
-            //        licznik = 0;
-            //    }
-
-            //}
-
-            // o wiele bardziej zapycha niz powyzsze w task run - dlaczego? odpala mase gc
-            //while (licznik < 80000)
-            //{
-            //    mes = new CommandModel();
-            //    mes.CommandType = CommandType.Data;
-            //    mes.Data = licznik.ToString();
-            //    _comMessanger.SendAsync(mes);
-            //    //if (licznik % 1000 == 0)
-            //    //GC.Collect();
-            //    //Thread.Sleep(1);
-            //    //await Task.Delay(1);
-
-            //    licznik++;
-            //}
-
-            // _comMessanger.Close();
-            Console.WriteLine("Waiting for signal...");
-            //Thread.Sleep(5000);
-            //_comMessanger.Close();
+            Console.WriteLine("ENTER to close communication line");
             Console.ReadLine();
             _comMessanger.Close();
+            Console.WriteLine("ENTER to open communication line");
+            Console.ReadLine();
+            _comMessanger.Open();
+            _comMessanger.StartReceiveAsync();
             Console.ReadLine();
         }
     }

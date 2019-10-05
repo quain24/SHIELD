@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessanger
+    public interface IMessanger : System.IDisposable
     {
         Task<bool> SendAsync(ICommandModel comand);
 
@@ -18,6 +18,8 @@ namespace Shield.HardwareCom
 
         void Close();
 
-        Task ConstantReceiveAsync();
+        Task StartReceiveAsync();
+
+        void StopReceiving();
     }
 }
