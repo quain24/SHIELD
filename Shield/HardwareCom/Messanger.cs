@@ -25,8 +25,13 @@ namespace Shield.HardwareCom
         private bool _setupSuccessufl = false;
         private bool _disposed = false;
         private bool _dataExtractorRunning = false;
+        private bool _receiverRunning = false;
 
         private object _dataExtractorLock = new object();
+
+        public event EventHandler<ICommandModel> CommandReceived;
+
+        public bool IsOpen { get => _device.IsOpen; }
 
         public Messanger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
@@ -43,7 +48,7 @@ namespace Shield.HardwareCom
 
             _receiveCT = _receiveCTS.Token;
 
-            _device.DataReceived += OnDataReceived;
+            _device.DataReceived += OnDataReceivedInternal;
 
             return _setupSuccessufl = true;
         }
@@ -62,13 +67,16 @@ namespace Shield.HardwareCom
             _device?.Close();
         }
 
-        public Task StartReceiveAsync()
+        public async Task StartReceiveAsync()
         {
+            if(_receiverRunning)
+                return;
             if (_setupSuccessufl)
             {
                 // Daemons, constantly running in background, hence Task.Run()'s
-                return Task.Run(async () =>
+                await Task.Run(async () =>
                 {
+                    _receiverRunning = true;
                     while (_device.IsOpen && !_receiveCT.IsCancellationRequested)
                     {
                         string toAdd = await _device.ReceiveAsync(_receiveCT).ConfigureAwait(false);
@@ -76,13 +84,13 @@ namespace Shield.HardwareCom
                         {
                             _rawDataBuffer.Add(toAdd);
                             if (!_dataExtractorRunning)
-                                // intentionally not awaited
+                                // intentionally not awaited - fire and forget
                                 Task.Run(async () => await DataExtractor(_receiveCT)).ConfigureAwait(false);
                         }
                     }
-                });
+                }).ConfigureAwait(false);
             }
-            return default;
+            _receiverRunning = false;
         }
 
         public void StopReceiving()
@@ -148,9 +156,10 @@ namespace Shield.HardwareCom
                     List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
                     foreach (string s in output)
                     {
-                        ICommandModel com = _commandTranslator.FromString(s);
+                        ICommandModel receivedCommad = _commandTranslator.FromString(s);
+                        OnCommandReceived(receivedCommad);
                         // Temporary display to console, in future - collection?
-                        Console.WriteLine(com.CommandTypeString + " " + com.Id + " " + com.Data + " | Received by external data searcher (" + i++ + ")");
+                        Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
                     }
                 }
                 else
@@ -165,9 +174,14 @@ namespace Shield.HardwareCom
 
         #endregion internal helpers
 
-        public void OnDataReceived(object sender, string e)
+        public void OnDataReceivedInternal(object sender, string e)
         {
             //_rawDataBuffer.Add(e.RemoveASCIIChars());
+        }
+
+        protected virtual void OnCommandReceived(ICommandModel command)
+        {
+            CommandReceived?.Invoke(this, command);
         }
 
         public void Dispose()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 
 namespace Shield.Helpers
@@ -23,7 +24,7 @@ namespace Shield.Helpers
 
             do
             {
-                result = new string(Enumerable.Range(1, (int)length).Select(A => CHARS[idGenerator.Next(CHARS.Length)]).ToArray()).ToUpper();
+                result = new string(Enumerable.Range(1, (int)length).Select(A => CHARS[idGenerator.Next(CHARS.Length)]).ToArray()).ToUpper(CultureInfo.InvariantCulture);
             }
             while (result == _lastId);
 

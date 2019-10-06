@@ -17,9 +17,10 @@
         StopReceiving,
         Completed,
         Correct,
+        RetryLast,
         Error,
         Unknown,
         Partial,
-        Data    //15
+        Data    //16
     }
 }

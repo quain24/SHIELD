@@ -51,16 +51,18 @@ namespace Shield.HardwareCom
             // Working classes
             builder.RegisterType<CommandTranslator>()
                    .As<ICommandTranslator>()
-                   .WithParameters(new[]{
-                                       new ResolvedParameter(
-                                           (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
-                                           (pi, ctx) => ctx.Resolve<IAppSettings>()),
-                                       new ResolvedParameter(
-                                           (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
-                                           (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
-                                       new ResolvedParameter(
-                                           (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
-                                           (pi, ctx) => ctx.Resolve<ICommandTranslator>())});
+                   .WithParameters(new[]
+                   {
+                        new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
+                            (pi, ctx) => ctx.Resolve<IAppSettings>()),
+                        new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
+                            (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
+                        new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
+                            (pi, ctx) => ctx.Resolve<ICommandTranslator>())
+                   });
 
             // Alternate way to register IIncomingDataPreparer
             //builder.RegisterType<IncomingDataPreparer>()
@@ -84,16 +86,31 @@ namespace Shield.HardwareCom
             //           });
 
             builder.Register(c =>
-                                {
-                                    IApplicationSettingsModel appSet = c.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>();
-                                    IIncomingDataPreparer incomingDataPreparer = new IncomingDataPreparer(appSet.CommandTypeSize,
-                                                                                        appSet.IdSize,
-                                                                                        appSet.DataSize,
-                                                                                        new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
-                                                                                        appSet.Separator);
-                                    return incomingDataPreparer;
-                                })
+                    {
+                        IApplicationSettingsModel appSet = c.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>();
+                        IIncomingDataPreparer incomingDataPreparer = new IncomingDataPreparer(appSet.CommandTypeSize,
+                                                                            appSet.IdSize,
+                                                                            appSet.DataSize,
+                                                                            new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
+                                                                            appSet.Separator);
+                        return incomingDataPreparer;
+                    })
                    .As<IIncomingDataPreparer>();
+
+            builder.RegisterType<Messanger>()
+                   .As<IMessanger>()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(ICommunicationDeviceFactory) && pi.Name == "communicationDeviceFactory",
+                           (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(ICommandTranslator) && pi.Name == "commandTranslator",
+                           (pi, ctx) => ctx.Resolve<ICommandTranslator>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(IIncomingDataPreparer) && pi.Name == "incomingDataPreparer",
+                           (pi, ctx) => ctx.Resolve<IIncomingDataPreparer>())
+                   });
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

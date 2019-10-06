@@ -130,7 +130,7 @@ namespace Shield.HardwareCom.Adapters
             {
                 int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, _receiveCT).ConfigureAwait(false);
                 string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
-                DataReceived?.Invoke(this, rawData);
+                OnDataReceived(rawData);
                 return rawData;
             }
             return null;
@@ -138,9 +138,12 @@ namespace Shield.HardwareCom.Adapters
 
         public void StopReceiving()
         {
-            _receiveCTS.Cancel();
-            _receiveCTS = new CancellationTokenSource();
-            _receiveCT = _receiveCTS.Token;
+            if(_receiveCTS != null)
+            {
+                _receiveCTS.Cancel();
+                _receiveCTS = new CancellationTokenSource();
+                _receiveCT = _receiveCTS.Token;
+            }
         }
 
         /// <summary>
@@ -194,10 +197,13 @@ namespace Shield.HardwareCom.Adapters
 
         public void StopSending()
         {
-            _sendCTS.Cancel();
-            _sendCTS.Dispose();
-            _sendCTS = new CancellationTokenSource();
-            _sendCT = _sendCTS.Token;
+            if(_sendCTS != null)
+            {
+                _sendCTS.Cancel();
+                _sendCTS.Dispose();
+                _sendCTS = new CancellationTokenSource();
+                _sendCT = _sendCTS.Token;
+            }
         }
 
         /// <summary>
@@ -214,6 +220,11 @@ namespace Shield.HardwareCom.Adapters
             {
                 Debug.WriteLine(@"ERROR - SerialPortAdaper - DiscardBuffer: Port was closed, nothing to discard.");
             }
+        }
+
+        protected virtual void OnDataReceived(string rawData)
+        {
+            DataReceived?.Invoke(this, rawData);
         }
 
         public void Dispose()
@@ -237,9 +248,9 @@ namespace Shield.HardwareCom.Adapters
                 }
                 if (_sendCTS != null)
                 {
-                    _receiveCTS.Cancel();
-                    _receiveCTS.Dispose();
-                    _receiveCTS = null;
+                    _sendCTS.Cancel();
+                    _sendCTS.Dispose();
+                    _sendCTS = null;
                 }
                 if (_port != null)
                 {

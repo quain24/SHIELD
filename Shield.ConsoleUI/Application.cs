@@ -20,8 +20,9 @@ namespace Shield.ConsoleUI
         private IMessageModel _message;
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
+        private IMessanger _messanger;
 
-        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger)
         {
             _command = command;
             _deviceFactory = deviceFactory;
@@ -29,6 +30,7 @@ namespace Shield.ConsoleUI
             _message = message;
             _commandTranslator = commandTranslator;
             _incomingDataPreparer = incomingDataPreparer;
+            _messanger = messanger;
         }
 
         public void Run()
@@ -103,7 +105,7 @@ namespace Shield.ConsoleUI
             //    }
             //}
 
-            _comMessanger = new Messanger(_deviceFactory, _commandTranslator, _incomingDataPreparer);
+            _comMessanger = _messanger;//new Messanger(_deviceFactory, _commandTranslator, _incomingDataPreparer);
             _comMessanger.Setup(DeviceType.Serial);
 
             // wyswietl porty w kompie

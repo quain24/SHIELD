@@ -16,7 +16,7 @@ namespace Shield.HardwareCom.Models
     [Serializable]
     public class MessageModel : IMessageModel
     {
-        private readonly string _messageId;
+        private string _messageId;
         private IAppSettings _appSettings;
         private IApplicationSettingsModel _applicationSettingsModel;
 
@@ -26,15 +26,23 @@ namespace Shield.HardwareCom.Models
         {
             _appSettings = appSettings;
             _applicationSettingsModel = (IApplicationSettingsModel)_appSettings.GetSettingsFor(Enums.SettingsType.Application);
-            // Every message gets unique ID that cannot be changed
-            _messageId = IdGenerator.GetId(_applicationSettingsModel.IdSize);
         }
 
         public bool IsBeingSent { get; set; } = false;
         public bool IsBeingReceived { get; set; } = false;
         public bool IsIncoming { get; set; } = false;
         public bool IsOutgoing { get; set; } = false;
+        public bool IsTransmissionCompleted { get; set; } = false;
         public int CommandCount { get { return _commands.Count(); } }
+
+        public string AssaignID(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                _messageId = IdGenerator.GetId(_applicationSettingsModel.IdSize);
+            else
+                _messageId = id;
+            return _messageId;
+        }
 
         public void Add(ICommandModel command)
         {

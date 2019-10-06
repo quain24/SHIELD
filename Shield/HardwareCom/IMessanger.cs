@@ -6,6 +6,7 @@ namespace Shield.HardwareCom
 {
     public interface IMessanger : System.IDisposable
     {
+        bool IsOpen { get; }
         Task<bool> SendAsync(ICommandModel comand);
 
         Task<bool> SendAsync(IMessageModel message);
@@ -21,5 +22,7 @@ namespace Shield.HardwareCom
         Task StartReceiveAsync();
 
         void StopReceiving();
+
+        event System.EventHandler<ICommandModel> CommandReceived;
     }
 }

@@ -40,7 +40,7 @@ namespace COM6TestSender
                         //Thread.Sleep(10);
                         //serial.Write($@"*0015*ABCD*123456789101112131415161718192");
                         //serial.Write($@"*{15.ToString().PadLeft(4, '0')}*" + rand.Next(1000, 9999) + '*' + "A1B2C3D4E5F6G7H8I9J10K11L12M13");
-                        string aa = $@"*{15.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                        string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
 
                         serial.Write(aa);
                         Console.WriteLine(aa);
@@ -64,7 +64,7 @@ namespace COM6TestSender
                 {
                     //try
                     //{
-                    string aa = $@"*0015*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                    string aa = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
                     byte[] bak = new byte[aa.Length];
                     bak = Encoding.ASCII.GetBytes(aa);
                     //Thread.Sleep(1);
@@ -103,7 +103,7 @@ namespace COM6TestSender
             {
                 while (true)
                 {
-                    serial.Write($@"*{"0015"}*" + i.ToString().PadLeft(4, '0') + '*' + i.ToString().PadLeft(30, '.'));
+                    serial.Write($@"*{"0016"}*" + i.ToString().PadLeft(4, '0') + '*' + i.ToString().PadLeft(30, '.'));
                     Console.WriteLine(serial.ReadExisting());
 
                     i++;
@@ -117,7 +117,7 @@ namespace COM6TestSender
             {
                 while (true)
                 {
-                    string aa = $@"*0015*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                    string aa = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
                     serial.Write(aa);
                     serial.DiscardOutBuffer();
                     Console.WriteLine(aa);

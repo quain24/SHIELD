@@ -9,7 +9,7 @@ namespace Shield.HardwareCom.Models
     public class CommandModel : ICommandModel
     {
         private string _data = string.Empty;
-        private string _id;
+        private string _id = string.Empty;
         private CommandType _command;
 
         public string Id
