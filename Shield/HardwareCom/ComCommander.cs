@@ -29,8 +29,6 @@ namespace Shield.HardwareCom
             // AutoFac auto factories
             _commandFactory = commandFactory;
             _messageFactory = messageFactory;
-
-            _messanger.CommandReceived += OnCommandReceived;
         }
 
         public void AssignMessanger(IMessanger messanger)
@@ -68,7 +66,7 @@ namespace Shield.HardwareCom
 
         public void Receiver(ICommandModel receivedCommand)
         {
-            string id = receivedCommand.Id;
+            string id = receivedCommand.Id;           
 
             if (_incomingBuffer.ContainsKey(id))
             {

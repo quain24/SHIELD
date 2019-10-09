@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
 {
-    // Przeanalizować tą klasę, popoprawiać i zoptymalizować co jest, upewnić się, że nie ma potrzeby niczego dodatkowego i zakończyć!
-
     public class SerialPortAdapter : ICommunicationDevice
     {
         /// <summary>
@@ -24,15 +22,9 @@ namespace Shield.HardwareCom.Adapters
 
         private const int ByteBufferSize = 4092;
 
-        private CancellationTokenSource _receiveCTS = new CancellationTokenSource();
-        private CancellationToken _receiveCT;
-        private CancellationTokenSource _sendCTS = new CancellationTokenSource();
-        private CancellationToken _sendCT;
-
-        private object _lock = new object();
-
         private readonly SerialPort _port;
-
+        
+        private object _lock = new object();  
         private bool _disposed = false;
         private bool _wasSetupCorrectly = false;
         private byte[] _buffer = new byte[ByteBufferSize];
@@ -76,9 +68,6 @@ namespace Shield.HardwareCom.Adapters
             _port.RtsEnable = false;
             _port.DiscardNull = true;
 
-            _sendCT = _sendCTS.Token;
-            _receiveCT = _receiveCTS.Token;
-
             return _wasSetupCorrectly = true;
         }
 
@@ -95,65 +84,58 @@ namespace Shield.HardwareCom.Adapters
 
         public void Close()
         {
-            StopReceiving();
-            StopSending();
-            // Close the serial port in a new thread to avoid freezes
-            Task closeTask = new Task(() =>
+            DiscardInBuffer();
+            _port.Close();
+        }
+
+        public async Task CloseAsync()
+        {
+            await Task.Run(() =>
             {
                 try
                 {
                     DiscardInBuffer();
                     _port.Close();
                 }
-                catch (IOException e)
+                catch(Exception e)
                 {
                     // Port was not open
                     Debug.WriteLine("MESSAGE: SerialPortAdapter Close - Port was not open! " + e.Message);
+                    throw;
                 }
-            });
-            closeTask.Start();
-
-            //return closeTask;
-
-            // odniorca:
-            // await serialStream.Close();
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Constantly monitors incoming communication data, filters it and generates Commands (ICommandModel)
         /// </summary>
-        public async Task<string> ReceiveAsync(CancellationToken cancellToken)
+        public async Task<string> ReceiveAsync(CancellationToken ct)
         {
-            cancellToken.Register(() => StopReceiving());
-
-            if (_port.IsOpen && !_receiveCT.IsCancellationRequested && !cancellToken.IsCancellationRequested)
+            if (_port.IsOpen && !ct.IsCancellationRequested)
             {
-                int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, _receiveCT).ConfigureAwait(false);
-                string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
-                OnDataReceived(rawData);
-                return rawData;
+                try
+                {
+                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
+                    string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
+                    OnDataReceived(rawData);
+                    return rawData;
+                }
+                catch
+                {
+                    return null;
+                }
             }
             return null;
-        }
-
-        public void StopReceiving()
-        {
-            if(_receiveCTS != null)
-            {
-                _receiveCTS.Cancel();
-                _receiveCTS = new CancellationTokenSource();
-                _receiveCT = _receiveCTS.Token;
-            }
-        }
+        }        
 
         /// <summary>
         /// Sends a raw command string taken from input CommandModel to the receiving device.
         /// </summary>
         /// <param name="command">Single command to transfer</param>
         /// <returns>Task<bool> if sends or failes</bool></returns>
-        public async Task<bool> SendAsync(string command)
+        public async Task<bool> SendAsync(string command, CancellationToken ct)
         {
-            if (!IsOpen || string.IsNullOrEmpty(command) || _sendCT.IsCancellationRequested)
+            if (!IsOpen || string.IsNullOrEmpty(command) || ct.IsCancellationRequested)
             {
                 Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: Port closed / raw command empty / cancellation requested");
                 return false;
@@ -162,7 +144,7 @@ namespace Shield.HardwareCom.Adapters
             byte[] buffer = Encoding.GetEncoding(_port.Encoding.CodePage).GetBytes(command);
             try
             {
-                await _port.BaseStream.WriteAsync(buffer, 0, buffer.Count(), _sendCT).ConfigureAwait(false);
+                await _port.BaseStream.WriteAsync(buffer, 0, buffer.Count(), ct).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -188,23 +170,12 @@ namespace Shield.HardwareCom.Adapters
                 _port.Write(command);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
                 Debug.WriteLine($@"ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailible?");
                 return false;
             }
-        }
-
-        public void StopSending()
-        {
-            if(_sendCTS != null)
-            {
-                _sendCTS.Cancel();
-                _sendCTS.Dispose();
-                _sendCTS = new CancellationTokenSource();
-                _sendCT = _sendCTS.Token;
-            }
-        }
+        }        
 
         /// <summary>
         /// Clears data in 'received' buffer
@@ -213,7 +184,8 @@ namespace Shield.HardwareCom.Adapters
         {
             try
             {
-                _port.DiscardInBuffer();
+                _port.BaseStream.Flush();
+                _port.DiscardInBuffer();                
                 _buffer = new byte[ByteBufferSize];
             }
             catch (Exception ex)
@@ -240,27 +212,14 @@ namespace Shield.HardwareCom.Adapters
 
             if (disposing)
             {
-                if (_receiveCTS != null)
-                {
-                    _receiveCTS.Cancel();
-                    _receiveCTS.Dispose();
-                    _receiveCTS = null;
-                }
-                if (_sendCTS != null)
-                {
-                    _sendCTS.Cancel();
-                    _sendCTS.Dispose();
-                    _sendCTS = null;
-                }
                 if (_port != null)
                 {
                     if (_port.IsOpen)
-                        this.Close();
-                    _port.Dispose();
+                        Close(); // no need for dispose - closing is equal
+                        //CloseAsync();
                 }
             }
             _buffer = null;
-
             _disposed = true;
         }
     }

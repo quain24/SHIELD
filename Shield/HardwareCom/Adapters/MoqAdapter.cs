@@ -24,7 +24,7 @@ namespace Shield.HardwareCom.Adapters
             //.DataReceived += PropagateDataReceivedEvent;
         }
 
-        public void Close()
+        public async Task CloseAsync()
         {
             Debug.WriteLine("Zamknięto obiekt \"MoqAdapter\"");
             _isOpen = false;
@@ -38,7 +38,7 @@ namespace Shield.HardwareCom.Adapters
 
         public void Dispose()
         {
-            Close();
+            CloseAsync();
             Debug.WriteLine("Zamknięto / Dispose obiekt \"MoqAdapter\"");
             //_port.DataReceived -= PropagateDataReceivedEvent;
         }
@@ -119,6 +119,16 @@ namespace Shield.HardwareCom.Adapters
         }
 
         public Task<string> StartReceivingAsync(CancellationToken cancellToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> SendAsync(string command, CancellationToken ct = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Close()
         {
             throw new NotImplementedException();
         }

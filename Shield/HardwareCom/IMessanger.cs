@@ -1,5 +1,6 @@
 ﻿using Shield.Enums;
 using Shield.HardwareCom.Models;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
@@ -19,7 +20,7 @@ namespace Shield.HardwareCom
 
         void Close();
 
-        Task StartReceiveAsync();
+        Task StartReceiveAsync(CancellationToken ct = default);
 
         void StopReceiving();
 

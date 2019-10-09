@@ -78,6 +78,7 @@
     <Compile Include="Extensions\StringExtension.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
+    <Compile Include="HardwareCom\AnswerChecker.cs" />
     <Compile Include="HardwareCom\ComCommander.cs" />
     <Compile Include="HardwareCom\CommandTranslator.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />

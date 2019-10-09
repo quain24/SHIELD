@@ -7,6 +7,7 @@ using Shield.HardwareCom.Models;
 using System;
 using System.IO.Ports;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.ConsoleUI
@@ -15,12 +16,11 @@ namespace Shield.ConsoleUI
     {
         private ICommandModel _command;
         private ICommunicationDeviceFactory _deviceFactory;
-        private IMessanger _comMessanger;
         private IAppSettings _setman;
         private IMessageModel _message;
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
-        private IMessanger _messanger;
+        private IMessanger _comMessanger;
 
         public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger)
         {
@@ -30,7 +30,7 @@ namespace Shield.ConsoleUI
             _message = message;
             _commandTranslator = commandTranslator;
             _incomingDataPreparer = incomingDataPreparer;
-            _messanger = messanger;
+            _comMessanger = messanger;
         }
 
         public void Run()
@@ -105,7 +105,7 @@ namespace Shield.ConsoleUI
             //    }
             //}
 
-            _comMessanger = _messanger;//new Messanger(_deviceFactory, _commandTranslator, _incomingDataPreparer);
+            ;//new Messanger(_deviceFactory, _commandTranslator, _incomingDataPreparer);
             _comMessanger.Setup(DeviceType.Serial);
 
             // wyswietl porty w kompie
@@ -113,7 +113,7 @@ namespace Shield.ConsoleUI
             {
                 Console.WriteLine(availablePort);
             }
-
+            
             //_comMessanger.Setup(DeviceType.Serial);
             _comMessanger.Open();
             _comMessanger.StartReceiveAsync().ConfigureAwait(false);
@@ -130,28 +130,40 @@ namespace Shield.ConsoleUI
 
             //_comMessanger.Send(null);
 
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    CommandModel mes = new CommandModel();
-                    mes.CommandType = CommandType.Data;
-                    mes.Data = licznik.ToString();
-                    mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
+            //Task.Run(async () =>
+            //{
+            //    while (true)
+            //    {
+            //        CommandModel mes = new CommandModel();
+            //        mes.CommandType = CommandType.Data;
+            //        mes.Data = licznik.ToString();
+            //        mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
 
-                    await _comMessanger.SendAsync(mes);
-                    licznik++;
-                }
-            });
+            //        await _comMessanger.SendAsync(mes);
+            //        licznik++;
+            //    }
+            //});
 
+            Console.WriteLine("ENTER to close communication line");
+            Console.ReadLine();
+            _comMessanger.StopReceiving();
+            //_comMessanger.Close();
+            Console.WriteLine("ENTER to open communication line");
+            Console.ReadLine();
+            Console.WriteLine("Com line opened.");
+            _comMessanger.Open();
+            _comMessanger.StartReceiveAsync();
             Console.WriteLine("ENTER to close communication line");
             Console.ReadLine();
             _comMessanger.Close();
             Console.WriteLine("ENTER to open communication line");
             Console.ReadLine();
+            Console.WriteLine("Com line opened.");
             _comMessanger.Open();
             _comMessanger.StartReceiveAsync();
             Console.ReadLine();
+            Console.WriteLine("end after enter");
+            Console.ReadLine();        
         }
     }
 }

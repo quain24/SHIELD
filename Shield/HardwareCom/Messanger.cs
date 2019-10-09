@@ -18,7 +18,6 @@ namespace Shield.HardwareCom
         private IIncomingDataPreparer _incomingDataPreparer;
 
         private CancellationTokenSource _receiveCTS = new CancellationTokenSource();
-        private CancellationToken _receiveCT;
 
         private BlockingCollection<string> _rawDataBuffer = new BlockingCollection<string>();
 
@@ -46,8 +45,6 @@ namespace Shield.HardwareCom
             if (_device is null)
                 return _setupSuccessufl = false;
 
-            _receiveCT = _receiveCTS.Token;
-
             _device.DataReceived += OnDataReceivedInternal;
 
             return _setupSuccessufl = true;
@@ -67,38 +64,57 @@ namespace Shield.HardwareCom
             _device?.Close();
         }
 
-        public async Task StartReceiveAsync()
+        public async Task StartReceiveAsync(CancellationToken ct)
         {
-            if(_receiverRunning)
+            if (_receiverRunning || !IsOpen)
                 return;
+            CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
+            if(internalCT == ct)
+                ct.Register(StopReceiving);
+
             if (_setupSuccessufl)
             {
                 // Daemons, constantly running in background, hence Task.Run()'s
-                await Task.Run(async () =>
+                _receiverRunning = await Task.Run(new Func<Task<bool>>(async () =>
                 {
                     _receiverRunning = true;
-                    while (_device.IsOpen && !_receiveCT.IsCancellationRequested)
+                    try
                     {
-                        string toAdd = await _device.ReceiveAsync(_receiveCT).ConfigureAwait(false);
-                        if (!string.IsNullOrEmpty(toAdd))
+                        while (_device.IsOpen && !internalCT.IsCancellationRequested)
                         {
-                            _rawDataBuffer.Add(toAdd);
-                            if (!_dataExtractorRunning)
-                                // intentionally not awaited - fire and forget
-                                Task.Run(async () => await DataExtractor(_receiveCT)).ConfigureAwait(false);
+                            string toAdd = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
+
+                            if (!string.IsNullOrEmpty(toAdd) || !internalCT.IsCancellationRequested)
+                            {
+                                _rawDataBuffer.Add(toAdd);
+                                if (!_dataExtractorRunning)
+                                {
+                                    // intentionally not awaited - fire and forget - will close self after while
+                                    Task.Run(async () => await DataExtractor(internalCT)).ConfigureAwait(false);
+                                }
+                            }
                         }
+                        return false;
                     }
-                }).ConfigureAwait(false);
+                    catch
+                    {                        
+                        return _receiverRunning = false;
+                    }
+                }), internalCT).ConfigureAwait(false);
             }
-            _receiverRunning = false;
         }
 
+        /// <summary>
+        /// Stops data receiving endpoint - data is still grabbed by underlaying data stream.
+        /// That data is not used, maintained or transformed.
+        /// Best to use for temporary pause in communication, but with option to receive data that were sent in meantime
+        /// </summary>
         public void StopReceiving()
         {
             _receiveCTS.Cancel();
             _receiveCTS.Dispose();
+            _device.DiscardInBuffer();
             _receiveCTS = new CancellationTokenSource();
-            _receiveCT = _receiveCTS.Token;
         }
 
         public Task<bool> SendAsync(ICommandModel command)
@@ -108,7 +124,7 @@ namespace Shield.HardwareCom
 
         public async Task<bool> SendAsync(IMessageModel message)
         {
-            if(message is null)
+            if (message is null)
                 return false;
 
             List<bool> results = new List<bool>();
@@ -137,7 +153,7 @@ namespace Shield.HardwareCom
 
         #region internal helpers
 
-        private async Task DataExtractor(CancellationToken cancellation)
+        private async Task DataExtractor(CancellationToken ct)
         {
             lock (_dataExtractorLock)
             {
@@ -148,9 +164,9 @@ namespace Shield.HardwareCom
 
             int idleCounter = 0;
             int i = 0;
-            while (!cancellation.IsCancellationRequested)
+            while (!ct.IsCancellationRequested)
             {
-                if (_rawDataBuffer.Count > 0 && !cancellation.IsCancellationRequested)
+                if (_rawDataBuffer.Count > 0 && !ct.IsCancellationRequested)
                 {
                     idleCounter = 0;
                     List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());

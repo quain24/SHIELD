@@ -13,19 +13,15 @@ namespace Shield.CommonInterfaces
         void Open();
 
         void Close();
+        Task CloseAsync();
 
         void DiscardInBuffer();
 
-        Task<bool> SendAsync(string command);
+        Task<bool> SendAsync(string command, CancellationToken ct = default);
 
         bool Send(string command);
 
-        //Task StartReceivingAsync();
-        Task<string> ReceiveAsync(CancellationToken cancellToken);
-
-        void StopReceiving();
-
-        void StopSending();
+        Task<string> ReceiveAsync(CancellationToken ct = default);        
 
         event EventHandler<string> DataReceived;
     }

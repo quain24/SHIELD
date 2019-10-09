@@ -41,8 +41,14 @@ namespace Shield.HardwareCom.Models
                 _messageId = IdGenerator.GetId(_applicationSettingsModel.IdSize);
             else
                 _messageId = id;
+
+            foreach (var kvp in _commands)
+            {
+                kvp.Value.Id = _messageId;
+            }
+
             return _messageId;
-        }
+        }       
 
         public void Add(ICommandModel command)
         {

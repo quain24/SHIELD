@@ -117,9 +117,9 @@ namespace COM6TestSender
             {
                 while (true)
                 {
-                    string aa = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
-                    serial.Write(aa);
-                    serial.DiscardOutBuffer();
+                   string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+
+                        serial.Write(aa);
                     Console.WriteLine(aa);
 
                     Console.WriteLine("...");
