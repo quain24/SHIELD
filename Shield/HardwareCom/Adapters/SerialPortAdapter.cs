@@ -111,19 +111,20 @@ namespace Shield.HardwareCom.Adapters
         /// </summary>
         public async Task<string> ReceiveAsync(CancellationToken ct)
         {
-            if (_port.IsOpen && !ct.IsCancellationRequested)
+            if (_port.IsOpen)
             {
                 try
                 {
-                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
+                    ct.ThrowIfCancellationRequested();
+                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(true);
                     string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
                     OnDataReceived(rawData);
                     return rawData;
                 }
-                catch
+                catch(IOException exc)
                 {
-                    return null;
-                }
+                    throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, rethrown. Either task was cancelled or port has been closed", ct);
+                }                
             }
             return null;
         }        
@@ -135,7 +136,7 @@ namespace Shield.HardwareCom.Adapters
         /// <returns>Task<bool> if sends or failes</bool></returns>
         public async Task<bool> SendAsync(string command, CancellationToken ct)
         {
-            if (!IsOpen || string.IsNullOrEmpty(command) || ct.IsCancellationRequested)
+            if (!IsOpen || string.IsNullOrEmpty(command))
             {
                 Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: Port closed / raw command empty / cancellation requested");
                 return false;
@@ -144,15 +145,16 @@ namespace Shield.HardwareCom.Adapters
             byte[] buffer = Encoding.GetEncoding(_port.Encoding.CodePage).GetBytes(command);
             try
             {
+                ct.ThrowIfCancellationRequested();
                 await _port.BaseStream.WriteAsync(buffer, 0, buffer.Count(), ct).ConfigureAwait(false);
+                return true;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible / cancelled?");
                 Debug.WriteLine(ex.Message);
-                return false;
+                return false;                
             }
-            return true;
         }
 
         /// <summary>

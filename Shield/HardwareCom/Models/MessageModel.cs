@@ -1,10 +1,10 @@
 ﻿using Shield.Data;
 using Shield.Data.Models;
 using Shield.Helpers;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Shield.Extensions;
 
 /// <summary>
 /// Contains list of commands that will be sent or were received
@@ -13,20 +13,10 @@ using System.Linq;
 
 namespace Shield.HardwareCom.Models
 {
-    [Serializable]
     public class MessageModel : IMessageModel
-    {
-        private string _messageId;
-        private IAppSettings _appSettings;
-        private IApplicationSettingsModel _applicationSettingsModel;
-
+    {        
+        private string _messageId = string.Empty;
         private Dictionary<int, ICommandModel> _commands = new Dictionary<int, ICommandModel>();
-
-        public MessageModel(IAppSettings appSettings)
-        {
-            _appSettings = appSettings;
-            _applicationSettingsModel = (IApplicationSettingsModel)_appSettings.GetSettingsFor(Enums.SettingsType.Application);
-        }
 
         public bool IsBeingSent { get; set; } = false;
         public bool IsBeingReceived { get; set; } = false;
@@ -34,13 +24,11 @@ namespace Shield.HardwareCom.Models
         public bool IsOutgoing { get; set; } = false;
         public bool IsTransmissionCompleted { get; set; } = false;
         public int CommandCount { get { return _commands.Count(); } }
+        public string Id { get { return _messageId; } set { AssaignID(value); } }
 
         public string AssaignID(string id)
         {
-            if (string.IsNullOrEmpty(id))
-                _messageId = IdGenerator.GetId(_applicationSettingsModel.IdSize);
-            else
-                _messageId = id;
+            _messageId = id.ToUpperInvariant();
 
             foreach (var kvp in _commands)
             {
@@ -48,7 +36,7 @@ namespace Shield.HardwareCom.Models
             }
 
             return _messageId;
-        }       
+        }
 
         public void Add(ICommandModel command)
         {

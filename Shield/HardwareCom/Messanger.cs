@@ -5,6 +5,7 @@ using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -68,9 +69,12 @@ namespace Shield.HardwareCom
         {
             if (_receiverRunning || !IsOpen)
                 return;
+
+            //  If there is no alternate cancellation token, then use one provided with this class
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
+            //  Either way additionally use 'StopReceiving' for cleanup
             if(internalCT == ct)
-                ct.Register(StopReceiving);
+                internalCT.Register(StopReceiving);
 
             if (_setupSuccessufl)
             {
@@ -80,12 +84,14 @@ namespace Shield.HardwareCom
                     _receiverRunning = true;
                     try
                     {
-                        while (_device.IsOpen && !internalCT.IsCancellationRequested)
+                        while (_device.IsOpen)
                         {
+                            internalCT.ThrowIfCancellationRequested();
                             string toAdd = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
 
-                            if (!string.IsNullOrEmpty(toAdd) || !internalCT.IsCancellationRequested)
+                            if (!string.IsNullOrEmpty(toAdd))
                             {
+                                internalCT.ThrowIfCancellationRequested();
                                 _rawDataBuffer.Add(toAdd);
                                 if (!_dataExtractorRunning)
                                 {
@@ -94,9 +100,9 @@ namespace Shield.HardwareCom
                                 }
                             }
                         }
-                        return false;
+                        return  _receiverRunning = false;
                     }
-                    catch
+                    catch(OperationCanceledException)
                     {                        
                         return _receiverRunning = false;
                     }
@@ -112,7 +118,6 @@ namespace Shield.HardwareCom
         public void StopReceiving()
         {
             _receiveCTS.Cancel();
-            _receiveCTS.Dispose();
             _device.DiscardInBuffer();
             _receiveCTS = new CancellationTokenSource();
         }
@@ -161,31 +166,42 @@ namespace Shield.HardwareCom
                     return;
                 _dataExtractorRunning = true;
             }
-
-            int idleCounter = 0;
-            int i = 0;
-            while (!ct.IsCancellationRequested)
+            try
             {
-                if (_rawDataBuffer.Count > 0 && !ct.IsCancellationRequested)
+                int idleCounter = 0;
+                int i = 0;
+                while (true)
                 {
-                    idleCounter = 0;
-                    List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
-                    foreach (string s in output)
+                    ct.ThrowIfCancellationRequested();
+                    if (_rawDataBuffer.Count > 0 && !ct.IsCancellationRequested)
                     {
-                        ICommandModel receivedCommad = _commandTranslator.FromString(s);
-                        OnCommandReceived(receivedCommad);
-                        // Temporary display to console, in future - collection?
-                        Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
+                        idleCounter = 0;
+                        List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
+                        foreach (string s in output)
+                        {
+                            ct.ThrowIfCancellationRequested();
+                            ICommandModel receivedCommad = _commandTranslator.FromString(s);
+                            OnCommandReceived(receivedCommad);
+                            // Temporary display to console, in future - collection?
+                            Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
+                        }
+                    }
+                    else
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        if (idleCounter++ > 10)
+                            break;
+                        await Task.Delay(50, ct).ConfigureAwait(false);
                     }
                 }
-                else
-                {
-                    if (idleCounter++ > 10)
-                        break;
-                    await Task.Delay(50).ConfigureAwait(false);
-                }
+                _dataExtractorRunning = false;            
             }
-            _dataExtractorRunning = false;
+            catch(OperationCanceledException oce)   
+            {
+                Debug.WriteLine("EXCEPTION: Messanger - DataExtractor: Operation cancelled.");
+                _dataExtractorRunning = false;
+                return;
+            }
         }
 
         #endregion internal helpers
