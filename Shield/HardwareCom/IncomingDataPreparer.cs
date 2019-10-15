@@ -97,24 +97,24 @@ namespace Shield.HardwareCom
                 else
                 {
                     int prelimenaryCommandType;
-                    if(!int.TryParse(_internalBuffer.ToString(1, CommandTypeLength), out prelimenaryCommandType))
+                    if (!int.TryParse(_internalBuffer.ToString(1, CommandTypeLength), out prelimenaryCommandType))
                         prelimenaryCommandType = errorCommandNumber;
 
                     // Before adding any good commands to output lets add garbage collected ealier,
-                    // if there was any, for recepient to handle
+                    // if there is any, for recepient to handle
                     if (gibberishBuffer.Length > 0)
                     {
                         _outputCollection.Add(gibberishBuffer.ToString());
                         gibberishBuffer.Clear();
                     }
 
-                    // found data type
+                    // Found data type
                     if (prelimenaryCommandType == dataCommandNumber)
                     {
-                        if(_internalBuffer.Length >= CommandLengthWithData)
+                        if (_internalBuffer.Length >= CommandLengthWithData)
                         {
-                            int separatorInData = CheckRawData(_internalBuffer.ToString(CommandLength, DataPackLength));
-                            if(separatorInData == -1)
+                            int separatorInData = _internalBuffer.ToString(CommandLength, DataPackLength).IndexOf(Separator);
+                            if (separatorInData == -1)
                             {
                                 _outputCollection.Add(_internalBuffer.ToString(0, CommandLengthWithData));
                                 _internalBuffer.Remove(0, CommandLengthWithData);
@@ -122,27 +122,28 @@ namespace Shield.HardwareCom
                             }
                             else
                             {
-                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData-1));
-                                _internalBuffer.Remove(0, separatorInData-1);
+                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData));
+                                _internalBuffer.Remove(0, separatorInData);
                                 continue;
                             }
                         }
-                        
                         else
-                        {   
-                            int separatorInData = CheckRawData(_internalBuffer.ToString(CommandLength, _internalBuffer.Length - CommandLength));
-                            if(separatorInData == -1)
+                        {
+                            int separatorInData = _internalBuffer.ToString(CommandLength, _internalBuffer.Length - CommandLength).IndexOf(Separator);
+                            if (separatorInData == -1)
                             {
                                 break;
                             }
                             else
                             {
-                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData-1));
-                                _internalBuffer.Remove(0, separatorInData-1);
+                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData));
+                                _internalBuffer.Remove(0, separatorInData);
                                 continue;
-                            }                            
+                            }
                         }
                     }
+
+                    // Found any other type
                     else
                     {
                         _outputCollection.Add(_internalBuffer.ToString(0, CommandLength));
@@ -159,11 +160,14 @@ namespace Shield.HardwareCom
             return _outputCollection;
         }
 
-        private int CheckRawData(string data)
+        private int CheckRawData(string data, bool includePattern = true)
         {
-            Match match = CommandPattern.Match(data);
-            if (match.Success)
-                return match.Index;
+            if (includePattern)
+            {
+                Match match = CommandPattern.Match(data);
+                if (match.Success)
+                    return match.Index;
+            }
 
             int firsIndexOfSepprarator = data.IndexOf(Separator);
 

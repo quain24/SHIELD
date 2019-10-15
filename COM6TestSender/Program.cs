@@ -17,7 +17,7 @@ namespace COM6TestSender
 
             int i = 0;
 
-            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good, 7 - partial");
+            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good, 7 - partial, 8 - nodata mixed");
             string a = Console.ReadLine();
 
             Random rand = new Random();
@@ -180,10 +180,36 @@ namespace COM6TestSender
                     Console.ReadLine();
 
 
-                    u = $@"..........";
+                    u = $@"@#$%^&(()/";
                     serial.Write(u);
                     Console.WriteLine(u);
                     Console.ReadLine();
+
+                }
+
+            }
+
+            else if(Int32.Parse(a) == 8)
+            {
+                while (true)
+                {
+                    i++;
+                    string u = $@"*0001*"  + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0002*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0010*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0015*12" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    Console.ReadLine();                    
 
                 }
 
