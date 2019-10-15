@@ -5,6 +5,7 @@ namespace Shield.HardwareCom
 {
     public interface IIncomingDataPreparer
     {
+        int CommandLengthWithData { get; }
         int CommandLength { get; }
         Regex CommandPattern { get; set; }
         int CommandTypeLength { get; set; }

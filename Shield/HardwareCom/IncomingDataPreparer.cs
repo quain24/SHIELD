@@ -7,6 +7,7 @@ namespace Shield.HardwareCom
     public class IncomingDataPreparer : IIncomingDataPreparer
     {
         private StringBuilder _internalBuffer = new StringBuilder();
+        private StringBuilder _cutoffs = new StringBuilder();
         private int _commandTypeLength = -1;
         private int _idLength = -1;
         private int _dataLength = -1;
@@ -19,7 +20,7 @@ namespace Shield.HardwareCom
         public Regex CommandPattern { get => _commandPattern; set => _commandPattern = value; }
         public char Separator { get; set; }
 
-        public int CommandLength
+        public int CommandLengthWithData
         {
             get
             {
@@ -30,7 +31,16 @@ namespace Shield.HardwareCom
             }
         }
 
-        //public IncomingDataPreparer(){ }
+        public int CommandLength
+        {
+            get
+            {
+                if (CommandTypeLength > 0 && IDLength > 0)
+                    return CommandTypeLength + IDLength + 3;
+                else
+                    return -1;
+            }
+        }
 
         public IncomingDataPreparer(int commandTypeLength, int idLength, int dataPackLength, Regex commandPattern, char separator)
         {
@@ -43,36 +53,109 @@ namespace Shield.HardwareCom
 
         public List<string> DataSearch(string data)
         {
-            if (CommandLength <= 0 && !string.IsNullOrEmpty(data))
+            if (CommandLengthWithData <= 0 && !string.IsNullOrEmpty(data))
                 return null;
 
             _internalBuffer.Append(data);
 
-            return Extract();
+            if (_internalBuffer.Length > CommandLength)
+                return Extract();
+            return null;
         }
 
         private List<string> Extract()
         {
             _outputCollection = new List<string>();
-            
+            StringBuilder gibberishBuffer = new StringBuilder();
+            int dataCommandNumber = (int)Enums.CommandType.Data;
+            int errorCommandNumber = (int)Enums.CommandType.Error;
+
             while (_internalBuffer.Length >= CommandLength)
             {
+                // lets not allow trash buffer to overgrow, right?
+                if (gibberishBuffer.Length > CommandLengthWithData * 10)
+                    gibberishBuffer.Remove(0, CommandLengthWithData);
+
                 int correctDataIndex = CheckRawData(_internalBuffer.ToString(0, CommandLength));
 
                 // Partially bad data
                 if (correctDataIndex > 0)
                 {
-                    _outputCollection.Add(_internalBuffer.ToString(0, correctDataIndex));
+                    gibberishBuffer.Append(_internalBuffer.ToString(0, correctDataIndex));
                     _internalBuffer.Remove(0, correctDataIndex);
+                    continue;
+                }
+                // Completely bad data
+                else if (correctDataIndex < 0)
+                {
+                    gibberishBuffer.Append(_internalBuffer.ToString(0, CommandLength));
+                    _internalBuffer.Remove(0, CommandLength);
+                    continue;
                 }
 
-                // All good or all bad
+                // Found good data, but if its of 'data' type additional checks will be performed
                 else
                 {
-                    _outputCollection.Add(_internalBuffer.ToString(0, CommandLength));
-                    _internalBuffer.Remove(0, CommandLength);
+                    int prelimenaryCommandType;
+                    if(!int.TryParse(_internalBuffer.ToString(1, CommandTypeLength), out prelimenaryCommandType))
+                        prelimenaryCommandType = errorCommandNumber;
+
+                    // Before adding any good commands to output lets add garbage collected ealier,
+                    // if there was any, for recepient to handle
+                    if (gibberishBuffer.Length > 0)
+                    {
+                        _outputCollection.Add(gibberishBuffer.ToString());
+                        gibberishBuffer.Clear();
+                    }
+
+                    // found data type
+                    if (prelimenaryCommandType == dataCommandNumber)
+                    {
+                        if(_internalBuffer.Length >= CommandLengthWithData)
+                        {
+                            int separatorInData = CheckRawData(_internalBuffer.ToString(CommandLength, DataPackLength));
+                            if(separatorInData == -1)
+                            {
+                                _outputCollection.Add(_internalBuffer.ToString(0, CommandLengthWithData));
+                                _internalBuffer.Remove(0, CommandLengthWithData);
+                                continue;
+                            }
+                            else
+                            {
+                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData-1));
+                                _internalBuffer.Remove(0, separatorInData-1);
+                                continue;
+                            }
+                        }
+                        
+                        else
+                        {   
+                            int separatorInData = CheckRawData(_internalBuffer.ToString(CommandLength, _internalBuffer.Length - CommandLength));
+                            if(separatorInData == -1)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData-1));
+                                _internalBuffer.Remove(0, separatorInData-1);
+                                continue;
+                            }                            
+                        }
+                    }
+                    else
+                    {
+                        _outputCollection.Add(_internalBuffer.ToString(0, CommandLength));
+                        _internalBuffer.Remove(0, CommandLength);
+                    }
                 }
-            }            
+            }
+
+            if (gibberishBuffer.Length > 0)
+            {
+                _outputCollection.Add(gibberishBuffer.ToString());
+                gibberishBuffer.Clear();
+            }
             return _outputCollection;
         }
 

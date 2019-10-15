@@ -78,7 +78,10 @@ namespace Shield.HardwareCom
 
             if (_setupSuccessufl)
             {
+                // intentionally not awaited - fire and forget
                 // Daemons, constantly running in background, hence Task.Run()'s
+                Task.Run(async () => await DataExtractor(internalCT)).ConfigureAwait(false);
+                
                 _receiverRunning = await Task.Run(new Func<Task<bool>>(async () =>
                 {
                     _receiverRunning = true;
@@ -93,11 +96,10 @@ namespace Shield.HardwareCom
                             {
                                 internalCT.ThrowIfCancellationRequested();
                                 _rawDataBuffer.Add(toAdd);
-                                if (!_dataExtractorRunning)
-                                {
+                                
                                     // intentionally not awaited - fire and forget - will close self after while
-                                    Task.Run(async () => await DataExtractor(internalCT)).ConfigureAwait(false);
-                                }
+                                    
+                                
                             }
                         }
                         return  _receiverRunning = false;
@@ -168,15 +170,15 @@ namespace Shield.HardwareCom
             }
             try
             {
-                int idleCounter = 0;
                 int i = 0;
                 while (true)
                 {
                     ct.ThrowIfCancellationRequested();
-                    if (_rawDataBuffer.Count > 0 && !ct.IsCancellationRequested)
+                    if (_rawDataBuffer.Count > 0)
                     {
-                        idleCounter = 0;
                         List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
+                        if(output is null || output.Count == 0)
+                            continue;
                         foreach (string s in output)
                         {
                             ct.ThrowIfCancellationRequested();
@@ -188,15 +190,12 @@ namespace Shield.HardwareCom
                     }
                     else
                     {
-                        ct.ThrowIfCancellationRequested();
-                        if (idleCounter++ > 10)
-                            break;
+                        ct.ThrowIfCancellationRequested();                        
                         await Task.Delay(50, ct).ConfigureAwait(false);
                     }
-                }
-                _dataExtractorRunning = false;            
+                }         
             }
-            catch(OperationCanceledException oce)   
+            catch(OperationCanceledException)   
             {
                 Debug.WriteLine("EXCEPTION: Messanger - DataExtractor: Operation cancelled.");
                 _dataExtractorRunning = false;

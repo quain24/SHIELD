@@ -9,7 +9,7 @@ namespace COM6TestSender
     {
         private static void Main(string[] args)
         {
-            SerialPort serial = new SerialPort { BaudRate = 19200, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
+            SerialPort serial = new SerialPort { BaudRate = 921600, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
             serial.DtrEnable = false;
             serial.RtsEnable = false;
             serial.DiscardNull = true;
@@ -17,7 +17,7 @@ namespace COM6TestSender
 
             int i = 0;
 
-            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - foreach, 5 - test random");
+            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good, 7 - partial");
             string a = Console.ReadLine();
 
             Random rand = new Random();
@@ -103,7 +103,7 @@ namespace COM6TestSender
             {
                 while (true)
                 {
-                    serial.Write($@"*{"0012"}*" + i.ToString().PadLeft(4, '0') + '*' + i.ToString().PadLeft(30, '.'));
+                    serial.Write($@"*{"0012"}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.'));
                     Console.WriteLine(serial.ReadExisting());
 
                     i++;
@@ -125,6 +125,68 @@ namespace COM6TestSender
                         Console.ReadLine();
                     }
                 }
+            }
+
+            else if(Int32.Parse(a) == 4)
+            {
+                while (true)
+                {
+                    serial.Write($@"*0005*" + Shield.Helpers.IdGenerator.GetId(4) + '*');
+                    Console.WriteLine(serial.ReadExisting());
+
+                }
+
+            }
+
+            else if(Int32.Parse(a) == 6)
+            {
+                while (true)
+                {
+                    i++;
+                    string u = $@"*0005*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+
+                    u = $@"*0012*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(25, '.');
+                    serial.Write(u);
+                    Console.WriteLine(u);
+
+                    u = $@"*0006*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    u = $@"*0012*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    u = $@"*0015*" + Shield.Helpers.IdGenerator.GetId(4) + '*' /*+ i.ToString().PadLeft(30, '.')*/;
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    u = $@"*0001*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    Console.WriteLine(serial.ReadExisting());
+                    Console.ReadLine();
+
+                }
+
+            }
+            else if(Int32.Parse(a) == 7)
+            {
+                while (true)
+                {
+                    i++;
+                    string u = $@"*0012*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(20, '.');
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    Console.ReadLine();
+
+
+                    u = $@"..........";
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    Console.ReadLine();
+
+                }
+
             }
 
             // zle na emulatorze

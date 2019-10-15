@@ -45,7 +45,7 @@ namespace Shield.ConsoleUI
             //// testowanie zapisywania ustawien - działa -
 
             ISerialPortSettingsModel settings = new SerialPortSettingsModel();
-            settings.BaudRate = 19200;//921600;
+            settings.BaudRate = 921600;//19200;//
             settings.DataBits = 8;
             settings.Parity = Parity.None;
             settings.PortNumber = 4;

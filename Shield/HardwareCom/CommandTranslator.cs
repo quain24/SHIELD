@@ -29,18 +29,20 @@ namespace Shield.HardwareCom
         public ICommandModel FromString(string rawData)
         {
             ICommandModel command = _commandModelFac();
-            string rawCommandTypeString;
-            string rawDataString;
-            string rawIdString;
+            string rawCommandTypeString = string.Empty;
+            string rawDataString = string.Empty;
+            string rawIdString = string.Empty;
 
-            int wholeCommandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + _appSettingsModel.DataSize + 3;
+            int CommandLengthWithData = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + _appSettingsModel.DataSize + 3;
+            int CommandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + 3;
 
-            if (rawData.Length == wholeCommandLength)
+            if (rawData.Length == CommandLengthWithData || rawData.Length == CommandLength)
             {
                 rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
                 rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
-                rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
-                //Example: *0001*A8DD*12345678912345
+
+                if(rawData.Length == CommandLengthWithData)
+                    rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);                
 
                 int rawComInt;
                 if (Int32.TryParse(rawCommandTypeString, out rawComInt))
@@ -49,10 +51,16 @@ namespace Shield.HardwareCom
                         command.CommandType = (CommandType)rawComInt;
                     else
                         command.CommandType = CommandType.Unknown;
-                }
 
-                command.Id = rawIdString;
-                command.Data = rawDataString;
+                    command.Id = rawIdString;
+                    command.Data = rawData.Length == CommandLengthWithData ? rawDataString : string.Empty;
+                }
+                else
+                {
+                    command.CommandType = CommandType.Error;
+                    command.Id = string.Empty.PadLeft(_appSettingsModel.IdSize, _filler);
+                    command.Data = rawData.Length > _appSettingsModel.DataSize ? rawData.Substring(0, _appSettingsModel.DataSize) : rawData;
+                }
             }
             else
             {
