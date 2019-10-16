@@ -8,11 +8,14 @@ namespace Shield.HardwareCom
     {
         private StringBuilder _internalBuffer = new StringBuilder();
         private StringBuilder _cutoffs = new StringBuilder();
+
         private int _commandTypeLength = -1;
         private int _idLength = -1;
         private int _dataLength = -1;
         private Regex _commandPattern;
         private List<string> _outputCollection;
+
+        private int _dataCommandNumber = (int)Enums.CommandType.Data;
 
         public int CommandTypeLength { get { return _commandTypeLength; } set { _commandTypeLength = value > 0 ? value : 0; } }
         public int IDLength { get { return _idLength; } set { _idLength = value > 0 ? value : 0; } }
@@ -58,126 +61,140 @@ namespace Shield.HardwareCom
 
             _internalBuffer.Append(data);
 
-            if (_internalBuffer.Length > CommandLength)
-                return Extract();
-            return null;
+            return Extract();
         }
 
         private List<string> Extract()
         {
-            _outputCollection = new List<string>();
             StringBuilder gibberishBuffer = new StringBuilder();
-            int dataCommandNumber = (int)Enums.CommandType.Data;
-            int errorCommandNumber = (int)Enums.CommandType.Error;
 
-            while (_internalBuffer.Length >= CommandLength)
+            void AddGibberishToOutputCollection()
             {
-                // lets not allow trash buffer to overgrow, right?
-                if (gibberishBuffer.Length > CommandLengthWithData * 10)
-                    gibberishBuffer.Remove(0, CommandLengthWithData);
-
-                int correctDataIndex = CheckRawData(_internalBuffer.ToString(0, CommandLength));
-
-                // Partially bad data
-                if (correctDataIndex > 0)
+                if (gibberishBuffer.Length > 0)
                 {
-                    gibberishBuffer.Append(_internalBuffer.ToString(0, correctDataIndex));
-                    _internalBuffer.Remove(0, correctDataIndex);
-                    continue;
+                    _outputCollection.Add(gibberishBuffer.ToString());
+                    gibberishBuffer.Clear();
                 }
-                // Completely bad data
-                else if (correctDataIndex < 0)
-                {
-                    gibberishBuffer.Append(_internalBuffer.ToString(0, CommandLength));
-                    _internalBuffer.Remove(0, CommandLength);
-                    continue;
-                }
+            }
 
-                // Found good data, but if its of 'data' type additional checks will be performed
-                else
-                {
-                    int prelimenaryCommandType;
-                    if (!int.TryParse(_internalBuffer.ToString(1, CommandTypeLength), out prelimenaryCommandType))
-                        prelimenaryCommandType = errorCommandNumber;
+            _outputCollection = new List<string>();
+            
 
-                    // Before adding any good commands to output lets add garbage collected ealier,
-                    // if there is any, for recepient to handle
-                    if (gibberishBuffer.Length > 0)
+            //  If there was something left from last raw data portion - add it to current buffer
+            if (_cutoffs.Length > 0)
+            {
+                _internalBuffer.Insert(0, _cutoffs.ToString());
+                _cutoffs.Clear();
+            }
+
+            while (_internalBuffer.Length > 0)
+            {
+                int patternIndex = FindPattern(_internalBuffer.ToString());
+
+                //  Found pattern
+                if (patternIndex >= 0)
+                {
+                    int ealierSeparatorIndex = _internalBuffer.ToString().IndexOf(Separator);
+                    if(ealierSeparatorIndex < patternIndex)
                     {
-                        _outputCollection.Add(gibberishBuffer.ToString());
-                        gibberishBuffer.Clear();
+                        gibberishBuffer.Append(_internalBuffer.ToString(0, patternIndex - 1));
                     }
 
-                    // Found data type
-                    if (prelimenaryCommandType == dataCommandNumber)
-                    {
-                        if (_internalBuffer.Length >= CommandLengthWithData)
+                    //  If its data type
+                    if (int.Parse(_internalBuffer.ToString(patternIndex + 1, CommandTypeLength)) == _dataCommandNumber)
+                    {   
+                        //  Is there enough chars to fill data portion of command?
+                        if (_internalBuffer.Length >= CommandLengthWithData + patternIndex)
                         {
-                            int separatorInData = _internalBuffer.ToString(CommandLength, DataPackLength).IndexOf(Separator);
-                            if (separatorInData == -1)
+                            //  check for prelimenary correctness of raw data pack
+                            int isThereSeparatorInData = FindSeparator(_internalBuffer.ToString(CommandLength, DataPackLength));
+
+                            // Data pack is busted, so throw it into return, recepient will handle this
+                            if (isThereSeparatorInData >= 0)
                             {
-                                _outputCollection.Add(_internalBuffer.ToString(0, CommandLengthWithData));
-                                _internalBuffer.Remove(0, CommandLengthWithData);
+                                AddGibberishToOutputCollection();
+                                _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLength + isThereSeparatorInData));
+                                _internalBuffer.Remove(0, CommandLength + isThereSeparatorInData);
                                 continue;
                             }
+
+                            //  Correct data pack!!
                             else
                             {
-                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData));
-                                _internalBuffer.Remove(0, separatorInData);
+                                AddGibberishToOutputCollection();
+                                _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLengthWithData));
+                                _internalBuffer.Remove(0, patternIndex + CommandLengthWithData);
                                 continue;
                             }
                         }
+
+                        //  Data pack is incomplete - lets leave it for next raw data portion
                         else
                         {
-                            int separatorInData = _internalBuffer.ToString(CommandLength, _internalBuffer.Length - CommandLength).IndexOf(Separator);
-                            if (separatorInData == -1)
-                            {
-                                break;
-                            }
-                            else
-                            {
-                                _outputCollection.Add(_internalBuffer.ToString(0, separatorInData));
-                                _internalBuffer.Remove(0, separatorInData);
-                                continue;
-                            }
+                            _cutoffs.Append(_internalBuffer);
+                            _internalBuffer.Clear();
+                            continue;
                         }
                     }
 
-                    // Found any other type
+                    //  If its not data, then just add it to return
                     else
                     {
-                        _outputCollection.Add(_internalBuffer.ToString(0, CommandLength));
-                        _internalBuffer.Remove(0, CommandLength);
+                        AddGibberishToOutputCollection();
+                        _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLength));
+                        _internalBuffer.Remove(0, patternIndex + CommandLength);
+                        continue;
+                    }
+                }
+
+                //  No pattern, no data before, lets try to find a separator at least
+                else
+                {
+                    int separatorIndex = FindSeparator(_internalBuffer.ToString());
+                    int lastSeparator = _internalBuffer.ToString().LastIndexOf(Separator);
+                    //  separator found, but not as one and only char in buffer
+                    if (separatorIndex >= 0 && _internalBuffer.Length > 1)
+                    {
+                        _cutoffs.Append(_internalBuffer.ToString(separatorIndex, _internalBuffer.Length - separatorIndex));
+                        gibberishBuffer.Append(_internalBuffer.ToString(0, separatorIndex));
+                        _internalBuffer.Remove(0, _internalBuffer.Length - separatorIndex);
+                    }
+
+                    // There is just a separator in buffer
+                    else if (separatorIndex >= 0)
+                    {
+                        _cutoffs.Append(Separator);
+                        _internalBuffer.Clear();
+                    }
+                    //  Nothing found
+                    else
+                    {
+                        gibberishBuffer.Append(_internalBuffer.ToString());
+                        _internalBuffer.Clear();
                     }
                 }
             }
 
-            if (gibberishBuffer.Length > 0)
-            {
-                _outputCollection.Add(gibberishBuffer.ToString());
-                gibberishBuffer.Clear();
-            }
+            AddGibberishToOutputCollection();
             return _outputCollection;
         }
 
-        private int CheckRawData(string data, bool includePattern = true)
+        private int FindPattern(string data)
         {
-            if (includePattern)
-            {
-                Match match = CommandPattern.Match(data);
-                if (match.Success)
-                    return match.Index;
-            }
-
-            int firsIndexOfSepprarator = data.IndexOf(Separator);
-
-            if (firsIndexOfSepprarator == -1)
-                return firsIndexOfSepprarator;
-
-            if (firsIndexOfSepprarator == 0)
-                return 1;
+            Match match = CommandPattern.Match(data);
+            if (match.Success)
+                return match.Index;
             else
-                return firsIndexOfSepprarator;
+                return -1;
         }
+
+        private int FindSeparator(string data, int startIndex = 0, int count = 0)
+        {
+            if (count == 0)
+                return data.IndexOf(Separator, startIndex);
+            else
+                return data.IndexOf(Separator, startIndex, count);
+        }
+        
     }
 }
