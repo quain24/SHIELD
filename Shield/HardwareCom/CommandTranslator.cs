@@ -90,10 +90,10 @@ namespace Shield.HardwareCom
             command.Append(givenCommand.Id).Append(_separator);
 
             if (givenCommand.CommandType == CommandType.Data)
+            {
                 command.Append(givenCommand.Data);
-
-            if (command.Length < completeCommandSizeWithSep)
                 command.Append(_filler, completeCommandSizeWithSep - command.Length);
+            }                
 
             return command.ToString();
         }

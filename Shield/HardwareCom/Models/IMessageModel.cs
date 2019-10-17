@@ -14,9 +14,7 @@ namespace Shield.HardwareCom.Models
 
         string AssaignID(string id = "");
 
-        void Add(ICommandModel command);
-
-        bool Remove(int id);
+        bool Add(ICommandModel command);
 
         bool Remove(ICommandModel command);
     }

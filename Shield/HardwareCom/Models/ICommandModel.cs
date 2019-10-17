@@ -2,7 +2,7 @@
 
 namespace Shield.HardwareCom.Models
 {
-    public interface ICommandModel
+    public interface ICommandModel : System.IEquatable<ICommandModel>
     {
         string Id { get; set; }
         CommandType CommandType { get; set; }

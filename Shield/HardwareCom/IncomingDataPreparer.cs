@@ -194,7 +194,6 @@ namespace Shield.HardwareCom
                 return data.IndexOf(Separator, startIndex);
             else
                 return data.IndexOf(Separator, startIndex, count);
-        }
-        
+        }        
     }
 }

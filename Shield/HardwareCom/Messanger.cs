@@ -96,10 +96,6 @@ namespace Shield.HardwareCom
                             {
                                 internalCT.ThrowIfCancellationRequested();
                                 _rawDataBuffer.Add(toAdd);
-                                
-                                    // intentionally not awaited - fire and forget - will close self after while
-                                    
-                                
                             }
                         }
                         return  _receiverRunning = false;
