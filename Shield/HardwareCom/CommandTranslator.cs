@@ -41,8 +41,8 @@ namespace Shield.HardwareCom
                 rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
                 rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
 
-                if(rawData.Length == CommandLengthWithData)
-                    rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);                
+                if (rawData.Length == CommandLengthWithData)
+                    rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
 
                 int rawComInt;
                 if (Int32.TryParse(rawCommandTypeString, out rawComInt))
@@ -66,7 +66,7 @@ namespace Shield.HardwareCom
             {
                 command.CommandType = CommandType.Error;
                 command.Id = string.Empty.PadLeft(_appSettingsModel.IdSize, _filler);
-                command.Data = string.Empty.PadLeft(_appSettingsModel.DataSize, _filler);
+                command.Data = rawData.Length > _appSettingsModel.DataSize ? rawData.Substring(0, _appSettingsModel.DataSize) : rawData;
             }
 
             return command;
@@ -84,16 +84,16 @@ namespace Shield.HardwareCom
             if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
                 return null;
 
-            StringBuilder command = new StringBuilder(_separator.ToString());
+            StringBuilder command = new StringBuilder(_separator);
 
-            command.Append(((int)givenCommand.CommandType).ToString().PadLeft(_appSettingsModel.CommandTypeSize, '0')).Append(_separator);
+            command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_appSettingsModel.CommandTypeSize, '0')).Append(_separator);
             command.Append(givenCommand.Id).Append(_separator);
 
             if (givenCommand.CommandType == CommandType.Data)
             {
                 command.Append(givenCommand.Data);
                 command.Append(_filler, completeCommandSizeWithSep - command.Length);
-            }                
+            }
 
             return command.ToString();
         }

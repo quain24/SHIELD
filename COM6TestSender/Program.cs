@@ -7,8 +7,16 @@ namespace COM6TestSender
 {
     internal class Program
     {
-        private static void Main(string[] args)
-        {
+        private static async Task Main(string[] args)
+        {   
+            await MainAsync(args);
+        }
+
+        public async static Task MainAsync(string[] args)
+       {
+
+
+
             SerialPort serial = new SerialPort { BaudRate = 921600, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
             serial.DtrEnable = false;
             serial.RtsEnable = false;
@@ -17,7 +25,7 @@ namespace COM6TestSender
 
             int i = 0;
 
-            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good, 7 - partial, 8 - nodata mixed");
+            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good, 7 - partial, 8 - nodata mixed, 9 - Async test");
             string a = Console.ReadLine();
 
             Random rand = new Random();
@@ -58,7 +66,7 @@ namespace COM6TestSender
             }
             else if (Int32.Parse(a) == 2)
             {
-                Task.Run(async () =>
+                await Task.Run(async () =>
             {
                 while (true)
                 {
@@ -191,6 +199,59 @@ namespace COM6TestSender
 
             else if(Int32.Parse(a) == 8)
             {
+                while (true)
+                {
+                    i++;
+                    string u = $@"*0001*"  + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0002*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0010*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0015*12" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                     u = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                    serial.Write(u);
+                    Console.WriteLine(u);
+                    Console.ReadLine();                    
+
+                }
+
+            }
+
+            else if(Int32.Parse(a) == 9)
+            {
+                async Task<bool> boo()
+                {
+                    bool b = false;
+                    while (true)
+                    {
+                        int aaa = 1;
+                        if(aaa > 10)
+                            break;
+                    }
+
+                    return b;
+                }
+
+                Console.WriteLine("Starting");
+                Console.WriteLine("running task");
+                
+                var test1 = boo().ConfigureAwait(false);
+                Console.ReadLine();
+                Console.WriteLine("Task Assigned");
+                await test1;
+                Console.WriteLine("Starting Awaiting");
+                Console.WriteLine("Post await");
+
+
+
+
+
                 while (true)
                 {
                     i++;

@@ -1,11 +1,10 @@
-﻿using Shield.Enums;
+﻿using Shield.Data;
+using Shield.Enums;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Shield.Data;
-using Shield.Helpers;
 
 namespace Shield.HardwareCom
 {
@@ -94,36 +93,35 @@ namespace Shield.HardwareCom
             else
             {
                 IMessageModel newMessage = _messageFactory();
-                newMessage.AssaignID(IdGenerator.GetId(_idLength));
+                newMessage.AssaignID(command.Id);
                 newMessage.Add(command);
                 newMessage.IsIncoming = true;
                 _incomingBuffer.Add(newMessage.Id, newMessage);
             }
         }
 
-        private bool CheckIfCompleted(IMessageModel message, CommandTrasnferDirection direction)
+        private bool CheckIfCompleted(IMessageModel message, CommandHeading direction)
         {
             if (message is null)
-                return false;
+                throw new ArgumentNullException(nameof(message), "Cannot pass null message!");
 
             Dictionary<string, IMessageModel> bufferToCheck;
 
             switch (direction)
             {
-                case CommandTrasnferDirection.Incoming:
+                case CommandHeading.Incoming:
                     bufferToCheck = _incomingBuffer;
                     break;
 
-                case CommandTrasnferDirection.Outgoing:
+                case CommandHeading.Outgoing:
                     bufferToCheck = _outgoingBuffer;
                     break;
 
-                case CommandTrasnferDirection.Unknown:
-                    return false;
+                case CommandHeading.Unknown:
+                    throw new ArgumentOutOfRangeException(nameof(direction), "Direction has to be known!");
 
                 default:
-                    Debug.WriteLine("ERROR: ComCommander - CheckIfCompleted - Wrong enum value passed - returning false");
-                    return false;
+                    throw new ArgumentOutOfRangeException(nameof(direction), "Parameter is outside of Enum!");
             }
 
             if (bufferToCheck.ContainsKey(message.Id))
@@ -136,24 +134,24 @@ namespace Shield.HardwareCom
             return false;
         }
 
-        private MessageCorectness AnalyseIfCorrect(IMessageModel message)
+        private MessageCorectness CheckIfCorrect(IMessageModel message)
         {
             if (message is null)
                 return MessageCorectness.isNull;
 
-            List<ICommandModel> badOrCompleted = message
+            List<ICommandModel> badOrUnknown = message
                 .Where(m =>
                     m.CommandType == CommandType.Unknown ||
                     m.CommandType == CommandType.Error)
                 .ToList();
 
-            if (!badOrCompleted.Any())
-                return MessageCorectness.Empty;
+            if (!badOrUnknown.Any())
+                return MessageCorectness.Good;
 
             int numberOfUnknowns = 0;
             int numberOfErrors = 0;
 
-            foreach (ICommandModel c in badOrCompleted)
+            foreach (ICommandModel c in badOrUnknown)
             {
                 if (c.CommandType == CommandType.Error)
                     numberOfErrors++;
@@ -165,10 +163,8 @@ namespace Shield.HardwareCom
                 return MessageCorectness.GotErrorsAndUnknowns;
             if (numberOfErrors > 0)
                 return MessageCorectness.GotErrors;
-            if (numberOfUnknowns > 0)
+            else
                 return MessageCorectness.GotUnknowns;
-
-            return MessageCorectness.Good;
         }
 
         public virtual void OnCommandReceived(object sender, ICommandModel command)
@@ -177,7 +173,7 @@ namespace Shield.HardwareCom
         }
     }
 
-    internal enum CommandTrasnferDirection
+    internal enum CommandHeading
     {
         Incoming,
         Outgoing,
