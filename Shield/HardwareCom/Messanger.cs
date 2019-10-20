@@ -19,6 +19,7 @@ namespace Shield.HardwareCom
         private IIncomingDataPreparer _incomingDataPreparer;
 
         private CancellationTokenSource _receiveCTS = new CancellationTokenSource();
+        private CancellationTokenSource _decodingCTS = new CancellationTokenSource();
 
         private BlockingCollection<string> _rawDataBuffer = new BlockingCollection<string>();
 
@@ -28,6 +29,7 @@ namespace Shield.HardwareCom
         private bool _receiverRunning = false;
 
         private object _dataExtractorLock = new object();
+        private object _receiverLock = new object();
 
         public event EventHandler<ICommandModel> CommandReceived;
 
@@ -60,6 +62,7 @@ namespace Shield.HardwareCom
         public void Close()
         {
             StopReceiving();
+            StopDecoding();
             _rawDataBuffer.Dispose();
             _rawDataBuffer = new BlockingCollection<string>();
             _device?.Close();
@@ -67,57 +70,99 @@ namespace Shield.HardwareCom
 
         public async Task StartReceiveAsync(CancellationToken ct)
         {
-            if (_receiverRunning || !IsOpen)
-                return;
+            lock (_receiverLock)
+            {
+                if (_receiverRunning || !IsOpen || !_setupSuccessufl)
+                    return;
+                _receiverRunning = true;
+            }
 
-            //  If there is no alternate cancellation token, then use one provided with this class
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
-            //  Either way additionally use 'StopReceiving' for cleanup
-            if(internalCT == ct)
+            if (internalCT == ct)
                 internalCT.Register(StopReceiving);
 
-            if (_setupSuccessufl)
+            try
             {
-                // intentionally not awaited - fire and forget
-                // Daemons, constantly running in background, hence Task.Run()'s
-                Task.Run(async () => await DataExtractor(internalCT)).ConfigureAwait(false);
-                
-                _receiverRunning = await Task.Run(new Func<Task<bool>>(async () =>
+                while (_device.IsOpen)
                 {
-                    _receiverRunning = true;
-                    try
-                    {
-                        while (_device.IsOpen)
-                        {
-                            internalCT.ThrowIfCancellationRequested();
-                            string toAdd = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
+                    internalCT.ThrowIfCancellationRequested();
+                    string toAdd = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
 
-                            if (!string.IsNullOrEmpty(toAdd))
-                            {
-                                internalCT.ThrowIfCancellationRequested();
-                                _rawDataBuffer.Add(toAdd);
-                            }
-                        }
-                        return  _receiverRunning = false;
+                    if (!string.IsNullOrEmpty(toAdd))
+                    {
+                        internalCT.ThrowIfCancellationRequested();
+                        _rawDataBuffer.Add(toAdd);
                     }
-                    catch(OperationCanceledException)
-                    {                        
-                        return _receiverRunning = false;
-                    }
-                }), internalCT).ConfigureAwait(false);
+                }
+                _receiverRunning = false;
+            }
+            catch (OperationCanceledException)
+            {
+                _receiverRunning = false;
             }
         }
 
-        /// <summary>
-        /// Stops data receiving endpoint - data is still grabbed by underlaying data stream.
-        /// That data is not used, maintained or transformed.
-        /// Best to use for temporary pause in communication, but with option to receive data that were sent in meantime
-        /// </summary>
+        public async Task StartDecodingAsync(CancellationToken ct)
+        {
+            lock (_dataExtractorLock)
+            {
+                if (_dataExtractorRunning)
+                    return;
+                _dataExtractorRunning = true;
+            }
+
+            CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
+            if (internalCT == ct)
+                internalCT.Register(StopDecoding);
+
+            try
+            {
+                int i = 0;
+                while (true)
+                {
+                    internalCT.ThrowIfCancellationRequested();
+                    if (_rawDataBuffer.Count > 0)
+                    {
+                        List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
+                        if (output is null || output.Count == 0)
+                            continue;
+                        foreach (string s in output)
+                        {
+                            internalCT.ThrowIfCancellationRequested();
+                            ICommandModel receivedCommad = _commandTranslator.FromString(s);
+                            OnCommandReceived(receivedCommad);
+                            // Temporary display to console, in future - collection?
+                            Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
+                        }
+                    }
+                    else
+                    {
+                        internalCT.ThrowIfCancellationRequested();
+                        await Task.Delay(50, internalCT).ConfigureAwait(false);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("EXCEPTION: Messanger - StartDecoding: Operation cancelled.");
+                _dataExtractorRunning = false;
+                return;
+            }
+        }
+
         public void StopReceiving()
         {
             _receiveCTS.Cancel();
             _device.DiscardInBuffer();
+            _receiveCTS.Dispose();
             _receiveCTS = new CancellationTokenSource();
+        }
+
+        public void StopDecoding()
+        {
+            _decodingCTS.Cancel();
+            _decodingCTS.Dispose();
+            _decodingCTS = new CancellationTokenSource();
         }
 
         public Task<bool> SendAsync(ICommandModel command)
@@ -153,53 +198,6 @@ namespace Shield.HardwareCom
             }
             return true;
         }
-
-        #region internal helpers
-
-        private async Task DataExtractor(CancellationToken ct)
-        {
-            lock (_dataExtractorLock)
-            {
-                if (_dataExtractorRunning)
-                    return;
-                _dataExtractorRunning = true;
-            }
-            try
-            {
-                int i = 0;
-                while (true)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    if (_rawDataBuffer.Count > 0)
-                    {
-                        List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
-                        if(output is null || output.Count == 0)
-                            continue;
-                        foreach (string s in output)
-                        {
-                            ct.ThrowIfCancellationRequested();
-                            ICommandModel receivedCommad = _commandTranslator.FromString(s);
-                            OnCommandReceived(receivedCommad);
-                            // Temporary display to console, in future - collection?
-                            Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
-                        }
-                    }
-                    else
-                    {
-                        ct.ThrowIfCancellationRequested();                        
-                        await Task.Delay(50, ct).ConfigureAwait(false);
-                    }
-                }         
-            }
-            catch(OperationCanceledException)   
-            {
-                Debug.WriteLine("EXCEPTION: Messanger - DataExtractor: Operation cancelled.");
-                _dataExtractorRunning = false;
-                return;
-            }
-        }
-
-        #endregion internal helpers
 
         public void OnDataReceivedInternal(object sender, string e)
         {

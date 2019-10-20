@@ -116,7 +116,8 @@ namespace Shield.ConsoleUI
             
             //_comMessanger.Setup(DeviceType.Serial);
             _comMessanger.Open();
-            _comMessanger.StartReceiveAsync().ConfigureAwait(false);
+            Task.Run(() => _comMessanger.StartReceiveAsync().ConfigureAwait(false));
+            Task.Run(() => _comMessanger.StartDecodingAsync().ConfigureAwait(false));
 
             int licznik = 0;
 
@@ -146,13 +147,12 @@ namespace Shield.ConsoleUI
 
             Console.WriteLine("ENTER to close communication line");
             Console.ReadLine();
-            _comMessanger.StopReceiving();
+            _comMessanger.StopDecoding();
             //_comMessanger.Close();
             Console.WriteLine("ENTER to open communication line");
             Console.ReadLine();
             Console.WriteLine("Com line opened.");
-            _comMessanger.Open();
-            _comMessanger.StartReceiveAsync();
+            Task.Run(() => _comMessanger.StartDecodingAsync().ConfigureAwait(false));
             Console.WriteLine("ENTER to close communication line");
             Console.ReadLine();
             _comMessanger.Close();
@@ -160,7 +160,8 @@ namespace Shield.ConsoleUI
             Console.ReadLine();
             Console.WriteLine("Com line opened.");
             _comMessanger.Open();
-            _comMessanger.StartReceiveAsync();
+            Task.Run(() => _comMessanger.StartReceiveAsync().ConfigureAwait(false));
+            Task.Run(() => _comMessanger.StartDecodingAsync().ConfigureAwait(false));
             Console.ReadLine();
             Console.WriteLine("end after enter");
             Console.ReadLine();        

@@ -23,6 +23,8 @@ namespace Shield.HardwareCom
         Task StartReceiveAsync(CancellationToken ct = default);
 
         void StopReceiving();
+        Task StartDecodingAsync(CancellationToken ct = default);
+        void StopDecoding();
 
         event System.EventHandler<ICommandModel> CommandReceived;
     }
