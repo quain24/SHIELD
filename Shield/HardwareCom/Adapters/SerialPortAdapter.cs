@@ -77,7 +77,15 @@ namespace Shield.HardwareCom.Adapters
             {
                 if (_port != null && !_port.IsOpen && _wasSetupCorrectly)
                 {
-                    _port.Open();
+                    try
+                    {
+                        _port.Open();
+                    }
+                    catch
+                    {
+                        Debug.WriteLine($"Could not open device - is it opened in another application or was cable disconnected?");
+                        throw;
+                    }
                 }
             }
         }

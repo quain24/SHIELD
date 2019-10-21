@@ -25,10 +25,10 @@ namespace Shield.HardwareCom
 
         private bool _setupSuccessufl = false;
         private bool _disposed = false;
-        private bool _dataExtractorRunning = false;
+        private bool _decoderRunning = false;
         private bool _receiverRunning = false;
 
-        private object _dataExtractorLock = new object();
+        private object _decoderLock = new object();
         private object _receiverLock = new object();
 
         public event EventHandler<ICommandModel> CommandReceived;
@@ -104,11 +104,11 @@ namespace Shield.HardwareCom
 
         public async Task StartDecodingAsync(CancellationToken ct)
         {
-            lock (_dataExtractorLock)
+            lock (_decoderLock)
             {
-                if (_dataExtractorRunning)
+                if (_decoderRunning)
                     return;
-                _dataExtractorRunning = true;
+                _decoderRunning = true;
             }
 
             CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
@@ -145,7 +145,7 @@ namespace Shield.HardwareCom
             catch (OperationCanceledException)
             {
                 Debug.WriteLine("EXCEPTION: Messanger - StartDecoding: Operation cancelled.");
-                _dataExtractorRunning = false;
+                _decoderRunning = false;
                 return;
             }
         }
@@ -189,6 +189,9 @@ namespace Shield.HardwareCom
 
         public bool Send(IMessageModel message)
         {
+            if (message is null)
+                return false;
+
             foreach (ICommandModel c in message)
             {
                 if (_device.Send(_commandTranslator.FromCommand(c)))
@@ -224,6 +227,12 @@ namespace Shield.HardwareCom
             {
                 // free managed resources
                 if (_receiveCTS != null)
+                {
+                    _receiveCTS.Cancel();
+                    _receiveCTS.Dispose();
+                    _receiveCTS = null;
+                }
+                if (_decodingCTS != null)
                 {
                     _receiveCTS.Cancel();
                     _receiveCTS.Dispose();

@@ -131,19 +131,19 @@ namespace Shield.ConsoleUI
 
             //_comMessanger.Send(null);
 
-            //Task.Run(async () =>
-            //{
-            //    while (true)
-            //    {
-            //        CommandModel mes = new CommandModel();
-            //        mes.CommandType = CommandType.Data;
-            //        mes.Data = licznik.ToString();
-            //        mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    CommandModel mes = new CommandModel();
+                    mes.CommandType = CommandType.Data;
+                    mes.Data = licznik.ToString();
+                    mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
 
-            //        await _comMessanger.SendAsync(mes);
-            //        licznik++;
-            //    }
-            //});
+                    await _comMessanger.SendAsync(mes);
+                    licznik++;
+                }
+            });
 
             Console.WriteLine("ENTER to close communication line");
             Console.ReadLine();

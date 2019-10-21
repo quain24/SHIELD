@@ -78,12 +78,11 @@ namespace Shield.HardwareCom
             }
 
             _outputCollection = new List<string>();
-            
 
             //  If there was something left from last raw data portion - add it to current buffer
             if (_cutoffs.Length > 0)
             {
-                _internalBuffer.Insert(0, _cutoffs.ToString());
+                _internalBuffer.Insert(0, _cutoffs);
                 _cutoffs.Clear();
             }
 
@@ -95,14 +94,14 @@ namespace Shield.HardwareCom
                 if (patternIndex >= 0)
                 {
                     int ealierSeparatorIndex = _internalBuffer.ToString().IndexOf(Separator);
-                    if(ealierSeparatorIndex < patternIndex)
+                    if (ealierSeparatorIndex < patternIndex)
                     {
                         gibberishBuffer.Append(_internalBuffer.ToString(0, patternIndex - 1));
                     }
 
                     //  If its data type
                     if (int.Parse(_internalBuffer.ToString(patternIndex + 1, CommandTypeLength)) == _dataCommandNumber)
-                    {   
+                    {
                         //  Is there enough chars to fill data portion of command?
                         if (_internalBuffer.Length >= CommandLengthWithData + patternIndex)
                         {
@@ -194,6 +193,6 @@ namespace Shield.HardwareCom
                 return data.IndexOf(Separator, startIndex);
             else
                 return data.IndexOf(Separator, startIndex, count);
-        }        
+        }
     }
 }

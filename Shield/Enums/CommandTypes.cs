@@ -26,6 +26,12 @@
         Slave,
 
         /// <summary>
+        /// States that this message is just a confirmation, typically followed by few <c>CommandType:Confirm</c>'s
+        /// or <c>Commandtype:Error</c>. 
+        /// </summary>
+        Confirmation,
+
+        /// <summary>
         /// Should be last command received, states that message is completed
         /// </summary>
         Completed,
