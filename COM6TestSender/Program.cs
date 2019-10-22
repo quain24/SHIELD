@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO.Ports;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,13 @@ namespace COM6TestSender
             serial.RtsEnable = false;
             serial.DiscardNull = true;
             serial.Open();
+
+       
+
+
+
+
+
 
             int i = 0;
 
@@ -48,7 +56,7 @@ namespace COM6TestSender
                         //Thread.Sleep(10);
                         //serial.Write($@"*0015*ABCD*123456789101112131415161718192");
                         //serial.Write($@"*{15.ToString().PadLeft(4, '0')}*" + rand.Next(1000, 9999) + '*' + "A1B2C3D4E5F6G7H8I9J10K11L12M13");
-                        string aa = $@"*{13.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                        string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
 
                         serial.Write(aa);
                         Console.WriteLine(aa);
@@ -72,7 +80,7 @@ namespace COM6TestSender
                 {
                     //try
                     //{
-                    string aa = $@"*0013*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                    string aa = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
                     byte[] bak = new byte[aa.Length];
                     bak = Encoding.ASCII.GetBytes(aa);
                     //Thread.Sleep(1);
@@ -111,7 +119,7 @@ namespace COM6TestSender
             {
                 while (true)
                 {
-                    serial.Write($@"*{"0013"}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.'));
+                    serial.Write($@"*{"0016"}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.'));
                     Console.WriteLine(serial.ReadExisting());
 
                     i++;
@@ -155,7 +163,7 @@ namespace COM6TestSender
                     serial.Write(u);
                     Console.WriteLine(u);
 
-                    u = $@"*0013*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(25, '.');
+                    u = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(25, '.');
                     serial.Write(u);
                     Console.WriteLine(u);
 
@@ -182,7 +190,7 @@ namespace COM6TestSender
                 while (true)
                 {
                     i++;
-                    string u = $@"*0013*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(20, '.');
+                    string u = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(20, '.');
                     serial.Write(u);
                     Console.WriteLine(u);
                     Console.ReadLine();
@@ -214,7 +222,7 @@ namespace COM6TestSender
                      u = $@"*0015*12" + Shield.Helpers.IdGenerator.GetId(4) + '*';
                     serial.Write(u);
                     Console.WriteLine(u);
-                     u = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                     u = $@"*0017*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
                     serial.Write(u);
                     Console.WriteLine(u);
                     Console.ReadLine();                    
@@ -267,7 +275,7 @@ namespace COM6TestSender
                      u = $@"*0015*12" + Shield.Helpers.IdGenerator.GetId(4) + '*';
                     serial.Write(u);
                     Console.WriteLine(u);
-                     u = $@"*0016*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
+                     u = $@"*0017*" + Shield.Helpers.IdGenerator.GetId(4) + '*';
                     serial.Write(u);
                     Console.WriteLine(u);
                     Console.ReadLine();                    
@@ -281,7 +289,7 @@ namespace COM6TestSender
             {
                 while (true)
                 {
-                    string aa = $@"*{13.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
+                    string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + Shield.Helpers.IdGenerator.GetId(4) + '*' + i.ToString().PadLeft(30, '.');
 
                     serial.Write(aa);
                     Console.WriteLine(aa);

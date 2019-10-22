@@ -14,6 +14,7 @@ namespace Shield.HardwareCom.Models
         private string _messageId = string.Empty;
         private List<ICommandModel> _commands = new List<ICommandModel>();
 
+        public long Timestamp { get; set; } = 0;
         public bool IsBeingSent { get; set; } = false;
         public bool IsBeingReceived { get; set; } = false;
         public bool IsIncoming { get; set; } = false;

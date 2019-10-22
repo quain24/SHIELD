@@ -4,6 +4,7 @@ namespace Shield.HardwareCom.Models
 {
     public interface IMessageModel : IEnumerable<ICommandModel>
     {
+        long Timestamp { get; set; }
         bool IsBeingSent { get; set; }
         bool IsBeingReceived { get; set; }
         bool IsIncoming { get; set; }

@@ -1,7 +1,7 @@
 ﻿namespace Shield.Enums
 {
     /// <summary>
-    /// Options for a command type when, for example, transmiting command to a device
+    /// Options for a command type when, for example, transmitting command to a device
     /// </summary>
     public enum CommandType
     {
@@ -10,10 +10,16 @@
         /// </summary>
         Empty = 0,
 
+        #region Message Header
+
         /// <summary>
         /// Ping remote device, start conversation etc.
         /// </summary>
         HandShake,
+
+        #endregion Message Header
+
+        #region Message type
 
         /// <summary>
         /// States that this message is a base message, can be responded to.
@@ -27,26 +33,57 @@
 
         /// <summary>
         /// States that this message is just a confirmation, typically followed by few <c>CommandType:Confirm</c>'s
-        /// or <c>Commandtype:Error</c>. 
+        /// or <c>Commandtype:Error</c>.
         /// </summary>
         Confirmation,
+
+        #endregion Message type
+
+        #region Message End / footer
 
         /// <summary>
         /// Should be last command received, states that message is completed
         /// </summary>
         Completed,
 
+        #endregion Message End / footer
+
+        #region Message response status codes
+
         /// <summary>
         /// Used in responding, states that corresponding received command is known and understood
         /// </summary>
-        Correct,
+        ReceivedAsCorrect,
 
-        Confirm,        
-        Cancel,
-        RetryLast,
+        /// <summary>
+        /// Used in responding, states that corresponding received command was distorted beyond repair
+        /// </summary>
+        ReceivedAsError,
+
+        /// <summary>
+        /// Used in responding, states that corresponding received command type is not known by receipient
+        /// </summary>
+        ReceivedAsUnknown,
+
+        /// <summary>
+        /// Used in responding, states that corresponding received command was partial, like, for example,
+        /// Data message dit no contained whole data pack
+        /// </summary>
+        ReceivedAsPartial,
+
+        #endregion Message response status codes
+
+        #region Message decoded status codes
+
         Error,
         Unknown,
         Partial,
-        Data    
+
+        #endregion Message decoded status codes
+
+        Confirm,
+        Cancel,
+        RetryLast,
+        Data
     }
 }

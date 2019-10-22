@@ -1,6 +1,7 @@
 ﻿using Shield.Data;
 using Shield.Enums;
 using Shield.HardwareCom.Models;
+using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace Shield.HardwareCom
         #region Sent messages collections
 
         private ConcurrentQueue<IMessageModel> _outgoingQueue = new ConcurrentQueue<IMessageModel>();
-        private Dictionary<string, IMessageModel> _outgoingSended = new Dictionary<string, IMessageModel>();
+        private Dictionary<string, IMessageModel> _outgoingSent = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _outgoingConfirmed = new Dictionary<string, IMessageModel>();
         private Dictionary<string, (MessageErrors errorType, IMessageModel Message)> _outgoingErrors = new Dictionary<string, (MessageErrors errorType, IMessageModel Message)>();
 
@@ -66,27 +67,120 @@ namespace Shield.HardwareCom
             _hasCommunicationManager = true;
         }
 
+        public void Conductor()
+        {
+        }
+
+        // Handles Incoming Confirmations and moves confirmed messages to correct buffers
+        private void IncomingConfirmationMessageHandler(IMessageModel message)
+        {
+            if (message is null)
+                return;
+
+            // If there is nothing to confirm, then exit
+            if (!_outgoingSent.ContainsKey(message.Id))
+            {
+                _incomingErrors[message.Id] = (MessageErrors.ConfirmedNonexistent, message);
+                _incomingComplete.Remove(message.Id);
+                return;
+            }
+
+            // If confirmed existing, then time to check if receiving device did actually got message properly
+            _incomingCompleteResponses[message.Id] = message;
+            _incomingComplete.Remove(message.Id);
+
+            var elements = from commands in message
+                           group commands by commands.CommandType into types
+                           select new { types.Key, Count = types.Count() };
+
+            int receivedErrors = 0;
+            int receivedUnknowns = 0;
+            int receivedPartials = 0;
+
+            foreach (var c in elements)
+            {
+                receivedErrors = c.Key == CommandType.ReceivedAsError ? c.Count : receivedErrors;
+                receivedUnknowns = c.Key == CommandType.ReceivedAsUnknown ? c.Count : receivedUnknowns;
+                receivedPartials = c.Key == CommandType.ReceivedAsPartial ? c.Count : receivedPartials;
+            }
+
+            // Everything is good, message was properly received
+            if (receivedErrors == 0 && receivedUnknowns == 0 && receivedPartials == 0)
+            {
+                _outgoingConfirmed[message.Id] = message;
+                _outgoingSent.Remove(message.Id);
+                return;
+            }
+
+            // Something went bad - sent message was received with errors.
+            // Pushing message that was confirmed to error buffer (at the end) and removing from sent buffer
+
+            IMessageModel tmpErrMessage = _outgoingSent[message.Id];
+            _outgoingSent.Remove(tmpErrMessage.Id);
+
+            // Error checking Conditions and insert into outgoing error buffer
+            if (receivedPartials > 0 && receivedErrors > 0 && receivedUnknowns > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotErrorsAndUnknownsAndPartials, tmpErrMessage);
+            }
+
+            if (receivedUnknowns > 0 && receivedErrors > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotErrorsAndUnknowns, tmpErrMessage);
+            }
+
+            if (receivedUnknowns > 0 && receivedPartials > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotPartialsAndUnknowns, tmpErrMessage);
+            }
+
+            if (receivedPartials > 0 && receivedErrors > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotErrorsAndPartials, tmpErrMessage);
+            }
+
+            if (receivedUnknowns > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotUnknowns, tmpErrMessage);
+            }
+
+            if (receivedPartials > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotPartials, tmpErrMessage);
+            }
+
+            if (receivedErrors > 0)
+            {
+                _outgoingErrors[message.Id] = (MessageErrors.GotErrors, tmpErrMessage);
+            }
+
+            _outgoingSent.Remove(tmpErrMessage.Id);
+            return;
+        }
+
+        // If incoming message could not be decoded correctly (unknown commands, errors), then its handled here
+        private void IncomingErrorrousMessageHandler(IMessageModel message)
+        {
+        }
+
+        private void IncomingMasterMessageHandler(IMessageModel message)
+        {
+        }
+
+        private void IncomingSlaveMessageHandler(IMessageModel message)
+        {
+        }
+
         public bool AddToSendingQueue(IMessageModel message)
         {
             if (message is null)
                 return false;
 
+            message.Timestamp = Timestamp.TimestampNow;
             message.IsOutgoing = true;
             _outgoingQueue.Enqueue(message);
             return true;
         }
-
-        public void Conductor()
-        {
-        }
-
-        public void RespondTo(IMessageModel message)
-        {
-        }
-
-        //public async Task<bool> SendQueuedMessagesAsync()
-        //{
-        //}
 
         public async Task<bool> SendNextQueuedMessageAsync()
         {
@@ -95,9 +189,10 @@ namespace Shield.HardwareCom
             if (_outgoingQueue.TryDequeue(out message))
             {
                 wasSent = await _messanger.SendAsync(message).ConfigureAwait(false);
+                message.Timestamp = Timestamp.TimestampNow;
                 if (wasSent)
                 {
-                    _outgoingSended[message.Id] = message;
+                    _outgoingSent[message.Id] = message;
                 }
                 else
                 {
@@ -109,42 +204,44 @@ namespace Shield.HardwareCom
 
         public void Receiver(ICommandModel receivedCommand)
         {
+            Buffer commandDepositedIn = AddIncomingToBuffer(receivedCommand);
+            string messageId = receivedCommand.Id;
+
             // Add received command to existing or new message in buffer
-            if (AddIncomingToBuffer(receivedCommand) == Buffer.IncomingPartial)
+            if (commandDepositedIn == Buffer.IncomingPartial)
             {
-                if (CheckIfCompleted(_incomingPartial[receivedCommand.Id]))
+                // Message is completed
+                if (CheckIfCompleted(_incomingPartial[messageId]))
                 {
-                    string id = receivedCommand.Id;
+                    _incomingComplete[messageId] = _incomingPartial[messageId];
+                    _incomingPartial.Remove(messageId);
 
-                    _incomingComplete[id] = _incomingPartial[id];
-                    _incomingPartial.Remove(id);
+                    var corectness = CheckIfDecodedCorrectly(_incomingComplete[messageId]);
+                    var messageType = MessageType(_incomingComplete[messageId]);
 
-                    var status = CheckIfCorrect(_incomingComplete[id]);
-
-                    if (status == MessageErrors.Good)
+                    // There are no decoding errors in completed message
+                    if (corectness == MessageErrors.None)
                     {
-                        if (IsResponse(_incomingComplete[id]))
-                        {                            
-                            if (_outgoingSended.ContainsKey(id))
-                            {
-                                _outgoingConfirmed[id] = _outgoingSended[id];
-                                _outgoingSended.Remove(id);
-                                _incomingCompleteResponses[id] = _incomingComplete[id];
-                            }
-                            else
-                            {
-                                _incomingErrors[id] = (MessageErrors.ConfirmedNonexistent, _incomingComplete[id]);
-                                _incomingComplete.Remove(id);
-                            }
+                        switch (messageType)
+                        {
+                            case IncomingType.Confirmation:
+                                IncomingConfirmationMessageHandler(_incomingComplete[messageId]);
+                                break;
+
+                            case IncomingType.Master:
+                                IncomingMasterMessageHandler(_incomingComplete[messageId]);
+                                break;
+
+                            case IncomingType.Slave:
+                                IncomingSlaveMessageHandler(_incomingComplete[messageId]);
+                                break;
+
+                            default:
+                                // If undetermined message type
+                                IncomingErrorrousMessageHandler(_incomingComplete[messageId]);
+                                break;
                         }
-                        _incomingComplete[receivedCommand.Id] = _incomingPartial[receivedCommand.Id];
-                        _incomingPartial.Remove(receivedCommand.Id);
-                        RespondTo(_incomingComplete[receivedCommand.Id]);
                     }
-
-
-
-                   
                 }
             }
         }
@@ -159,6 +256,7 @@ namespace Shield.HardwareCom
                 if (_incomingPartial[command.Id].IsTransmissionCompleted)
                 {
                     IMessageModel newMessage = _messageFactory();
+                    newMessage.Timestamp = Timestamp.TimestampNow;
                     newMessage.AssaignID(command.Id);
                     newMessage.Add(command);
                     _incomingErrors[command.Id] = (MessageErrors.WasAlreadyCompleted, newMessage);
@@ -169,12 +267,12 @@ namespace Shield.HardwareCom
             else
             {
                 IMessageModel newMessage = _messageFactory();
+                newMessage.Timestamp = Timestamp.TimestampNow;
                 newMessage.AssaignID(command.Id);
                 newMessage.Add(command);
                 newMessage.IsIncoming = true;
                 _incomingPartial[newMessage.Id] = newMessage;
             }
-            
             return Buffer.IncomingPartial;
         }
 
@@ -195,7 +293,39 @@ namespace Shield.HardwareCom
             return false;
         }
 
-        private MessageErrors CheckIfCorrect(IMessageModel message)
+        private static IncomingType MessageType(IMessageModel message)
+        {
+            List<ICommandModel> statusCommands = message
+                    .Where(c =>
+                        c.CommandType == CommandType.Confirmation ||
+                        c.CommandType == CommandType.Master ||
+                        c.CommandType == CommandType.Slave)
+                    .ToList();
+            if (statusCommands.Count == 1)
+            {
+                switch (statusCommands.First().CommandType)
+                {
+                    case CommandType.Confirmation:
+                        return IncomingType.Confirmation;
+
+                    case CommandType.Master:
+                        return IncomingType.Master;
+
+                    case CommandType.Slave:
+                        return IncomingType.Slave;
+
+                    default:
+                        throw new InvalidOperationException("Outside of bound for CommandType Enum - was it changed, were there memory errors?");
+                }
+            }
+
+            return IncomingType.Undetermined;
+        }
+
+        /// <summary>
+        /// Checks if received message is properly decoded
+        /// </summary>
+        private static MessageErrors CheckIfDecodedCorrectly(IMessageModel message)
         {
             if (message is null)
                 return MessageErrors.isNull;
@@ -203,25 +333,16 @@ namespace Shield.HardwareCom
             List<ICommandModel> badOrUnknown = message
                 .Where(c =>
                     c.CommandType == CommandType.Unknown ||
-                    c.CommandType == CommandType.Error)
+                    c.CommandType == CommandType.Error ||
+                    c.CommandType == CommandType.Partial)
                 .ToList();
 
             if (!badOrUnknown.Any())
-            {
-                List<ICommandModel> statusCommands = message
-                    .Where(c =>
-                        c.CommandType == CommandType.Confirmation ||
-                        c.CommandType == CommandType.Master || 
-                        c.CommandType == CommandType.Slave)
-                    .ToList();
-                if(statusCommands.Count == 1)
-                    return MessageErrors.Good;
-                else
-                    return MessageErrors.CannotTellType;
-            }                
+                return MessageErrors.None;
 
             int numberOfUnknowns = 0;
             int numberOfErrors = 0;
+            int numberOfPartials = 0;
 
             foreach (ICommandModel c in badOrUnknown)
             {
@@ -229,25 +350,24 @@ namespace Shield.HardwareCom
                     numberOfErrors++;
                 else if (c.CommandType == CommandType.Unknown)
                     numberOfUnknowns++;
+                else if (c.CommandType == CommandType.Partial)
+                    numberOfPartials++;
             }
 
+            if (numberOfErrors > 0 && numberOfUnknowns > 0 && numberOfPartials > 0)
+                return MessageErrors.GotErrorsAndUnknownsAndPartials;
+            if (numberOfErrors > 0 && numberOfPartials > 0)
+                return MessageErrors.GotErrorsAndPartials;
             if (numberOfErrors > 0 && numberOfUnknowns > 0)
                 return MessageErrors.GotErrorsAndUnknowns;
+            if (numberOfPartials > 0 && numberOfUnknowns > 0)
+                return MessageErrors.GotPartialsAndUnknowns;
             if (numberOfErrors > 0)
                 return MessageErrors.GotErrors;
+            if (numberOfPartials > 0)
+                return MessageErrors.GotPartials;
             else
                 return MessageErrors.GotUnknowns;
-        }
-
-        private bool IsResponse(IMessageModel message)
-        {
-            if(message.Any(c => c.CommandType == CommandType.Confirmation))
-                return true;
-            return false;
-        }
-
-        private void IfMessageIsIncorrect()
-        {
         }
 
         public virtual void OnCommandReceived(object sender, ICommandModel command)
@@ -258,10 +378,14 @@ namespace Shield.HardwareCom
 
     internal enum MessageErrors
     {
-        Good,
+        None,
+        GotPartials,
         GotUnknowns,
         GotErrors,
         GotErrorsAndUnknowns,
+        GotPartialsAndUnknowns,
+        GotErrorsAndPartials,
+        GotErrorsAndUnknownsAndPartials,
         CannotTellType,
         NotSent,
         NotConfirmed,
@@ -276,5 +400,13 @@ namespace Shield.HardwareCom
         None,
         IncomingPartial,
         IncomingError
+    }
+
+    internal enum IncomingType
+    {
+        Master,
+        Slave,
+        Confirmation,
+        Undetermined
     }
 }

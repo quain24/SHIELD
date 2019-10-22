@@ -93,6 +93,7 @@
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
+    <Compile Include="Helpers\Timestamp.cs" />
     <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="_Backup\CommunicationDeviceFactory.cs" />
