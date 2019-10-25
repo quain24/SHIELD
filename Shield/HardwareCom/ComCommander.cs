@@ -1,5 +1,4 @@
-﻿using Shield.Data;
-using Shield.Enums;
+﻿using Shield.Enums;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
@@ -14,7 +13,6 @@ namespace Shield.HardwareCom
     {
         private Func<ICommandModel> _commandFactory;
         private Func<IMessageModel> _messageFactory;
-        private IAppSettings _appSettings;
         private IMessanger _messanger;
 
         #region Sent messages collections
@@ -30,24 +28,19 @@ namespace Shield.HardwareCom
 
         private Dictionary<string, IMessageModel> _incomingPartial = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _incomingComplete = new Dictionary<string, IMessageModel>();
-        private Dictionary<string, IMessageModel> _incomingCompleteConfirmed = new Dictionary<string, IMessageModel>();
-        private Dictionary<string, IMessageModel> _incomingCompleteResponses = new Dictionary<string, IMessageModel>();
+        private Dictionary<string, IMessageModel> _incomingCompleteConfirms = new Dictionary<string, IMessageModel>();
+        private Dictionary<string, IMessageModel> _incomingCompleteSlaves = new Dictionary<string, IMessageModel>();
+        private Dictionary<string, IMessageModel> _incomingCompleteMasters = new Dictionary<string, IMessageModel>();
         private Dictionary<string, (MessageErrors errorType, IMessageModel Message)> _incomingErrors = new Dictionary<string, (MessageErrors errorType, IMessageModel Message)>();
 
         #endregion Received messages collections
 
-        private int _idLength;
         private bool _hasCommunicationManager = false;
-
-        private object _incomingBufferLock = new object();
 
         public bool DeviceIsOpen { get { return _hasCommunicationManager ? _messanger.IsOpen : false; } }
 
-        public ComCommander(Func<ICommandModel> commandFactory, Func<IMessageModel> messageFactory, IAppSettings appSettings)
+        public ComCommander(Func<ICommandModel> commandFactory, Func<IMessageModel> messageFactory)
         {
-            _appSettings = appSettings;
-            _idLength = _appSettings.GetSettingsFor<Data.Models.IApplicationSettingsModel>().IdSize;
-
             // AutoFac auto factories
             _commandFactory = commandFactory;
             _messageFactory = messageFactory;
@@ -67,8 +60,70 @@ namespace Shield.HardwareCom
             _hasCommunicationManager = true;
         }
 
-        public void Conductor()
+        public void IncomingConductor(IMessageModel message)
         {
+            // Check for decoding correctness
+            MessageErrors decodingError = CheckIfDecodedCorrectly(message);
+            if (decodingError == MessageErrors.None)
+            {
+                // Check if message is complete
+                if (IsCompleted(message))
+                {
+                    // Message is completed, decoded properly - now off to corresponding buffers and handlers
+                    SwitchBuffers(message, _incomingPartial, _incomingComplete);
+                    if (IsPatternCorrect(message))
+                    {
+                        switch (MessageType(message))
+                        {
+                            case IncomingType.Confirmation:
+                                SwitchBuffers(message, _incomingComplete, _incomingCompleteConfirms);
+                                IncomingConfirmationMessageHandler(message);
+                                break;
+
+                            case IncomingType.Master:
+                                SwitchBuffers(message, _incomingComplete, _incomingCompleteMasters);
+                                IncomingMasterMessageHandler(message);
+                                break;
+
+                            case IncomingType.Slave:
+                                SwitchBuffers(message, _incomingComplete, _incomingCompleteSlaves);
+                                IncomingSlaveMessageHandler(message);
+                                break;
+
+                            default:
+                                SwitchBuffers(message, MessageErrors.UndeterminedType, _incomingComplete, _incomingErrors);
+                                IncomingErrorrousMessageHandler(message);
+                                break;
+                        }
+                    }
+                    // Something wrong in message pattern
+                    else
+                    {
+                        if (MessageType(message) == IncomingType.Undetermined)
+                        {
+                            SwitchBuffers(message, MessageErrors.UndeterminedType, _incomingComplete, _incomingErrors);
+                            IncomingErrorrousMessageHandler(message);
+                        }
+                        else
+                        {
+                            SwitchBuffers(message, MessageErrors.BadMessagePattern, _incomingComplete, _incomingErrors);
+                            IncomingErrorrousMessageHandler(message);
+                        }
+                    }
+                }
+                // Message incomplete
+                else
+                {
+                    // Nothing, wait for another command
+                    return;
+                }
+            }
+            // Message is incorrect - throw it into IncomingErrors
+            else
+            {
+                SwitchBuffers(message, decodingError, _incomingPartial, _incomingErrors);
+                IncomingErrorrousMessageHandler(message);
+            }
         }
 
         // Handles Incoming Confirmations and moves confirmed messages to correct buffers
@@ -80,14 +135,12 @@ namespace Shield.HardwareCom
             // If there is nothing to confirm, then exit
             if (!_outgoingSent.ContainsKey(message.Id))
             {
-                _incomingErrors[message.Id] = (MessageErrors.ConfirmedNonexistent, message);
-                _incomingComplete.Remove(message.Id);
+                SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingCompleteConfirms, _incomingErrors);
                 return;
             }
 
-            // If confirmed existing, then time to check if receiving device did actually got message properly
-            _incomingCompleteResponses[message.Id] = message;
-            _incomingComplete.Remove(message.Id);
+            // If confirmed exists, then time to check if receiving device actually got message properly
+            _incomingCompleteConfirms[message.Id] = message;
 
             var elements = from commands in message
                            group commands by commands.CommandType into types
@@ -107,8 +160,14 @@ namespace Shield.HardwareCom
             // Everything is good, message was properly received
             if (receivedErrors == 0 && receivedUnknowns == 0 && receivedPartials == 0)
             {
-                _outgoingConfirmed[message.Id] = message;
-                _outgoingSent.Remove(message.Id);
+                if (SwitchBuffers(_outgoingSent[message.Id], _outgoingSent, _outgoingConfirmed))
+                {
+                    OutgoingConfirmedMessagehandler(_outgoingConfirmed[message.Id]);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Could not transfer message from Sent to Confirmed buffer.");
+                }
                 return;
             }
 
@@ -116,59 +175,98 @@ namespace Shield.HardwareCom
             // Pushing message that was confirmed to error buffer (at the end) and removing from sent buffer
 
             IMessageModel tmpErrMessage = _outgoingSent[message.Id];
-            _outgoingSent.Remove(tmpErrMessage.Id);
+            MessageErrors error;
 
             // Error checking Conditions and insert into outgoing error buffer
             if (receivedPartials > 0 && receivedErrors > 0 && receivedUnknowns > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotErrorsAndUnknownsAndPartials, tmpErrMessage);
-            }
+                error = MessageErrors.GotErrorAndUnknownAndPartialCommands;
 
             if (receivedUnknowns > 0 && receivedErrors > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotErrorsAndUnknowns, tmpErrMessage);
-            }
+                error = MessageErrors.GotErrorAndUnknownCommands;
 
             if (receivedUnknowns > 0 && receivedPartials > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotPartialsAndUnknowns, tmpErrMessage);
-            }
+                error = MessageErrors.GotPartialAndUnknownCommands;
 
             if (receivedPartials > 0 && receivedErrors > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotErrorsAndPartials, tmpErrMessage);
-            }
+                error = MessageErrors.GotErrorAndPartialCommands;
 
             if (receivedUnknowns > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotUnknowns, tmpErrMessage);
-            }
+                error = MessageErrors.GotUnknownCommands;
 
             if (receivedPartials > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotPartials, tmpErrMessage);
-            }
+                error = MessageErrors.GotPartialsCommands;
 
             if (receivedErrors > 0)
-            {
-                _outgoingErrors[message.Id] = (MessageErrors.GotErrors, tmpErrMessage);
-            }
+                error = MessageErrors.GotErrorCommands;
+            else
+                error = MessageErrors.Unknown;
 
-            _outgoingSent.Remove(tmpErrMessage.Id);
+            SwitchBuffers(tmpErrMessage, error, _outgoingSent, _outgoingErrors);
+            OutgoingErrorrousMessageHandler(tmpErrMessage);
+
             return;
         }
 
         // If incoming message could not be decoded correctly (unknown commands, errors), then its handled here
-        private void IncomingErrorrousMessageHandler(IMessageModel message)
+        public void IncomingErrorrousMessageHandler(IMessageModel message)
         {
+            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
+            Console.WriteLine($@"ERROR TYPE: {Enum.GetName(typeof(MessageErrors), _incomingErrors[message.Id].errorType)}");
+            foreach(var c in message)
+            {
+                string line = $@"----  {c.CommandTypeString}";
+                if(c.CommandType == CommandType.Data)
+                    line += $@" | Data: {c.Data}";
+                Console.WriteLine(line);
+            }
         }
 
-        private void IncomingMasterMessageHandler(IMessageModel message)
+        public void OutgoingErrorrousMessageHandler(IMessageModel message)
         {
+            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
+            foreach(var c in message)
+            {
+                string line = $@"----  {c.CommandTypeString}";
+                if(c.CommandType == CommandType.Data)
+                    line += $@" | Data: {c.Data}";
+                Console.WriteLine(line);
+            }
         }
 
-        private void IncomingSlaveMessageHandler(IMessageModel message)
+        public void OutgoingConfirmedMessagehandler(IMessageModel message)
         {
+            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
+            foreach(var c in message)
+            {
+                string line = $@"----  {c.CommandTypeString}";
+                if(c.CommandType == CommandType.Data)
+                    line += $@" | Data: {c.Data}";
+                Console.WriteLine(line);
+            }
+        }
+
+        public void IncomingMasterMessageHandler(IMessageModel message)
+        {
+            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
+            foreach(var c in message)
+            {
+                string line = $@"----  {c.CommandTypeString}";
+                if(c.CommandType == CommandType.Data)
+                    line += $@" | Data: {c.Data}";
+                Console.WriteLine(line);
+            }
+        }
+
+        public void IncomingSlaveMessageHandler(IMessageModel message)
+        {
+            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
+            foreach(var c in message)
+            {
+                string line = $@"----  {c.CommandTypeString}";
+                if(c.CommandType == CommandType.Data)
+                    line += $@" | Data: {c.Data}";
+                Console.WriteLine(line);
+            }
         }
 
         public bool AddToSendingQueue(IMessageModel message)
@@ -204,52 +302,25 @@ namespace Shield.HardwareCom
 
         public void Receiver(ICommandModel receivedCommand)
         {
-            Buffer commandDepositedIn = AddIncomingToBuffer(receivedCommand);
+            Buffer commandDepositedIn = ChooseBufferFor(receivedCommand);
             string messageId = receivedCommand.Id;
 
-            // Add received command to existing or new message in buffer
             if (commandDepositedIn == Buffer.IncomingPartial)
             {
-                // Message is completed
-                if (CheckIfCompleted(_incomingPartial[messageId]))
-                {
-                    _incomingComplete[messageId] = _incomingPartial[messageId];
-                    _incomingPartial.Remove(messageId);
-
-                    var corectness = CheckIfDecodedCorrectly(_incomingComplete[messageId]);
-                    var messageType = MessageType(_incomingComplete[messageId]);
-
-                    // There are no decoding errors in completed message
-                    if (corectness == MessageErrors.None)
-                    {
-                        switch (messageType)
-                        {
-                            case IncomingType.Confirmation:
-                                IncomingConfirmationMessageHandler(_incomingComplete[messageId]);
-                                break;
-
-                            case IncomingType.Master:
-                                IncomingMasterMessageHandler(_incomingComplete[messageId]);
-                                break;
-
-                            case IncomingType.Slave:
-                                IncomingSlaveMessageHandler(_incomingComplete[messageId]);
-                                break;
-
-                            default:
-                                // If undetermined message type
-                                IncomingErrorrousMessageHandler(_incomingComplete[messageId]);
-                                break;
-                        }
-                    }
-                }
-            }
+                IncomingConductor(_incomingPartial[messageId]);
+            }                           
         }
 
-        private Buffer AddIncomingToBuffer(ICommandModel command)
+        private Buffer ChooseBufferFor(ICommandModel command)
         {
             if (command is null)
                 return Buffer.None;
+
+            if (_incomingErrors.ContainsKey(command.Id))
+            {
+                _incomingErrors[command.Id].Message.Add(command);
+                return Buffer.IncomingError;
+            }
 
             if (_incomingPartial.ContainsKey(command.Id))
             {
@@ -276,55 +347,6 @@ namespace Shield.HardwareCom
             return Buffer.IncomingPartial;
         }
 
-        private static bool CheckIfCompleted(IMessageModel message)
-        {
-            if (message is null)
-                throw new ArgumentNullException(nameof(message), "Cannot pass null message!");
-
-            if (message.IsTransmissionCompleted)
-                return true;
-
-            if (message.Last().CommandType == CommandType.Completed)
-            {
-                message.IsTransmissionCompleted = true;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static IncomingType MessageType(IMessageModel message)
-        {
-            List<ICommandModel> statusCommands = message
-                    .Where(c =>
-                        c.CommandType == CommandType.Confirmation ||
-                        c.CommandType == CommandType.Master ||
-                        c.CommandType == CommandType.Slave)
-                    .ToList();
-            if (statusCommands.Count == 1)
-            {
-                switch (statusCommands.First().CommandType)
-                {
-                    case CommandType.Confirmation:
-                        return IncomingType.Confirmation;
-
-                    case CommandType.Master:
-                        return IncomingType.Master;
-
-                    case CommandType.Slave:
-                        return IncomingType.Slave;
-
-                    default:
-                        throw new InvalidOperationException("Outside of bound for CommandType Enum - was it changed, were there memory errors?");
-                }
-            }
-
-            return IncomingType.Undetermined;
-        }
-
-        /// <summary>
-        /// Checks if received message is properly decoded
-        /// </summary>
         private static MessageErrors CheckIfDecodedCorrectly(IMessageModel message)
         {
             if (message is null)
@@ -355,43 +377,166 @@ namespace Shield.HardwareCom
             }
 
             if (numberOfErrors > 0 && numberOfUnknowns > 0 && numberOfPartials > 0)
-                return MessageErrors.GotErrorsAndUnknownsAndPartials;
+                return MessageErrors.GotErrorAndUnknownAndPartialCommands;
             if (numberOfErrors > 0 && numberOfPartials > 0)
-                return MessageErrors.GotErrorsAndPartials;
+                return MessageErrors.GotErrorAndPartialCommands;
             if (numberOfErrors > 0 && numberOfUnknowns > 0)
-                return MessageErrors.GotErrorsAndUnknowns;
+                return MessageErrors.GotErrorAndUnknownCommands;
             if (numberOfPartials > 0 && numberOfUnknowns > 0)
-                return MessageErrors.GotPartialsAndUnknowns;
+                return MessageErrors.GotPartialAndUnknownCommands;
             if (numberOfErrors > 0)
-                return MessageErrors.GotErrors;
+                return MessageErrors.GotErrorCommands;
             if (numberOfPartials > 0)
-                return MessageErrors.GotPartials;
+                return MessageErrors.GotPartialsCommands;
             else
-                return MessageErrors.GotUnknowns;
+                return MessageErrors.GotUnknownCommands;
+        }
+
+        private static bool IsCompleted(IMessageModel message)
+        {
+            if (message is null)
+                throw new ArgumentNullException(nameof(message), "Cannot pass null message!");
+
+            if (message.IsTransmissionCompleted)
+                return true;
+
+            if (message.Last().CommandType == CommandType.EndMessage)
+            {
+                message.IsTransmissionCompleted = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsPatternCorrect(IMessageModel message)
+        {
+            // not enough commands in message
+            if (message.Count() < 3)
+                return false;
+
+            // Correct beginning and end?
+            if (message.First().CommandType != CommandType.HandShake ||
+                message.Last().CommandType != CommandType.EndMessage)
+                return false;
+
+            // Only one begin and one end?
+            if (message.Count(c => c.CommandType == CommandType.HandShake || c.CommandType == CommandType.EndMessage) != 2)
+                return false;
+
+            // Message type in correct place?
+            CommandType messageType = message.ElementAt(1).CommandType;
+            if (messageType != CommandType.Master && messageType != CommandType.Slave && messageType != CommandType.Confirmation)
+                return false;
+
+            // Only one message type?
+            if (message.
+                Count(c =>
+                    c.CommandType == CommandType.Master ||
+                    c.CommandType == CommandType.Slave ||
+                    c.CommandType == CommandType.Confirmation)
+                != 1)
+                return false;
+
+            return true;
+        }
+
+        private static IncomingType MessageType(IMessageModel message)
+        {
+            CommandType type = message.ElementAt(1).CommandType;
+
+            switch (type)
+            {
+                case CommandType.Master:
+                    return IncomingType.Master;
+
+                case CommandType.Slave:
+                    return IncomingType.Slave;
+
+                case CommandType.Confirmation:
+                    return IncomingType.Confirmation;
+
+                default:
+                    return IncomingType.Undetermined;
+            }
         }
 
         public virtual void OnCommandReceived(object sender, ICommandModel command)
         {
             Receiver(command);
         }
+
+        #region Message transfer between buffers
+
+        private static bool SwitchBuffers(IMessageModel message,
+                                   Dictionary<string, IMessageModel> source,
+                                   Dictionary<string, IMessageModel> target)
+        {
+            if (message is null || source is null || target is null)
+                return false;
+
+            if (source == target)
+                return false;
+
+            if (!source.ContainsKey(message.Id))
+                return false;
+
+            target[message.Id] = message;
+            source.Remove(message.Id);
+            return true;
+        }
+
+        private static bool SwitchBuffers(IMessageModel message,
+                                   MessageErrors error,
+                                   Dictionary<string, IMessageModel> source,
+                                   Dictionary<string, (MessageErrors errorType, IMessageModel Message)> target)
+        {
+            if (!Enum.IsDefined(typeof(MessageErrors), error))
+                return false;
+
+            if (message is null || source is null ||
+                target is null || !source.ContainsKey(message.Id))
+                return false;
+
+            target[message.Id] = (error, message);
+            source.Remove(message.Id);
+            return true;
+        }
+
+        private static bool SwitchBuffers(IMessageModel message,
+                                   Dictionary<string, (MessageErrors errorType, IMessageModel Message)> source,
+                                   Dictionary<string, IMessageModel> target)
+        {
+            if (message is null || source is null ||
+                target is null || !source.ContainsKey(message.Id))
+                return false;
+
+            target[message.Id] = message;
+            source.Remove(message.Id);
+            return true;
+        }
+
+        #endregion Message transfer between buffers
     }
 
-    internal enum MessageErrors
+    public enum MessageErrors
     {
         None,
-        GotPartials,
-        GotUnknowns,
-        GotErrors,
-        GotErrorsAndUnknowns,
-        GotPartialsAndUnknowns,
-        GotErrorsAndPartials,
-        GotErrorsAndUnknownsAndPartials,
-        CannotTellType,
+        GotPartialsCommands,
+        GotUnknownCommands,
+        GotErrorCommands,
+        GotErrorAndUnknownCommands,
+        GotPartialAndUnknownCommands,
+        GotErrorAndPartialCommands,
+        GotErrorAndUnknownAndPartialCommands,
+        UndeterminedType,
+        BadMessagePattern,
         NotSent,
         NotConfirmed,
         ConfirmedNonexistent,
         Empty,
         WasAlreadyCompleted,
+        Unknown,
         isNull
     }
 

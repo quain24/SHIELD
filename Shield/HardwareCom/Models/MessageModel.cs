@@ -4,7 +4,7 @@ using System.Linq;
 
 /// <summary>
 /// Contains list of commands that will be sent or were received
-/// Single message is preffered unit of communication between devices
+/// Single message is preferred unit of communication between devices
 /// </summary>
 
 namespace Shield.HardwareCom.Models

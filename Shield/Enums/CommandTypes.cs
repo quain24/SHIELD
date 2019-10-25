@@ -44,7 +44,7 @@
         /// <summary>
         /// Should be last command received, states that message is completed
         /// </summary>
-        Completed,
+        EndMessage,
 
         #endregion Message End / footer
 
@@ -61,13 +61,13 @@
         ReceivedAsError,
 
         /// <summary>
-        /// Used in responding, states that corresponding received command type is not known by receipient
+        /// Used in responding, states that corresponding received command type is not known by recipient
         /// </summary>
         ReceivedAsUnknown,
 
         /// <summary>
         /// Used in responding, states that corresponding received command was partial, like, for example,
-        /// Data message dit no contained whole data pack
+        /// Data message did not contained whole data pack
         /// </summary>
         ReceivedAsPartial,
 

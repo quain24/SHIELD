@@ -132,7 +132,7 @@ namespace Shield.HardwareCom
                             ICommandModel receivedCommad = _commandTranslator.FromString(s);
                             OnCommandReceived(receivedCommad);
                             // Temporary display to console, in future - collection?
-                            Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
+                            //Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
                         }
                     }
                     else
