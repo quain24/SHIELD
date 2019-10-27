@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessanger : System.IDisposable
+    public interface IMessenger : System.IDisposable
     {
         bool IsOpen { get; }
+
         Task<bool> SendAsync(ICommandModel comand);
 
         Task<bool> SendAsync(IMessageModel message);
@@ -23,6 +24,10 @@ namespace Shield.HardwareCom
         Task StartReceiveAsync(CancellationToken ct = default);
 
         void StopReceiving();
+
+        Task StartDecodingAsync(CancellationToken ct = default);
+
+        void StopDecoding();
 
         event System.EventHandler<ICommandModel> CommandReceived;
     }

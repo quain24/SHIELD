@@ -4,10 +4,7 @@ namespace Shield.HardwareCom.Models
 {
     public interface IMessageModel : IEnumerable<ICommandModel>
     {
-        bool IsBeingSent { get; set; }
-        bool IsBeingReceived { get; set; }
-        bool IsIncoming { get; set; }
-        bool IsOutgoing { get; set; }
+        long Timestamp { get; set; }
         bool IsTransmissionCompleted { get; set; }
         int CommandCount { get; }
         string Id { get; set; }

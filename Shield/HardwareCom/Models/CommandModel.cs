@@ -10,12 +10,19 @@ namespace Shield.HardwareCom.Models
     {
         private string _data = string.Empty;
         private string _id = string.Empty;
+        private long _timestamp = 0;
         private CommandType _command;
+
+        public long TimeStamp
+        {
+            get { return _timestamp; }
+            set { _timestamp = value; }
+        }
 
         public string Id
         {
             get { return _id; }
-            set { _id = value; }
+            set { _id = value.ToUpperInvariant(); }
         }
 
         public string Data

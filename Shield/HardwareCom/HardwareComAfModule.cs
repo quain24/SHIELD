@@ -64,27 +64,6 @@ namespace Shield.HardwareCom
                             (pi, ctx) => ctx.Resolve<ICommandTranslator>())
                    });
 
-            // Alternate way to register IIncomingDataPreparer
-            //builder.RegisterType<IncomingDataPreparer>()
-            //       .As<IIncomingDataPreparer>()
-            //       .WithParameters(new[]{
-            //                       new ResolvedParameter(
-            //                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "commandTypeLength",
-            //                           (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().CommandTypeSize),
-            //                       new ResolvedParameter(
-            //                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
-            //                           (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().IdSize),
-            //                       new ResolvedParameter(
-            //                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "dataPackLength",
-            //                           (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().DataSize),
-            //                       new ResolvedParameter(
-            //                           (pi, ctx) => pi.ParameterType == typeof(Regex) && pi.Name == "commandPattern",
-            //                           (pi, ctx) => new Regex($@"[{ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().Separator}][0-9]{{{ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().CommandTypeSize}}}[{ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().Separator}][a-zA-Z0-9]{{{ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().IdSize}}}[{ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().Separator}]")),
-            //                       new ResolvedParameter(
-            //                           (pi, ctx) => pi.ParameterType == typeof(char) && pi.Name == "separator",
-            //                           (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>().Separator)
-            //           });
-
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>();
@@ -97,8 +76,8 @@ namespace Shield.HardwareCom
                     })
                    .As<IIncomingDataPreparer>();
 
-            builder.RegisterType<Messanger>()
-                   .As<IMessanger>()
+            builder.RegisterType<Messenger>()
+                   .As<IMessenger>()
                    .WithParameters(new[]
                    {
                        new ResolvedParameter(
@@ -113,16 +92,16 @@ namespace Shield.HardwareCom
                    });
 
             // tymczasowo do wszystkiego innego
-            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
-                   .Where(t => t.IsInNamespace("HardwareCom"))
-                   .Except<Messanger>()
-                   .Except<MoqAdapter>()
-                   .Except<SerialPortAdapter>()
-                   .Except<CommandTranslator>()
-                   .Except<CommunicationDeviceFactory>()
-                   .Except<IncomingDataPreparer>()
-                   .AsImplementedInterfaces()
-                   .InstancePerDependency();
+            //builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+            //       .Where(t => t.IsInNamespace("HardwareCom"))
+            //       .Except<Messenger>()
+            //       .Except<MoqAdapter>()
+            //       .Except<SerialPortAdapter>()
+            //       .Except<CommandTranslator>()
+            //       .Except<CommunicationDeviceFactory>()
+            //       .Except<IncomingDataPreparer>()
+            //       .AsImplementedInterfaces()
+            //       .InstancePerDependency();
 
             base.Load(builder);
         }

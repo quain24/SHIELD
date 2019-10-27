@@ -23,8 +23,8 @@ namespace Shield.HardwareCom.Adapters
         private const int ByteBufferSize = 4092;
 
         private readonly SerialPort _port;
-        
-        private object _lock = new object();  
+
+        private object _lock = new object();
         private bool _disposed = false;
         private bool _wasSetupCorrectly = false;
         private byte[] _buffer = new byte[ByteBufferSize];
@@ -36,9 +36,8 @@ namespace Shield.HardwareCom.Adapters
         public bool IsOpen { get { if (_port != null && _port.IsOpen) return true; return false; } }
 
         public SerialPortAdapter() => _port = new SerialPort();
-        
-        public SerialPortAdapter(ISerialPortSettingsModel settings) : this() => Setup(settings);       
-      
+
+        public SerialPortAdapter(ISerialPortSettingsModel settings) : this() => Setup(settings);
 
         /// <summary>
         /// Sets up all of the necessary parameters for this instance of the device
@@ -77,7 +76,15 @@ namespace Shield.HardwareCom.Adapters
             {
                 if (_port != null && !_port.IsOpen && _wasSetupCorrectly)
                 {
-                    _port.Open();
+                    try
+                    {
+                        _port.Open();
+                    }
+                    catch
+                    {
+                        Debug.WriteLine($"Could not open device - is it opened in another application or was cable disconnected?");
+                        throw;
+                    }
                 }
             }
         }
@@ -97,7 +104,7 @@ namespace Shield.HardwareCom.Adapters
                     DiscardInBuffer();
                     _port.Close();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     // Port was not open
                     Debug.WriteLine("MESSAGE: SerialPortAdapter Close - Port was not open! " + e.Message);
@@ -121,13 +128,13 @@ namespace Shield.HardwareCom.Adapters
                     OnDataReceived(rawData);
                     return rawData;
                 }
-                catch(IOException exc)
+                catch (IOException exc)
                 {
                     throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, rethrown. Either task was cancelled or port has been closed", ct);
-                }                
+                }
             }
             return null;
-        }        
+        }
 
         /// <summary>
         /// Sends a raw command string taken from input CommandModel to the receiving device.
@@ -153,7 +160,7 @@ namespace Shield.HardwareCom.Adapters
             {
                 Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible / cancelled?");
                 Debug.WriteLine(ex.Message);
-                return false;                
+                return false;
             }
         }
 
@@ -177,7 +184,7 @@ namespace Shield.HardwareCom.Adapters
                 Debug.WriteLine($@"ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailible?");
                 return false;
             }
-        }        
+        }
 
         /// <summary>
         /// Clears data in 'received' buffer
@@ -187,7 +194,7 @@ namespace Shield.HardwareCom.Adapters
             try
             {
                 _port.BaseStream.Flush();
-                _port.DiscardInBuffer();                
+                _port.DiscardInBuffer();
                 _buffer = new byte[ByteBufferSize];
             }
             catch (Exception ex)
@@ -218,7 +225,7 @@ namespace Shield.HardwareCom.Adapters
                 {
                     if (_port.IsOpen)
                         Close(); // no need for dispose - closing is equal
-                        //CloseAsync();
+                                 //CloseAsync();
                 }
             }
             _buffer = null;
