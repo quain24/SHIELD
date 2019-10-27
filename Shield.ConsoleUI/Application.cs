@@ -7,7 +7,6 @@ using Shield.HardwareCom.Models;
 using System;
 using System.IO.Ports;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.ConsoleUI
@@ -20,10 +19,10 @@ namespace Shield.ConsoleUI
         private IMessageModel _message;
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
-        private IMessanger _comMessanger;
-        private ComCommander _comcom = new ComCommander(new Func<ICommandModel>(() => {return new CommandModel();}), new Func<IMessageModel>(() => {return new MessageModel(); }));
+        private IMessenger _comMessanger;
+        private ComCommander _comcom = new ComCommander(new CommandModelFactory(new Func<ICommandModel>(() => { return new CommandModel(); })), new Func<IMessageModel>(() => { return new MessageModel(); }));
 
-        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger)
+        public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessenger messanger)
         {
             _command = command;
             _deviceFactory = deviceFactory;
@@ -73,6 +72,25 @@ namespace Shield.ConsoleUI
             // wczytywanie ustawien
             _setman.LoadFromFile();
 
+            //Console.WriteLine("MessageModelCreation");
+            //MessageModel mm = new MessageModel();
+            //CommandModel c1 = new CommandModel{CommandType = CommandType.HandShake, Id = "AAAA"};
+            //CommandModel c2 = new CommandModel{CommandType = CommandType.Master, Id = "AAAA"};
+            //CommandModel c3 = new CommandModel{CommandType = CommandType.Data, Id = "AAAA", Data = "123456789123456789456321458785"};
+            //mm.Add(c1); mm.Add(c2); mm.Add(c3);
+            //Console.WriteLine("Added commands");
+            //foreach(var c in mm)
+            //{
+            //    Console.WriteLine(c.CommandTypeString);
+            //    Console.WriteLine(c.Data);
+            //}
+            //Console.WriteLine("Deleting first message by new message");
+            //CommandModel c4 = new CommandModel{CommandType = CommandType.HandShake, Id = "AAAA"};
+            //Console.WriteLine(mm.Remove(c4));
+            //Console.WriteLine("Deleting first message by reference to it");
+            //Console.WriteLine(mm.Remove(c1));
+            //Console.ReadLine();
+
             //// Prymityne wyswietlanie wartosci
             //foreach (var item in _setman.GetAll())
             //{
@@ -114,14 +132,14 @@ namespace Shield.ConsoleUI
             {
                 Console.WriteLine(availablePort);
             }
-            
+
             //_comMessanger.Setup(DeviceType.Serial);
 
             _comcom.AssignMessanger(_comMessanger);
 
             _comMessanger.Open();
-            Task.Run(() => _comMessanger.StartReceiveAsync().ConfigureAwait(false));
-            Task.Run(() => _comMessanger.StartDecodingAsync().ConfigureAwait(false));
+            Task.Run(() => _comMessanger.StartReceiveAsync());
+            Task.Run(() => _comMessanger.StartDecodingAsync());
 
             int licznik = 0;
 
@@ -156,7 +174,7 @@ namespace Shield.ConsoleUI
             Console.WriteLine("ENTER to open communication line");
             Console.ReadLine();
             Console.WriteLine("Com line opened.");
-            Task.Run(() => _comMessanger.StartDecodingAsync().ConfigureAwait(false));
+            Task.Run(() => _comMessanger.StartDecodingAsync());
             Console.WriteLine("ENTER to close communication line");
             Console.ReadLine();
             _comMessanger.Close();
@@ -164,11 +182,11 @@ namespace Shield.ConsoleUI
             Console.ReadLine();
             Console.WriteLine("Com line opened.");
             _comMessanger.Open();
-            Task.Run(() => _comMessanger.StartReceiveAsync().ConfigureAwait(false));
-            Task.Run(() => _comMessanger.StartDecodingAsync().ConfigureAwait(false));
+            Task.Run(() => _comMessanger.StartReceiveAsync());
+            Task.Run(() => _comMessanger.StartDecodingAsync());
             Console.ReadLine();
             Console.WriteLine("end after enter");
-            Console.ReadLine();        
+            Console.ReadLine();
         }
     }
 }

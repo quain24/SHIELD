@@ -22,7 +22,7 @@ namespace Shield.HardwareCom.Models
         public string Id
         {
             get { return _id; }
-            set { _id = value; }
+            set { _id = value.ToUpperInvariant(); }
         }
 
         public string Data

@@ -15,10 +15,6 @@ namespace Shield.HardwareCom.Models
         private List<ICommandModel> _commands = new List<ICommandModel>();
 
         public long Timestamp { get; set; } = 0;
-        public bool IsBeingSent { get; set; } = false;
-        public bool IsBeingReceived { get; set; } = false;
-        public bool IsIncoming { get; set; } = false;
-        public bool IsOutgoing { get; set; } = false;
         public bool IsTransmissionCompleted { get; set; } = false;
         public int CommandCount { get { return _commands.Count(); } }
         public string Id { get { return _messageId; } set { AssaignID(value); } }
@@ -39,24 +35,14 @@ namespace Shield.HardwareCom.Models
         {
             if (command is null)
                 return false;
-            if (!string.IsNullOrEmpty(_messageId))
-                command.Id = _messageId;
+            command.Id = _messageId;
             _commands.Add(command);
             return true;
         }
 
         public bool Remove(ICommandModel command)
         {
-            int countBefore = CommandCount;
-            foreach (var c in _commands)
-            {
-                if (c.Equals(command))
-                {
-                    _commands.Remove(c);
-                }
-            }
-
-            return countBefore != CommandCount ? true : false;
+            return _commands.Remove(command);
         }
 
         #region IEnumerable implementation

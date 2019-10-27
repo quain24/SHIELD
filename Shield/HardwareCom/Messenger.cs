@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class Messanger : IMessanger
+    public class Messenger : IMessenger
     {
         private ICommunicationDeviceFactory _communicationDeviceFactory;
         private ICommunicationDevice _device;
@@ -35,7 +35,7 @@ namespace Shield.HardwareCom
 
         public bool IsOpen { get => _device.IsOpen; }
 
-        public Messanger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
+        public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
             _communicationDeviceFactory = communicationDeviceFactory;
             _commandTranslator = commandTranslator;
@@ -131,8 +131,6 @@ namespace Shield.HardwareCom
                             internalCT.ThrowIfCancellationRequested();
                             ICommandModel receivedCommad = _commandTranslator.FromString(s);
                             OnCommandReceived(receivedCommad);
-                            // Temporary display to console, in future - collection?
-                            //Console.WriteLine(receivedCommad.CommandTypeString + " " + receivedCommad.Id + " " + receivedCommad.Data + " | Received by external data searcher (" + i++ + ")");
                         }
                     }
                     else
@@ -144,7 +142,7 @@ namespace Shield.HardwareCom
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine("EXCEPTION: Messanger - StartDecoding: Operation cancelled.");
+                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation canceled.");
                 _decoderRunning = false;
                 return;
             }

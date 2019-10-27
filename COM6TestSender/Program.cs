@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO.Ports;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace COM6TestSender
@@ -253,16 +254,9 @@ namespace COM6TestSender
                     Console.ReadLine();
                 }
             }
-
-
-
-
-
             else if (Int32.Parse(a) == 10)
             {
                 int num = 0;
-
-                
 
                 Console.WriteLine($@"Wybierz typ komenty do wysłania:");
                 Console.WriteLine("1 - Handshake");
@@ -283,43 +277,63 @@ namespace COM6TestSender
                 Console.WriteLine("16 - Data");
                 Console.WriteLine("17 - Renew ID!");
 
+                string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+
+                Regex pat = new Regex(pattern);
+
                 string id = Shield.Helpers.IdGenerator.GetId(4);
 
-                while(true)
+                int licz = 0;
+                while (true)
                 {
                     string data = num.ToString().PadLeft(30, '.');
-                    int choose = Int32.Parse(Console.ReadLine());
+                    int choose = 0;
+                    if (!int.TryParse(Console.ReadLine(), out choose))
+                        continue;
+                    if (choose == 0 || choose == Int32.MaxValue || choose == Int32.MinValue)
+                        continue;
                     Console.WriteLine("OK");
 
                     string packet = $@"*{choose.ToString().PadLeft(4, '0')}*{id}*";
-                    if(choose == 16)
+                    if (choose == 16)
                     {
                         packet += data;
                         num++;
                     }
-
-                    else if(choose == 17)
+                    else if (choose == 17)
                     {
                         id = Shield.Helpers.IdGenerator.GetId(4);
                         Console.WriteLine($@"ID changed to {id}");
                         continue;
                     }
-
-                    else if(choose > 17)
+                    else if (choose > 17)
                     {
                         Console.WriteLine("bad command");
                         continue;
                     }
 
                     serial.Write(packet);
+                    if (choose == 5)
+                    {
+                        await Task.Delay(2000);
+                        Console.WriteLine("----    RESPONSE    ----");
+                        //while (serial.BytesToRead > 0)
+                        //{
+                        //    string resp = serial.ReadExisting();
+                        //    string[] rep = new string[licz+2];
+                        //    licz = 0;
+                        //    rep = pat.Split(resp);
+
+                        //    foreach(var s in rep)
+                        //    {
+                        //        Console.WriteLine(s);
+                        //    }
+                        //}
+                        Console.WriteLine(serial.ReadExisting());
+                        Console.WriteLine("----  END RESPONSE  ----");
+                    }
                 }
             }
-
-
-
-
-
-
 
             // zle na emulatorze
             else

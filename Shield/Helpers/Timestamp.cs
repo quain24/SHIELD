@@ -13,7 +13,7 @@ namespace Shield.Helpers
         /// </summary>
         public static long TimestampNow
         {
-            get{ return GetTimestamp();}
+            get { return GetTimestamp(); }
         }
 
         /// <summary>
