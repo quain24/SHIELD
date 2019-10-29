@@ -70,11 +70,14 @@ namespace Shield.HardwareCom
 
         public async Task StartReceiveAsync(CancellationToken ct)
         {
-            lock (_receiverLock)
-            {
-                if (_receiverRunning || !IsOpen || !_setupSuccessufl)
-                    return;
-                _receiverRunning = true;
+            if (!_receiverRunning)
+            {            
+                lock (_receiverLock)
+                {
+                    if (_receiverRunning || !IsOpen || !_setupSuccessufl)
+                        return;
+                    _receiverRunning = true;
+                }
             }
 
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
@@ -91,7 +94,21 @@ namespace Shield.HardwareCom
                     if (!string.IsNullOrEmpty(toAdd))
                     {
                         internalCT.ThrowIfCancellationRequested();
-                        _rawDataBuffer.Add(toAdd);
+                        _rawDataBuffer.Add(toAdd);                        
+
+                        // Testing of internal implementation of decoding!
+
+                        //List<string> output = _incomingDataPreparer.DataSearch(toAdd/*_rawDataBuffer.Take()*/);
+                        //if (output is null || output.Count == 0)
+                        //    continue;
+                        //foreach (string s in output)
+                        //{
+                        //    internalCT.ThrowIfCancellationRequested();
+                        //    ICommandModel receivedCommad = _commandTranslator.FromString(s);
+                        //    OnCommandReceived(receivedCommad);
+                        //}
+
+                        // end testing
                     }
                 }
                 _receiverRunning = false;
@@ -101,29 +118,34 @@ namespace Shield.HardwareCom
                 _receiverRunning = false;
             }
         }
-
+        
         public async Task StartDecodingAsync(CancellationToken ct)
         {
-            lock (_decoderLock)
+            if (!_decoderRunning)
             {
-                if (_decoderRunning)
-                    return;
-                _decoderRunning = true;
+                lock (_decoderLock)
+                {
+                    if (!_decoderRunning)
+                        _decoderRunning = true;
+                    else
+                        return;
+                }
             }
 
             CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
             if (internalCT == ct)
                 internalCT.Register(StopDecoding);
 
+            string workpiece = string.Empty;
+
             try
             {
-                int i = 0;
                 while (true)
                 {
                     internalCT.ThrowIfCancellationRequested();
-                    if (_rawDataBuffer.Count > 0)
+                    if (_rawDataBuffer.TryTake(out workpiece, 50))
                     {
-                        List<string> output = _incomingDataPreparer.DataSearch(_rawDataBuffer.Take());
+                        List<string> output = _incomingDataPreparer.DataSearch(workpiece);
                         if (output is null || output.Count == 0)
                             continue;
                         foreach (string s in output)
@@ -136,13 +158,13 @@ namespace Shield.HardwareCom
                     else
                     {
                         internalCT.ThrowIfCancellationRequested();
-                        await Task.Delay(50, internalCT).ConfigureAwait(false);
+                        await Task.Delay(1000, internalCT).ConfigureAwait(false);
                     }
                 }
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation canceled.");
+                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
                 _decoderRunning = false;
                 return;
             }

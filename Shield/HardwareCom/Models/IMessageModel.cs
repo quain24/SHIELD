@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Shield.Enums;
+using System.Collections.Generic;
+using static Shield.HardwareCom.Models.MessageModel;
 
 namespace Shield.HardwareCom.Models
 {

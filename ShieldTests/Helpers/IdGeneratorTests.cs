@@ -10,7 +10,7 @@ namespace ShieldTests.Helpers
         [InlineData(1)]
         public void IdGenerator_ReturnsRandomStringWhenGivenCorrectLength(int length)
         {
-            string result = Shield.Helpers.IdGenerator.GetId(length);
+            string result = Shield.Helpers.IdGenerator.GetID(length);
             Assert.NotNull(result);
             Assert.Equal(length, result.Length);
         }
@@ -20,7 +20,7 @@ namespace ShieldTests.Helpers
         [InlineData(-512)]
         public void IdGenerator_ReturnsNullGuivenWrongData(int length)
         {
-            string result = Shield.Helpers.IdGenerator.GetId(length);
+            string result = Shield.Helpers.IdGenerator.GetID(length);
 
             Assert.Null(result);
         }

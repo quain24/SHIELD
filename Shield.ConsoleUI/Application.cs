@@ -45,7 +45,7 @@ namespace Shield.ConsoleUI
             //// testowanie zapisywania ustawien - działa -
 
             ISerialPortSettingsModel settings = new SerialPortSettingsModel();
-            settings.BaudRate = 921600;//19200;//
+            settings.BaudRate = 19200;//921600;//
             settings.DataBits = 8;
             settings.Parity = Parity.None;
             settings.PortNumber = 4;
@@ -160,7 +160,7 @@ namespace Shield.ConsoleUI
                     CommandModel mes = new CommandModel();
                     mes.CommandType = CommandType.Data;
                     mes.Data = licznik.ToString();
-                    mes.Id = Helpers.IdGenerator.GetId(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
+                    mes.Id = Helpers.IdGenerator.GetID(((IApplicationSettingsModel)_setman.GetSettingsFor(SettingsType.Application)).IdSize);
 
                     await _comMessanger.SendAsync(mes);
                     licznik++;

@@ -17,6 +17,9 @@ namespace Shield.HardwareCom
         private Func<IMessageModel> _messageFactory;
         private IMessenger _messanger;
 
+        private object _receiverLock = new object();
+        private bool _receiverRunning = false;
+
         #region Variables - Sent messages collections
 
         private ConcurrentQueue<IMessageModel> _outgoingQueue = new ConcurrentQueue<IMessageModel>();
@@ -29,6 +32,7 @@ namespace Shield.HardwareCom
 
         #region Variables - Received messages collections
 
+        private ConcurrentQueue<ICommandModel> _incomingQueue = new ConcurrentQueue<ICommandModel>();
         private Dictionary<string, IMessageModel> _incomingPartial = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _incomingComplete = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _incomingCompleteConfirms = new Dictionary<string, IMessageModel>();
@@ -74,6 +78,7 @@ namespace Shield.HardwareCom
             if (!_outgoingSent.ContainsKey(message.Id))
             {
                 SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingCompleteConfirms, _incomingErrors);
+                IncomingErrorrousMessageHandler(message);
                 return;
             }
 
@@ -113,31 +118,18 @@ namespace Shield.HardwareCom
             // Pushing message that was confirmed to error buffer (at the end) and removing from sent buffer
 
             IMessageModel tmpErrMessage = _outgoingSent[message.Id];
-            MessageErrors error;
+            MessageErrors error = MessageErrors.None;
 
             // Error checking Conditions and insert into outgoing error buffer
-            if (receivedPartials > 0 && receivedErrors > 0 && receivedUnknowns > 0)
-                error = MessageErrors.GotErrorAndUnknownAndPartialCommands;
-
-            if (receivedUnknowns > 0 && receivedErrors > 0)
-                error = MessageErrors.GotErrorAndUnknownCommands;
-
-            if (receivedUnknowns > 0 && receivedPartials > 0)
-                error = MessageErrors.GotPartialAndUnknownCommands;
-
-            if (receivedPartials > 0 && receivedErrors > 0)
-                error = MessageErrors.GotErrorAndPartialCommands;
 
             if (receivedUnknowns > 0)
-                error = MessageErrors.GotUnknownCommands;
+                error = error | MessageErrors.GotUnknownCommands;
 
             if (receivedPartials > 0)
-                error = MessageErrors.GotPartialsCommands;
+                error = error | MessageErrors.GotPartialCommands;
 
             if (receivedErrors > 0)
-                error = MessageErrors.GotErrorCommands;
-            else
-                error = MessageErrors.Unknown;
+                error = error | MessageErrors.GotErrorCommands;
 
             SwitchBuffers(tmpErrMessage, error, _outgoingSent, _outgoingErrors);
             OutgoingErrorrousMessageHandler(tmpErrMessage);
@@ -173,6 +165,7 @@ namespace Shield.HardwareCom
             {
                 SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingCompleteSlaves, _incomingErrors);
                 IncomingErrorrousMessageHandler(message);
+                return;
             }
 
             AddToSendingQueue(ConfirmationOf(message));
@@ -198,7 +191,7 @@ namespace Shield.HardwareCom
             SendNextQueuedMessageAsync();
 
             Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            Console.WriteLine($@"ERROR TYPE: {Enum.GetName(typeof(MessageErrors), _incomingErrors[message.Id].errorType)}");
+            Console.WriteLine($@"ERROR TYPE: {_incomingErrors[message.Id].errorType}");
             foreach (var c in message)
             {
                 string line = $@"----  {c.CommandTypeString}";
@@ -279,59 +272,59 @@ namespace Shield.HardwareCom
 
         public void IncomingConductor(IMessageModel message)
         {
-            // Check for decoding correctness
-            MessageErrors decodingError = CheckIfDecodedCorrectly(message);
-            if (decodingError != MessageErrors.GotErrorCommands)
+            // Check if message is complete
+            if (IsCompleted(message))
             {
-                // Check if message is complete
-                if (IsCompleted(message))
+                SwitchBuffers(message, _incomingPartial, _incomingComplete);
+
+                // Check for Possible errors - if bad, then off to incoming error handler
+                MessageErrors decodingErrors = CheckIfDecodedCorrectly(message);
+                bool patternCorrect = IsPatternCorrect(message);
+                IncomingType messageType = MessageType(message);
+
+                if(patternCorrect == false)
+                    decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
+                if(messageType == IncomingType.Undetermined)
+                    decodingErrors = decodingErrors | MessageErrors.UndeterminedType;                
+
+                if (decodingErrors != MessageErrors.None)
                 {
-                    // Message is completed, decoded properly - now off to corresponding buffers and handlers
-                    SwitchBuffers(message, _incomingPartial, _incomingComplete);
-                    if (IsPatternCorrect(message))
-                    {
-                        switch (MessageType(message))
-                        {
-                            case IncomingType.Confirmation:
-                                SwitchBuffers(message, _incomingComplete, _incomingCompleteConfirms);
-                                IncomingConfirmationMessageHandler(message);
-                                break;
-
-                            case IncomingType.Master:
-                                SwitchBuffers(message, _incomingComplete, _incomingCompleteMasters);
-                                IncomingMasterMessageHandler(message);
-                                break;
-
-                            case IncomingType.Slave:
-                                SwitchBuffers(message, _incomingComplete, _incomingCompleteSlaves);
-                                IncomingSlaveMessageHandler(message);
-                                break;
-
-                            default:
-                                SwitchBuffers(message, MessageErrors.UndeterminedType, _incomingComplete, _incomingErrors);
-                                IncomingErrorrousMessageHandler(message);
-                                break;
-                        }
-                    }
-                    // Something wrong in message pattern
-                    else
-                    {
-                        SwitchBuffers(message, MessageErrors.BadMessagePattern, _incomingComplete, _incomingErrors);
-                        IncomingErrorrousMessageHandler(message);
-                    }
-                }
-                // Message incomplete
-                else
-                {
-                    // Nothing, wait for another command
+                    SwitchBuffers(message, decodingErrors, _incomingComplete, _incomingErrors);
+                    IncomingErrorrousMessageHandler(message);
                     return;
                 }
+
+                // Else, message is completed, decoded properly - now off to corresponding buffers and handlers                
+                switch (messageType)
+                {
+                    case IncomingType.Confirmation:
+                        SwitchBuffers(message, _incomingComplete, _incomingCompleteConfirms);
+                        IncomingConfirmationMessageHandler(message);
+                        break;
+
+                    case IncomingType.Master:
+                        SwitchBuffers(message, _incomingComplete, _incomingCompleteMasters);
+                        IncomingMasterMessageHandler(message);
+                        break;
+
+                    case IncomingType.Slave:
+                        SwitchBuffers(message, _incomingComplete, _incomingCompleteSlaves);
+                        IncomingSlaveMessageHandler(message);
+                        break;
+                    
+                    // Should not happen ever, just for sanity
+                    default:
+                        decodingErrors = MessageErrors.UndeterminedType;
+                        SwitchBuffers(message, decodingErrors, _incomingComplete, _incomingErrors);
+                        IncomingErrorrousMessageHandler(message);
+                        break;
+                }
             }
-            // Message is incorrect - throw it into IncomingErrors
+            // Message incomplete
             else
             {
-                SwitchBuffers(message, decodingError, _incomingPartial, _incomingErrors);
-                IncomingErrorrousMessageHandler(message);
+                // Nothing, wait for another command
+                return;
             }
         }
 
@@ -389,18 +382,38 @@ namespace Shield.HardwareCom
 
         #endregion Message Sending
 
-        #region Error, state and type checking
-
-        private void Receiver(ICommandModel receivedCommand)
+        private void Receiver()
         {
-            Buffer commandDepositedIn = ChooseBufferFor(receivedCommand);
-            string messageId = receivedCommand.Id;
-
-            if (commandDepositedIn == Buffer.IncomingPartial)
+            if (!_receiverRunning)
             {
-                IncomingConductor(_incomingPartial[messageId]);
+                lock (_receiverLock)
+                {
+                    if (!_receiverRunning) // If first check was hit in the same time twice - safety net
+                        _receiverRunning = true;
+                    else
+                        return;
+                }
+            }
+
+            ICommandModel command;
+            while (_incomingQueue.TryDequeue(out command))
+            {
+                Buffer commandDepositedIn = ChooseBufferFor(command);
+                string messageId = command.Id;
+
+                if (commandDepositedIn == Buffer.IncomingPartial)
+                {
+                    IncomingConductor(_incomingPartial[messageId]);
+                }
+            }
+
+            lock (_receiverLock)
+            {
+                _receiverRunning = false;
             }
         }
+
+        #region Error, state and type checking
 
         private Buffer ChooseBufferFor(ICommandModel command)
         {
@@ -415,16 +428,8 @@ namespace Shield.HardwareCom
 
             if (_incomingPartial.ContainsKey(command.Id))
             {
-                if (_incomingPartial[command.Id].IsTransmissionCompleted)
-                {
-                    IMessageModel newMessage = _messageFactory();
-                    newMessage.Timestamp = Timestamp.TimestampNow;
-                    newMessage.AssaignID(command.Id);
-                    newMessage.Add(command);
-                    _incomingErrors[command.Id] = (MessageErrors.WasAlreadyCompleted, newMessage);
-                    return Buffer.IncomingError;
-                }
                 _incomingPartial[command.Id].Add(command);
+                return Buffer.IncomingPartial;
             }
             else
             {
@@ -456,6 +461,8 @@ namespace Shield.HardwareCom
             int numberOfErrors = 0;
             int numberOfPartials = 0;
 
+            MessageErrors errors = MessageErrors.None;
+
             foreach (ICommandModel c in badOrUnknown)
             {
                 if (c.CommandType == CommandType.Error)
@@ -466,20 +473,14 @@ namespace Shield.HardwareCom
                     numberOfPartials++;
             }
 
-            if (numberOfErrors > 0 && numberOfUnknowns > 0 && numberOfPartials > 0)
-                return MessageErrors.GotErrorAndUnknownAndPartialCommands;
-            if (numberOfErrors > 0 && numberOfPartials > 0)
-                return MessageErrors.GotErrorAndPartialCommands;
-            if (numberOfErrors > 0 && numberOfUnknowns > 0)
-                return MessageErrors.GotErrorAndUnknownCommands;
-            if (numberOfPartials > 0 && numberOfUnknowns > 0)
-                return MessageErrors.GotPartialAndUnknownCommands;
             if (numberOfErrors > 0)
-                return MessageErrors.GotErrorCommands;
+                errors = errors | MessageErrors.GotErrorCommands;
             if (numberOfPartials > 0)
-                return MessageErrors.GotPartialsCommands;
-            else
-                return MessageErrors.GotUnknownCommands;
+                errors = errors | MessageErrors.GotPartialCommands;
+            if (numberOfUnknowns > 0)
+                errors = errors | MessageErrors.GotUnknownCommands;
+
+            return errors;
         }
 
         private static bool IsCompleted(IMessageModel message)
@@ -561,7 +562,10 @@ namespace Shield.HardwareCom
 
         public virtual void OnCommandReceived(object sender, ICommandModel command)
         {
-            Receiver(command);
+            command.TimeStamp = Timestamp.TimestampNow;
+            IdGenerator.UsedThisID(command.Id);
+            _incomingQueue.Enqueue(command);
+            Receiver();
         }
 
         #endregion Event handlers
@@ -591,9 +595,6 @@ namespace Shield.HardwareCom
                                    Dictionary<string, IMessageModel> source,
                                    Dictionary<string, (MessageErrors errorType, IMessageModel Message)> target)
         {
-            if (!Enum.IsDefined(typeof(MessageErrors), error))
-                return false;
-
             if (message is null || source is null ||
                 target is null || !source.ContainsKey(message.Id))
                 return false;
@@ -620,28 +621,6 @@ namespace Shield.HardwareCom
 
         #region Internal Enums
 
-        internal enum MessageErrors
-        {
-            None,
-            GotPartialsCommands,
-            GotUnknownCommands,
-            GotErrorCommands,
-            GotErrorAndUnknownCommands,
-            GotPartialAndUnknownCommands,
-            GotErrorAndPartialCommands,
-            GotErrorAndUnknownAndPartialCommands,
-            UndeterminedType,
-            BadMessagePattern,
-            NotSent,
-            NotConfirmed,
-            ConfirmedNonexistent,
-            RespondedToNonexistent,
-            Empty,
-            WasAlreadyCompleted,
-            Unknown,
-            isNull
-        }
-
         internal enum Buffer
         {
             None,
@@ -658,5 +637,24 @@ namespace Shield.HardwareCom
         }
 
         #endregion Internal Enums
+
+        [Flags]
+        public enum MessageErrors
+        {
+            None = 0,
+            GotPartialCommands = 1 << 0,
+            GotUnknownCommands = 1 << 1,
+            GotErrorCommands = 1 << 2,
+            UndeterminedType = 1 << 3,
+            BadMessagePattern = 1 << 4,
+            NotSent = 1 << 5,
+            NotConfirmed = 1 << 6,
+            ConfirmedNonexistent = 1 << 7,
+            RespondedToNonexistent = 1 << 8,
+            Empty = 1 << 9,
+            WasAlreadyCompleted = 1 << 10,
+            Unknown = 1 << 11,
+            isNull = 1 << 12
+        }
     }
 }

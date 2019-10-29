@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Shield.Enums;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -59,5 +60,6 @@ namespace Shield.HardwareCom.Models
         }
 
         #endregion IEnumerable implementation
+
     }
 }

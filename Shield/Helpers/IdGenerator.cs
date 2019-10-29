@@ -18,7 +18,7 @@ namespace Shield.Helpers
         /// </summary>
         /// <param name="length">how many chars should be generated</param>
         /// <returns></returns>
-        public static string GetId(int? length)
+        public static string GetID(int? length)
         {
             if (length < 1 || length is null)
                 return null;
@@ -43,6 +43,21 @@ namespace Shield.Helpers
                 _usedIDs = new HashSet<string>();
 
             return result;
+        }
+
+        /// <summary>
+        /// Add ID that was used up by, for example, incoming master message or similar,
+        /// so it wont be generated later by <c>IdGenerator.GetID</c> method.
+        /// </summary>
+        /// <param name="id">Used up ID</param>
+        /// <returns></returns>
+        public static bool UsedThisID(string id)
+        {
+            if(string.IsNullOrEmpty(id))
+                return false;
+
+            _usedIDs.Add(id.ToUpperInvariant());
+            return true;
         }
 
         private static ulong CalculateBufferSize(int idLength)
