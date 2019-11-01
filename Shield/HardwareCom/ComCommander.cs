@@ -13,12 +13,28 @@ namespace Shield.HardwareCom
 {
     public class ComCommander
     {
+        #region Autofac objects
+
         private ICommandModelFactory _commandFactory;
         private Func<IMessageModel> _messageFactory;
         private IMessenger _messanger;
 
+        #endregion Autofac objects
+
+        #region Locks
+
         private object _receiverLock = new object();
         private bool _receiverRunning = false;
+
+        #endregion Locks
+
+        #region Variables
+
+        private long _confirmationTimeout = 2000;
+        private long _completitionTimeout = 2000;
+        private bool _hasCommunicationManager = false;
+
+        #endregion Variables
 
         #region Variables - Sent messages collections
 
@@ -34,7 +50,6 @@ namespace Shield.HardwareCom
 
         private ConcurrentQueue<ICommandModel> _incomingQueue = new ConcurrentQueue<ICommandModel>();
         private Dictionary<string, IMessageModel> _incomingPartial = new Dictionary<string, IMessageModel>();
-        private Dictionary<string, IMessageModel> _incomingComplete = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _incomingCompleteConfirms = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _incomingCompleteSlaves = new Dictionary<string, IMessageModel>();
         private Dictionary<string, IMessageModel> _incomingCompleteMasters = new Dictionary<string, IMessageModel>();
@@ -42,9 +57,31 @@ namespace Shield.HardwareCom
 
         #endregion Variables - Received messages collections
 
-        private bool _hasCommunicationManager = false;
+        #region Events
+
+        public event EventHandler<CommandEventArgs> CommandReceived;
+
+        public event EventHandler<MessageEventArgs> IncomingConfirmationReceived;
+
+        public event EventHandler<MessageEventArgs> IncomingMasterReceived;
+
+        public event EventHandler<MessageEventArgs> IncomingSlaveReceived;
+
+        public event EventHandler<MessageErrorEventArgs> IncomingErrorReceived;
+
+        public event EventHandler<MessageEventArgs> OutgoingMessageSent;
+
+        public event EventHandler<MessageEventArgs> OutgoingMessageConfirmed;
+
+        public event EventHandler<MessageErrorEventArgs> OutgoingErrorOccured;
+
+        #endregion Events
+
+        #region Properties
 
         public bool DeviceIsOpen { get { return _hasCommunicationManager ? _messanger.IsOpen : false; } }
+
+        #endregion Properties
 
         public ComCommander(ICommandModelFactory commandFactory, Func<IMessageModel> messageFactory)
         {
@@ -74,17 +111,6 @@ namespace Shield.HardwareCom
             if (message is null)
                 return;
 
-            // If there is nothing to confirm, then exit
-            if (!_outgoingSent.ContainsKey(message.Id))
-            {
-                SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingCompleteConfirms, _incomingErrors);
-                IncomingErrorrousMessageHandler(message);
-                return;
-            }
-
-            // If confirmed exists, then time to check if receiving device actually got message properly
-            _incomingCompleteConfirms[message.Id] = message;
-
             var elements = from commands in message
                            group commands by commands.CommandType into types
                            select new { types.Key, Count = types.Count() };
@@ -103,9 +129,9 @@ namespace Shield.HardwareCom
             // Everything is good, message was properly received
             if (receivedErrors == 0 && receivedUnknowns == 0 && receivedPartials == 0)
             {
-                if (SwitchBuffers(_outgoingSent[message.Id], _outgoingSent, _outgoingConfirmed))
+                if (SwitchBuffers(message, _outgoingSent, _outgoingConfirmed))
                 {
-                    OutgoingConfirmedMessagehandler(_outgoingConfirmed[message.Id]);
+                    OutgoingConfirmedMessagehandler(message);
                 }
                 else
                 {
@@ -142,7 +168,7 @@ namespace Shield.HardwareCom
             if (message is null)
                 return;
 
-            AddToSendingQueue(ConfirmationOf(message));
+            AddToSendingQueue(CreateConfirmationOf(message));
             SendNextQueuedMessageAsync();
 
             Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
@@ -160,15 +186,7 @@ namespace Shield.HardwareCom
             if (message is null)
                 return;
 
-            // If there is nothing to respond to, then exit
-            if (!_outgoingConfirmed.ContainsKey(message.Id))
-            {
-                SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingCompleteSlaves, _incomingErrors);
-                IncomingErrorrousMessageHandler(message);
-                return;
-            }
-
-            AddToSendingQueue(ConfirmationOf(message));
+            AddToSendingQueue(CreateConfirmationOf(message));
             SendNextQueuedMessageAsync();
 
             Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
@@ -187,7 +205,7 @@ namespace Shield.HardwareCom
                 return;
 
             // Will act according to given error type, for now just respond and display.
-            AddToSendingQueue(ConfirmationOf(message));
+            AddToSendingQueue(CreateConfirmationOf(message));
             SendNextQueuedMessageAsync();
 
             Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
@@ -229,9 +247,9 @@ namespace Shield.HardwareCom
             }
         }
 
-        private IMessageModel ConfirmationOf(IMessageModel message)
+        private IMessageModel CreateConfirmationOf(IMessageModel message)
         {
-            if (message is null)
+            if (message is null || message.ElementAt(1).CommandType == CommandType.Confirmation)
                 return null;
 
             IMessageModel confirmation = _messageFactory();
@@ -272,50 +290,65 @@ namespace Shield.HardwareCom
 
         public void IncomingConductor(IMessageModel message)
         {
+            if (message is null)
+                return;
+
             // Check if message is complete
             if (IsCompleted(message))
             {
-                SwitchBuffers(message, _incomingPartial, _incomingComplete);
+                //SwitchBuffers(message, _incomingPartial, _incomingComplete);
 
                 // Check for Possible errors - if bad, then off to incoming error handler
                 MessageErrors decodingErrors = CheckIfDecodedCorrectly(message);
                 bool patternCorrect = IsPatternCorrect(message);
                 IncomingType messageType = MessageType(message);
 
-                if(patternCorrect == false)
+                if (patternCorrect == false)
                     decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
-                if(messageType == IncomingType.Undetermined)
-                    decodingErrors = decodingErrors | MessageErrors.UndeterminedType;                
+                if (messageType == IncomingType.Undetermined)
+                    decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
 
                 if (decodingErrors != MessageErrors.None)
                 {
-                    SwitchBuffers(message, decodingErrors, _incomingComplete, _incomingErrors);
+                    SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
                     IncomingErrorrousMessageHandler(message);
                     return;
                 }
 
-                // Else, message is completed, decoded properly - now off to corresponding buffers and handlers                
+                // Else, message is completed, decoded properly - now off to corresponding buffers and handlers
                 switch (messageType)
                 {
                     case IncomingType.Confirmation:
-                        SwitchBuffers(message, _incomingComplete, _incomingCompleteConfirms);
+                        if (!_outgoingSent.ContainsKey(message.Id))
+                        {
+                            SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingPartial, _incomingErrors);
+                            IncomingErrorrousMessageHandler(message);
+                            break;
+                        }
+                        SwitchBuffers(message, _incomingPartial, _incomingCompleteConfirms);
                         IncomingConfirmationMessageHandler(message);
                         break;
 
                     case IncomingType.Master:
-                        SwitchBuffers(message, _incomingComplete, _incomingCompleteMasters);
+                        SwitchBuffers(message, _incomingPartial, _incomingCompleteMasters);
                         IncomingMasterMessageHandler(message);
                         break;
 
                     case IncomingType.Slave:
-                        SwitchBuffers(message, _incomingComplete, _incomingCompleteSlaves);
+                        if (!_outgoingConfirmed.ContainsKey(message.Id))
+                        {
+                            SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingPartial, _incomingErrors);
+                            IncomingErrorrousMessageHandler(message);
+                            break;
+                        }
+                        SwitchBuffers(message, _incomingPartial, _incomingCompleteSlaves);
                         IncomingSlaveMessageHandler(message);
                         break;
-                    
+
                     // Should not happen ever, just for sanity
                     default:
                         decodingErrors = MessageErrors.UndeterminedType;
-                        SwitchBuffers(message, decodingErrors, _incomingComplete, _incomingErrors);
+                        SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
                         IncomingErrorrousMessageHandler(message);
                         break;
                 }
@@ -346,6 +379,10 @@ namespace Shield.HardwareCom
         {
             IMessageModel message;
             bool wasSent = false;
+
+            if (DeviceIsOpen == false)
+                return false;
+
             if (_outgoingQueue.TryDequeue(out message))
             {
                 wasSent = await _messanger.SendAsync(message).ConfigureAwait(false);
@@ -445,7 +482,7 @@ namespace Shield.HardwareCom
         private static MessageErrors CheckIfDecodedCorrectly(IMessageModel message)
         {
             if (message is null)
-                return MessageErrors.isNull;
+                return MessageErrors.IsNull;
 
             List<ICommandModel> badOrUnknown = message
                 .Where(c =>
@@ -558,6 +595,102 @@ namespace Shield.HardwareCom
 
         #endregion Error, state and type checking
 
+        #region Internal helpers
+
+        private bool InConfirmationWindow(IMessageModel message)
+        {
+            if (_outgoingSent.ContainsKey(message.Id) &&
+                Timestamp.Difference(_outgoingSent[message.Id].Timestamp) <= _confirmationTimeout)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private bool InCompletitionWindow(IMessageModel message)
+        {
+            if (_incomingPartial.ContainsKey(message.Id) &&
+                Timestamp.Difference(_incomingPartial[message.Id].Timestamp) <= _completitionTimeout)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public long ConfirmationTimeout(long timeout)
+        {
+            if (timeout < 0 || timeout % 1 != 0)
+                return _confirmationTimeout;
+
+            _confirmationTimeout = timeout;
+            return _confirmationTimeout;
+        }
+
+        public long ConfirmationTimeout()
+        {
+            return _confirmationTimeout;
+        }
+
+        public long CompletitionTimeout(long timeout)
+        {
+            if (timeout < 0 || timeout % 1 != 0)
+                return _confirmationTimeout;
+
+            _confirmationTimeout = timeout;
+            return _confirmationTimeout;
+        }
+
+        public long CompletitionTimeout()
+        {
+            return _completitionTimeout;
+        }
+
+        public List<IMessageModel> CompletitionTimeoutCheckAndClear()
+        {
+            List<IMessageModel> timeoutedMessages = new List<IMessageModel>();
+
+            timeoutedMessages = _incomingPartial
+                .Where(kvp => InCompletitionWindow(kvp.Value) == false)
+                .Select(kvp => kvp.Value)
+                .ToList();
+
+            timeoutedMessages.ForEach(message =>
+            {
+                MessageErrors decodingErrors = CheckIfDecodedCorrectly(message);
+                bool patternCorrect = IsPatternCorrect(message);
+                IncomingType messageType = MessageType(message);
+
+                if (patternCorrect == false)
+                    decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
+                if (messageType == IncomingType.Undetermined)
+                    decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
+                decodingErrors = decodingErrors | MessageErrors.Incomplete | MessageErrors.CompletitionTimeout;
+
+                SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
+            });
+
+            return timeoutedMessages;
+        }
+
+        public List<IMessageModel> ConfirmationTimeoutCheckAndClean()
+        {
+            List<IMessageModel> unconfirmedMessages = new List<IMessageModel>();
+
+            unconfirmedMessages = _outgoingSent
+                .Where(kvp => InConfirmationWindow(kvp.Value) == false)
+                .Select(kvp => kvp.Value)
+                .ToList();
+
+            unconfirmedMessages.ForEach(message =>
+            {
+                SwitchBuffers(message, MessageErrors.ConfirmationTimeout, _outgoingSent, _outgoingErrors);
+            });
+
+            return unconfirmedMessages;
+        }
+
+        #endregion Internal helpers
+
         #region Event handlers
 
         public virtual void OnCommandReceived(object sender, ICommandModel command)
@@ -637,24 +770,5 @@ namespace Shield.HardwareCom
         }
 
         #endregion Internal Enums
-
-        [Flags]
-        public enum MessageErrors
-        {
-            None = 0,
-            GotPartialCommands = 1 << 0,
-            GotUnknownCommands = 1 << 1,
-            GotErrorCommands = 1 << 2,
-            UndeterminedType = 1 << 3,
-            BadMessagePattern = 1 << 4,
-            NotSent = 1 << 5,
-            NotConfirmed = 1 << 6,
-            ConfirmedNonexistent = 1 << 7,
-            RespondedToNonexistent = 1 << 8,
-            Empty = 1 << 9,
-            WasAlreadyCompleted = 1 << 10,
-            Unknown = 1 << 11,
-            isNull = 1 << 12
-        }
     }
 }
