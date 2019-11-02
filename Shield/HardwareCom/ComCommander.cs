@@ -90,9 +90,19 @@ namespace Shield.HardwareCom
         public event EventHandler<MessageErrorEventArgs> IncomingCompletitionTimeoutOccured;
 
         /// <summary>
-        /// Message has been sent - awaiting confirmation from recipient
+        /// Master message has been sent - awaiting confirmation from recipient
         /// </summary>
-        public event EventHandler<MessageEventArgs> OutgoingMessageSent;
+        public event EventHandler<MessageEventArgs> OutgoingMasterSent;
+
+        /// <summary>
+        /// Slave message has been sent - awaiting confirmation from recipient
+        /// </summary>
+        public event EventHandler<MessageEventArgs> OutgoingSlaveSent;
+
+        /// <summary>
+        /// Confirmation of received message has been sent
+        /// </summary>
+        public event EventHandler<MessageEventArgs> OutgoingConfirmationSent;
 
         /// <summary>
         /// Message has been confirmed by recipient
@@ -763,9 +773,19 @@ namespace Shield.HardwareCom
             IncomingCompletitionTimeoutOccured?.Invoke(sender, e);
         }
 
-        protected virtual void OnOutgoingMessageSent(object sender, MessageEventArgs e)
+        protected virtual void OnOutgoingMasterSent(object sender, MessageEventArgs e)
         {
-            OutgoingMessageSent?.Invoke(sender, e);
+            OutgoingMasterSent?.Invoke(sender, e);
+        }
+
+        protected virtual void OnOutgoingSlaveSent(object sender, MessageEventArgs e)
+        {
+            OutgoingMasterSent?.Invoke(sender, e);
+        }
+
+        protected virtual void OnOutgoingConfirmationSent(object sender, MessageEventArgs e)
+        {
+            OutgoingConfirmationSent?.Invoke(sender, e);
         }
 
         protected virtual void OnOutgoingMessageConfirmed(object sender, MessageEventArgs e)
@@ -840,7 +860,14 @@ namespace Shield.HardwareCom
         {
             None,
             IncomingPartial,
-            IncomingError
+            IncomingCompleteConfirms,
+            IncomingCompleteSlaves,
+            IncomingCompleteMasters,
+            IncomingError,
+            OutgoingSent,
+            OutgoingConfirmed,
+            OutgoingConfirmations,
+            OutgoingErrors
         }
 
         internal enum IncomingType
