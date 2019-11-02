@@ -59,20 +59,54 @@ namespace Shield.HardwareCom
 
         #region Events
 
+        /// <summary>
+        /// Single command has been received
+        /// </summary>
         public event EventHandler<CommandEventArgs> CommandReceived;
 
+        /// <summary>
+        /// Confirmation message has been received (proper and completed)
+        /// </summary>
         public event EventHandler<MessageEventArgs> IncomingConfirmationReceived;
 
+        /// <summary>
+        /// Master message has been received (proper and completed)
+        /// </summary>
         public event EventHandler<MessageEventArgs> IncomingMasterReceived;
 
+        /// <summary>
+        /// Slave message has been received (proper and completed)
+        /// </summary>
         public event EventHandler<MessageEventArgs> IncomingSlaveReceived;
 
+        /// <summary>
+        /// Message containing error(s) has been received
+        /// </summary>
         public event EventHandler<MessageErrorEventArgs> IncomingErrorReceived;
 
+        /// <summary>
+        /// ERROR - This message has not been completed in specified time
+        /// </summary>
+        public event EventHandler<MessageErrorEventArgs> IncomingCompletitionTimeoutOccured;
+
+        /// <summary>
+        /// Message has been sent - awaiting confirmation from recipient
+        /// </summary>
         public event EventHandler<MessageEventArgs> OutgoingMessageSent;
 
+        /// <summary>
+        /// Message has been confirmed by recipient
+        /// </summary>
         public event EventHandler<MessageEventArgs> OutgoingMessageConfirmed;
 
+        /// <summary>
+        /// ERROR - This message has not been confirmed in specified time
+        /// </summary>
+        public event EventHandler<MessageErrorEventArgs> OutgoingConfirmationTimeoutOccured;
+
+        /// <summary>
+        /// Outgoing message contained / triggered an error(s)
+        /// </summary>
         public event EventHandler<MessageErrorEventArgs> OutgoingErrorOccured;
 
         #endregion Events
@@ -96,11 +130,11 @@ namespace Shield.HardwareCom
                 return;
             if (_hasCommunicationManager)
             {
-                _messanger.CommandReceived -= OnCommandReceived;
+                _messanger.CommandReceived -= OnCommandReceivedinternally;
             }
 
             _messanger = messanger;
-            _messanger.CommandReceived += OnCommandReceived;
+            _messanger.CommandReceived += OnCommandReceivedinternally;
             _hasCommunicationManager = true;
         }
 
@@ -296,8 +330,6 @@ namespace Shield.HardwareCom
             // Check if message is complete
             if (IsCompleted(message))
             {
-                //SwitchBuffers(message, _incomingPartial, _incomingComplete);
-
                 // Check for Possible errors - if bad, then off to incoming error handler
                 MessageErrors decodingErrors = CheckIfDecodedCorrectly(message);
                 bool patternCorrect = IsPatternCorrect(message);
@@ -377,11 +409,11 @@ namespace Shield.HardwareCom
 
         public async Task<bool> SendNextQueuedMessageAsync()
         {
-            IMessageModel message;
-            bool wasSent = false;
-
             if (DeviceIsOpen == false)
                 return false;
+
+            IMessageModel message;
+            bool wasSent = false;
 
             if (_outgoingQueue.TryDequeue(out message))
             {
@@ -693,12 +725,62 @@ namespace Shield.HardwareCom
 
         #region Event handlers
 
-        public virtual void OnCommandReceived(object sender, ICommandModel command)
+        protected virtual void OnCommandReceivedinternally(object sender, ICommandModel command)
         {
             command.TimeStamp = Timestamp.TimestampNow;
             IdGenerator.UsedThisID(command.Id);
             _incomingQueue.Enqueue(command);
             Receiver();
+        }
+
+        protected virtual void OnCommandReceived(object sender, CommandEventArgs e)
+        {
+            CommandReceived?.Invoke(sender, e);
+        }
+
+        protected virtual void OnIncomingConfirmation(object sender, MessageEventArgs e)
+        {
+            IncomingConfirmationReceived?.Invoke(sender, e);
+        }
+
+        protected virtual void OnIncomingMasterReceived(object sender, MessageEventArgs e)
+        {
+            IncomingMasterReceived?.Invoke(sender, e);
+        }
+
+        protected virtual void OnIncomingSlaveReceived(object sender, MessageEventArgs e)
+        {
+            IncomingSlaveReceived?.Invoke(sender, e);
+        }
+
+        protected virtual void OnIncomingErrorReceived(object sender, MessageErrorEventArgs e)
+        {
+            IncomingErrorReceived?.Invoke(sender, e);
+        }
+
+        protected virtual void OnIncomingCompletitionTimeoutOccured(object sender, MessageErrorEventArgs e)
+        {
+            IncomingCompletitionTimeoutOccured?.Invoke(sender, e);
+        }
+
+        protected virtual void OnOutgoingMessageSent(object sender, MessageEventArgs e)
+        {
+            OutgoingMessageSent?.Invoke(sender, e);
+        }
+
+        protected virtual void OnOutgoingMessageConfirmed(object sender, MessageEventArgs e)
+        {
+            OutgoingMessageConfirmed?.Invoke(sender, e);
+        }
+
+        protected virtual void OnOutgoingErrorOccured(object sender, MessageErrorEventArgs e)
+        {
+            OutgoingErrorOccured?.Invoke(sender, e);
+        }
+
+        protected virtual void OnOutgoingConfirmationTimeoutOccured(object sender, MessageErrorEventArgs e)
+        {
+            OutgoingConfirmationTimeoutOccured?.Invoke(sender, e);
         }
 
         #endregion Event handlers
