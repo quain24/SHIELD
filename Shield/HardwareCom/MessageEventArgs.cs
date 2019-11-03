@@ -7,7 +7,7 @@ namespace Shield.HardwareCom
     {
         private IMessageModel _message;
 
-        private MessageEventArgs(IMessageModel message)
+        public MessageEventArgs(IMessageModel message)
         {
             _message = message;
         }

@@ -31,6 +31,8 @@ namespace Shield.ConsoleUI
             _commandTranslator = commandTranslator;
             _incomingDataPreparer = incomingDataPreparer;
             _comMessanger = messanger;
+
+            _comcom.IncomingErrorReceived += OnErrorReceived;
         }
 
         public void Run()
@@ -187,6 +189,17 @@ namespace Shield.ConsoleUI
             Console.ReadLine();
             Console.WriteLine("end after enter");
             Console.ReadLine();
+        }
+
+        public void OnErrorReceived(object sender, MessageErrorEventArgs e)
+        {
+            Console.WriteLine("-------------------------------------------------------------------");
+            Console.WriteLine(e.Message.Id);
+            Console.WriteLine(e.Errors.ToString());
+            foreach(var c in e.Message)
+            {
+                Console.WriteLine(c.CommandTypeString);
+            }
         }
     }
 }

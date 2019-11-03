@@ -25,6 +25,7 @@ namespace Shield.Enums
         WasAlreadyCompleted = 1 << 12,
         Unknown = 1 << 13,
         Incomplete = 1 << 14,
-        IsNull = 1 << 15
+        Error = 1 << 15,
+        IsNull = 1 << 16
     }
 }
