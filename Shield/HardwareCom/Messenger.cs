@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class Messenger : IMessenger
+    public class Messenger : IMessanger
     {
         private ICommunicationDeviceFactory _communicationDeviceFactory;
         private ICommunicationDevice _device;

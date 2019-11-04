@@ -20,7 +20,7 @@ namespace Shield.HardwareCom
 
         private ICommandModelFactory _commandFactory;
         private Func<IMessageModel> _messageFactory;
-        private IMessenger _messanger;
+        private IMessanger _messanger;
 
         #endregion Autofac objects
 
@@ -167,7 +167,7 @@ namespace Shield.HardwareCom
             return _completitionTimeout;
         }
 
-        public void AssignMessanger(IMessenger messanger)
+        public void AssignMessanger(IMessanger messanger)
         {
             if (messanger is null)
                 return;

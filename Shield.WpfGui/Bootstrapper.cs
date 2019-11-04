@@ -1,8 +1,10 @@
-﻿using Caliburn.Micro;
+﻿using Autofac;
+using Caliburn.Micro;
+using Shield.Data;
+using Shield.HardwareCom;
 using Shield.WpfGui.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 
 namespace Shield.WpfGui
@@ -10,7 +12,7 @@ namespace Shield.WpfGui
     public class Bootstrapper : BootstrapperBase
     {
         // konf simple container, continued on bottom
-        private SimpleContainer _container = new SimpleContainer();
+        private static IContainer _container;
 
         // Initialize - requires additional config in app.xaml (resourceDictionary... etc bootstrapper)
         public Bootstrapper()
@@ -24,39 +26,51 @@ namespace Shield.WpfGui
             DisplayRootViewFor<ShellViewModel>();
         }
 
-        #region Simple Container configuration
+        #region AutoFac Configuration
 
         protected override void Configure()
         {
-            _container.Instance(_container);
+            var builder = new ContainerBuilder();
 
-            _container
-                .Singleton<IWindowManager, WindowManager>()
-                .Singleton<IEventAggregator, EventAggregator>();
+            builder.RegisterModule<WpfGuiAfModule>();
+            builder.RegisterModule<HardwareComAfModule>();
+            builder.RegisterModule<DataAfModule>();
+            builder.RegisterModule<ShieldAfModule>();
 
-            GetType().Assembly.GetTypes()
-                .Where(type => type.IsClass)
-                .Where(type => type.Name.EndsWith("ViewModel"))
-                .ToList()
-                .ForEach(viewModelType =>
-                    _container.RegisterPerRequest(viewModelType, viewModelType.ToString(), viewModelType));
+            _container = builder.Build();
         }
 
         protected override object GetInstance(Type service, string key)
         {
-            return _container.GetInstance(service, key);
+            // return _container.GetInstance(service, key);
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                if (_container.IsRegistered(service))
+                    return _container.Resolve(service);
+            }
+            else
+            {
+                if (_container.IsRegisteredWithKey(key, service))
+                    return _container.ResolveKeyed(key, service);
+            }
+
+            var msgFormat = "Could not locate any instances of contract {0}.";
+            var msg = string.Format(msgFormat, key ?? service.Name);
+            throw new Exception(msg);
         }
 
         protected override IEnumerable<object> GetAllInstances(Type service)
         {
-            return _container.GetAllInstances(service);
+            //return _container.GetAllInstances(service);
+            var type = typeof(IEnumerable<>).MakeGenericType(service);
+            return _container.Resolve(type) as IEnumerable<object>;
         }
 
         protected override void BuildUp(object instance)
         {
-            _container.BuildUp(instance);
+            _container.InjectProperties(instance);
         }
 
-        #endregion Simple Container configuration
+        #endregion AutoFac Configuration
     }
 }

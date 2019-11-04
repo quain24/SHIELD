@@ -7,7 +7,35 @@
         mc:Ignorable="d"
         Title="ShellView" Height="450" Width="800">
     <Grid>
-        <Button x:Name="but" Content="Odpal" HorizontalAlignment="Left" Margin="352,206,0,0" VerticalAlignment="Top" Width="75" />
-        <Button x:Name="zacznij" Content="Startup" HorizontalAlignment="Left" Margin="220,206,0,0" VerticalAlignment="Top" Width="76" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="20"/>
+        </Grid.ColumnDefinitions>
+               
+        <Button x:Name="OpenDevice" Grid.Column="1" Grid.Row="1" MaxHeight="50" MaxWidth="150" VerticalAlignment="Top">Open device</Button>
+        <Button x:Name="StartReceiving" Grid.Column="1" Grid.Row="1" MaxHeight="50" MaxWidth="150"  VerticalAlignment="Center">Start receiving</Button>  
+        
+        <DataGrid x:Name="ReceivedMessages" Grid.Row="1" Grid.Column="3"
+                  CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Grid.RowSpan="4"
+                  AutoGenerateColumns="False"
+                  SelectedItem="SelectedMessage">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Path=Id}"/>
+                <DataGridTextColumn Header="Command count" Binding="{Binding Path=CommandCount}"/>                
+            </DataGrid.Columns>
+            
+        </DataGrid>
+        
     </Grid>
 </Window>

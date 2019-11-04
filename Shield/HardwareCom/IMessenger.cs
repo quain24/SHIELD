@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessenger : System.IDisposable
+    public interface IMessanger : System.IDisposable
     {
         bool IsOpen { get; }
 

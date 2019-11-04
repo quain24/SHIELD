@@ -77,7 +77,7 @@ namespace Shield.HardwareCom
                    .As<IIncomingDataPreparer>();
 
             builder.RegisterType<Messenger>()
-                   .As<IMessenger>()
+                   .As<IMessanger>()
                    .WithParameters(new[]
                    {
                        new ResolvedParameter(
