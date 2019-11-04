@@ -1,32 +1,26 @@
 ﻿using Caliburn.Micro;
-using Shield.HardwareCom.Adapters;
-using System;
-using System.Diagnostics;
-using Shield;
+using Shield.Data;
 using Shield.Enums;
 using Shield.HardwareCom;
-using Shield.Data;
-using Shield.Helpers;
-using Shield.Extensions;
-using Shield.CommonInterfaces;
 using Shield.HardwareCom.Factories;
-using Shield.Data.Models;
-using Autofac.Features.Indexed;
 using Shield.HardwareCom.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace Shield.WpfGui.ViewModels
 {
+    // Data grid inside data grid.
+    // Znalezc metode pobrania wybranego przez usera rzedu danych jako zrodla dla wewnetrznego data gridu
+
     public class ShellViewModel : Conductor<object>
     {
-        IMessanger _messanger;
-        ComCommander _comCommander;
-        ICommunicationDeviceFactory _comDevFac;
-        IAppSettings _settings;
-        ICommandModelFactory _commandFactory;
-        
+        private IMessanger _messanger;
+        private ComCommander _comCommander;
+        private IAppSettings _settings;
+        private ICommandModelFactory _commandFactory;
+
         private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
-        private IMessageModel _selectedMessage;
+        private IMessageModel _selectedReceivedMessage;
 
         public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory)
         {
@@ -38,7 +32,7 @@ namespace Shield.WpfGui.ViewModels
             _messanger.Setup(DeviceType.Serial);
 
             _comCommander = new ComCommander(_commandFactory, new Func<IMessageModel>(() => { return new MessageModel(); }));
-            _comCommander.AssignMessanger(_messanger); 
+            _comCommander.AssignMessanger(_messanger);
 
             _comCommander.IncomingMasterReceived += AddIncomingMessageToDisplay;
             _comCommander.IncomingSlaveReceived += AddIncomingMessageToDisplay;
@@ -60,28 +54,26 @@ namespace Shield.WpfGui.ViewModels
         {
             get { return _receivedMessages; }
             set { _receivedMessages = value; }
-        }        
-
-        public IMessageModel SelectedReceivedMessages
-        {
-            get { return _selectedMessage; }
-            set
-            { 
-                _selectedMessage = value;
-                NotifyOfPropertyChange(() => SelectedReceivedMessages);
-            }
         }
 
-
+        public IMessageModel SelectedReceivedMessage
+        {
+            get { return _selectedReceivedMessage; }
+            set
+            {
+                _selectedReceivedMessage = value;
+                NotifyOfPropertyChange(() => SelectedReceivedMessage);
+            }
+        }
 
         public bool CanOpenDevice
         {
             get
             {
-                if(_messanger.IsOpen) return false;
+                if (_messanger.IsOpen) return false;
                 return true;
             }
-        }        
+        }
 
         public void OpenDevice()
         {
@@ -94,7 +86,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if(_messanger.IsOpen) return true;
+                if (_messanger.IsOpen) return true;
                 return false;
             }
         }
@@ -105,6 +97,5 @@ namespace Shield.WpfGui.ViewModels
             Task.Run(async () => await _messanger.StartDecodingAsync());
             NotifyOfPropertyChange(() => CanStartReceiving);
         }
-        
     }
 }
