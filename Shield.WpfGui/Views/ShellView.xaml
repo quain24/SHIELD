@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Shield.WpfGui.Views"
+        xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
         mc:Ignorable="d"
         Title="ShellView" Height="450" Width="800">
     <Grid>
@@ -29,13 +30,25 @@
         <DataGrid x:Name="ReceivedMessages" Grid.Row="1" Grid.Column="3"
                   CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Grid.RowSpan="4"
                   AutoGenerateColumns="False"
-                  SelectedItem="SelectedMessage">
+                  SelectedItem="SelectedReceivedMessage">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Path=Id}"/>
-                <DataGridTextColumn Header="Command count" Binding="{Binding Path=CommandCount}"/>                
-            </DataGrid.Columns>
+                <DataGridTextColumn Header="Command count" Binding="{Binding Path=CommandCount}"/>  
+            </DataGrid.Columns>            
+            <DataGrid.RowDetailsTemplate>
+                <DataTemplate>
+                    <DataGrid x:Name="SingleMessageCommands" ItemsSource="{Binding Path=Commands}" AutoGenerateColumns="False" RowDetailsVisibilityMode="VisibleWhenSelected" AlternatingRowBackground="AntiqueWhite" IsReadOnly="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Command Type" Binding="{Binding Path=CommandType}"/>
+                            <DataGridTextColumn Header="Data" Binding="{Binding Path=Data}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DataTemplate>
+            </DataGrid.RowDetailsTemplate>
             
         </DataGrid>
+        
+        <DataGrid x:Name="SingleMessageCommands" Grid.Column="1" Grid.Row="3" Grid.RowSpan="2"></DataGrid>
         
     </Grid>
 </Window>

@@ -1,5 +1,4 @@
-﻿using Shield.Enums;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,6 +18,8 @@ namespace Shield.HardwareCom.Models
         public bool IsTransmissionCompleted { get; set; } = false;
         public int CommandCount { get { return _commands.Count(); } }
         public string Id { get { return _messageId; } set { AssaignID(value); } }
+
+        public List<ICommandModel> Commands { get { return _commands; } }
 
         public string AssaignID(string id)
         {
@@ -60,6 +61,5 @@ namespace Shield.HardwareCom.Models
         }
 
         #endregion IEnumerable implementation
-
     }
 }

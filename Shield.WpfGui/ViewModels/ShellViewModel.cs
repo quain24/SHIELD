@@ -40,6 +40,11 @@ namespace Shield.WpfGui.ViewModels
             _comCommander.IncomingErrorReceived += AddIncomingMessageErrorToDisplay;
         }
 
+        private void SingleMessageCommands_BeginningEdit(object sender, System.Windows.Controls.DataGridBeginningEditEventArgs e)
+        {
+            e.Cancel = true;
+        }
+
         public void AddIncomingMessageToDisplay(object sender, MessageEventArgs e)
         {
             ReceivedMessages.Add(e.Message);
@@ -53,7 +58,7 @@ namespace Shield.WpfGui.ViewModels
         public BindableCollection<IMessageModel> ReceivedMessages
         {
             get { return _receivedMessages; }
-            set { _receivedMessages = value; }
+            set { _receivedMessages = value;}
         }
 
         public IMessageModel SelectedReceivedMessage
@@ -63,8 +68,39 @@ namespace Shield.WpfGui.ViewModels
             {
                 _selectedReceivedMessage = value;
                 NotifyOfPropertyChange(() => SelectedReceivedMessage);
+                NotifyOfPropertyChange(() => SingleMessageCommands);
             }
         }
+
+        public BindableCollection<ICommandModel> SingleMessageCommands
+        {
+            get
+            {                
+                return GetSingleMessageCommands();
+            }
+        }
+
+        public BindableCollection<ICommandModel> GetSingleMessageCommands()
+        {
+            var output = new BindableCollection<ICommandModel>();
+
+            if( _selectedReceivedMessage is null)
+                return output;
+
+            foreach(var c in SelectedReceivedMessage)
+            {
+                output.Add(c);
+            }
+
+            return output;
+        }
+
+
+
+
+
+
+            
 
         public bool CanOpenDevice
         {

@@ -10,6 +10,7 @@ namespace Shield.HardwareCom.Models
         bool IsTransmissionCompleted { get; set; }
         int CommandCount { get; }
         string Id { get; set; }
+        List<ICommandModel> Commands { get; }
 
         string AssaignID(string id = "");
 
