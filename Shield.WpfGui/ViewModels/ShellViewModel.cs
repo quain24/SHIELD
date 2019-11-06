@@ -22,6 +22,8 @@ namespace Shield.WpfGui.ViewModels
         private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
         private IMessageModel _selectedReceivedMessage;
 
+        private bool _receivingButtonActivated = false;
+
         public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory)
         {
             _settings = settings;
@@ -40,11 +42,6 @@ namespace Shield.WpfGui.ViewModels
             _comCommander.IncomingErrorReceived += AddIncomingMessageErrorToDisplay;
         }
 
-        private void SingleMessageCommands_BeginningEdit(object sender, System.Windows.Controls.DataGridBeginningEditEventArgs e)
-        {
-            e.Cancel = true;
-        }
-
         public void AddIncomingMessageToDisplay(object sender, MessageEventArgs e)
         {
             ReceivedMessages.Add(e.Message);
@@ -58,7 +55,7 @@ namespace Shield.WpfGui.ViewModels
         public BindableCollection<IMessageModel> ReceivedMessages
         {
             get { return _receivedMessages; }
-            set { _receivedMessages = value;}
+            set { _receivedMessages = value; }
         }
 
         public IMessageModel SelectedReceivedMessage
@@ -75,7 +72,7 @@ namespace Shield.WpfGui.ViewModels
         public BindableCollection<ICommandModel> SingleMessageCommands
         {
             get
-            {                
+            {
                 return GetSingleMessageCommands();
             }
         }
@@ -84,23 +81,16 @@ namespace Shield.WpfGui.ViewModels
         {
             var output = new BindableCollection<ICommandModel>();
 
-            if( _selectedReceivedMessage is null)
+            if (_selectedReceivedMessage is null)
                 return output;
 
-            foreach(var c in SelectedReceivedMessage)
+            foreach (var c in SelectedReceivedMessage)
             {
                 output.Add(c);
             }
 
             return output;
         }
-
-
-
-
-
-
-            
 
         public bool CanOpenDevice
         {
@@ -111,19 +101,59 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
+        public bool CanCloseDevice
+        {
+            get
+            {
+                if (_messanger is null) return false;
+                if (_messanger.IsOpen) return true;
+                return false;
+            }
+        }
+
         public void OpenDevice()
         {
             _messanger.Open();
             NotifyOfPropertyChange(() => CanOpenDevice);
+            NotifyOfPropertyChange(() => CanCloseDevice);
             NotifyOfPropertyChange(() => CanStartReceiving);
+            NotifyOfPropertyChange(() => CanStopReceiving);
+            NotifyOfPropertyChange(() => ButtonAIsChecked);
+            NotifyOfPropertyChange(() => CanStartReceiving);
+        }
+
+        public void CloseDevice()
+        {
+            _messanger.Close();
+            NotifyOfPropertyChange(() => CanCloseDevice);
+            NotifyOfPropertyChange(() => CanOpenDevice);
+            NotifyOfPropertyChange(() => CanStartReceiving);
+            NotifyOfPropertyChange(() => CanStopReceiving);
+            NotifyOfPropertyChange(() => ButtonAIsChecked);
         }
 
         public bool CanStartReceiving
         {
             get
             {
-                if (_messanger.IsOpen) return true;
+                if (_receivingButtonActivated == false && _messanger.IsOpen) return true;
                 return false;
+            }
+        }
+
+        public bool ButtonAIsChecked
+        {
+            get
+            {
+                if (_messanger.IsOpen)
+                {
+                    return true;
+                }
+                else
+                {
+                    _receivingButtonActivated = false;
+                    return false;
+                }
             }
         }
 
@@ -131,7 +161,27 @@ namespace Shield.WpfGui.ViewModels
         {
             Task.Run(async () => await _messanger.StartReceiveAsync());
             Task.Run(async () => await _messanger.StartDecodingAsync());
+            _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
+            NotifyOfPropertyChange(() => CanStopReceiving);
+        }
+
+        public bool CanStopReceiving
+        {
+            get
+            {
+                if (_receivingButtonActivated == true && _messanger.IsOpen) return true;
+                return false;
+            }
+        }
+
+        public void StopReceiving()
+        {
+            _messanger.StopDecoding();
+            _messanger.StopReceiving();
+            _receivingButtonActivated = false;
+            NotifyOfPropertyChange(() => CanStartReceiving);
+            NotifyOfPropertyChange(() => CanStopReceiving);
         }
     }
 }

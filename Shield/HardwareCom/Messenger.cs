@@ -34,6 +34,8 @@ namespace Shield.HardwareCom
         public event EventHandler<ICommandModel> CommandReceived;
 
         public bool IsOpen { get => _device.IsOpen; }
+        public bool IsReceiving { get => _receiverRunning; }
+        public bool IsDecoding { get => _decoderRunning; }
 
         public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
@@ -61,8 +63,8 @@ namespace Shield.HardwareCom
 
         public void Close()
         {
-            StopReceiving();
             StopDecoding();
+            StopReceiving();            
             _rawDataBuffer.Dispose();
             _rawDataBuffer = new BlockingCollection<string>();
             _device?.Close();
@@ -140,7 +142,7 @@ namespace Shield.HardwareCom
 
             try
             {
-                while (true)
+                while (true && _rawDataBuffer != null)
                 {
                     internalCT.ThrowIfCancellationRequested();
                     if (_rawDataBuffer.TryTake(out workpiece, 50))

@@ -8,6 +8,8 @@ namespace Shield.HardwareCom
     public interface IMessanger : System.IDisposable
     {
         bool IsOpen { get; }
+        bool IsReceiving { get; }
+        bool IsDecoding { get; }
 
         Task<bool> SendAsync(ICommandModel comand);
 
