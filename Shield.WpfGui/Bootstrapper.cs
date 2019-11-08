@@ -41,7 +41,7 @@ namespace Shield.WpfGui
  
             public override void WriteLine(string message)
             {
-                Debugger.Break();
+              Debugger.Break();
             }
         }
 

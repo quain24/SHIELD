@@ -4,49 +4,18 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Shield.WpfGui.Views"
+        xmlns:vm="clr-namespace:Shield.WpfGui.ViewModels"
         xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+        xmlns:cal="http://www.caliburnproject.org"
         mc:Ignorable="d"
-        Title="ShellView" Height="450" Width="800">
-
-    <Window.Resources>
-        <Style TargetType="{x:Type RadioButton}" x:Key="FlatRadioButtonStyle">
-            <Setter Property="Width" Value="100" />
-            <Setter Property="Background" Value="#FF346FD6" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Padding" Value="5,2,5,3" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type RadioButton}">
-                        <Border Background="{TemplateBinding Background}"
-                                Width="{TemplateBinding Width}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                                HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
-                            <ContentPresenter Content="{TemplateBinding Content}"
-                                              Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF6696E9" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
+        Title="ShellView" MinHeight="350" MinWidth="610" Height="600" Width="1100">
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -61,18 +30,21 @@
             <ColumnDefinition Width="20" />
         </Grid.ColumnDefinitions>
 
-        <!--<Button x:Name="OpenDevice" Grid.Column="1" Grid.Row="1" MaxHeight="50" MaxWidth="150" VerticalAlignment="Top">Open device</Button>-->
-        <!--<Button x:Name="StartReceiving" Grid.Column="1" Grid.Row="1" MaxHeight="50" MaxWidth="150"  VerticalAlignment="Center">Start receiving</Button>-->
-
+        <!--Row 1-->
+        <!--Received messages table-->
         <DataGrid x:Name="ReceivedMessages" Grid.Row="1" Grid.Column="3"
-                  CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Grid.RowSpan="4"
+                  CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" Grid.RowSpan="3" Margin="0 0 0 10"
+                  CanUserReorderColumns="False" CanUserSortColumns="False"
                   AutoGenerateColumns="False"
                   SelectedItem="SelectedReceivedMessage">
             <DataGrid.Columns>
+                <!--<DataGridTextColumn Header="No" Binding=""-->
+                <DataGridTextColumn Header="Time" Binding="{Binding  Path=Timestamp}"/>
                 <DataGridTextColumn Header="ID" Binding="{Binding Path=Id}" />
                 <DataGridTextColumn Header="Command count" Binding="{Binding Path=CommandCount}" />
             </DataGrid.Columns>
-            <DataGrid.RowDetailsTemplate>
+
+            <!--<DataGrid.RowDetailsTemplate>
                 <DataTemplate>
                     <DataGrid x:Name="SingleMessageCommands" ItemsSource="{Binding Path=Commands}" AutoGenerateColumns="False" RowDetailsVisibilityMode="VisibleWhenSelected" AlternatingRowBackground="AntiqueWhite" IsReadOnly="False">
                         <DataGrid.Columns>
@@ -81,55 +53,97 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </DataTemplate>
-            </DataGrid.RowDetailsTemplate>
+            </DataGrid.RowDetailsTemplate>-->
         </DataGrid>
+
+        <!--Dock panel containing sub-grid for buttons-->
+        <DockPanel Grid.Column="1" Grid.Row="1" MinWidth="350" MinHeight="50" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <!--Sub - grid-->
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="150" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="50" />
+                </Grid.RowDefinitions>
+
+                <!--Row 0-->
+                <!--Start / stop device / receiving buttons-->
+                <RadioButton x:Name="StopReceiving" GroupName="ReceivingButtons" Content="Stop Receiving" Grid.Column="2" Grid.Row="0"  IsChecked="{Binding Path=ButtonAIsChecked, Mode=OneWay}">
+                    <RadioButton.Style>
+                        <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=StartReceiving}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </RadioButton.Style>
+                </RadioButton>
+                <RadioButton x:Name="StartReceiving" GroupName="ReceivingButtons" Content="Start Receiving" Grid.Column="2" Grid.Row="0">
+                    <RadioButton.Style>
+                        <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=StopReceiving}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </RadioButton.Style>
+                </RadioButton>
+
+                <RadioButton x:Name="CloseDevice" GroupName="OpenCloseButtons" Content="Close Device" Grid.Column="0" Grid.Row="0" IsChecked="True">
+                    <RadioButton.Style>
+                        <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=OpenDevice}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </RadioButton.Style>
+                </RadioButton>
+                <RadioButton x:Name="OpenDevice" GroupName="OpenCloseButtons" Content="Open Device" Grid.Column="0" Grid.Row="0">
+                    <RadioButton.Style>
+                        <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=CloseDevice}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </RadioButton.Style>
+                </RadioButton>
+            </Grid>
+        </DockPanel>
+
+        <!--Row 2-->
+        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Height="20" MaxHeight="20">
+            <ComboBox ItemsSource="{Binding CommandTypes}" SelectedItem="{Binding SelectedCommand}"  Width="100" MaxWidth="150"></ComboBox>
+            <TextBox Text="{Binding DataInput, Mode=TwoWay}" IsEnabled="{Binding DataInputState}" MinWidth="150" MaxWidth="250"></TextBox>
+            <Button x:Name="AddCommand" Content="Add command" Width="100" MaxWidth="150"/>
+        </StackPanel>
         
-        <DataGrid x:Name="SingleMessageCommands" Grid.Column="1" Grid.Row="4" Grid.RowSpan="1" ></DataGrid>
 
-        <RadioButton x:Name="StopReceiving" GroupName="ReceivingButtons" Content="Stop Receiving" Grid.Column="1" Grid.Row="1"  IsChecked="{Binding Path=ButtonAIsChecked, Mode=OneWay}" >
-            <RadioButton.Style>
-                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsChecked, ElementName=StartReceiving}" Value="True">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </RadioButton.Style>
-        </RadioButton>
-        <RadioButton x:Name="StartReceiving" GroupName="ReceivingButtons" Content="Start Receiving" Grid.Column="1" Grid.Row="1" >
-            <RadioButton.Style>
-                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsChecked, ElementName=StopReceiving}" Value="True">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </RadioButton.Style>
-        </RadioButton>        
+        <!--Row 3-->
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center">
+            <DataGrid x:Name="NewMessageCommands" SelectedItem="{Binding SelectedNewMessageCommand}" Width="250" Margin="0 0 5 0" ></DataGrid>
+            <DataGrid x:Name="SentMessages" SelectedItem="{Binding SelectedSentMessage}" Width="250" Margin="5 0 0 0" ></DataGrid>
+        </StackPanel>
 
-        <RadioButton x:Name="CloseDevice" Content="Close Device" Grid.Column="1" Grid.Row="2" IsChecked="True">
-            <RadioButton.Style>
-                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsChecked, ElementName=OpenDevice}" Value="True">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </RadioButton.Style>
-        </RadioButton>
-        <RadioButton x:Name="OpenDevice" Content="Open Device" Grid.Column="1" Grid.Row="2">
-            <RadioButton.Style>
-                <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource FlatRadioButtonStyle}">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsChecked, ElementName=CloseDevice}" Value="True">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </RadioButton.Style>
-        </RadioButton>
+        <!--Row 4-->
+
+        <!--Single received message details-->
+        <DataGrid x:Name="SingleMessageCommands" Grid.Column="3" Grid.Row="4" Grid.RowSpan="3" >
+            
+        </DataGrid>
+
+        <!--Row 5-->
+
+        <!--Row 6-->
+
+        <!--Row 7-->
     </Grid>
 </Window>
