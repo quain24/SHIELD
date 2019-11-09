@@ -39,7 +39,7 @@
                   SelectedItem="SelectedReceivedMessage">
             <DataGrid.Columns>
                 <!--<DataGridTextColumn Header="No" Binding=""-->
-                <DataGridTextColumn Header="Time" Binding="{Binding  Path=Timestamp}"/>
+                <DataGridTextColumn Header="Time" Binding="{Binding  Path=Timestamp}" />
                 <DataGridTextColumn Header="ID" Binding="{Binding Path=Id}" />
                 <DataGridTextColumn Header="Command count" Binding="{Binding Path=CommandCount}" />
             </DataGrid.Columns>
@@ -120,29 +120,50 @@
         </DockPanel>
 
         <!--Row 2-->
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Height="20" MaxHeight="20">
+        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Height="20" MaxHeight="20" HorizontalAlignment="Center">
             <ComboBox ItemsSource="{Binding CommandTypes}" SelectedItem="{Binding SelectedCommand}"  Width="100" MaxWidth="150"></ComboBox>
-            <TextBox Text="{Binding DataInput, Mode=TwoWay}" IsEnabled="{Binding DataInputState}" MinWidth="150" MaxWidth="250"></TextBox>
-            <Button x:Name="AddCommand" Content="Add command" Width="100" MaxWidth="150"/>
+            <TextBox IsEnabled="{Binding DataInputState}" MinWidth="150" MaxWidth="250">
+                <Validation.ErrorTemplate>
+                    <ControlTemplate>
+                        <StackPanel>
+                            <!-- Placeholder for the TextBox itself -->
+                            <AdornedElementPlaceholder x:Name="textBox" />
+                            <ItemsControl ItemsSource="{Binding}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ErrorContent}" Foreground="Red" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ControlTemplate>
+                </Validation.ErrorTemplate>
+                <Binding Path="DataInput" UpdateSourceTrigger="PropertyChanged" />
+            </TextBox>
+            <Button x:Name="AddCommand" Content="Add command" Width="100" MaxWidth="150" />
         </StackPanel>
-        
 
         <!--Row 3-->
-        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center">
-            <DataGrid x:Name="NewMessageCommands" SelectedItem="{Binding SelectedNewMessageCommand}" Width="250" Margin="0 0 5 0" ></DataGrid>
-            <DataGrid x:Name="SentMessages" SelectedItem="{Binding SelectedSentMessage}" Width="250" Margin="5 0 0 0" ></DataGrid>
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="1" Grid.RowSpan="3" HorizontalAlignment="Center">
+            <DataGrid x:Name="NewMessageCommands" SelectedItem="{Binding SelectedNewMessageCommand}" Width="250" Margin="0 0 5 0" Height="auto" ></DataGrid>
+            <DataGrid x:Name="SentMessages" SelectedItem="{Binding SelectedSentMessage}" Width="250" Margin="5 0 0 0"  Height="auto" />
         </StackPanel>
 
         <!--Row 4-->
 
         <!--Single received message details-->
-        <DataGrid x:Name="SingleMessageCommands" Grid.Column="3" Grid.Row="4" Grid.RowSpan="3" >
-            
+        <DataGrid x:Name="SingleMessageCommands" Grid.Column="3" Grid.Row="4" Grid.RowSpan="4">
         </DataGrid>
+                
 
         <!--Row 5-->
+        
 
         <!--Row 6-->
+        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Height="20" HorizontalAlignment="Center">
+            <Button x:Name="RemoveCommand" Content="Remove command"/>
+            <Button x:Name="SendMessage" Content="Send message"/>
+        </StackPanel>
 
         <!--Row 7-->
     </Grid>

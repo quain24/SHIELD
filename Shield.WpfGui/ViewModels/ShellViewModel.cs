@@ -9,13 +9,18 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Controls;
+using System.Globalization;
+using System.ComponentModel;
+using Shield.WpfGui.Validators;
+using System.Collections;
 
 namespace Shield.WpfGui.ViewModels
 {
     // Data grid inside data grid.
     // Znalezc metode pobrania wybranego przez usera rzedu danych jako zrodla dla wewnetrznego data gridu
 
-    public class ShellViewModel : Conductor<object>
+    public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
         private IMessanger _messanger;
         private ComCommander _comCommander;
@@ -23,6 +28,8 @@ namespace Shield.WpfGui.ViewModels
         private ICommandModelFactory _commandFactory;
         private string _selectedCommand;
         private string _dataInput;
+
+        
 
         private BindableCollection<string> _possibleCommands = new BindableCollection<string>(Enum.GetNames(typeof(CommandType)));
         private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
@@ -34,6 +41,12 @@ namespace Shield.WpfGui.ViewModels
         private IMessageModel _selectedReceivedMessage;
 
         private bool _receivingButtonActivated = false;
+
+
+        private CommandDataPackValidation _dataPackValidation;
+        private readonly Dictionary<string, ICollection<string>>
+        _validationErrors = new Dictionary<string, ICollection<string>>();
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory)
         {
@@ -51,6 +64,8 @@ namespace Shield.WpfGui.ViewModels
             _comCommander.IncomingSlaveReceived += AddIncomingMessageToDisplay;
             _comCommander.IncomingConfirmationReceived += AddIncomingMessageToDisplay;
             _comCommander.IncomingErrorReceived += AddIncomingMessageErrorToDisplay;
+            
+            _dataPackValidation = new CommandDataPackValidation(_settings.GetSettingsFor<IApplicationSettingsModel>().Separator, DataPackFiller());
         }
 
         public int DataPackLength()
@@ -272,8 +287,9 @@ namespace Shield.WpfGui.ViewModels
             set
             {
                 _dataInput = value;
+                ValidateCommandDataPack(_dataInput);
                 NotifyOfPropertyChange(() => DataInput);
-                NotifyOfPropertyChange(() => CanAddCommand);
+                NotifyOfPropertyChange(() => CanAddCommand);                
             }
         }
 
@@ -301,14 +317,15 @@ namespace Shield.WpfGui.ViewModels
                 NewMessageCommands.Add(_commandFactory.Create((CommandType)Enum.Parse(typeof(CommandType), SelectedCommand)));
         }
 
-
-        // TODO -> Add validation call when changing text, not just when leaving text box
         public bool CanAddCommand
         {
             get
             {
                 if(SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
                 {
+                    if(_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
+                        return false;
+
                     if(DataInput != null && DataInput.Length > 0 && !DataInput.Contains(DataPackFiller()) &&
                         !DataInput.Contains(_settings.GetSettingsFor<IApplicationSettingsModel>().Separator) &&
                         !DataInput.Contains(" "))
@@ -334,7 +351,11 @@ namespace Shield.WpfGui.ViewModels
         public BindableCollection<ICommandModel> NewMessageCommands
         {
             get { return _newMessageCommands; }
-            set { _newMessageCommands = value; }
+            set 
+            {
+                _newMessageCommands = value;
+                NotifyOfPropertyChange(() => CanRemoveCommand);
+            }
         }
 
         public BindableCollection<IMessageModel> SentMessages
@@ -351,6 +372,7 @@ namespace Shield.WpfGui.ViewModels
             {
                 _selectedNewMessageCommand = value;
                 NotifyOfPropertyChange(() => SelectedNewMessageCommand);
+                NotifyOfPropertyChange(() => CanRemoveCommand);
             }
         }
 
@@ -364,5 +386,68 @@ namespace Shield.WpfGui.ViewModels
                 NotifyOfPropertyChange(() => SelectedSentMessage);
             }
         }
-    }
+
+        public void RemoveCommand()
+        {
+            NewMessageCommands.Remove(SelectedNewMessageCommand);
+        }
+
+        public bool CanRemoveCommand
+        {
+            get
+            {
+                if(SelectedNewMessageCommand is null)
+                    return false;
+                return true;
+            }
+        }
+
+        public bool HasErrors
+        {
+            get { return _validationErrors.Count > 0; }
+        }
+
+        private async void ValidateCommandDataPack(string data)
+        {
+            const string propertyKey = "DataInput";
+            ICollection<string> validationErrors = null;
+            /* Call service asynchronously */
+            bool isValid = await Task<bool>.Run(() => 
+            { 
+                return _dataPackValidation.ValidateDataPack(data, out validationErrors); 
+            })
+            .ConfigureAwait(false);
+ 
+            if (!isValid)
+            {
+                /* Update the collection in the dictionary returned by the GetErrors method */
+                _validationErrors[propertyKey] = validationErrors;
+                /* Raise event to tell WPF to execute the GetErrors method */
+                RaiseErrorsChanged(propertyKey);
+            }
+            else if(_validationErrors.ContainsKey(propertyKey))
+            {
+                /* Remove all errors for this property */
+                _validationErrors.Remove(propertyKey);
+                /* Raise event to tell WPF to execute the GetErrors method */
+                RaiseErrorsChanged(propertyKey);
+            }
+        }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName)
+                || !_validationErrors.ContainsKey(propertyName))
+                return null;
+ 
+            return _validationErrors[propertyName];
+        }
+
+        private void RaiseErrorsChanged(string propertyName)
+        {
+            if (ErrorsChanged != null)
+                ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));
+        }
+        
+    }       
 }
