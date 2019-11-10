@@ -504,7 +504,8 @@ namespace Shield.HardwareCom
                 message.Timestamp = Timestamp.TimestampNow;
                 if (wasSent)
                 {
-                    switch (message.ElementAt(1).CommandType)
+                    CommandType type = message.Count() <= 1 ? CommandType.Unknown : message.ElementAt(1).CommandType;
+                    switch ( type)
                     {
                         case CommandType.Confirmation:
                             _outgoingConfirmations[message.Id] = message;

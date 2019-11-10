@@ -84,7 +84,7 @@ namespace Shield.HardwareCom
             if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
                 return null;
 
-            StringBuilder command = new StringBuilder(_separator);
+            StringBuilder command = new StringBuilder(_separator.ToString());
 
             command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_appSettingsModel.CommandTypeSize, '0')).Append(_separator);
             command.Append(givenCommand.Id).Append(_separator);

@@ -14,6 +14,7 @@ using System.Globalization;
 using System.ComponentModel;
 using Shield.WpfGui.Validators;
 using System.Collections;
+using Shield.Helpers;
 
 namespace Shield.WpfGui.ViewModels
 {
@@ -38,9 +39,12 @@ namespace Shield.WpfGui.ViewModels
         private ICommandModel _selectedNewMessageCommand;
         private IMessageModel _selectedSentMessage;
 
+        private Func<IMessageModel> _messageFactory;
+
         private IMessageModel _selectedReceivedMessage;
 
         private bool _receivingButtonActivated = false;
+        private bool _sending = false;
 
 
         private CommandDataPackValidation _dataPackValidation;
@@ -55,9 +59,13 @@ namespace Shield.WpfGui.ViewModels
             _commandFactory = commandFactory;
             _settings.LoadFromFile();
 
-            _messanger.Setup(DeviceType.Serial);
+            //_settings.GetSettingsFor<ISerialPortSettingsModel>().BaudRate = 19200;
+            //_settings.SaveToFile();
 
-            _comCommander = new ComCommander(_commandFactory, new Func<IMessageModel>(() => { return new MessageModel(); }));
+            _messanger.Setup(DeviceType.Serial);
+            _messageFactory = new Func<IMessageModel>(() => { return new MessageModel(); });
+
+            _comCommander = new ComCommander(_commandFactory, _messageFactory);
             _comCommander.AssignMessanger(_messanger);
 
             _comCommander.IncomingMasterReceived += AddIncomingMessageToDisplay;
@@ -177,6 +185,7 @@ namespace Shield.WpfGui.ViewModels
             NotifyOfPropertyChange(() => CanStopReceiving);
             NotifyOfPropertyChange(() => ButtonAIsChecked);
             NotifyOfPropertyChange(() => CanStartReceiving);
+            NotifyOfPropertyChange(() => CanSendMessage);
         }
 
         public void CloseDevice()
@@ -187,6 +196,7 @@ namespace Shield.WpfGui.ViewModels
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
             NotifyOfPropertyChange(() => ButtonAIsChecked);
+            NotifyOfPropertyChange(() => CanSendMessage);
         }
 
         public bool CanStartReceiving
@@ -315,6 +325,8 @@ namespace Shield.WpfGui.ViewModels
             }
             else
                 NewMessageCommands.Add(_commandFactory.Create((CommandType)Enum.Parse(typeof(CommandType), SelectedCommand)));
+            NotifyOfPropertyChange(()=> CanSendMessage);
+            NotifyOfPropertyChange(() => NewMessageCommands);
         }
 
         public bool CanAddCommand
@@ -355,13 +367,19 @@ namespace Shield.WpfGui.ViewModels
             {
                 _newMessageCommands = value;
                 NotifyOfPropertyChange(() => CanRemoveCommand);
+                NotifyOfPropertyChange(() => NewMessageCommands);
             }
         }
 
         public BindableCollection<IMessageModel> SentMessages
         {
             get { return _sentMessages; }
-            set { _sentMessages = value; }
+            set
+            {
+                _sentMessages = value;
+                // hack!
+                _sending = false;
+            }
         }
 
         public ICommandModel SelectedNewMessageCommand
@@ -384,12 +402,32 @@ namespace Shield.WpfGui.ViewModels
             {
                 _selectedSentMessage = value;
                 NotifyOfPropertyChange(() => SelectedSentMessage);
+                NotifyOfPropertyChange(() => SingleSelectedSentMessage);
             }
         }
+
+        public BindableCollection<ICommandModel> SingleSelectedSentMessage
+        {
+            get
+            {
+                var output = new BindableCollection<ICommandModel>();
+
+                if(SelectedSentMessage is null)
+                    return output;
+                
+                foreach(var c in SelectedSentMessage)
+                {
+                    output.Add(c);
+                }
+                return output;
+            }
+        }
+
 
         public void RemoveCommand()
         {
             NewMessageCommands.Remove(SelectedNewMessageCommand);
+            NotifyOfPropertyChange(()=> CanSendMessage);
         }
 
         public bool CanRemoveCommand
@@ -400,6 +438,61 @@ namespace Shield.WpfGui.ViewModels
                     return false;
                 return true;
             }
+        }
+
+        public async Task SendMessage()
+        {
+            var message = GenerateMessage(NewMessageCommands);
+            if(message is null)
+                return;
+            _comCommander.AddToSendingQueue(message);
+
+            // hack!
+            _sending = true;
+            NotifyOfPropertyChange(()=> CanSendMessage);
+            // hack end
+            bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
+
+            // hack
+            _sending = false;
+            if (sent)
+            {
+                SentMessages.Add(message);
+                NewMessageCommands.Clear();
+                NotifyOfPropertyChange(()=> NewMessageCommands);
+                NotifyOfPropertyChange(()=> SentMessages);
+                NotifyOfPropertyChange(()=> CanSendMessage);
+            }
+        }
+
+        public bool CanSendMessage
+        {
+            get
+            {
+                if(NewMessageCommands.Count < 1 || _comCommander.DeviceIsOpen == false || _sending == true)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
+        {
+            if(commands.Count() == 0 || commands is null)
+                return null;
+
+            IMessageModel message = _messageFactory();
+
+            foreach(var c in commands)
+            {
+                message.Add(c);
+            }
+
+            message.Timestamp = Timestamp.TimestampNow;
+            message.AssaignID(IdGenerator.GetID(_settings.GetSettingsFor<IApplicationSettingsModel>().IdSize));
+
+            return message;
         }
 
         public bool HasErrors

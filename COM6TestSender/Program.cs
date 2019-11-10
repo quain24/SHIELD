@@ -16,7 +16,7 @@ namespace COM6TestSender
 
         public async static Task MainAsync(string[] args)
         {
-            SerialPort serial = new SerialPort { BaudRate = /*19200*/921600, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
+            SerialPort serial = new SerialPort { BaudRate = 19200/*921600*/, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
             serial.DtrEnable = false;
             serial.RtsEnable = false;
             serial.DiscardNull = true;
