@@ -75,6 +75,7 @@
     <Compile Include="Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
     <Compile Include="Enums\IncomingMessageType.cs" />
+    <Compile Include="Enums\Message.cs" />
     <Compile Include="Enums\MessageErrors.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\StringExtension.cs" />
