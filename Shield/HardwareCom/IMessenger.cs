@@ -11,6 +11,8 @@ namespace Shield.HardwareCom
         bool IsReceiving { get; }
         bool IsDecoding { get; }
 
+        bool IsSending { get; }
+
         Task<bool> SendAsync(ICommandModel comand);
 
         Task<bool> SendAsync(IMessageModel message);

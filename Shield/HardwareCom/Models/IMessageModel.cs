@@ -1,13 +1,10 @@
-﻿using Shield.Enums;
-using System.Collections.Generic;
-using static Shield.HardwareCom.Models.MessageModel;
+﻿using System.Collections.Generic;
 
 namespace Shield.HardwareCom.Models
 {
     public interface IMessageModel : IEnumerable<ICommandModel>
     {
         long Timestamp { get; set; }
-        bool IsTransmissionCompleted { get; set; }
         int CommandCount { get; }
         string Id { get; set; }
         List<ICommandModel> Commands { get; }
@@ -17,5 +14,7 @@ namespace Shield.HardwareCom.Models
         bool Add(ICommandModel command);
 
         bool Remove(ICommandModel command);
+
+        bool Replace(ICommandModel target, ICommandModel replacement);
     }
 }

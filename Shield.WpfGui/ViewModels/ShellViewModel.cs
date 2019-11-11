@@ -27,8 +27,10 @@ namespace Shield.WpfGui.ViewModels
         private ComCommander _comCommander;
         private IAppSettings _settings;
         private ICommandModelFactory _commandFactory;
+        private IMessageInfoAndErrorChecks _msgInfoError;
         private string _selectedCommand;
         private string _dataInput;
+
 
         
 
@@ -52,7 +54,7 @@ namespace Shield.WpfGui.ViewModels
         _validationErrors = new Dictionary<string, ICollection<string>>();
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory)
+        public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory, IMessageInfoAndErrorChecks msgInfoError)
         {
             _settings = settings;
             _messanger = messanger;
@@ -65,7 +67,9 @@ namespace Shield.WpfGui.ViewModels
             _messanger.Setup(DeviceType.Serial);
             _messageFactory = new Func<IMessageModel>(() => { return new MessageModel(); });
 
-            _comCommander = new ComCommander(_commandFactory, _messageFactory);
+            _msgInfoError = msgInfoError;
+
+            _comCommander = new ComCommander(_commandFactory, _messageFactory, _msgInfoError);
             _comCommander.AssignMessanger(_messanger);
 
             _comCommander.IncomingMasterReceived += AddIncomingMessageToDisplay;

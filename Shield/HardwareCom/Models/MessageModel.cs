@@ -15,7 +15,6 @@ namespace Shield.HardwareCom.Models
         private List<ICommandModel> _commands = new List<ICommandModel>();
 
         public long Timestamp { get; set; } = 0;
-        public bool IsTransmissionCompleted { get; set; } = false;
         public int CommandCount { get { return _commands.Count(); } }
         public string Id { get { return _messageId; } set { AssaignID(value); } }
 
@@ -45,6 +44,15 @@ namespace Shield.HardwareCom.Models
         public bool Remove(ICommandModel command)
         {
             return _commands.Remove(command);
+        }
+
+        public bool Replace(ICommandModel target, ICommandModel replacement)
+        {
+            var targetIndex = _commands.IndexOf(target);
+            if(targetIndex == -1)
+                return false;
+            _commands[targetIndex] = replacement;
+            return true;
         }
 
         #region IEnumerable implementation

@@ -67,11 +67,12 @@ namespace Shield.HardwareCom
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>();
-                        IIncomingDataPreparer incomingDataPreparer = new IncomingDataPreparer(appSet.CommandTypeSize,
-                                                                            appSet.IdSize,
-                                                                            appSet.DataSize,
-                                                                            new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
-                                                                            appSet.Separator);
+                        IIncomingDataPreparer incomingDataPreparer =
+                            new IncomingDataPreparer(appSet.CommandTypeSize,
+                                                     appSet.IdSize,
+                                                     appSet.DataSize,
+                                                     new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
+                                                     appSet.Separator);
                         return incomingDataPreparer;
                     })
                    .As<IIncomingDataPreparer>();
@@ -90,6 +91,13 @@ namespace Shield.HardwareCom
                            (pi, ctx) => pi.ParameterType == typeof(IIncomingDataPreparer) && pi.Name == "incomingDataPreparer",
                            (pi, ctx) => ctx.Resolve<IIncomingDataPreparer>())
                    });
+
+
+            // Additional objects, some may be temporary
+
+            builder.RegisterType<MessageInfoAndErrorChecks>()
+                .As<IMessageInfoAndErrorChecks>();
+
 
             // tymczasowo do wszystkiego innego
             //builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

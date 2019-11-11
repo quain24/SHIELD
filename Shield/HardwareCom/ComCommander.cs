@@ -3,6 +3,7 @@ using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
+using System.Reflection;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace Shield.HardwareCom
         private ICommandModelFactory _commandFactory;
         private Func<IMessageModel> _messageFactory;
         private IMessanger _messanger;
+        private IMessageInfoAndErrorChecks _msgInfoError;
 
         #endregion Autofac objects
 
@@ -127,14 +129,20 @@ namespace Shield.HardwareCom
         #region Properties
 
         public bool DeviceIsOpen { get { return _hasCommunicationManager ? _messanger.IsOpen : false; } }
+        public bool DeviceIsSending { get { return _hasCommunicationManager ? _messanger.IsSending : false; } }
+        public bool DeviceIsReceiving { get { return _hasCommunicationManager ? _messanger.IsReceiving : false; } }
 
         #endregion Properties
 
-        public ComCommander(ICommandModelFactory commandFactory, Func<IMessageModel> messageFactory)
+        public ComCommander(ICommandModelFactory commandFactory, Func<IMessageModel> messageFactory, IMessageInfoAndErrorChecks msgInfoError)
         {
             // AutoFac auto factories
             _commandFactory = commandFactory;
             _messageFactory = messageFactory;
+            _msgInfoError = msgInfoError;
+
+            _msgInfoError.CompletitionTimeout = _completitionTimeout;
+            _msgInfoError.ConfirmationTimeout = _confirmationTimeout;
         }
 
         #region Settings, setups, etc
@@ -145,6 +153,7 @@ namespace Shield.HardwareCom
                 return _confirmationTimeout;
 
             _confirmationTimeout = timeout;
+            _msgInfoError.ConfirmationTimeout = _confirmationTimeout;
             return _confirmationTimeout;
         }
 
@@ -159,6 +168,7 @@ namespace Shield.HardwareCom
                 return _confirmationTimeout;
 
             _confirmationTimeout = timeout;
+            _msgInfoError.CompletitionTimeout = _completitionTimeout;
             return _confirmationTimeout;
         }
 
@@ -171,7 +181,7 @@ namespace Shield.HardwareCom
         {
             if (messanger is null)
                 return;
-            if (_hasCommunicationManager)
+            if (_hasCommunicationManager && _messanger != null)
             {
                 _messanger.CommandReceived -= OnCommandReceivedinternally;
             }
@@ -253,15 +263,6 @@ namespace Shield.HardwareCom
             SendNextQueuedMessageAsync();
 
             OnIncomingMasterReceived(this, new MessageEventArgs(message));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         private void IncomingSlaveMessageHandler(IMessageModel message)
@@ -274,14 +275,14 @@ namespace Shield.HardwareCom
 
             OnIncomingSlaveReceived(this, new MessageEventArgs(message));
 
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
+            //Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
+            //foreach (var c in message)
+            //{
+            //    string line = $@"----  {c.CommandTypeString}";
+            //    if (c.CommandType == CommandType.Data)
+            //        line += $@" | Data: {c.Data}";
+            //    Console.WriteLine(line);
+            //}
         }
 
         private void IncomingErrorrousMessageHandler(IMessageModel message)
@@ -293,19 +294,7 @@ namespace Shield.HardwareCom
             AddToSendingQueue(CreateConfirmationOf(message));
             SendNextQueuedMessageAsync();
 
-            // testing event sending
-
             OnIncomingErrorReceived(this, new MessageErrorEventArgs(message, _incomingErrors[message.Id].errorType));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            Console.WriteLine($@"ERROR TYPE: {_incomingErrors[message.Id].errorType}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         #endregion Incoming messages handlers
@@ -318,15 +307,6 @@ namespace Shield.HardwareCom
                 return;
 
             OnOutgoingMasterSent(this, new MessageEventArgs(message));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         private void OutgoingSlaveMessageHandler(IMessageModel message)
@@ -335,15 +315,6 @@ namespace Shield.HardwareCom
                 return;
 
             OnOutgoingSlaveSent(this, new MessageEventArgs(message));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         private void OutgoingConfirmationSend(IMessageModel message)
@@ -352,15 +323,6 @@ namespace Shield.HardwareCom
                 return;
 
             OnOutgoingConfirmationSent(this, new MessageEventArgs(message));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         private void OutgoingErrorrousMessageHandler(IMessageModel message)
@@ -369,15 +331,6 @@ namespace Shield.HardwareCom
                 return;
 
             OnOutgoingErrorOccured(this, new MessageErrorEventArgs(message, _outgoingErrors[message.Id].errorType));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         private void OutgoingConfirmedMessagehandler(IMessageModel message)
@@ -386,15 +339,6 @@ namespace Shield.HardwareCom
                 return;
 
             OnOutgoingMessageConfirmed(this, new MessageEventArgs(message));
-
-            Console.WriteLine($@"From: {System.Reflection.MethodBase.GetCurrentMethod().Name} | ID: {message.Id} | Command count: {message.CommandCount}");
-            foreach (var c in message)
-            {
-                string line = $@"----  {c.CommandTypeString}";
-                if (c.CommandType == CommandType.Data)
-                    line += $@" | Data: {c.Data}";
-                Console.WriteLine(line);
-            }
         }
 
         #endregion Outgoing message handlers
@@ -407,72 +351,70 @@ namespace Shield.HardwareCom
                 return;
 
             // Check if message is complete
-            if (IsCompleted(message))
+            if (_msgInfoError.IsCompleted(message))
             {
                 // Check for Possible errors - if bad, then off to incoming error handler
-                MessageErrors decodingErrors = CheckIfDecodedCorrectly(message);
-                bool patternCorrect = IsPatternCorrect(message);
-                IncomingType messageType = MessageType(message);
+                MessageErrors decodingErrors = _msgInfoError.DecodingErrorsIn(message);
+                bool patternCorrect = _msgInfoError.IsPatternCorrect(message);
+                IncomingMessageType messageType = _msgInfoError.DetectType(message);
 
                 if (patternCorrect == false)
                     decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
-                if (messageType == IncomingType.Undetermined)
+                if (messageType == IncomingMessageType.Undetermined)
                     decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
 
                 if (decodingErrors != MessageErrors.None)
                 {
                     SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
                     IncomingErrorrousMessageHandler(message);
-                    return;
                 }
-
-                // Else, message is completed, decoded properly - now off to corresponding buffers and handlers
-                switch (messageType)
+                else
                 {
-                    case IncomingType.Confirmation:
-                        if (!_outgoingSent.ContainsKey(message.Id))
-                        {
-                            SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingPartial, _incomingErrors);
+                    // Else, message is completed, decoded properly - now off to corresponding buffers and handlers
+                    switch (messageType)
+                    {
+                        case IncomingMessageType.Confirmation:
+                            if (!_outgoingSent.ContainsKey(message.Id))
+                            {
+                                SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingPartial, _incomingErrors);
+                                IncomingErrorrousMessageHandler(message);
+                                break;
+                            }
+                            SwitchBuffers(message, _incomingPartial, _incomingCompleteConfirms);
+                            IncomingConfirmationMessageHandler(message);
+                            break;
+
+                        case IncomingMessageType.Master:
+                            SwitchBuffers(message, _incomingPartial, _incomingCompleteMasters);
+                            IncomingMasterMessageHandler(message);
+                            break;
+
+                        case IncomingMessageType.Slave:
+                            if (!_outgoingConfirmed.ContainsKey(message.Id))
+                            {
+                                SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingPartial, _incomingErrors);
+                                IncomingErrorrousMessageHandler(message);
+                                break;
+                            }
+                            SwitchBuffers(message, _incomingPartial, _incomingCompleteSlaves);
+                            IncomingSlaveMessageHandler(message);
+                            break;
+
+                        // Should not happen ever, just for sanity
+                        default:
+                            decodingErrors = MessageErrors.UndeterminedType;
+                            SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
                             IncomingErrorrousMessageHandler(message);
                             break;
-                        }
-                        SwitchBuffers(message, _incomingPartial, _incomingCompleteConfirms);
-                        IncomingConfirmationMessageHandler(message);
-                        break;
-
-                    case IncomingType.Master:
-                        SwitchBuffers(message, _incomingPartial, _incomingCompleteMasters);
-                        IncomingMasterMessageHandler(message);
-                        break;
-
-                    case IncomingType.Slave:
-                        if (!_outgoingConfirmed.ContainsKey(message.Id))
-                        {
-                            SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingPartial, _incomingErrors);
-                            IncomingErrorrousMessageHandler(message);
-                            break;
-                        }
-                        SwitchBuffers(message, _incomingPartial, _incomingCompleteSlaves);
-                        IncomingSlaveMessageHandler(message);
-                        break;
-
-                    // Should not happen ever, just for sanity
-                    default:
-                        decodingErrors = MessageErrors.UndeterminedType;
-                        SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
-                        IncomingErrorrousMessageHandler(message);
-                        break;
+                    }
                 }
             }
             // Message incomplete
             else
             {
-                // Nothing, wait for another command
-                if (CompletitionTimeoutExceeded(message))
-                {
+                // Nothing, wait for another command or process completition timeout
+                if (_msgInfoError.CompletitionTimeoutExceeded(message))
                     ProcessCompletitionTimeout(message);
-                }
-                return;
             }
         }
 
@@ -505,7 +447,7 @@ namespace Shield.HardwareCom
                 if (wasSent)
                 {
                     CommandType type = message.Count() <= 1 ? CommandType.Unknown : message.ElementAt(1).CommandType;
-                    switch ( type)
+                    switch (type)
                     {
                         case CommandType.Confirmation:
                             _outgoingConfirmations[message.Id] = message;
@@ -614,153 +556,16 @@ namespace Shield.HardwareCom
             return Buffer.IncomingPartial;
         }
 
-        private static MessageErrors CheckIfDecodedCorrectly(IMessageModel message)
-        {
-            if (message is null)
-                return MessageErrors.IsNull;
-
-            List<ICommandModel> badOrUnknown = message
-                .Where(c =>
-                    c.CommandType == CommandType.Unknown ||
-                    c.CommandType == CommandType.Error ||
-                    c.CommandType == CommandType.Partial)
-                .ToList();
-
-            if (!badOrUnknown.Any())
-                return MessageErrors.None;
-
-            int numberOfUnknowns = 0;
-            int numberOfErrors = 0;
-            int numberOfPartials = 0;
-
-            MessageErrors errors = MessageErrors.None;
-
-            foreach (ICommandModel c in badOrUnknown)
-            {
-                if (c.CommandType == CommandType.Error)
-                    numberOfErrors++;
-                else if (c.CommandType == CommandType.Unknown)
-                    numberOfUnknowns++;
-                else if (c.CommandType == CommandType.Partial)
-                    numberOfPartials++;
-            }
-
-            if (numberOfErrors > 0)
-                errors = errors | MessageErrors.GotErrorCommands;
-            if (numberOfPartials > 0)
-                errors = errors | MessageErrors.GotPartialCommands;
-            if (numberOfUnknowns > 0)
-                errors = errors | MessageErrors.GotUnknownCommands;
-
-            return errors;
-        }
-
-        private static bool IsCompleted(IMessageModel message)
-        {
-            if (message is null)
-                throw new ArgumentNullException(nameof(message), "Cannot pass null message!");
-
-            if (message.IsTransmissionCompleted)
-                return true;
-
-            if (message.Last().CommandType == CommandType.EndMessage)
-            {
-                message.IsTransmissionCompleted = true;
-                return true;
-            }
-
-            return false;
-        }
-
-        private static bool IsPatternCorrect(IMessageModel message)
-        {
-            // not enough commands in message
-            if (message.Count() < 3)
-                return false;
-
-            // Correct beginning and end?
-            if (message.First().CommandType != CommandType.HandShake ||
-                message.Last().CommandType != CommandType.EndMessage)
-                return false;
-
-            // Only one begin and one end?
-            if (message.Count(c => c.CommandType == CommandType.HandShake || c.CommandType == CommandType.EndMessage) != 2)
-                return false;
-
-            // Message type in correct place?
-            CommandType messageType = message.ElementAt(1).CommandType;
-            if (messageType != CommandType.Master && messageType != CommandType.Slave && messageType != CommandType.Confirmation)
-            {
-                return false;
-            }
-
-            // Only one message type?
-            if (message.
-                Count(c =>
-                    c.CommandType == CommandType.Master ||
-                    c.CommandType == CommandType.Slave ||
-                    c.CommandType == CommandType.Confirmation)
-                != 1)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private static IncomingType MessageType(IMessageModel message)
-        {
-            if (message is null || message.Count() < 2)
-                return IncomingType.Undetermined;
-
-            CommandType type = message.ElementAt(1).CommandType;
-
-            switch (type)
-            {
-                case CommandType.Master:
-                    return IncomingType.Master;
-
-                case CommandType.Slave:
-                    return IncomingType.Slave;
-
-                case CommandType.Confirmation:
-                    return IncomingType.Confirmation;
-
-                default:
-                    return IncomingType.Undetermined;
-            }
-        }
-
-        private bool CompletitionTimeoutExceeded(IMessageModel message)
-        {
-            if (message is null)
-                return false;
-
-            if (Timestamp.Difference(message.Timestamp) > _completitionTimeout)
-                return true;
-            return false;
-        }
-
-        private bool ConfirmationTimeoutExceeded(IMessageModel message)
-        {
-            if (message is null)
-                return false;
-
-            if (Timestamp.Difference(message.Timestamp) > _confirmationTimeout)
-                return true;
-            return false;
-        }
-
         public Dictionary<string, IMessageModel> FindConfirmationTimeouts()
         {
-            var output = _outgoingSent.Where(message => ConfirmationTimeoutExceeded(message.Value))
+            var output = _outgoingSent.Where(message => _msgInfoError.ConfirmationTimeoutExceeded(message.Value))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             return output;
         }
 
         public Dictionary<string, IMessageModel> FindCompletitionTimeouts()
         {
-            var output = _incomingPartial.Where(message => CompletitionTimeoutExceeded(message.Value))
+            var output = _incomingPartial.Where(message => _msgInfoError.CompletitionTimeoutExceeded(message.Value))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             return output;
         }
@@ -831,17 +636,17 @@ namespace Shield.HardwareCom
             return false;
         }
 
-        private static MessageErrors ErrorCheckWithoutTimeouts(IMessageModel message)
+        private MessageErrors ErrorCheckWithoutTimeouts(IMessageModel message)
         {
             if (message is null)
                 return MessageErrors.IsNull;
 
-            MessageErrors decodingErrors = CheckIfDecodedCorrectly(message);
-            IncomingType messageType = MessageType(message);
+            MessageErrors decodingErrors = _msgInfoError.DecodingErrorsIn(message);
+            IncomingMessageType messageType = _msgInfoError.DetectType(message);
 
-            if (IsPatternCorrect(message) == false) decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
-            if (messageType == IncomingType.Undetermined) decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
-            if (IsCompleted(message) == false) decodingErrors = decodingErrors | MessageErrors.Incomplete;
+            if (_msgInfoError.IsPatternCorrect(message) == false) decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
+            if (_msgInfoError.DetectType(message) == IncomingMessageType.Undetermined) decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
+            if (_msgInfoError.IsCompleted(message) == false) decodingErrors = decodingErrors | MessageErrors.Incomplete;
 
             return decodingErrors;
         }
@@ -885,24 +690,6 @@ namespace Shield.HardwareCom
             confirmation.Add(_commandFactory.Create(CommandType.EndMessage));
             confirmation.AssaignID(message.Id);
             return confirmation;
-        }
-
-        private bool InConfirmationWindow(IMessageModel message)
-        {
-            if (Timestamp.Difference(message.Timestamp) <= _confirmationTimeout)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private bool InCompletitionWindow(IMessageModel message)
-        {
-            if (Timestamp.Difference(message.Timestamp) <= _completitionTimeout)
-            {
-                return true;
-            }
-            return false;
         }
 
         #endregion Internal helpers
@@ -979,7 +766,7 @@ namespace Shield.HardwareCom
 
         #endregion Event handlers
 
-        #region Internal message transfer between buffers
+        #region Internal buffer handling
 
         private static bool SwitchBuffers(IMessageModel message,
                                    Dictionary<string, IMessageModel> source,
@@ -1026,28 +813,102 @@ namespace Shield.HardwareCom
             return true;
         }
 
-        #endregion Internal message transfer between buffers
-
-        #region Internal Enums
-
-        internal enum IncomingType
+        private bool DeleteMessage(IMessageModel target, Dictionary<string, IMessageModel> location)
         {
-            Master,
-            Slave,
-            Confirmation,
-            Undetermined
+            if (target is null || location is null)
+                return false;
+
+            IMessageModel messageToRemove;
+            if (location.TryGetValue(target.Id, out messageToRemove))
+            {
+                location.Remove(target.Id);
+                return true;
+            }
+            return false;
         }
 
-        #endregion Internal Enums
+        private bool DeleteMessage(IMessageModel target, Dictionary<string, (MessageErrors, IMessageModel)> location)
+        {
+            if (target is null || location is null)
+                return false;
+
+            (MessageErrors, IMessageModel) messageToRemove;
+            if (location.TryGetValue(target.Id, out messageToRemove))
+            {
+                location.Remove(target.Id);
+                return true;
+            }
+            return false;
+        }
+
+        private bool ClearBuffer(Buffer target)
+        {
+            ICommandModel tmpCommand;
+            IMessageModel tmpMessage;
+
+            switch (target)
+            {
+                case Buffer.None:
+                    return false;
+                case Buffer.IncomingQueue:               
+                    while(_incomingQueue.Count > 0)
+                    {
+                         _incomingQueue.TryDequeue(out tmpCommand);
+                    }
+                    break;
+                      
+                case Buffer.IncomingPartial:
+                    _incomingPartial.Clear();
+                    break;
+                case Buffer.IncomingCompleteConfirms:
+                    _incomingCompleteConfirms.Clear();
+                    break;
+                case Buffer.IncomingCompleteSlaves:
+                    _incomingCompleteSlaves.Clear();
+                    break;
+                case Buffer.IncomingCompleteMasters:
+                    _incomingCompleteMasters.Clear();
+                    break;
+                case Buffer.IncomingError:
+                    _incomingErrors.Clear();
+                    break;
+                case Buffer.OutgoingQueue:            
+                    while(_outgoingQueue.Count > 0)
+                    {
+                         _outgoingQueue.TryDequeue(out tmpMessage);
+                    }
+                    break;
+                case Buffer.OutgoingSent:
+                    _outgoingSent.Clear();
+                    break;
+                case Buffer.OutgoingConfirmed:
+                    _outgoingConfirmed.Clear();
+                    break;
+                case Buffer.OutgoingConfirmations:
+                    _outgoingConfirmations.Clear();
+                    break;
+                case Buffer.OutgoingErrors:
+                    _outgoingErrors.Clear();
+                    break;
+                default:
+                    return false;
+            }                  
+                    
+            return true;
+        }
+        
+        #endregion Internal buffer handling
 
         public enum Buffer
         {
             None,
+            IncomingQueue,
             IncomingPartial,
             IncomingCompleteConfirms,
             IncomingCompleteSlaves,
             IncomingCompleteMasters,
             IncomingError,
+            OutgoingQueue,
             OutgoingSent,
             OutgoingConfirmed,
             OutgoingConfirmations,

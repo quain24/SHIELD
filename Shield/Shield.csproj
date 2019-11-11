@@ -74,6 +74,7 @@
     <Compile Include="Data\Models\SerialPortSettingModel.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
+    <Compile Include="Enums\IncomingMessageType.cs" />
     <Compile Include="Enums\MessageErrors.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\StringExtension.cs" />
@@ -89,10 +90,14 @@
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
+    <Compile Include="HardwareCom\IMessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
+    <Compile Include="HardwareCom\MessageDecodingCheck.cs" />
+    <Compile Include="HardwareCom\MessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\MessageErrorEventArgs.cs" />
     <Compile Include="HardwareCom\MessageEventArgs.cs" />
+    <Compile Include="HardwareCom\MessageTypeDetector.cs" />
     <Compile Include="HardwareCom\Messenger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />
     <Compile Include="HardwareCom\Models\ICommandModel.cs" />

@@ -27,6 +27,7 @@ namespace Shield.HardwareCom
         private bool _disposed = false;
         private bool _decoderRunning = false;
         private bool _receiverRunning = false;
+        private bool _isSending = false;
 
         private object _decoderLock = new object();
         private object _receiverLock = new object();
@@ -36,6 +37,7 @@ namespace Shield.HardwareCom
         public bool IsOpen { get => _device.IsOpen; }
         public bool IsReceiving { get => _receiverRunning; }
         public bool IsDecoding { get => _decoderRunning; }
+        public bool IsSending {get => _isSending; }
 
         public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
@@ -48,23 +50,21 @@ namespace Shield.HardwareCom
         {
             _device = _communicationDeviceFactory.Device(type);
             if (_device is null)
-                return _setupSuccessufl = false;
-
-            _device.DataReceived += OnDataReceivedInternal;
+                return _setupSuccessufl = false;            
 
             return _setupSuccessufl = true;
         }
 
         public void Open()
         {
-            if (_setupSuccessufl)
+            if (_setupSuccessufl && IsOpen == false)
                 _device.Open();
         }
 
         public void Close()
         {
             StopDecoding();
-            StopReceiving();            
+            StopReceiving();
             _rawDataBuffer.Dispose();
             _rawDataBuffer = new BlockingCollection<string>();
             _device?.Close();
@@ -73,7 +73,7 @@ namespace Shield.HardwareCom
         public async Task StartReceiveAsync(CancellationToken ct)
         {
             if (!_receiverRunning)
-            {            
+            {
                 lock (_receiverLock)
                 {
                     if (_receiverRunning || !IsOpen || !_setupSuccessufl)
@@ -96,21 +96,7 @@ namespace Shield.HardwareCom
                     if (!string.IsNullOrEmpty(toAdd))
                     {
                         internalCT.ThrowIfCancellationRequested();
-                        _rawDataBuffer.Add(toAdd);                        
-
-                        // Testing of internal implementation of decoding!
-
-                        //List<string> output = _incomingDataPreparer.DataSearch(toAdd/*_rawDataBuffer.Take()*/);
-                        //if (output is null || output.Count == 0)
-                        //    continue;
-                        //foreach (string s in output)
-                        //{
-                        //    internalCT.ThrowIfCancellationRequested();
-                        //    ICommandModel receivedCommad = _commandTranslator.FromString(s);
-                        //    OnCommandReceived(receivedCommad);
-                        //}
-
-                        // end testing
+                        _rawDataBuffer.Add(toAdd);
                     }
                 }
                 _receiverRunning = false;
@@ -120,7 +106,7 @@ namespace Shield.HardwareCom
                 _receiverRunning = false;
             }
         }
-        
+
         public async Task StartDecodingAsync(CancellationToken ct)
         {
             if (!_decoderRunning)
@@ -187,9 +173,12 @@ namespace Shield.HardwareCom
             _decodingCTS = new CancellationTokenSource();
         }
 
-        public Task<bool> SendAsync(ICommandModel command)
+        public async Task<bool> SendAsync(ICommandModel command)
         {
-            return _device.SendAsync(_commandTranslator.FromCommand(command));
+            _isSending = true;
+            bool status = await _device.SendAsync(_commandTranslator.FromCommand(command)).ConfigureAwait(false);
+            _isSending = false;
+            return status;
         }
 
         public async Task<bool> SendAsync(IMessageModel message)
@@ -214,19 +203,16 @@ namespace Shield.HardwareCom
             if (message is null)
                 return false;
 
+            bool wasSentWithoutError = true;
+
             foreach (ICommandModel c in message)
             {
                 if (_device.Send(_commandTranslator.FromCommand(c)))
                     continue;
                 else
-                    return false;
+                    wasSentWithoutError = false;
             }
-            return true;
-        }
-
-        public void OnDataReceivedInternal(object sender, string e)
-        {
-            //_rawDataBuffer.Add(e.RemoveASCIIChars());
+            return wasSentWithoutError;
         }
 
         protected virtual void OnCommandReceived(ICommandModel command)
