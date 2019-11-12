@@ -84,6 +84,7 @@
     <Compile Include="HardwareCom\ComCommander.cs" />
     <Compile Include="HardwareCom\CommandEventArgs.cs" />
     <Compile Include="HardwareCom\CommandTranslator.cs" />
+    <Compile Include="HardwareCom\CommunicationHub.cs" />
     <Compile Include="HardwareCom\Factories\CommandModelFactory.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
     <Compile Include="HardwareCom\Factories\ICommandModelFactory.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\MessageDecodingCheck.cs" />
+    <Compile Include="HardwareCom\MessageHWComEventArgs.cs" />
     <Compile Include="HardwareCom\MessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\MessageErrorEventArgs.cs" />
     <Compile Include="HardwareCom\MessageEventArgs.cs" />
@@ -102,7 +104,9 @@
     <Compile Include="HardwareCom\Messenger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />
     <Compile Include="HardwareCom\Models\ICommandModel.cs" />
+    <Compile Include="HardwareCom\Models\IMessageHWComModel.cs" />
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
+    <Compile Include="HardwareCom\Models\MessageHWComModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />

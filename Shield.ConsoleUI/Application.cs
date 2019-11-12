@@ -20,7 +20,7 @@ namespace Shield.ConsoleUI
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
         private IMessanger _comMessanger;
-        private ComCommander _comcom = new ComCommander(new CommandModelFactory(new Func<ICommandModel>(() => { return new CommandModel(); })), new Func<IMessageModel>(() => { return new MessageModel(); }));
+        //private ComCommander _comcom = new ComCommander(new CommandModelFactory(new Func<ICommandModel>(() => { return new CommandModel(); })), new Func<IMessageModel>(() => { return new MessageModel(); }));
 
         public Application(IAppSettings setman, ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger)
         {
@@ -32,7 +32,7 @@ namespace Shield.ConsoleUI
             _incomingDataPreparer = incomingDataPreparer;
             _comMessanger = messanger;
 
-            _comcom.IncomingErrorReceived += OnErrorReceived;
+            //_comcom.IncomingErrorReceived += OnErrorReceived;
         }
 
         public void Run()
@@ -137,7 +137,7 @@ namespace Shield.ConsoleUI
 
             //_comMessanger.Setup(DeviceType.Serial);
 
-            _comcom.AssignMessanger(_comMessanger);
+            //_comcom.AssignMessanger(_comMessanger);
 
             _comMessanger.Open();
             Task.Run(() => _comMessanger.StartReceiveAsync());

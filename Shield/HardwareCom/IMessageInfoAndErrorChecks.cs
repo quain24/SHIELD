@@ -16,5 +16,9 @@ namespace Shield.HardwareCom
         bool IsCompleted(IMessageModel message);
         bool InCompletitionWindow(IMessageModel message);
         bool InConfirmationWindow(IMessageModel message);
+        bool IsCompleted(IMessageHWComModel message);
+        bool IsPatternCorrect(IMessageHWComModel message);
+        bool ConfirmationTimeoutExceeded(IMessageHWComModel message);
+        bool CompletitionTimeoutExceeded(IMessageHWComModel message);
     }
 }
