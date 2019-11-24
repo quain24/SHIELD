@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 namespace Shield.Data.Models
 {
     /// <summary>
-    /// Contains all of the availible settings, for serialization and deserialization. Is used by AppSettings object to give and store settings
+    /// Contains all of the available settings, for serialization and deserialization. Is used by AppSettings object to give and store settings
     /// not to be used alone
     /// </summary>
 
@@ -15,15 +15,15 @@ namespace Shield.Data.Models
     [KnownType(typeof(SerialPortSettingsModel))]
     [KnownType(typeof(MoqPortSettingsModel))]
     [KnownType(typeof(ApplicationSettingsModel))]
+    [KnownType(typeof(CommandTypesModel))]
     [DataContract(Name = "Configuration", Namespace = "ShieldAppSettings")]
     [XmlRoot("ApplicationSettings")]
     public class AppSettingsModel : IAppSettingsModel
     {
-        [XmlElement("Settings")]
         [DataMember(Name = "Settings")]
-        private Dictionary<SettingsType, ISettings> _settings = new Dictionary<SettingsType, ISettings>();
+        private Dictionary<SettingsType, ISetting> _settings = new Dictionary<SettingsType, ISetting>();
 
-        public Dictionary<SettingsType, ISettings> Settings
+        public Dictionary<SettingsType, ISetting> Settings
         {
             get => _settings;
             set => _settings = value;

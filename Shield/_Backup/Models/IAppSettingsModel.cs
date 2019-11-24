@@ -6,6 +6,6 @@ namespace Shield.Data.Models
 {
     public interface IAppSettingsModel
     {
-        Dictionary<SettingsType, ISettings> Settings { get; set; }
+        Dictionary<SettingsType, ISetting> Settings { get; set; }
     }
 }

@@ -5,6 +5,6 @@
         SerialDevice,
         MoqDevice,
         Application,
-        User
+        CommandTypes
     }
 }

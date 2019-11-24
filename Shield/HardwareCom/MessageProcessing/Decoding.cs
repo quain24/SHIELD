@@ -8,9 +8,9 @@ using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom
 {
-    public static class MessageDecodingCheck
+    public static class Decoding
     {
-        public static MessageErrors ErrorsIn(IMessageModel message)
+        public static MessageErrors Check(IMessageModel message)
         {
             if (message is null)
                 return MessageErrors.IsNull;

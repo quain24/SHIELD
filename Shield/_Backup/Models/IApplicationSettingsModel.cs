@@ -2,7 +2,7 @@
 
 namespace Shield.Data.Models
 {
-    public interface IApplicationSettingsModel : ISetting
+    public interface IApplicationSettingsModel : CommonInterfaces.ISetting
     {
         int DataSize { get; set; }
         int IdSize { get; set; }

@@ -6,15 +6,15 @@ namespace Shield.Data
 {
     public interface IAppSettings
     {
-        void Add(SettingsType type, ISettings settings);
+        void Add(SettingsType type, ISetting settings);
 
         void Flush();
 
-        Dictionary<SettingsType, ISettings> GetAll();
+        Dictionary<SettingsType, ISetting> GetAll();
 
-        ISettings GetSettingsFor(SettingsType type);
+        ISetting GetSettingsFor(SettingsType type);
 
-        T GetSettingsFor<T>() where T : class, ISettings;
+        T GetSettingsFor<T>() where T : class, ISetting;
 
         bool LoadFromFile();
 

@@ -54,8 +54,8 @@ namespace Shield.HardwareCom
                    .WithParameters(new[]
                    {
                         new ResolvedParameter(
-                            (pi, ctx) => pi.ParameterType == typeof(IAppSettings) && pi.Name == "appSettings",
-                            (pi, ctx) => ctx.Resolve<IAppSettings>()),
+                            (pi, ctx) => pi.ParameterType == typeof(ISettings) && pi.Name == "appSettings",
+                            (pi, ctx) => ctx.Resolve<ISettings>()),
                         new ResolvedParameter(
                             (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandModelFac",
                             (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
@@ -66,7 +66,7 @@ namespace Shield.HardwareCom
 
             builder.Register(c =>
                     {
-                        IApplicationSettingsModel appSet = c.Resolve<IAppSettings>().GetSettingsFor<IApplicationSettingsModel>();
+                        IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
                         IIncomingDataPreparer incomingDataPreparer =
                             new IncomingDataPreparer(appSet.CommandTypeSize,
                                                      appSet.IdSize,

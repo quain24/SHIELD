@@ -1,6 +1,6 @@
 ﻿namespace Shield.CommonInterfaces
 {
-    public interface ICommunicationDeviceSettings : ISettings
+    public interface ICommunicationDeviceSettings : ISetting
     {
     }
 }

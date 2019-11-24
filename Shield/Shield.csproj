@@ -60,18 +60,20 @@
   <ItemGroup>
     <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
-    <Compile Include="CommonInterfaces\ISettings.cs" />
-    <Compile Include="Data\AppSettings.cs" />
+    <Compile Include="CommonInterfaces\ISetting.cs" />
+    <None Include="_Backup\AppSettings.cs" />
     <Compile Include="Data\DataAfModule.cs" />
-    <Compile Include="Data\IAppSettings.cs" />
+    <Compile Include="Data\ISettings.cs" />
     <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
-    <Compile Include="Data\Models\AppSettingsModel.cs" />
+    <Compile Include="Data\Models\CommandTypesModel.cs" />
     <Compile Include="Data\Models\IApplicationSettingsModel.cs" />
-    <Compile Include="Data\Models\IAppSettingsModel.cs" />
+    <Compile Include="Data\Models\ICommandTypesModel.cs" />
     <Compile Include="Data\Models\IMoqPortSettingsModel.cs" />
     <Compile Include="Data\Models\ISerialPortSettingsModel.cs" />
+    <Compile Include="Data\Models\ISettingsModel.cs" />
     <Compile Include="Data\Models\MoqPortSettingsModel.cs" />
     <Compile Include="Data\Models\SerialPortSettingModel.cs" />
+    <Compile Include="Data\Models\SettingsModel.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
     <Compile Include="Enums\IncomingMessageType.cs" />
@@ -95,11 +97,12 @@
     <Compile Include="HardwareCom\IMessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
-    <Compile Include="HardwareCom\MessageDecodingCheck.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\Decoding.cs" />
     <Compile Include="HardwareCom\MessageHWComEventArgs.cs" />
     <Compile Include="HardwareCom\MessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\MessageErrorEventArgs.cs" />
     <Compile Include="HardwareCom\MessageEventArgs.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\Completness.cs" />
     <Compile Include="HardwareCom\MessageTypeDetector.cs" />
     <Compile Include="HardwareCom\Messenger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />
@@ -110,11 +113,21 @@
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
+    <Compile Include="Data\Settings.cs" />
     <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="_Backup\CommunicationDeviceFactory.cs" />
-    <None Include="_Backup\Messanger.cs" />
-    <None Include="_Backup\SerialPortAdapter.cs" />
+    <None Include="_Backup\Models\ApplicationSettingsModel.cs" />
+    <None Include="_Backup\Models\AppSettingsModel.cs" />
+    <None Include="_Backup\Models\CommandTypesModel.cs" />
+    <None Include="_Backup\Models\IApplicationSettingsModel.cs" />
+    <None Include="_Backup\Models\IAppSettingsModel.cs" />
+    <None Include="_Backup\Models\ICommandTypesModel.cs" />
+    <None Include="_Backup\Models\IMoqPortSettingsModel.cs" />
+    <None Include="_Backup\Models\ISerialPortSettingsModel.cs" />
+    <None Include="_Backup\Models\ISettingsModel.cs" />
+    <None Include="_Backup\Models\MoqPortSettingsModel.cs" />
+    <None Include="_Backup\Models\SerialPortSettingModel.cs" />
+    <None Include="_Backup\Models\SettingsModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

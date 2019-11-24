@@ -25,7 +25,7 @@ namespace Shield.WpfGui.ViewModels
     {
         private IMessanger _messanger;
         private ComCommander _comCommander;
-        private IAppSettings _settings;
+        private ISettings _settings;
         private ICommandModelFactory _commandFactory;
         private IMessageInfoAndErrorChecks _msgInfoError;
         private string _selectedCommand;
@@ -54,7 +54,7 @@ namespace Shield.WpfGui.ViewModels
         _validationErrors = new Dictionary<string, ICollection<string>>();
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory, IMessageInfoAndErrorChecks msgInfoError)
+        public ShellViewModel(IMessanger messanger, ISettings settings, ICommandModelFactory commandFactory, IMessageInfoAndErrorChecks msgInfoError)
         {
             _settings = settings;
             _messanger = messanger;
@@ -77,17 +77,17 @@ namespace Shield.WpfGui.ViewModels
             _comCommander.IncomingConfirmationReceived += AddIncomingMessageToDisplay;
             _comCommander.IncomingErrorReceived += AddIncomingMessageErrorToDisplay;
             
-            _dataPackValidation = new CommandDataPackValidation(_settings.GetSettingsFor<IApplicationSettingsModel>().Separator, DataPackFiller());
+            _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
         }
 
         public int DataPackLength()
         {
-            return _settings.GetSettingsFor<IApplicationSettingsModel>().DataSize;
+            return _settings.ForTypeOf<IApplicationSettingsModel>().DataSize;
         }
 
         public char DataPackFiller()
         {
-            return _settings.GetSettingsFor<IApplicationSettingsModel>().Filler;
+            return _settings.ForTypeOf<IApplicationSettingsModel>().Filler;
         }
 
         public List<string> DataPackGenerator(string data)
@@ -343,7 +343,7 @@ namespace Shield.WpfGui.ViewModels
                         return false;
 
                     if(DataInput != null && DataInput.Length > 0 && !DataInput.Contains(DataPackFiller()) &&
-                        !DataInput.Contains(_settings.GetSettingsFor<IApplicationSettingsModel>().Separator) &&
+                        !DataInput.Contains(_settings.ForTypeOf<IApplicationSettingsModel>().Separator) &&
                         !DataInput.Contains(" "))
                     {
                         return true;
@@ -494,7 +494,7 @@ namespace Shield.WpfGui.ViewModels
             }
 
             message.Timestamp = Timestamp.TimestampNow;
-            message.AssaignID(IdGenerator.GetID(_settings.GetSettingsFor<IApplicationSettingsModel>().IdSize));
+            message.AssaignID(IdGenerator.GetID(_settings.ForTypeOf<IApplicationSettingsModel>().IdSize));
 
             return message;
         }

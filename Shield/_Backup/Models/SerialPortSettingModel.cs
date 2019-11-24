@@ -1,4 +1,5 @@
 ﻿using Shield.Enums;
+using System;
 using System.IO.Ports;
 using System.Runtime.Serialization;
 
@@ -7,11 +8,6 @@ namespace Shield.Data.Models
     [DataContract(Name = "SerialPortSettings")]
     public class SerialPortSettingsModel : ISerialPortSettingsModel
     {
-        public SerialPortSettingsModel()
-        {
-            SetDefaults();
-        }
-
         [DataMember]
         public int PortNumber { get; set; }
 
@@ -39,16 +35,9 @@ namespace Shield.Data.Models
         [DataMember]
         public int Encoding { get; set; }
 
-        public SettingsType Type { get; set; }
-
         [OnDeserializing]
-        private void OnDeserializing(StreamingContext context)
-        {
-            SetDefaults();
-        }
-
-        public void SetDefaults()
-        {
+        void OnDeserializing(StreamingContext context)
+        {            
             PortNumber = 5;
             BaudRate = 19200;
             DataBits = 8;
@@ -59,7 +48,6 @@ namespace Shield.Data.Models
             ReadTimeout = -1;
             WriteTimeout = -1;
             Encoding = System.Text.Encoding.ASCII.CodePage;
-            Type = SettingsType.SerialDevice;
         }
     }
 }

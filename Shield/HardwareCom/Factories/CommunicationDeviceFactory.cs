@@ -14,13 +14,13 @@ namespace Shield.HardwareCom.Factories
 
     public class CommunicationDeviceFactory : ICommunicationDeviceFactory
     {
-        private IAppSettings _appSettings;
+        private ISettings _settings;
         private IIndex<DeviceType, ICommunicationDevice> _deviceFactory;
 
         public CommunicationDeviceFactory(IIndex<DeviceType, ICommunicationDevice> deviceFactory,
-                                          IAppSettings appSettings)
+                                          ISettings settings)
         {
-            _appSettings = appSettings;
+            _settings = settings;
             _deviceFactory = deviceFactory;
         }
 
@@ -29,7 +29,7 @@ namespace Shield.HardwareCom.Factories
             switch (type)
             {
                 case DeviceType.Serial:
-                    ISerialPortSettingsModel settings = _appSettings.GetSettingsFor<ISerialPortSettingsModel>();
+                    ISerialPortSettingsModel settings = _settings.ForTypeOf<ISerialPortSettingsModel>();
                     ICommunicationDevice device = _deviceFactory[type];
                     if (device.Setup(settings)) //-- can replace autofac parameters used when registering.
                         return device;
@@ -37,7 +37,7 @@ namespace Shield.HardwareCom.Factories
                         break;
 
                 case DeviceType.Moq:
-                    IMoqPortSettingsModel settings2 = _appSettings.GetSettingsFor<IMoqPortSettingsModel>();
+                    IMoqPortSettingsModel settings2 = _settings.ForTypeOf<IMoqPortSettingsModel>();
                     ICommunicationDevice device2 = _deviceFactory[type];
                     if (device2.Setup(settings2))
                         return device2;
