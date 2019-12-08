@@ -8,17 +8,19 @@ namespace Shield.HardwareCom
         long CompletitionTimeout { get; set; }
         long ConfirmationTimeout { get; set; }
 
-        bool CompletitionTimeoutExceeded(IMessageModel message);
-        bool ConfirmationTimeoutExceeded(IMessageModel message);
+        bool IsCompletitionTimeoutExceeded(IMessageModel message);
+        bool IsConfirmationTimeoutExceeded(IMessageModel message);
         MessageErrors DecodingErrorsIn(IMessageModel message);
-        IncomingMessageType DetectType(IMessageModel message);
+        Errors DecodingErrorsIn(IMessageHWComModel message);
+        IncomingMessageType DetectTypeOf(IMessageModel message);
+        MessageType DetectTypeOf(IMessageHWComModel message);
         bool IsPatternCorrect(IMessageModel message);
         bool IsCompleted(IMessageModel message);
         bool InCompletitionWindow(IMessageModel message);
         bool InConfirmationWindow(IMessageModel message);
         bool IsCompleted(IMessageHWComModel message);
         bool IsPatternCorrect(IMessageHWComModel message);
-        bool ConfirmationTimeoutExceeded(IMessageHWComModel message);
-        bool CompletitionTimeoutExceeded(IMessageHWComModel message);
+        bool IsConfirmationTimeoutExceeded(IMessageHWComModel message);
+        bool IsCompletitionTimeoutExceeded(IMessageHWComModel message);
     }
 }

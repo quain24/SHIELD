@@ -7,8 +7,9 @@ using Shield.HardwareCom.Models;
 using System;
 using System.IO.Ports;
 using System.Text;
+using Shield.HardwareCom.MessageProcessing;
 using System.Threading.Tasks;
-
+using System.Collections.Generic;
 
 namespace Shield.ConsoleUI
 {
@@ -20,11 +21,23 @@ namespace Shield.ConsoleUI
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
         private IMessanger _comMessanger;
-        private ICommandTypesModel _commandTypesModel;
         private ISettings _settings;
-        //private ComCommander _comcom = new ComCommander(new CommandModelFactory(new Func<ICommandModel>(() => { return new CommandModel(); })), new Func<IMessageModel>(() => { return new MessageModel(); }));
 
-        public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ICommandTypesModel commandTypesModel, ISettings settings)
+        ICommandIngester _ingester;
+        ICompletitionTimeout _completitionTimeout;
+        IConfirmationTimeout _confirmationTimeout;
+        IDecoding _decoding;
+        ICompleteness _completness;
+        IPattern _pattern;
+        
+
+        public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ISettings settings,
+            ICommandIngester ingester,
+            ICompletitionTimeout completitionTimeout,
+            IConfirmationTimeout confirmationTimeout,
+            IDecoding decoding,
+            ICompleteness completness,
+            IPattern pattern)
         {
             _command = command;
             _deviceFactory = deviceFactory;
@@ -32,8 +45,14 @@ namespace Shield.ConsoleUI
             _commandTranslator = commandTranslator;
             _incomingDataPreparer = incomingDataPreparer;
             _comMessanger = messanger;
-            _commandTypesModel = commandTypesModel;
             _settings = settings;
+
+            _ingester = ingester;
+            _completitionTimeout = completitionTimeout;
+            _confirmationTimeout = confirmationTimeout;
+            _decoding = decoding;
+            _completness = completness;
+            _pattern = pattern;
 
             //_comcom.IncomingErrorReceived += OnErrorReceived;
         }
@@ -50,14 +69,6 @@ namespace Shield.ConsoleUI
             //settings3.WriteTimeout = 100;
             //settings3.Encoding = Encoding.ASCII.CodePage;
 
-            //_commandTypesModel = new CommandTypesModel();
-
-            //_commandTypesModel.AddCommand("Revert");
-            //_commandTypesModel.AddCommand("revert");
-            //_commandTypesModel.AddCommand("Review");
-
-
-
             //IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
             //settings2.PortNumber = 6;
 
@@ -68,73 +79,22 @@ namespace Shield.ConsoleUI
             //appset.Filler = '.';
             //appset.Separator = '*';
 
-            //_settings.Add(SettingsType.CommandTypes, _commandTypesModel);
             //_settings.Add(SettingsType.SerialDevice, settings3);
             //_settings.Add(SettingsType.MoqDevice, settings2);
-            ///_settings.Add(SettingsType.Application, appset);
+            //_settings.Add(SettingsType.Application, appset);
 
             //_settings.SaveToFile();
             _settings.LoadFromFile(); 
             
-            var aa = _settings.For(SettingsType.Application);
-            Console.ReadLine();
+            
+
+            Dictionary<string, IMessageHWComModel> msgcol = new Dictionary<string, IMessageHWComModel>();
 
 
 
 
 
 
-            //IApplicationSettingsModel appset = new ApplicationSettingsModel();
-            //appset.DataSize = 30;
-            //appset.IdSize = 4;
-            //appset.CommandTypeSize = 4;
-            //appset.Filler = '.';
-            //appset.Separator = '*';
-
-            ////// testowanie zapisywania ustawien - działa -
-
-            //ISerialPortSettingsModel settings = new SerialPortSettingsModel();
-            //settings.BaudRate = 19200;//921600;//
-            //settings.DataBits = 8;
-            //settings.Parity = Parity.None;
-            //settings.PortNumber = 4;
-            //settings.StopBits = StopBits.One;
-            //settings.ReadTimeout = -1;
-            //settings.WriteTimeout = 100;
-            //settings.Encoding = Encoding.ASCII.CodePage;
-
-            //IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
-            //settings2.PortNumber = 6;
-
-            //AppSettings setman = new AppSettings(new AppSettingsModel());
-            //_setman.Add(SettingsType.SerialDevice, settings);
-            //_setman.Add(SettingsType.MoqDevice, settings2);
-            //_setman.Add(SettingsType.Application, appset);
-
-            //ICommandTypesModel commandTypesModel = new CommandTypesModel();
-            //commandTypesModel.AddCommand("TestCommand");
-            //_setman.Add(SettingsType.CommandTypes, commandTypesModel);
-
-
-
-
-
-
-            //_setman.SaveToFile();
-
-            ////foreach (var item in _setman.GetAll())
-            ////{
-            ////    Console.WriteLine("Pozycja sprzed wczytania:");
-            ////    Console.WriteLine(item.Key.ToString() + " " + item.Value.ToString());
-            ////}
-
-            //// wczytywanie ustawien
-            //_setman.LoadFromFile();
-
-            //foreach(var c in _setman.GetSettingsFor<ICommandTypesModel>().CommandTypes)
-            //{
-            //    Console.WriteLine(c.Key.ToString());
-            //}
 
            
             _comMessanger.Setup(DeviceType.Serial);
@@ -152,6 +112,8 @@ namespace Shield.ConsoleUI
             _comMessanger.Open();
             Task.Run(() => _comMessanger.StartReceiveAsync());
             Task.Run(() => _comMessanger.StartDecodingAsync());
+
+
 
             //int licznik = 0;
 
@@ -198,7 +160,7 @@ namespace Shield.ConsoleUI
             //Task.Run(() => _comMessanger.StartDecodingAsync());
             //Console.ReadLine();
             //Console.WriteLine("end after enter");
-            //Console.ReadLine();
+            Console.ReadLine();
         }
 
         public void OnErrorReceived(object sender, MessageErrorEventArgs e)

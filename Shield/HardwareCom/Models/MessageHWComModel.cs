@@ -32,10 +32,15 @@ namespace Shield.HardwareCom.Models
         public Errors Errors { get; set; } = Errors.None;
         public List<ICommandModel> Commands { get { return _commands; } }
 
-        public bool Confirmed { get; set; } = false;
-        public bool Completed { get; set; } = false;
-        public bool Correct { get; set; } = false;
-        public bool Transfered { get; set; } = false;
+        public bool IsConfirmed { get; set; } = false;
+        public bool IsCompleted { get; set; } = false;
+
+        public bool IsCorrect
+        {
+            get { return Errors == Errors.None ? true : false; }
+        }
+
+        public bool IsTransfered { get; set; } = false;
 
         #region Indexer
 

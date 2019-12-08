@@ -34,42 +34,85 @@ namespace Shield.Data.Models
         [OptionalField]
         private char _filler;
 
+        [DataMember]
+        [OptionalField]
+        private long _completitionTimeout;
+
+        [DataMember]
+        [OptionalField]
+        private long _confirmationTimeout;
+
+        private SettingsType _type;
+
         public ApplicationSettingsModel()
         {
             SetDefaults();
         }
 
+        /// <summary>
+        /// Determines size of data pack in sent messages - should always be the same on every device
+        /// </summary>
         public int DataSize
         {
             get { return _dataSize; }
             set => _dataSize = value >= 1 ? value : 1;
         }
 
+        /// <summary>
+        /// Size of unique ID generated for every message - should always be the same for all devices
+        /// </summary>
         public int IdSize
         {
             get { return _idSize; }
             set => _idSize = value >= 4 ? value : 4;
         }
 
+        /// <summary>
+        /// Size of CommandType value portion of every message - minimum value of 4. Should always be the same for all devices
+        /// </summary>
         public int CommandTypeSize
         {
             get { return _commandTypeSize; }
             set => _commandTypeSize = value >= 4 ? value : 4;
         }
 
+        /// <summary>
+        /// Separator symbol - will be used to separate message parts, like id and command type - cannot be used in data pack - should always be the same for all devices
+        /// </summary>
         public char Separator
         {
             get { return _separator; }
             set { _separator = value; }
         }
 
+        /// <summary>
+        /// Filler is used for completing data packs that have less then required symbols - cannot be used inside datapack - should always be the same for all devices.
+        /// </summary>
         public char Filler
         {
             get { return _filler; }
             set { _filler = value; }
         }
 
-        public SettingsType Type { get; set; }
+        /// <summary>
+        /// How long a message should be held before it is marked as error because of being incomplete (in milliseconds).
+        /// </summary>
+        public long ConfirmationTimeout
+        {
+            get { return _confirmationTimeout; }
+            set { _confirmationTimeout = value; }
+        }
+
+        /// <summary>
+        /// how long should application wait for message confirmation (in milliseconds)
+        /// </summary>
+        public long CompletitionTimeout
+        {
+            get { return _completitionTimeout; }
+            set { _completitionTimeout = value; }
+        }
+
+        public SettingsType Type { get => _type; }
 
         public void SetDefaults()
         {
@@ -78,7 +121,9 @@ namespace Shield.Data.Models
             _commandTypeSize = 4;
             _separator = '*';
             _filler = '.';
-            Type = SettingsType.Application;
+            _confirmationTimeout = 0;
+            _completitionTimeout = 0;
+            _type = SettingsType.Application;
         }
 
         [OnDeserializing]

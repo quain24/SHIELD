@@ -9,7 +9,9 @@ namespace Shield.Data.Models
         [DataMember]
         public int PortNumber { get; set; }
 
-        public SettingsType Type { get; set; }
+        private SettingsType _type;
+
+        public SettingsType Type { get => _type; }
 
         public MoqPortSettingsModel()
         {
@@ -19,7 +21,7 @@ namespace Shield.Data.Models
         public void SetDefaults()
         {
             PortNumber = 2;
-            Type = SettingsType.MoqDevice;
+            _type = SettingsType.MoqDevice;
         }
 
         [OnDeserializing]

@@ -39,7 +39,9 @@ namespace Shield.Data.Models
         [DataMember]
         public int Encoding { get; set; }
 
-        public SettingsType Type { get; set; }
+        private SettingsType _type;
+
+        public SettingsType Type { get => _type; }
 
         [OnDeserializing]
         private void OnDeserializing(StreamingContext context)
@@ -59,7 +61,7 @@ namespace Shield.Data.Models
             ReadTimeout = -1;
             WriteTimeout = -1;
             Encoding = System.Text.Encoding.ASCII.CodePage;
-            Type = SettingsType.SerialDevice;
+            _type = SettingsType.SerialDevice;
         }
     }
 }

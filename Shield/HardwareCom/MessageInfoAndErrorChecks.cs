@@ -24,7 +24,7 @@ namespace Shield.HardwareCom
             set { _completitionTimeout = value; }
         }
 
-        public bool CompletitionTimeoutExceeded(IMessageModel message)
+        public bool IsCompletitionTimeoutExceeded(IMessageModel message)
         {
             if (message is null)
                 return false;
@@ -33,7 +33,7 @@ namespace Shield.HardwareCom
                 return true;
             return false;
         }
-        public bool CompletitionTimeoutExceeded(IMessageHWComModel message)
+        public bool IsCompletitionTimeoutExceeded(IMessageHWComModel message)
         {
             if (message is null)
                 return false;
@@ -46,7 +46,7 @@ namespace Shield.HardwareCom
             return false;
         }
 
-        public bool ConfirmationTimeoutExceeded(IMessageModel message)
+        public bool IsConfirmationTimeoutExceeded(IMessageModel message)
         {
             if (message is null)
                 return false;
@@ -55,7 +55,7 @@ namespace Shield.HardwareCom
                 return true;
             return false;
         }
-        public bool ConfirmationTimeoutExceeded(IMessageHWComModel message)
+        public bool IsConfirmationTimeoutExceeded(IMessageHWComModel message)
         {
             if (message is null)
                 return false;
@@ -115,10 +115,10 @@ namespace Shield.HardwareCom
             return errors;
         }
 
-        public MessageErrors DecodingErrorsIn(IMessageHWComModel message)
+        public Errors DecodingErrorsIn(IMessageHWComModel message)
         {
             if (message is null)
-                return MessageErrors.IsNull;
+                return Errors.IsNull;
 
             List<ICommandModel> badOrUnknown = message
                 .Where(c =>
@@ -128,23 +128,23 @@ namespace Shield.HardwareCom
                 .ToList();
 
             if (badOrUnknown.Any() == false)
-                return MessageErrors.None;
+                return Errors.None;
 
-            MessageErrors errors = MessageErrors.None;
+            Errors output = Errors.None;            
 
             foreach (ICommandModel c in badOrUnknown)
             {
                 if (c.CommandType == CommandType.Error)
-                    errors = errors | MessageErrors.GotErrorCommands;
+                    output = output | Errors.GotErrorCommands;
                 else if (c.CommandType == CommandType.Unknown)
-                    errors = errors | MessageErrors.GotUnknownCommands;
+                    output = output | Errors.GotUnknownCommands;
                 else if (c.CommandType == CommandType.Partial)
-                    errors = errors | MessageErrors.GotPartialCommands;
+                    output = output | Errors.GotPartialCommands;
             }
-            return errors;
+            return output;
         }
 
-        public IncomingMessageType DetectType(IMessageModel message)
+        public IncomingMessageType DetectTypeOf(IMessageModel message)
         {
             if (message is null || message.Count() < 2)
                 return IncomingMessageType.Undetermined;
@@ -166,7 +166,7 @@ namespace Shield.HardwareCom
                     return IncomingMessageType.Undetermined;
             }
         }
-        public MessageType DetectType(IMessageHWComModel message)
+        public MessageType DetectTypeOf(IMessageHWComModel message)
         {
             if (message is null || message.Count() < 2)
                             return MessageType.Unknown;
@@ -285,8 +285,11 @@ namespace Shield.HardwareCom
             if (message is null)
                 throw new ArgumentNullException(nameof(message), "Cannot pass null message!");
 
-            if(message.Completed == true || message.Last().CommandType == CommandType.EndMessage)
+            if(message.IsCompleted == true || message.Last().CommandType == CommandType.EndMessage)
+            {
+                message.IsCompleted = true;
                 return true;
+            }
 
             return false;
         }

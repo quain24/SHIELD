@@ -356,7 +356,7 @@ namespace Shield.HardwareCom
                 // Check for Possible errors - if bad, then off to incoming error handler
                 MessageErrors decodingErrors = _msgInfoError.DecodingErrorsIn(message);
                 bool patternCorrect = _msgInfoError.IsPatternCorrect(message);
-                IncomingMessageType messageType = _msgInfoError.DetectType(message);
+                IncomingMessageType messageType = _msgInfoError.DetectTypeOf(message);
 
                 if (patternCorrect == false)
                     decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
@@ -413,7 +413,7 @@ namespace Shield.HardwareCom
             else
             {
                 // Nothing, wait for another command or process completition timeout
-                if (_msgInfoError.CompletitionTimeoutExceeded(message))
+                if (_msgInfoError.IsCompletitionTimeoutExceeded(message))
                     ProcessCompletitionTimeout(message);
             }
         }
@@ -558,14 +558,14 @@ namespace Shield.HardwareCom
 
         public Dictionary<string, IMessageModel> FindConfirmationTimeouts()
         {
-            var output = _outgoingSent.Where(message => _msgInfoError.ConfirmationTimeoutExceeded(message.Value))
+            var output = _outgoingSent.Where(message => _msgInfoError.IsConfirmationTimeoutExceeded(message.Value))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             return output;
         }
 
         public Dictionary<string, IMessageModel> FindCompletitionTimeouts()
         {
-            var output = _incomingPartial.Where(message => _msgInfoError.CompletitionTimeoutExceeded(message.Value))
+            var output = _incomingPartial.Where(message => _msgInfoError.IsCompletitionTimeoutExceeded(message.Value))
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             return output;
         }
@@ -642,10 +642,10 @@ namespace Shield.HardwareCom
                 return MessageErrors.IsNull;
 
             MessageErrors decodingErrors = _msgInfoError.DecodingErrorsIn(message);
-            IncomingMessageType messageType = _msgInfoError.DetectType(message);
+            IncomingMessageType messageType = _msgInfoError.DetectTypeOf(message);
 
             if (_msgInfoError.IsPatternCorrect(message) == false) decodingErrors = decodingErrors | MessageErrors.BadMessagePattern;
-            if (_msgInfoError.DetectType(message) == IncomingMessageType.Undetermined) decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
+            if (_msgInfoError.DetectTypeOf(message) == IncomingMessageType.Undetermined) decodingErrors = decodingErrors | MessageErrors.UndeterminedType;
             if (_msgInfoError.IsCompleted(message) == false) decodingErrors = decodingErrors | MessageErrors.Incomplete;
 
             return decodingErrors;

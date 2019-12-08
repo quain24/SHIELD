@@ -1,42 +1,39 @@
-﻿using Shield.HardwareCom.Factories;
+﻿using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
     public class CommunicationHub
     {
-        #region Settings and info
+
+        // TODO
+        // Do we need collections here? will we use it?
+        // input collection can be located in ingester object
 
         private bool _hasCommunicationManager = false;
-        private long _confirmationTimeout = 2000;
-        private long _completitionTimeout = 2000;
 
-        // locks
         private bool _processing = false;
-
         private object _processingLock = new object();
 
-        #endregion Settings and info
+        private CancellationTokenSource _incomingCommandProcessingCTS = new CancellationTokenSource();
 
-        #region Objects from Autofac and settings - setters
-
-        private IMessageInfoAndErrorChecks _msgInfoError;
         private IMessanger _messanger;
-        private Func<IMessageHWComModel> _messageFactory;
-        private ICommandModelFactory _commandFactory;
-
-        #endregion Objects from Autofac and settings - setters
+        private IMessageInfoAndErrorChecks _messageInfoError;
+        private ICommandIngester _commandIngester;
 
         // main message collections
-        private Dictionary<string, IMessageHWComModel> _receivedMessages = new Dictionary<string, IMessageHWComModel>();
+        private ConcurrentQueue<IMessageHWComModel> _sendingQueue = new ConcurrentQueue<IMessageHWComModel>();
 
         private Dictionary<string, IMessageHWComModel> _sentMessages = new Dictionary<string, IMessageHWComModel>();
-        private ConcurrentQueue<IMessageHWComModel> _sendingQueue = new ConcurrentQueue<IMessageHWComModel>();
+
+        private Dictionary<string, IMessageHWComModel> _receivedMessages = new Dictionary<string, IMessageHWComModel>();
+        private ConcurrentQueue<ICommandModel> _commandsToProcess = new ConcurrentQueue<ICommandModel>();
 
         public bool DeviceIsOpen { get { return _hasCommunicationManager ? _messanger.IsOpen : false; } }
         public bool DeviceIsSending { get { return _hasCommunicationManager ? _messanger.IsSending : false; } }
@@ -106,13 +103,11 @@ namespace Shield.HardwareCom
 
         #endregion Events
 
-        public CommunicationHub(IMessageInfoAndErrorChecks msgInfoError,
-                                ICommandModelFactory commandFactory,
-                                Func<IMessageHWComModel> messageFactory)
+        public CommunicationHub(IMessageInfoAndErrorChecks messageInfoError,
+                                ICommandIngester commandIngester)
         {
-            _msgInfoError = msgInfoError;
-            _messageFactory = new Func<IMessageHWComModel>(() => { return new MessageHWComModel(); }); //_messageFactory = messageFactory;
-            _commandFactory = commandFactory;
+            _messageInfoError = messageInfoError;
+            _commandIngester = commandIngester;
         }
 
         #region Setup methods
@@ -120,21 +115,17 @@ namespace Shield.HardwareCom
         public long ConfirmationTimeout(long timeout = -1)
         {
             if (timeout < 0 || timeout % 1 != 0)
-                return _confirmationTimeout;
+                return _messageInfoError?.ConfirmationTimeout ?? -1;
 
-            _confirmationTimeout = timeout;
-            _msgInfoError.ConfirmationTimeout = _confirmationTimeout;
-            return _confirmationTimeout;
+            return _messageInfoError is null ? -1 : _messageInfoError.ConfirmationTimeout = timeout;
         }
 
         public long CompletitionTimeout(long timeout = -1)
         {
             if (timeout < 0 || timeout % 1 != 0)
-                return _confirmationTimeout;
+                return _messageInfoError?.CompletitionTimeout ?? -1;
 
-            _confirmationTimeout = timeout;
-            _msgInfoError.CompletitionTimeout = _completitionTimeout;
-            return _confirmationTimeout;
+            return _messageInfoError is null ? -1 : _messageInfoError.CompletitionTimeout = timeout;
         }
 
         public void AssignMessanger(IMessanger messanger)
@@ -155,8 +146,86 @@ namespace Shield.HardwareCom
         {
         }
 
-        private void ProcessIncomingCommand(ICommandModel command)
+        private void AddToProcessingQueue(ICommandModel command)
         {
+            _commandsToProcess.Enqueue(command);
+        }
+
+        private void TryAddCommandToMessage(ICommandModel command)
+        { // single thread - one command at a time
+            IMessageHWComModel message;
+
+            if (_receivedMessages.ContainsKey(command.Id))
+            {
+                message = _receivedMessages[command.Id];
+                if (_messageInfoError.IsCompleted(message))
+                {
+                    // ERROR - corresponding message is already completed!
+                    // handle, give to other, exit?
+                }
+                if (_messageInfoError.IsCompletitionTimeoutExceeded(message))
+                {
+                    message.Errors = message.Errors | Enums.Errors.CompletitionTimeout;
+                    // ERROR - corresponding message hit completition timeout
+                    // handle, give to other, exit?
+                }
+            }
+
+            else if (_commandIngester.TryIngest(command, out message))
+            {
+
+                if(_messageInfoError.IsCompleted(message))
+                {
+                    // GOOD - completed, give it to handler
+                }
+
+                else
+                {
+                    // NEUTRAL - not completed, but also still in time - so just wait for another command
+                    //           or for completeness timeout checker from other thread?
+                }
+
+            }
+
+
+
+
+
+
+
+
+
+
+
+                // Inject command into incomplete message
+                if (_messageInfoError.IsCompletitionTimeoutExceeded(message) == false)
+                {
+                    // Completition timeout is not exceeded, so check if this message is complete
+                    if (_messageInfoError.IsCompleted(message))
+                    {
+                        // Message is complete, its isComplete is set, now time to check for errors
+                        message.Errors = message.Errors | _messageInfoError.DecodingErrorsIn(message);
+                        if (_messageInfoError.IsPatternCorrect(message) == false)
+                            message.Errors = message.Errors | Enums.Errors.BadMessagePattern;
+                        message.Type = _messageInfoError.DetectTypeOf(message);
+                        if (message.Type == Enums.MessageType.Unknown)
+                            message.Errors = message.Errors | Enums.Errors.UndeterminedType;
+                    }
+                    else
+                    {
+                        // incomplete but there is still time for it to be completed
+                        // what to do? Nothing?
+                    }
+                
+            }
+            else
+            {
+                // not ingested - so completed, cannot add another command - trash it
+            }
+        }
+        private bool IsMsgAlreadyCompleted(string id)
+        {
+            return (_receivedMessages.ContainsKey(id) && _receivedMessages[id].IsCompleted);
         }
 
         #region Event handlers
@@ -167,7 +236,7 @@ namespace Shield.HardwareCom
             command.TimeStamp = Timestamp.TimestampNow;
             IdGenerator.UsedThisID(command.Id);
 
-            ProcessIncomingCommand(command);
+            AddToProcessingQueue(command);
         }
 
         #endregion Event handlers

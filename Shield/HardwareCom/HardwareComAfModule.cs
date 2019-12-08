@@ -6,6 +6,7 @@ using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Linq;
@@ -98,18 +99,30 @@ namespace Shield.HardwareCom
             builder.RegisterType<MessageInfoAndErrorChecks>()
                 .As<IMessageInfoAndErrorChecks>();
 
+            builder.RegisterType<CommandIngester>()
+                .As<ICommandIngester>()
+                .WithParameter(new ResolvedParameter(
+                    (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
+                    (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()));
+
+           
+
 
             // tymczasowo do wszystkiego innego
-            //builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
-            //       .Where(t => t.IsInNamespace("HardwareCom"))
-            //       .Except<Messenger>()
-            //       .Except<MoqAdapter>()
-            //       .Except<SerialPortAdapter>()
-            //       .Except<CommandTranslator>()
-            //       .Except<CommunicationDeviceFactory>()
-            //       .Except<IncomingDataPreparer>()
-            //       .AsImplementedInterfaces()
-            //       .InstancePerDependency();
+            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+                   .Where(t => t.IsInNamespace("Shield.HardwareCom"))
+                   .Except<Messenger>()
+                   .Except<MoqAdapter>()
+                   .Except<SerialPortAdapter>()
+                   .Except<CommandTranslator>()
+                   .Except<CommunicationDeviceFactory>()
+                   .Except<IncomingDataPreparer>()
+                   .AsImplementedInterfaces()
+                   .InstancePerDependency();
+
+            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+                .Where(t => t.IsInNamespace($@"Shield.HardwareCom.MessageProcessing"))
+                .AsImplementedInterfaces();
 
             base.Load(builder);
         }

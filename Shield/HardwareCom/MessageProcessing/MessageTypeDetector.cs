@@ -6,13 +6,16 @@ using Shield.Enums;
 using System.Threading.Tasks;
 using Shield.HardwareCom.Models;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.MessageProcessing
 {
     public static class MessageTypeDetector
     {
         public static IncomingMessageType Detect(IMessageModel message)
         {
-            if (message is null || message.Count() < 2)
+            if(message is null)
+                throw new ArgumentNullException(nameof(message), "MessageTypeDetector: Detect - Passed NULL instead of a Message object");
+
+            if (message.Count() < 2)
                 return IncomingMessageType.Undetermined;
 
             CommandType type = message.ElementAt(1).CommandType;

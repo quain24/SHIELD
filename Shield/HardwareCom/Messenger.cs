@@ -236,24 +236,24 @@ namespace Shield.HardwareCom
                 // free managed resources
                 if (_receiveCTS != null)
                 {
-                    _receiveCTS.Cancel();
-                    _receiveCTS.Dispose();
+                    _receiveCTS?.Cancel();
+                    _receiveCTS?.Dispose();
                     _receiveCTS = null;
                 }
                 if (_decodingCTS != null)
                 {
-                    _receiveCTS.Cancel();
-                    _receiveCTS.Dispose();
+                    _receiveCTS?.Cancel();
+                    _receiveCTS?.Dispose();
                     _receiveCTS = null;
                 }
                 if (_rawDataBuffer != null)
                 {
-                    _rawDataBuffer.Dispose();
+                    _rawDataBuffer?.Dispose();
                     _rawDataBuffer = null;
                 }
                 if (_device != null)
                 {
-                    _device.Dispose();
+                    _device?.Dispose();
                     _device = null;
                 }
             }
