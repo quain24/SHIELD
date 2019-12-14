@@ -21,6 +21,7 @@ namespace Shield.Data
         public Settings(ISettingsModel settingsModel)
         {
             _settingsModel = settingsModel;
+            LoadFromFile();
             AddMissingSettingPacks();
         }       
 
@@ -114,7 +115,7 @@ namespace Shield.Data
         /// </summary>
         /// <param name="type">What should be added or replaced?</param>
         /// <param name="settings">with what config pack?</param>
-        public void Add(SettingsType type, CommonInterfaces.ISetting settings)
+        public void AddOrReplace(SettingsType type, CommonInterfaces.ISetting settings)
         {
             if (_settingsModel.Settings.ContainsKey(type))
                 _settingsModel.Settings.Remove(type);

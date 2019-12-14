@@ -6,7 +6,7 @@ namespace Shield.HardwareCom
 {
     public interface ICommandIngester
     {
-        BlockingCollection<IMessageHWComModel> GetCompletedMessages();
+        BlockingCollection<IMessageHWComModel> GetProcessedMessages();
         bool TryIngest(ICommandModel incomingCommand, out IMessageHWComModel message);
     }
 }

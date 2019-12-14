@@ -93,6 +93,75 @@ namespace Shield.HardwareCom
                            (pi, ctx) => ctx.Resolve<IIncomingDataPreparer>())
                    });
 
+            // MESSAGE PROCESSING: =====================================================================================
+
+            #region Classes for checking correctness
+
+            builder.RegisterType<Completeness>()
+                   .As<ICompleteness>();
+
+            builder.RegisterType<CompletitionTimeout>()
+                   .As<ICompletitionTimeout>()
+                   .WithParameter(new ResolvedParameter(
+                       (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
+                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout));
+
+            builder.RegisterType<ConfirmationTimeout>()
+                   .As<IConfirmationTimeout>()
+                   .WithParameter(new ResolvedParameter(
+                       (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
+                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout));
+
+            builder.RegisterType<Decoding>()
+                   .As<IDecoding>();
+
+            builder.RegisterType<Pattern>()
+                   .As<IPattern>();
+
+            builder.RegisterType<TypeDetector>()
+                   .As<ITypeDetector>();
+
+            #endregion Classes for checking correctness
+
+            #region Message object processing
+
+            builder.RegisterType<CommandIngester>()
+                   .As<ICommandIngester>()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
+                            (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(ICompleteness) && pi.Name == "completeness",
+                           (pi, ctx) => ctx.Resolve<ICompleteness>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(ICompletitionTimeout) && pi.Name == "completitionTimeout",
+                           (pi, ctx) => ctx.Resolve<ICompletitionTimeout>())
+                   });
+
+            builder.RegisterType<MessageProcessor>()
+                   .As<IMessageProcessor>()
+                   .AsSelf()
+                   .Keyed<IMessageProcessor>(nameof(MessageProcessor));
+
+            builder.RegisterType<IncomingMessageProcessor>()
+                   .As<IMessageProcessor>()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(IDecoding) && pi.Name == "decoding",
+                           (pi, ctx) => ctx.Resolve<IDecoding>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(IPattern) && pi.Name == "pattern",
+                           (pi, ctx) => ctx.Resolve<IPattern>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(ITypeDetector) && pi.Name == "typeDetector",
+                           (pi, ctx) => ctx.Resolve<ITypeDetector>())
+                   })
+                   .Keyed<IMessageProcessor>(nameof(IncomingMessageProcessor));
+
+            #endregion Message object processing
 
             // Additional objects, some may be temporary
 
@@ -104,9 +173,6 @@ namespace Shield.HardwareCom
                 .WithParameter(new ResolvedParameter(
                     (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
                     (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()));
-
-           
-
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
@@ -120,9 +186,9 @@ namespace Shield.HardwareCom
                    .AsImplementedInterfaces()
                    .InstancePerDependency();
 
-            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
-                .Where(t => t.IsInNamespace($@"Shield.HardwareCom.MessageProcessing"))
-                .AsImplementedInterfaces();
+            //builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+            //    .Where(t => t.IsInNamespace($@"Shield.HardwareCom.MessageProcessing"))
+            //    .AsImplementedInterfaces();
 
             base.Load(builder);
         }

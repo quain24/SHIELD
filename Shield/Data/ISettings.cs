@@ -6,7 +6,7 @@ namespace Shield.Data
 {
     public interface ISettings
     {
-        void Add(SettingsType type, ISetting settings);
+        void AddOrReplace(SettingsType type, ISetting settings);
         void Flush();
         ISetting For(SettingsType type);
         T ForTypeOf<T>() where T : class, ISetting;

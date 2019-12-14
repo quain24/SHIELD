@@ -11,11 +11,15 @@ namespace Shield.HardwareCom
     {
         private readonly Func<IMessageHWComModel> _msgFactory;
         private ICompleteness _completness;
+        private ICompletitionTimeout _completitionTimeout;
 
-        private readonly Dictionary<string, IMessageHWComModel> _incompleteMessages;
         private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
-        private readonly BlockingCollection<IMessageHWComModel> _completedMessages = new BlockingCollection<IMessageHWComModel>();
-        private readonly BlockingCollection<ICommandModel> _errorAlreadyCompletedMessages = new BlockingCollection<ICommandModel>();
+
+        private readonly Dictionary<string, IMessageHWComModel> _incompleteMessages =
+            new Dictionary<string, IMessageHWComModel>(StringComparer.InvariantCultureIgnoreCase);
+
+        private readonly BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
+        private readonly BlockingCollection<ICommandModel> _errCommands = new BlockingCollection<ICommandModel>();
 
         private object _lock = new object();
         private bool _isProcessing = false;
@@ -34,11 +38,13 @@ namespace Shield.HardwareCom
         /// If commands is to be ingested into already completed message - it will be put in separate collection.
         /// </summary>
         /// <param name="messageFactory">Message factory delegate</param>
-        /// <param name="completness">State check - checks if message is completed</param>
-        public CommandIngester(Func<IMessageHWComModel> messageFactory, ICompleteness completness)
+        /// <param name="completeness">State check - checks if message is completed</param>
+        /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
+        public CommandIngester(Func<IMessageHWComModel> messageFactory, ICompleteness completeness, ICompletitionTimeout completitionTimeout = null)
         {
             _msgFactory = messageFactory;
-            _completness = completness;
+            _completness = completeness;
+            _completitionTimeout = completitionTimeout;
         }
 
         /// <summary>
@@ -50,15 +56,12 @@ namespace Shield.HardwareCom
         /// <returns>True if command was ingested, false if a corresponding message was already completed</returns>
         public bool TryIngest(ICommandModel incomingCommand, out IMessageHWComModel message)
         {
-            if (_incompleteMessages is null)
-                throw new Exception("CommandIngester: TryIngest - There is no collection set for command to be ingested into");
             if (_completness is null)
                 throw new Exception("CommandIngester: TryIngest - Completeness checker is NULL");
+            if (incomingCommand is null)
+                throw new ArgumentNullException(nameof(incomingCommand), "CommandIngester: TryIngest - tried to ingest NULL");
 
             message = null;
-
-            if (incomingCommand is null)
-                return false;
 
             if (_incompleteMessages.ContainsKey(incomingCommand.Id))
             {
@@ -73,10 +76,32 @@ namespace Shield.HardwareCom
                 _incompleteMessages.Add(message.Id, message);
             }
 
+            // check for old completes or removed otherwise
             if (message is null || _completness.IsComplete(message))
+            {
+                _errCommands.Add(incomingCommand);
                 return false;
+            }
+
+            // check for completition timeout if checker exists
+            if (_completitionTimeout?.IsExceeded(message) ?? false)
+            {
+                message.Errors = message.Errors | Enums.Errors.CompletitionTimeout;
+                _processedMessages.Add(message);
+                _errCommands.Add(incomingCommand);
+                _incompleteMessages[incomingCommand.Id] = null;
+                return false;
+            }
 
             message.Add(incomingCommand);
+
+            // if completed after last command, then move to processed
+            if (_completness.IsComplete(message))
+            {
+                _processedMessages.Add(message);
+                _incompleteMessages[message.Id] = null;
+            }
+
             return true;
         }
 
@@ -122,13 +147,7 @@ namespace Shield.HardwareCom
                     break;
                 }
 
-                bool isIngested = TryIngest(command, out message);
-
-                if (isIngested && _completness.IsComplete(message))
-                    _completedMessages.Add(message);
-
-                if (isIngested == false)
-                    _errorAlreadyCompletedMessages.Add(command);
+                TryIngest(command, out message);
             }
 
             lock (_lock)
@@ -147,21 +166,22 @@ namespace Shield.HardwareCom
         }
 
         /// <summary>
-        /// Gives a thread safe collection of completed messages for further processing
+        /// Gives a thread safe collection of completed and timeout messages for further processing
         /// </summary>
         /// <returns></returns>
-        public BlockingCollection<IMessageHWComModel> GetCompletedMessages()
+        public BlockingCollection<IMessageHWComModel> GetProcessedMessages()
         {
-            return _completedMessages;
+            return _processedMessages;
         }
 
         /// <summary>
-        /// Gives a thread safe collection of commands that were received, but corresponding messages were already completed
+        /// Gives a thread safe collection of commands that were received, but corresponding messages were already completed or completition timeout
+        /// was exceeded.
         /// </summary>
         /// <returns></returns>
-        public BlockingCollection<ICommandModel> GetCommandsWhereMessageAlreadyCompleted()
+        public BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout()
         {
-            return _errorAlreadyCompletedMessages;
+            return _errCommands;
         }
     }
 }

@@ -8,6 +8,11 @@ namespace Shield.HardwareCom.MessageProcessing
     {
         private long _confirmationTimeout;
 
+        public ConfirmationTimeout (long timeout = 0)
+        {
+            _confirmationTimeout = timeout;
+        }
+
         public long Timeout
         {
             get => _confirmationTimeout;

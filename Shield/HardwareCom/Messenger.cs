@@ -11,6 +11,13 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
+    /// <summary>
+    /// Basic communication class - every command sent or received goes through this class.
+    /// Constantly monitors incoming communication and simultaneously sends given commands.
+    /// Needs to be setup by <c>Setup</c> method.
+    /// OPEN / START RECEIVING / START DECODING.
+    /// Returns decoded commands by <c>CommandReceived</c> event.
+    /// </summary>
     public class Messenger : IMessanger
     {
         private ICommunicationDeviceFactory _communicationDeviceFactory;
@@ -37,7 +44,7 @@ namespace Shield.HardwareCom
         public bool IsOpen { get => _device.IsOpen; }
         public bool IsReceiving { get => _receiverRunning; }
         public bool IsDecoding { get => _decoderRunning; }
-        public bool IsSending {get => _isSending; }
+        public bool IsSending { get => _isSending; }
 
         public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
@@ -50,7 +57,7 @@ namespace Shield.HardwareCom
         {
             _device = _communicationDeviceFactory.Device(type);
             if (_device is null)
-                return _setupSuccessufl = false;            
+                return _setupSuccessufl = false;
 
             return _setupSuccessufl = true;
         }

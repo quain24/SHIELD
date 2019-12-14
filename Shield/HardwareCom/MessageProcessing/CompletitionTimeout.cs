@@ -8,6 +8,11 @@ namespace Shield.HardwareCom.MessageProcessing
     {
         private long _completitionTimeout;
 
+        public CompletitionTimeout(long timeout = 0)
+        {
+            _completitionTimeout = timeout;
+        }
+
         public long Timeout
         {
             get => _completitionTimeout;
