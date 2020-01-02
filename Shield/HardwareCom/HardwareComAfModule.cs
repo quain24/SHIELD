@@ -25,21 +25,19 @@ namespace Shield.HardwareCom
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
+            // More complicated factories (with params in constructor) are separated below.
+            // ==================================================================================================================================
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Factory"))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
+                   .Except<MessageFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
-            #region Communication Device Factory
+            #region Communication Device Factory and required devices
 
             builder.RegisterType<SerialPortAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Serial)
-                   .UsingConstructor();  // use parameterless constructor when using setup in factory
-
-            // can be used when instead of additional call for setup method when creating this device in communicationDeviceFactory
-            //.WithParameter(new ResolvedParameter(
-            //              (pi, ctx) => pi.ParameterType == typeof(ISerialPortSettingsModel) && pi.Name == "settings",
-            //              (pi, ctx) => ctx.Resolve<IAppSettings>().GetSettingsFor<ISerialPortSettingsModel>()));
+                   .UsingConstructor();
 
             builder.RegisterType<MoqAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Moq)
@@ -47,7 +45,23 @@ namespace Shield.HardwareCom
                                  (pi, ctx) => pi.ParameterType == typeof(string) && pi.Name == "portName",
                                  (pi, ctx) => "1"));
 
-            #endregion Communication Device Factory
+            #endregion Communication Device Factory and required devices
+
+            // Message factory
+
+            builder.RegisterType<MessageFactory>()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
+                           (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
+                           (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)
+                   })
+                   .As<IMessageFactory>();
+
+            // End of factories registration ========================================================================================================
 
             // Working classes
             builder.RegisterType<CommandTranslator>()
@@ -130,8 +144,8 @@ namespace Shield.HardwareCom
                    .WithParameters(new[]
                    {
                        new ResolvedParameter(
-                            (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
-                            (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()),
+                            (pi, ctx) => pi.ParameterType == typeof(IMessageFactory) && pi.Name == "messageFactory",
+                            (pi, ctx) => ctx.Resolve<IMessageFactory>()),
                        new ResolvedParameter(
                            (pi, ctx) => pi.ParameterType == typeof(ICompleteness) && pi.Name == "completeness",
                            (pi, ctx) => ctx.Resolve<ICompleteness>()),
@@ -168,11 +182,11 @@ namespace Shield.HardwareCom
             builder.RegisterType<MessageInfoAndErrorChecks>()
                 .As<IMessageInfoAndErrorChecks>();
 
-            builder.RegisterType<CommandIngester>()
-                .As<ICommandIngester>()
-                .WithParameter(new ResolvedParameter(
-                    (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
-                    (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()));
+            //builder.RegisterType<CommandIngester>()
+            //    .As<ICommandIngester>()
+            //    .WithParameter(new ResolvedParameter(
+            //        (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
+            //        (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()));
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
@@ -183,6 +197,7 @@ namespace Shield.HardwareCom
                    .Except<CommandTranslator>()
                    .Except<CommunicationDeviceFactory>()
                    .Except<IncomingDataPreparer>()
+                   .Except<MessageFactory>()
                    .AsImplementedInterfaces()
                    .InstancePerDependency();
 

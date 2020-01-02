@@ -1,4 +1,5 @@
-﻿using Shield.HardwareCom.MessageProcessing;
+﻿using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
@@ -9,7 +10,7 @@ namespace Shield.HardwareCom
 {
     public class CommandIngester : ICommandIngester
     {
-        private readonly Func<IMessageHWComModel> _msgFactory;
+        private readonly IMessageFactory _msgFactory;
         private ICompleteness _completness;
         private ICompletitionTimeout _completitionTimeout;
 
@@ -40,7 +41,7 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngester(Func<IMessageHWComModel> messageFactory, ICompleteness completeness, ICompletitionTimeout completitionTimeout = null)
+        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ICompletitionTimeout completitionTimeout = null)
         {
             _msgFactory = messageFactory;
             _completness = completeness;
@@ -69,10 +70,7 @@ namespace Shield.HardwareCom
             }
             else
             {
-                message = _msgFactory();
-                message.Timestamp = Helpers.Timestamp.TimestampNow;
-                message.AssaignID(incomingCommand.Id);
-                message.Direction = Enums.Direction.Incoming;
+                message = _msgFactory.CreateNew(incomingCommand.Id, Enums.Direction.Incoming);
                 _incompleteMessages.Add(message.Id, message);
             }
 

@@ -13,11 +13,6 @@ namespace Shield.Enums
         Unknown,
 
         /// <summary>
-        /// No specified direction
-        /// </summary>
-        None,
-
-        /// <summary>
         /// Message is incoming from remote machine
         /// </summary>
         Incoming,

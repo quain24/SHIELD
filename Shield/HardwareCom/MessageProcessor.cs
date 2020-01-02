@@ -13,8 +13,9 @@ namespace Shield.HardwareCom
         private const int TakeTimeout = 150;
         private readonly BlockingCollection<IMessageHWComModel> _messagesToProcess = new BlockingCollection<IMessageHWComModel>();
         private readonly BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
-        private CancellationTokenSource _processingCTS = new CancellationTokenSource();        
+        private CancellationTokenSource _processingCTS = new CancellationTokenSource();
         private bool _isProcessing = false;
+        private object _processingLock = new object();
 
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed
@@ -41,6 +42,13 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessagesContinous()
         {
+            lock (_processingLock)
+            {
+                if (_isProcessing)
+                    return;
+                _isProcessing = true;
+            }
+
             while (true)
             {
                 _isProcessing = true;
@@ -67,6 +75,13 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessages()
         {
+            lock (_processingLock)
+            {
+                if (_isProcessing)
+                    return;
+                _isProcessing = true;
+            }
+
             while (_messagesToProcess.Count > 0)
             {
                 _isProcessing = true;
@@ -77,7 +92,8 @@ namespace Shield.HardwareCom
                     IMessageHWComModel message = null;
 
                     if (_messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token))
-                    {                        
+                    {
+                        bool isProcessedWithoutErrors = TryProcess(message, out processedMessage);
                         _processedMessages.Add(processedMessage);
                     }
                     else

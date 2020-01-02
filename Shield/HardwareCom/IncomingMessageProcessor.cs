@@ -10,7 +10,7 @@ namespace Shield.HardwareCom
     /// for further processing / handling by another class. Is derived from <see cref="MessageProcessor"/> and implements
     /// <seealso cref="IMessageProcessor"/>
     /// </summary>
-    public class IncomingMessageProcessor : MessageProcessor, IMessageProcessor
+    public class IncomingMessageProcessor : MessageProcessor//, IMessageProcessor
     {
         private readonly IDecoding _decoding;
         private readonly IPattern _pattern;
@@ -32,10 +32,6 @@ namespace Shield.HardwareCom
 
             processedMessage = messageToProcess;
 
-            // got any errors from previous processors or similar?
-            if (messageToProcess.Errors != Errors.None)
-                return false;
-
             // check for decoding errors
             messageToProcess.Errors = messageToProcess.Errors | _decoding.Check(messageToProcess);
 
@@ -47,7 +43,7 @@ namespace Shield.HardwareCom
             messageToProcess.Type = _typeDetector.DetectTypeOf(messageToProcess);
             if (messageToProcess.Type == MessageType.Unknown)
                 messageToProcess.Errors = messageToProcess.Errors | Errors.UndeterminedType;
-
+            
             return messageToProcess.Errors == Errors.None ? true : false;
         }
     }

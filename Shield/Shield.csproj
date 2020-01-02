@@ -92,12 +92,14 @@
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
+    <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
     <Compile Include="HardwareCom\IMessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\IMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\CommandIngester.cs" />
     <Compile Include="HardwareCom\IncomingMessageProcessor.cs" />
+    <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeout.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ConfirmationTimeout.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Decoding.cs" />
