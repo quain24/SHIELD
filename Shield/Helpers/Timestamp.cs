@@ -50,7 +50,7 @@ namespace Shield.Helpers
             if((from - to) % 1 != 0)
                 return -1;
 
-            return from - to < 0 ? (from - to) * -1 : from - to;
+            return from < to ? (from - to) * -1 : from - to;
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Shield.Helpers
             if(from < 0 || from % 1 != 0)
                 return -1;
 
-            return TimestampNow - from;
+            return Difference(from, TimestampNow);
         }
     }
 }

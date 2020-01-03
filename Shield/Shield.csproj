@@ -93,6 +93,7 @@
     <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
+    <Compile Include="HardwareCom\IInherittest.cs" />
     <Compile Include="HardwareCom\IMessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\IMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="HardwareCom\CommandIngester.cs" />
     <Compile Include="HardwareCom\IncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
+    <Compile Include="HardwareCom\Inherittest.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeout.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ConfirmationTimeout.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Decoding.cs" />
@@ -114,8 +116,11 @@
     <Compile Include="HardwareCom\MessageProcessing\IConfirmationTimeout.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IDecoding.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IPattern.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\ITimeoutCheck.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ITypeDetector.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Pattern.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\TimeoutCheck.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\TimeoutChecker.cs" />
     <Compile Include="HardwareCom\MessageProcessing\TypeDetector.cs" />
     <Compile Include="HardwareCom\MessageProcessing\MessageTypeDetector.cs" />
     <Compile Include="HardwareCom\MessageProcessor.cs" />

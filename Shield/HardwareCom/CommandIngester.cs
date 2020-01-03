@@ -12,7 +12,7 @@ namespace Shield.HardwareCom
     {
         private readonly IMessageFactory _msgFactory;
         private ICompleteness _completness;
-        private ICompletitionTimeout _completitionTimeout;
+        private ITimeoutCheck _completitionTimeout;
 
         private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
 
@@ -41,7 +41,7 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ICompletitionTimeout completitionTimeout = null)
+        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout = null)
         {
             _msgFactory = messageFactory;
             _completness = completeness;
@@ -63,6 +63,10 @@ namespace Shield.HardwareCom
                 throw new ArgumentNullException(nameof(incomingCommand), "CommandIngester: TryIngest - tried to ingest NULL");
 
             message = null;
+
+            // In any case, add command id to used-up pool on this machine
+            Helpers.IdGenerator.UsedThisID(incomingCommand.Id);
+
 
             if (_incompleteMessages.ContainsKey(incomingCommand.Id))
             {

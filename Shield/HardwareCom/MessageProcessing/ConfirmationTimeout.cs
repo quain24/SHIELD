@@ -4,30 +4,20 @@ using Shield.Helpers;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class ConfirmationTimeout : IConfirmationTimeout
-    {
-        private long _confirmationTimeout;
+    public class ConfirmationTimeout : TimeoutCheck
+    { 
+        public ConfirmationTimeout(long timeout)
+            : base(timeout) { }
 
-        public ConfirmationTimeout (long timeout = 0)
+        public override bool IsExceeded(IMessageHWComModel message)
         {
-            _confirmationTimeout = timeout;
-        }
-
-        public long Timeout
-        {
-            get => _confirmationTimeout;
-            set => _confirmationTimeout = value;
-        }
-
-        public bool IsExceeded(IMessageHWComModel message)
-        {
-            if (message is null || Timeout == 0)
+            if (message is null || Timeout <= 0)
                 return false;
 
             if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
                 return true;
 
-            if (Timestamp.Difference(message.Timestamp) > _confirmationTimeout)
+            if (Timestamp.Difference(message.Timestamp) > _timeout)
                 return true;
             return false;
         }

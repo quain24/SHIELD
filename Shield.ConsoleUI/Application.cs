@@ -23,9 +23,9 @@ namespace Shield.ConsoleUI
         private IMessanger _comMessanger;
         private ISettings _settings;
 
+        private IInherittest _inheritest;
+
         ICommandIngester _ingester;
-        ICompletitionTimeout _completitionTimeout;
-        IConfirmationTimeout _confirmationTimeout;
         IDecoding _decoding;
         ICompleteness _completness;
         IPattern _pattern;
@@ -33,11 +33,10 @@ namespace Shield.ConsoleUI
 
         public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ISettings settings,
             ICommandIngester ingester,
-            ICompletitionTimeout completitionTimeout,
-            IConfirmationTimeout confirmationTimeout,
             IDecoding decoding,
             ICompleteness completness,
-            IPattern pattern)
+            IPattern pattern,
+            IInherittest inheritest)
         {
             _command = command;
             _deviceFactory = deviceFactory;
@@ -48,12 +47,11 @@ namespace Shield.ConsoleUI
             _settings = settings;
 
             _ingester = ingester;
-            _completitionTimeout = completitionTimeout;
-            _confirmationTimeout = confirmationTimeout;
             _decoding = decoding;
             _completness = completness;
             _pattern = pattern;
 
+            _inheritest = inheritest;
             //_comcom.IncomingErrorReceived += OnErrorReceived;
         }
 
@@ -104,6 +102,8 @@ namespace Shield.ConsoleUI
             {
                 Console.WriteLine(availablePort);
             }
+
+            _inheritest.GetValues();
 
             ////_comMessanger.Setup(DeviceType.Serial);
 

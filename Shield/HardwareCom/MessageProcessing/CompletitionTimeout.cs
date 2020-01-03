@@ -4,30 +4,20 @@ using Shield.Helpers;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class CompletitionTimeout : ICompletitionTimeout
+    public class CompletitionTimeout : TimeoutCheck
     {
-        private long _completitionTimeout;
+        public CompletitionTimeout(long timeout)
+            : base(timeout) { }
 
-        public CompletitionTimeout(long timeout = 0)
+        public override bool IsExceeded(IMessageHWComModel message)
         {
-            _completitionTimeout = timeout;
-        }
-
-        public long Timeout
-        {
-            get => _completitionTimeout;
-            set => _completitionTimeout = value;
-        }
-
-        public bool IsExceeded(IMessageHWComModel message)
-        {
-            if (message is null || Timeout == 0)
+            if (message is null || Timeout <= 0)
                 return false;
 
             if (message.Errors.HasFlag(Errors.CompletitionTimeout))
                 return true;
 
-            if (Timestamp.Difference(message.Timestamp) > _completitionTimeout)
+            if (Timestamp.Difference(message.Timestamp) > _timeout)
                 return true;
             return false;
         }
