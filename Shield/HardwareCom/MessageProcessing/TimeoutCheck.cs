@@ -1,16 +1,17 @@
 ﻿using Shield.HardwareCom.Models;
+using Shield.Helpers;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public abstract class TimeoutCheck : ITimeoutCheck
+    public class TimeoutCheck : ITimeoutCheck
     {
-        internal long _timeout;
+        private long _timeout;
+        private const int NoTimeout = 0;
 
-        public TimeoutCheck(long timeout = 0)
-        {
-            _timeout = SetTimeout(timeout);
-            System.Console.WriteLine("base call");
-        }
+        public int NoTimeoutValue => NoTimeout;
+
+        public TimeoutCheck(long timeout = NoTimeout)
+            => _timeout = SetTimeout(timeout);
 
         public long Timeout
         {
@@ -20,9 +21,19 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private long SetTimeout(long timeout)
         {
-            return (timeout <= 0 || timeout % 1 != 0) ? 0 : timeout;
+            return (timeout <= NoTimeout || timeout % 1 != 0) ? NoTimeout : timeout;
         }
 
-        public abstract bool IsExceeded(IMessageHWComModel message);
+        public virtual bool IsExceeded(IMessageHWComModel message, IMessageHWComModel inCompareTo = null)
+        {
+            if (message is null || Timeout <= NoTimeoutValue)
+                return false;
+
+            long difference = inCompareTo is null ?
+                Timestamp.Difference(message.Timestamp) :
+                Timestamp.Difference(message.Timestamp, inCompareTo.Timestamp);
+
+            return difference > Timeout ? true : false;
+        }
     }
 }

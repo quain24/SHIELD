@@ -88,7 +88,7 @@ namespace Shield.HardwareCom
             // check for completition timeout if checker exists
             if (_completitionTimeout?.IsExceeded(message) ?? false)
             {
-                message.Errors = message.Errors | Enums.Errors.CompletitionTimeout;
+                message.Errors |= Enums.Errors.CompletitionTimeout;
                 _processedMessages.Add(message);
                 _errCommands.Add(incomingCommand);
                 _incompleteMessages[incomingCommand.Id] = null;

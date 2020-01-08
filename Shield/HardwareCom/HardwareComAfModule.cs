@@ -116,50 +116,15 @@ namespace Shield.HardwareCom
 
             builder.RegisterType<TimeoutCheck>()
                    .As<ITimeoutCheck>()
-                   .WithParameter("timeout", 0)
-                   .Keyed<ITimeoutCheck>(nameof(TimeoutCheck));
+                   .WithParameter("timeout", 0);
 
-            builder.RegisterType<CompletitionTimeout>()
-                   .As<ITimeoutCheck>()
+            builder.RegisterType<ConfirmationTimeoutChecker>()
+                   .As<IConfirmationTimeoutChecker>()
                    .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
-                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout))
-                   .Keyed<ITimeoutCheck>(nameof(CompletitionTimeout));
-
-            builder.RegisterType<ConfirmationTimeout>()
-                   .As<ITimeoutCheck>()
-                   .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
-                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
-                   .Keyed<ITimeoutCheck>(nameof(ConfirmationTimeout));
-
-
-            // TEST =============
-
-            builder.RegisterType<Inherittest>()
-                   .As<IInherittest>()
-                   .WithParameters(new[]
-                   {
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionCheck",
-                           (pi, ctx) => ctx.ResolveKeyed<ITimeoutCheck>(nameof(CompletitionTimeout))),
-
-                        new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "confirmationCheck",
-                           (pi, ctx) => ctx.ResolveKeyed<ITimeoutCheck>(nameof(ConfirmationTimeout)))
-                   });
-
-            //builder.RegisterType<CompletitionTimeout>()
-            //       .As<ICompletitionTimeout>()
-            //       .WithParameter(new ResolvedParameter(
-            //           (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
-            //           (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout));
-
-            //builder.RegisterType<ConfirmationTimeout>()
-            //       .As<IConfirmationTimeout>()
-            //       .WithParameter(new ResolvedParameter(
-            //           (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
-            //           (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout));
+                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "timeoutCheck",
+                            (pi, ctx) => ctx.Resolve<ITimeoutCheck>(new ResolvedParameter(
+                                (pii, ctxx) => pii.ParameterType == typeof(long) && pii.Name == "timeout",
+                                (pii, ctxx) => ctxx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))));
 
             builder.RegisterType<Decoding>()
                    .As<IDecoding>();
@@ -171,6 +136,25 @@ namespace Shield.HardwareCom
                    .As<ITypeDetector>();
 
             #endregion Classes for checking correctness
+
+            // TEST =============
+
+            builder.RegisterType<Inherittest>()
+                   .As<IInherittest>()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionCheck",
+                            (pi, ctx) => ctx.Resolve<ITimeoutCheck>(new ResolvedParameter(
+                                (pii, ctxx) => pii.ParameterType == typeof(long) && pii.Name == "timeout",
+                                (pii, ctxx) => ctxx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout))),
+
+                        new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "confirmationCheck",
+                            (pi, ctx) => ctx.Resolve<ITimeoutCheck>(new ResolvedParameter(
+                                (pii, ctxx) => pii.ParameterType == typeof(long) && pii.Name == "timeout",
+                                (pii, ctxx) => ctxx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout)))
+                   });
 
             #region Message object processing
 
@@ -186,7 +170,9 @@ namespace Shield.HardwareCom
                            (pi, ctx) => ctx.Resolve<ICompleteness>()),
                        new ResolvedParameter(
                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
-                           (pi, ctx) => ctx.ResolveKeyed<ITimeoutCheck>(nameof(CompletitionTimeout)))
+                           (pi, ctx) => ctx.Resolve<ITimeoutCheck>(new ResolvedParameter(
+                               (pii, ctxx) => pii.ParameterType == typeof(long) && pi.Name == "timeout",
+                               (pii, ctxx) => ctxx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout)))
                    });
 
             builder.RegisterType<MessageProcessor>()
@@ -216,14 +202,13 @@ namespace Shield.HardwareCom
 
             builder.RegisterType<MessageInfoAndErrorChecks>()
                 .As<IMessageInfoAndErrorChecks>();
-            
+
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.IsInNamespace("Shield.HardwareCom"))
                    .Except<Inherittest>()
+                   .Except<ConfirmationTimeoutChecker>()
                    .Except<TimeoutCheck>()
-                   .Except<CompletitionTimeout>()
-                   .Except<ConfirmationTimeout>()
                    .Except<Messenger>()
                    .Except<MoqAdapter>()
                    .Except<SerialPortAdapter>()
