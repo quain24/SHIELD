@@ -67,7 +67,6 @@ namespace Shield.HardwareCom
             // In any case, add command id to used-up pool on this machine
             Helpers.IdGenerator.UsedThisID(incomingCommand.Id);
 
-
             if (_incompleteMessages.ContainsKey(incomingCommand.Id))
             {
                 message = _incompleteMessages[incomingCommand.Id];

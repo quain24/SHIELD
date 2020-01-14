@@ -43,7 +43,7 @@ namespace Shield.HardwareCom
             messageToProcess.Type = _typeDetector.DetectTypeOf(messageToProcess);
             if (messageToProcess.Type == MessageType.Unknown)
                 messageToProcess.Errors = messageToProcess.Errors | Errors.UndeterminedType;
-            
+
             return messageToProcess.Errors == Errors.None ? true : false;
         }
     }

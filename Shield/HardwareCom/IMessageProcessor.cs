@@ -8,10 +8,15 @@ namespace Shield.HardwareCom
         bool IsProcessingMessages { get; }
 
         void AddMessageToProcess(IMessageHWComModel message);
+
         BlockingCollection<IMessageHWComModel> GetProcessedMessages();
+
         void StartProcessingMessages();
+
         void StartProcessingMessagesContinous();
+
         void StopProcessingMessages();
+
         bool TryProcess(IMessageHWComModel messageToProcess, out IMessageHWComModel processedMessage);
     }
 }

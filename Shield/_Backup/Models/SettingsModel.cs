@@ -12,7 +12,6 @@ namespace Shield.Data.Models
     [DataContract(Name = "ApplicationSettings")]
     public class SettingsModel : ISettingsModel
     {
-        
         private Dictionary<SettingsType, ISetting> _settings = new Dictionary<SettingsType, ISetting>();
 
         [DataMember(Name = "Settings")]

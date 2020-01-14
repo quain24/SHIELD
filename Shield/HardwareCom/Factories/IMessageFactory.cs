@@ -8,7 +8,7 @@ namespace Shield.HardwareCom.Factories
         IMessageHWComModel CreateNew(
             Direction direction = Direction.Unknown,
             MessageType type = MessageType.Unknown,
-            string id = "",            
+            string id = "",
             long timestampOverride = 0);
     }
 }

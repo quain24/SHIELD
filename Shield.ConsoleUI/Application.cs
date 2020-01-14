@@ -1,15 +1,13 @@
 ﻿using Shield.Data;
-using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
-using System.IO.Ports;
-using System.Text;
-using Shield.HardwareCom.MessageProcessing;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO.Ports;
+using System.Threading.Tasks;
 
 namespace Shield.ConsoleUI
 {
@@ -25,11 +23,10 @@ namespace Shield.ConsoleUI
 
         private IInherittest _inheritest;
 
-        ICommandIngester _ingester;
-        IDecoding _decoding;
-        ICompleteness _completness;
-        IPattern _pattern;
-        
+        private ICommandIngester _ingester;
+        private IDecoding _decoding;
+        private ICompleteness _completness;
+        private IPattern _pattern;
 
         public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ISettings settings,
             ICommandIngester ingester,
@@ -82,19 +79,10 @@ namespace Shield.ConsoleUI
             //_settings.Add(SettingsType.Application, appset);
 
             //_settings.SaveToFile();
-            _settings.LoadFromFile(); 
-            
-            
+            _settings.LoadFromFile();
 
             Dictionary<string, IMessageHWComModel> msgcol = new Dictionary<string, IMessageHWComModel>();
 
-
-
-
-
-
-
-           
             _comMessanger.Setup(DeviceType.Serial);
 
             //wyswietl porty w kompie
@@ -112,8 +100,6 @@ namespace Shield.ConsoleUI
             _comMessanger.Open();
             Task.Run(() => _comMessanger.StartReceiveAsync());
             Task.Run(() => _comMessanger.StartDecodingAsync());
-
-
 
             //int licznik = 0;
 
@@ -168,7 +154,7 @@ namespace Shield.ConsoleUI
             Console.WriteLine("-------------------------------------------------------------------");
             Console.WriteLine(e.Message.Id);
             Console.WriteLine(e.Errors.ToString());
-            foreach(var c in e.Message)
+            foreach (var c in e.Message)
             {
                 Console.WriteLine(c.CommandTypeString);
             }

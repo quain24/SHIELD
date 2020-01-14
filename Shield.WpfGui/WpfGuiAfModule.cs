@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Autofac;
+using Caliburn.Micro;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Autofac;
-using Autofac.Core;
-using Caliburn.Micro;
 
 namespace Shield.WpfGui
 {
@@ -29,7 +24,7 @@ namespace Shield.WpfGui
             builder.RegisterAssemblyTypes(Assembly.Load($"{nameof(Shield)}.{nameof(WpfGui)}"))
                 .Where(t => t.IsInNamespace("Shield.WpfGui.Models") && t.Name.EndsWith("Model"))
                 .AsSelf();
-                
+
             base.Load(builder);
         }
     }

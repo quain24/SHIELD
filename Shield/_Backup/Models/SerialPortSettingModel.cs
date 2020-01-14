@@ -37,7 +37,7 @@ namespace Shield.Data.Models
 
         [OnDeserializing]
         void OnDeserializing(StreamingContext context)
-        {            
+        {
             PortNumber = 5;
             BaudRate = 19200;
             DataBits = 8;

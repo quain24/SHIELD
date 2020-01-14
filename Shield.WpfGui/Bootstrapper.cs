@@ -26,26 +26,23 @@ namespace Shield.WpfGui
         {
             DisplayRootViewFor<ShellViewModel>();
 
-
             PresentationTraceSources.Refresh();
             PresentationTraceSources.DataBindingSource.Listeners.Add(new ConsoleTraceListener());
             PresentationTraceSources.DataBindingSource.Listeners.Add(new DebugTraceListener());
-            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning | SourceLevels.Error;            
+            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning | SourceLevels.Error;
         }
- 
+
         public class DebugTraceListener : TraceListener
         {
             public override void Write(string message)
             {
             }
- 
+
             public override void WriteLine(string message)
             {
-              Debugger.Break();
+                Debugger.Break();
             }
         }
-
-        
 
         #region AutoFac Configuration
 

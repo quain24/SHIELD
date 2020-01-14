@@ -335,10 +335,9 @@ namespace COM6TestSender
                     }
                 }
             }
-
             else if (Int32.Parse(a) == 11)
             {
-                int num = 0;  
+                int num = 0;
                 int counter = 0;
 
                 string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
@@ -346,60 +345,54 @@ namespace COM6TestSender
                 Regex pat = new Regex(pattern);
 
                 string id = Shield.Helpers.IdGenerator.GetID(4);
-                List<int> comsetup = new List<int>{1,2,16,16,16,16,16,16,16,16,16,16,16,5,17};
+                List<int> comsetup = new List<int> { 1, 2, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 5, 17 };
 
                 int licz = 0;
 
                 Task.Run(() =>
                 {
+                    Regex pat2 = new Regex(pattern);
 
-                Regex pat2 = new Regex(pattern);
+                    string id2 = Shield.Helpers.IdGenerator.GetID(4);
+                    List<int> comsetup2 = new List<int> { 1, 3, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 15, 15, 15, 5, 17 };
 
-                string id2 = Shield.Helpers.IdGenerator.GetID(4);
-                List<int> comsetup2 = new List<int>{1,3,16,16,16,16,16,16,16,16,16,16,16,15,15,15,5,17};
-
-                int licz2 = 0;
-                while (true)
-                {
-                    foreach(var iii2 in comsetup2)
+                    int licz2 = 0;
+                    while (true)
                     {
-                        string data2 = num.ToString().PadLeft(30, '.');
-                        int choose2 = iii2;
+                        foreach (var iii2 in comsetup2)
+                        {
+                            string data2 = num.ToString().PadLeft(30, '.');
+                            int choose2 = iii2;
 
-                        string packet2 = $@"*{choose2.ToString().PadLeft(4, '0')}*{id2}*";
-                        if (choose2 == 16)
-                        {
-                            packet2 += data2;
-                            num++;
-                        }
-                        else if (choose2 == 17)
-                        {
-                            id2 = Shield.Helpers.IdGenerator.GetID(4);
-                            //Console.WriteLine($@"ID changed to {id2}");
-                            continue;
-                        }
-                        else if (choose2 > 17)
-                        {
-                            Console.WriteLine("bad command");
-                            continue;
-                        }
+                            string packet2 = $@"*{choose2.ToString().PadLeft(4, '0')}*{id2}*";
+                            if (choose2 == 16)
+                            {
+                                packet2 += data2;
+                                num++;
+                            }
+                            else if (choose2 == 17)
+                            {
+                                id2 = Shield.Helpers.IdGenerator.GetID(4);
+                                //Console.WriteLine($@"ID changed to {id2}");
+                                continue;
+                            }
+                            else if (choose2 > 17)
+                            {
+                                Console.WriteLine("bad command");
+                                continue;
+                            }
 
-                        Console.WriteLine(counter);
-                        counter++;
-                        serial.Write(packet2);
+                            Console.WriteLine(counter);
+                            counter++;
+                            serial.Write(packet2);
                             Console.WriteLine(serial.ReadExisting());
-
+                        }
                     }
-                }
                 });
 
-
-
-
-
                 while (true)
                 {
-                    foreach(var iii in comsetup)
+                    foreach (var iii in comsetup)
                     {
                         string data = num.ToString().PadLeft(30, '.');
                         int choose = iii;
@@ -428,9 +421,6 @@ namespace COM6TestSender
                         Console.WriteLine(serial.ReadExisting());
                     }
                 }
-
-
-
             }
 
             // zle na emulatorze

@@ -33,12 +33,13 @@ namespace Shield.HardwareCom
                 return true;
             return false;
         }
+
         public bool IsCompletitionTimeoutExceeded(IMessageHWComModel message)
         {
             if (message is null)
                 return false;
 
-            if(message.Errors.HasFlag(Errors.CompletitionTimeout))
+            if (message.Errors.HasFlag(Errors.CompletitionTimeout))
                 return true;
 
             if (Timestamp.Difference(message.Timestamp) > _completitionTimeout)
@@ -55,12 +56,13 @@ namespace Shield.HardwareCom
                 return true;
             return false;
         }
+
         public bool IsConfirmationTimeoutExceeded(IMessageHWComModel message)
         {
             if (message is null)
                 return false;
 
-            if(message.Errors.HasFlag(Errors.ConfirmationTimeout))
+            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
                 return true;
 
             if (Timestamp.Difference(message.Timestamp) > _confirmationTimeout)
@@ -130,7 +132,7 @@ namespace Shield.HardwareCom
             if (badOrUnknown.Any() == false)
                 return Errors.None;
 
-            Errors output = Errors.None;            
+            Errors output = Errors.None;
 
             foreach (ICommandModel c in badOrUnknown)
             {
@@ -154,41 +156,42 @@ namespace Shield.HardwareCom
             switch (type)
             {
                 case CommandType.Master:
-                    return IncomingMessageType.Master;
+                return IncomingMessageType.Master;
 
                 case CommandType.Slave:
-                    return IncomingMessageType.Slave;
+                return IncomingMessageType.Slave;
 
                 case CommandType.Confirmation:
-                    return IncomingMessageType.Confirmation;
+                return IncomingMessageType.Confirmation;
 
                 default:
-                    return IncomingMessageType.Undetermined;
+                return IncomingMessageType.Undetermined;
             }
         }
+
         public MessageType DetectTypeOf(IMessageHWComModel message)
         {
             if (message is null || message.Count() < 2)
-                            return MessageType.Unknown;
+                return MessageType.Unknown;
 
-            if(message.Type != MessageType.Unknown)
-                return message.Type;            
+            if (message.Type != MessageType.Unknown)
+                return message.Type;
 
             CommandType type = message.ElementAt(1).CommandType;
 
             switch (type)
             {
                 case CommandType.Master:
-                    return MessageType.Master;
+                return MessageType.Master;
 
                 case CommandType.Slave:
-                    return MessageType.Slave;
+                return MessageType.Slave;
 
                 case CommandType.Confirmation:
-                    return MessageType.Confirmation;
+                return MessageType.Confirmation;
 
                 default:
-                    return MessageType.Unknown;
+                return MessageType.Unknown;
             }
         }
 
@@ -230,6 +233,7 @@ namespace Shield.HardwareCom
 
             return true;
         }
+
         public bool IsPatternCorrect(IMessageHWComModel message)
         {
             // not enough commands in message
@@ -285,7 +289,7 @@ namespace Shield.HardwareCom
             if (message is null)
                 throw new ArgumentNullException(nameof(message), "Cannot pass null message!");
 
-            if(message.IsCompleted == true || message.Last().CommandType == CommandType.EndMessage)
+            if (message.IsCompleted == true || message.Last().CommandType == CommandType.EndMessage)
             {
                 message.IsCompleted = true;
                 return true;

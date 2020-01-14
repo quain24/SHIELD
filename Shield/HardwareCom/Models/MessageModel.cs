@@ -49,7 +49,7 @@ namespace Shield.HardwareCom.Models
         public bool Replace(ICommandModel target, ICommandModel replacement)
         {
             var targetIndex = _commands.IndexOf(target);
-            if(targetIndex == -1)
+            if (targetIndex == -1)
                 return false;
             _commands[targetIndex] = replacement;
             return true;

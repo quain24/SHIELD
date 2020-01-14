@@ -1,5 +1,4 @@
-﻿using Shield.HardwareCom.MessageProcessing;
-using Shield.HardwareCom.Models;
+﻿using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
@@ -11,7 +10,6 @@ namespace Shield.HardwareCom
 {
     public class CommunicationHub
     {
-
         // TODO
         // Do we need collections here? will we use it?
         // input collection can be located in ingester object
@@ -170,59 +168,45 @@ namespace Shield.HardwareCom
                     // handle, give to other, exit?
                 }
             }
-
             else if (_commandIngester.TryIngest(command, out message))
             {
-
-                if(_messageInfoError.IsCompleted(message))
+                if (_messageInfoError.IsCompleted(message))
                 {
                     // GOOD - completed, give it to handler
                 }
-
                 else
                 {
                     // NEUTRAL - not completed, but also still in time - so just wait for another command
                     //           or for completeness timeout checker from other thread?
                 }
-
             }
 
-
-
-
-
-
-
-
-
-
-
-                // Inject command into incomplete message
-                if (_messageInfoError.IsCompletitionTimeoutExceeded(message) == false)
+            // Inject command into incomplete message
+            if (_messageInfoError.IsCompletitionTimeoutExceeded(message) == false)
+            {
+                // Completition timeout is not exceeded, so check if this message is complete
+                if (_messageInfoError.IsCompleted(message))
                 {
-                    // Completition timeout is not exceeded, so check if this message is complete
-                    if (_messageInfoError.IsCompleted(message))
-                    {
-                        // Message is complete, its isComplete is set, now time to check for errors
-                        message.Errors = message.Errors | _messageInfoError.DecodingErrorsIn(message);
-                        if (_messageInfoError.IsPatternCorrect(message) == false)
-                            message.Errors = message.Errors | Enums.Errors.BadMessagePattern;
-                        message.Type = _messageInfoError.DetectTypeOf(message);
-                        if (message.Type == Enums.MessageType.Unknown)
-                            message.Errors = message.Errors | Enums.Errors.UndeterminedType;
-                    }
-                    else
-                    {
-                        // incomplete but there is still time for it to be completed
-                        // what to do? Nothing?
-                    }
-                
+                    // Message is complete, its isComplete is set, now time to check for errors
+                    message.Errors = message.Errors | _messageInfoError.DecodingErrorsIn(message);
+                    if (_messageInfoError.IsPatternCorrect(message) == false)
+                        message.Errors = message.Errors | Enums.Errors.BadMessagePattern;
+                    message.Type = _messageInfoError.DetectTypeOf(message);
+                    if (message.Type == Enums.MessageType.Unknown)
+                        message.Errors = message.Errors | Enums.Errors.UndeterminedType;
+                }
+                else
+                {
+                    // incomplete but there is still time for it to be completed
+                    // what to do? Nothing?
+                }
             }
             else
             {
                 // not ingested - so completed, cannot add another command - trash it
             }
         }
+
         private bool IsMsgAlreadyCompleted(string id)
         {
             return (_receivedMessages.ContainsKey(id) && _receivedMessages[id].IsCompleted);

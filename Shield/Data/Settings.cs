@@ -23,7 +23,7 @@ namespace Shield.Data
             _settingsModel = settingsModel;
             LoadFromFile();
             AddMissingSettingPacks();
-        }       
+        }
 
         /// <summary>
         /// Clears all settings from memory

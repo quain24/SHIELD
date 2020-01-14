@@ -3,7 +3,6 @@ using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
-using System.Reflection;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -374,38 +373,38 @@ namespace Shield.HardwareCom
                     switch (messageType)
                     {
                         case IncomingMessageType.Confirmation:
-                            if (!_outgoingSent.ContainsKey(message.Id))
-                            {
-                                SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingPartial, _incomingErrors);
-                                IncomingErrorrousMessageHandler(message);
-                                break;
-                            }
-                            SwitchBuffers(message, _incomingPartial, _incomingCompleteConfirms);
-                            IncomingConfirmationMessageHandler(message);
+                        if (!_outgoingSent.ContainsKey(message.Id))
+                        {
+                            SwitchBuffers(message, MessageErrors.ConfirmedNonexistent, _incomingPartial, _incomingErrors);
+                            IncomingErrorrousMessageHandler(message);
                             break;
+                        }
+                        SwitchBuffers(message, _incomingPartial, _incomingCompleteConfirms);
+                        IncomingConfirmationMessageHandler(message);
+                        break;
 
                         case IncomingMessageType.Master:
-                            SwitchBuffers(message, _incomingPartial, _incomingCompleteMasters);
-                            IncomingMasterMessageHandler(message);
-                            break;
+                        SwitchBuffers(message, _incomingPartial, _incomingCompleteMasters);
+                        IncomingMasterMessageHandler(message);
+                        break;
 
                         case IncomingMessageType.Slave:
-                            if (!_outgoingConfirmed.ContainsKey(message.Id))
-                            {
-                                SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingPartial, _incomingErrors);
-                                IncomingErrorrousMessageHandler(message);
-                                break;
-                            }
-                            SwitchBuffers(message, _incomingPartial, _incomingCompleteSlaves);
-                            IncomingSlaveMessageHandler(message);
+                        if (!_outgoingConfirmed.ContainsKey(message.Id))
+                        {
+                            SwitchBuffers(message, MessageErrors.RespondedToNonexistent, _incomingPartial, _incomingErrors);
+                            IncomingErrorrousMessageHandler(message);
                             break;
+                        }
+                        SwitchBuffers(message, _incomingPartial, _incomingCompleteSlaves);
+                        IncomingSlaveMessageHandler(message);
+                        break;
 
                         // Should not happen ever, just for sanity
                         default:
-                            decodingErrors = MessageErrors.UndeterminedType;
-                            SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
-                            IncomingErrorrousMessageHandler(message);
-                            break;
+                        decodingErrors = MessageErrors.UndeterminedType;
+                        SwitchBuffers(message, decodingErrors, _incomingPartial, _incomingErrors);
+                        IncomingErrorrousMessageHandler(message);
+                        break;
                     }
                 }
             }
@@ -450,24 +449,24 @@ namespace Shield.HardwareCom
                     switch (type)
                     {
                         case CommandType.Confirmation:
-                            _outgoingConfirmations[message.Id] = message;
-                            OutgoingConfirmationSend(message);
-                            break;
+                        _outgoingConfirmations[message.Id] = message;
+                        OutgoingConfirmationSend(message);
+                        break;
 
                         case CommandType.Master:
-                            _outgoingSent[message.Id] = message;
-                            OutgoingMasterMessageHandler(message);
-                            break;
+                        _outgoingSent[message.Id] = message;
+                        OutgoingMasterMessageHandler(message);
+                        break;
 
                         case CommandType.Slave:
-                            _outgoingSent[message.Id] = message;
-                            OutgoingSlaveMessageHandler(message);
-                            break;
+                        _outgoingSent[message.Id] = message;
+                        OutgoingSlaveMessageHandler(message);
+                        break;
 
                         default:
-                            _outgoingErrors[message.Id] = (MessageErrors.UndeterminedType, message);
-                            OutgoingErrorrousMessageHandler(message);
-                            break;
+                        _outgoingErrors[message.Id] = (MessageErrors.UndeterminedType, message);
+                        OutgoingErrorrousMessageHandler(message);
+                        break;
                     }
                 }
                 else
@@ -670,20 +669,20 @@ namespace Shield.HardwareCom
                 switch (c.CommandType)
                 {
                     case CommandType.Error:
-                        responseCommand.CommandType = CommandType.ReceivedAsError;
-                        break;
+                    responseCommand.CommandType = CommandType.ReceivedAsError;
+                    break;
 
                     case CommandType.Unknown:
-                        responseCommand.CommandType = CommandType.ReceivedAsUnknown;
-                        break;
+                    responseCommand.CommandType = CommandType.ReceivedAsUnknown;
+                    break;
 
                     case CommandType.Partial:
-                        responseCommand.CommandType = CommandType.ReceivedAsPartial;
-                        break;
+                    responseCommand.CommandType = CommandType.ReceivedAsPartial;
+                    break;
 
                     default:
-                        responseCommand.CommandType = CommandType.ReceivedAsCorrect;
-                        break;
+                    responseCommand.CommandType = CommandType.ReceivedAsCorrect;
+                    break;
                 }
                 confirmation.Add(responseCommand);
             }
@@ -849,54 +848,65 @@ namespace Shield.HardwareCom
             switch (target)
             {
                 case Buffer.None:
-                    return false;
-                case Buffer.IncomingQueue:               
-                    while(_incomingQueue.Count > 0)
-                    {
-                         _incomingQueue.TryDequeue(out tmpCommand);
-                    }
-                    break;
-                      
+                return false;
+
+                case Buffer.IncomingQueue:
+                while (_incomingQueue.Count > 0)
+                {
+                    _incomingQueue.TryDequeue(out tmpCommand);
+                }
+                break;
+
                 case Buffer.IncomingPartial:
-                    _incomingPartial.Clear();
-                    break;
+                _incomingPartial.Clear();
+                break;
+
                 case Buffer.IncomingCompleteConfirms:
-                    _incomingCompleteConfirms.Clear();
-                    break;
+                _incomingCompleteConfirms.Clear();
+                break;
+
                 case Buffer.IncomingCompleteSlaves:
-                    _incomingCompleteSlaves.Clear();
-                    break;
+                _incomingCompleteSlaves.Clear();
+                break;
+
                 case Buffer.IncomingCompleteMasters:
-                    _incomingCompleteMasters.Clear();
-                    break;
+                _incomingCompleteMasters.Clear();
+                break;
+
                 case Buffer.IncomingError:
-                    _incomingErrors.Clear();
-                    break;
-                case Buffer.OutgoingQueue:            
-                    while(_outgoingQueue.Count > 0)
-                    {
-                         _outgoingQueue.TryDequeue(out tmpMessage);
-                    }
-                    break;
+                _incomingErrors.Clear();
+                break;
+
+                case Buffer.OutgoingQueue:
+                while (_outgoingQueue.Count > 0)
+                {
+                    _outgoingQueue.TryDequeue(out tmpMessage);
+                }
+                break;
+
                 case Buffer.OutgoingSent:
-                    _outgoingSent.Clear();
-                    break;
+                _outgoingSent.Clear();
+                break;
+
                 case Buffer.OutgoingConfirmed:
-                    _outgoingConfirmed.Clear();
-                    break;
+                _outgoingConfirmed.Clear();
+                break;
+
                 case Buffer.OutgoingConfirmations:
-                    _outgoingConfirmations.Clear();
-                    break;
+                _outgoingConfirmations.Clear();
+                break;
+
                 case Buffer.OutgoingErrors:
-                    _outgoingErrors.Clear();
-                    break;
+                _outgoingErrors.Clear();
+                break;
+
                 default:
-                    return false;
-            }                  
-                    
+                return false;
+            }
+
             return true;
         }
-        
+
         #endregion Internal buffer handling
 
         public enum Buffer

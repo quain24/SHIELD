@@ -2,10 +2,10 @@
 using System.Runtime.Serialization;
 
 namespace Shield.Data.Models
-{    
+{
     [DataContract(Name = "MoqPortSettings")]
     public class MoqPortSettingsModel : IMoqPortSettingsModel
-    {        
+    {
         [DataMember]
         public int PortNumber { get; set; }
 
