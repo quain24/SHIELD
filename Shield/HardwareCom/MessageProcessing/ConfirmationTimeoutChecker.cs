@@ -88,7 +88,7 @@ namespace Shield.HardwareCom.MessageProcessing
                 {
                     if (_isProcessing)
                         return;
-                    _isProcessing = true;
+                    _isProcessing = true;sdfsdf
                 }
             }
 
