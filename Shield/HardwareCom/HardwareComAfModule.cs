@@ -61,7 +61,6 @@ namespace Shield.HardwareCom
                            (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)
                    });
 
-                   //CommandModelFactory(Func<ICommandModel> commandFactory, int idLength)
             // Message factory
 
             builder.RegisterType<MessageFactory>()
