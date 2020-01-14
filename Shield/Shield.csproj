@@ -87,8 +87,10 @@
     <Compile Include="HardwareCom\CommunicationHub.cs" />
     <Compile Include="HardwareCom\Factories\CommandModelFactory.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ConfirmationFactory.cs" />
     <Compile Include="HardwareCom\Factories\ICommandModelFactory.cs" />
     <Compile Include="HardwareCom\Factories\ICommunicationDeviceFactory.cs" />
+    <Compile Include="HardwareCom\Factories\IConfirmationFactory.cs" />
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
@@ -119,7 +121,6 @@
     <Compile Include="HardwareCom\MessageProcessing\TimeoutCheck.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ConfirmationTimeoutChecker.cs" />
     <Compile Include="HardwareCom\MessageProcessing\TypeDetector.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\MessageTypeDetector.cs" />
     <Compile Include="HardwareCom\MessageProcessor.cs" />
     <Compile Include="HardwareCom\Messenger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />

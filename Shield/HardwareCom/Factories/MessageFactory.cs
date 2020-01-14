@@ -16,9 +16,9 @@ namespace Shield.HardwareCom.Factories
         }
 
         public IMessageHWComModel CreateNew(
-            string idOverride = "",
             Enums.Direction direction = Enums.Direction.Unknown,
             Enums.MessageType type = Enums.MessageType.Unknown,            
+            string idOverride = "",
             long timestampOverride = 0)
         {
             IMessageHWComModel output = _messageFactory();

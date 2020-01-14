@@ -6,9 +6,9 @@ namespace Shield.HardwareCom.Factories
     public interface IMessageFactory
     {
         IMessageHWComModel CreateNew(
-            string id = "",            
             Direction direction = Direction.Unknown,
             MessageType type = MessageType.Unknown,
+            string id = "",            
             long timestampOverride = 0);
     }
 }

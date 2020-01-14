@@ -8,8 +8,11 @@ namespace Shield.HardwareCom.MessageProcessing
         long Timeout { get; set; }
 
         void AddConfirmation(IMessageHWComModel confirmation);
+
         void AddToCheckingQueue(IMessageHWComModel message);
-        bool IsExceeded(IMessageHWComModel message);
+
+        bool IsExceeded(IMessageHWComModel message, IMessageHWComModel confirmation = null);
+
         BlockingCollection<IMessageHWComModel> ProcessedMessages();
     }
 }

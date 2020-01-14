@@ -31,6 +31,7 @@ namespace Shield.HardwareCom
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Factory"))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Except<MessageFactory>()
+                   .Except<ConfirmationFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
@@ -47,6 +48,20 @@ namespace Shield.HardwareCom
 
             #endregion Communication Device Factory and required devices
 
+            // Command factory
+
+            builder.RegisterType<CommandModelFactory>()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandFactory",
+                           (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
+                           (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)
+                   });
+
+                   //CommandModelFactory(Func<ICommandModel> commandFactory, int idLength)
             // Message factory
 
             builder.RegisterType<MessageFactory>()
@@ -223,7 +238,7 @@ namespace Shield.HardwareCom
             //    .Where(t => t.IsInNamespace($@"Shield.HardwareCom.MessageProcessing"))
             //    .AsImplementedInterfaces();
 
-            base.Load(builder);
+            //base.Load(builder);
         }
     }
 }

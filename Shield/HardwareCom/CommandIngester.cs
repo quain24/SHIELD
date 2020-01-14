@@ -74,7 +74,7 @@ namespace Shield.HardwareCom
             }
             else
             {
-                message = _msgFactory.CreateNew(incomingCommand.Id, Enums.Direction.Incoming);
+                message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: incomingCommand.Id);
                 _incompleteMessages.Add(message.Id, message);
             }
 

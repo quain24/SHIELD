@@ -91,7 +91,7 @@ namespace Shield.Enums
     public enum Confirmed
     {
         /// <summary>
-        /// Confirmation is pending
+        /// Message was not confirmed
         /// </summary>
         No,
 
@@ -101,11 +101,12 @@ namespace Shield.Enums
         Yes,
 
         /// <summary>
-        /// Message was not confirmed
-        /// </summary>
-        Pending
+        /// Unconfirmed or confirmed out of time frame
+        /// </summary>       
+
+        Timeout
     }
-    
+
     /// <summary>
     /// Message errors - can be multiple (flag)
     /// </summary>
