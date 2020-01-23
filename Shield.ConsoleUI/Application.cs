@@ -1,4 +1,5 @@
 ﻿using Shield.Data;
+using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
@@ -67,18 +68,18 @@ namespace Shield.ConsoleUI
             //IMoqPortSettingsModel settings2 = new MoqPortSettingsModel();
             //settings2.PortNumber = 6;
 
-            //IApplicationSettingsModel appset = new ApplicationSettingsModel();
-            //appset.DataSize = 30;
-            //appset.IdSize = 4;
-            //appset.CommandTypeSize = 4;
-            //appset.Filler = '.';
-            //appset.Separator = '*';
+            IApplicationSettingsModel appset = new ApplicationSettingsModel();
+            appset.DataSize = 30;
+            appset.IdSize = 4;
+            appset.CommandTypeSize = 4;
+            appset.Filler = '.';
+            appset.Separator = '*';
 
             //_settings.Add(SettingsType.SerialDevice, settings3);
             //_settings.Add(SettingsType.MoqDevice, settings2);
-            //_settings.Add(SettingsType.Application, appset);
+            _settings.AddOrReplace(SettingsType.Application, appset);
 
-            //_settings.SaveToFile();
+            _settings.SaveToFile();
             _settings.LoadFromFile();
 
             Dictionary<string, IMessageHWComModel> msgcol = new Dictionary<string, IMessageHWComModel>();

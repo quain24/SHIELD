@@ -61,7 +61,6 @@
     <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
     <Compile Include="CommonInterfaces\ISetting.cs" />
-    <None Include="_Backup\AppSettings.cs" />
     <Compile Include="Data\DataAfModule.cs" />
     <Compile Include="Data\ISettings.cs" />
     <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
@@ -134,18 +133,6 @@
     <Compile Include="Data\Settings.cs" />
     <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="_Backup\Models\ApplicationSettingsModel.cs" />
-    <None Include="_Backup\Models\AppSettingsModel.cs" />
-    <None Include="_Backup\Models\CommandTypesModel.cs" />
-    <None Include="_Backup\Models\IApplicationSettingsModel.cs" />
-    <None Include="_Backup\Models\IAppSettingsModel.cs" />
-    <None Include="_Backup\Models\ICommandTypesModel.cs" />
-    <None Include="_Backup\Models\IMoqPortSettingsModel.cs" />
-    <None Include="_Backup\Models\ISerialPortSettingsModel.cs" />
-    <None Include="_Backup\Models\ISettingsModel.cs" />
-    <None Include="_Backup\Models\MoqPortSettingsModel.cs" />
-    <None Include="_Backup\Models\SerialPortSettingModel.cs" />
-    <None Include="_Backup\Models\SettingsModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

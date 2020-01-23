@@ -39,7 +39,7 @@ namespace Shield.WpfGui
             }
 
             public override void WriteLine(string message)
-            {
+            {                
                 Debugger.Break();
             }
         }
@@ -49,18 +49,17 @@ namespace Shield.WpfGui
         protected override void Configure()
         {
             var builder = new ContainerBuilder();
-
-            builder.RegisterModule<WpfGuiAfModule>();
+                        
             builder.RegisterModule<HardwareComAfModule>();
             builder.RegisterModule<DataAfModule>();
             builder.RegisterModule<ShieldAfModule>();
+            builder.RegisterModule<WpfGuiAfModule>();
 
             _container = builder.Build();
         }
 
         protected override object GetInstance(Type service, string key)
         {
-            // return _container.GetInstance(service, key);
             if (string.IsNullOrWhiteSpace(key))
             {
                 if (_container.IsRegistered(service))
@@ -79,7 +78,6 @@ namespace Shield.WpfGui
 
         protected override IEnumerable<object> GetAllInstances(Type service)
         {
-            //return _container.GetAllInstances(service);
             var type = typeof(IEnumerable<>).MakeGenericType(service);
             return _container.Resolve(type) as IEnumerable<object>;
         }

@@ -41,7 +41,7 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout = null)
+        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout/* = null*/)
         {
             _msgFactory = messageFactory;
             _completness = completeness;
@@ -64,23 +64,28 @@ namespace Shield.HardwareCom
 
             message = null;
 
+            Console.WriteLine($@"Commandingester TryIngest command {incomingCommand.Id}");
+
             // In any case, add command id to used-up pool on this machine
             Helpers.IdGenerator.UsedThisID(incomingCommand.Id);
 
             if (_incompleteMessages.ContainsKey(incomingCommand.Id))
             {
                 message = _incompleteMessages[incomingCommand.Id];
+                Console.WriteLine("CommandIngester - command added to incomplete message");
             }
             else
             {
                 message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: incomingCommand.Id);
                 _incompleteMessages.Add(message.Id, message);
+                Console.WriteLine($@"CommandIngester - new message created, command count: {message.CommandCount}");
             }
 
             // check for old completes or removed otherwise
             if (message is null || _completness.IsComplete(message))
             {
                 _errCommands.Add(incomingCommand);
+                Console.WriteLine("CommandIngester - ERROR - tried to add new command to completed message");
                 return false;
             }
 
@@ -91,6 +96,7 @@ namespace Shield.HardwareCom
                 _processedMessages.Add(message);
                 _errCommands.Add(incomingCommand);
                 _incompleteMessages[incomingCommand.Id] = null;
+                Console.WriteLine("CommandIngester - Error - message  completition timeoutted");
                 return false;
             }
 
@@ -101,6 +107,7 @@ namespace Shield.HardwareCom
             {
                 _processedMessages.Add(message);
                 _incompleteMessages[message.Id] = null;
+                Console.WriteLine("CommandIngester - Message was processed, adding to processed messages collection");
             }
 
             return true;
@@ -117,6 +124,7 @@ namespace Shield.HardwareCom
             if (command is null)
                 return false;
             _awaitingQueue.Add(command);
+            Console.WriteLine($@"CommandIngester - Command {command.Id} added to be processed.");
             return true;
         }
 
@@ -129,30 +137,45 @@ namespace Shield.HardwareCom
             lock (_lock)
             {
                 if (_isProcessing)
+                {
+                    Console.WriteLine("CommandIngester - commands are already being processed");
                     return;
+                }
                 else
                     _isProcessing = true;
             }
 
-            ICommandModel command;
+            Console.WriteLine("CommandIngester - Command processing started");
+
+            ICommandModel command = null;
             IMessageHWComModel message;
+            int debugCounter = 0;
+            int debugLoopCounter = 0;
 
             while (true)
             {
                 try
-                {
-                    command = _awaitingQueue.Take(_cancelProcessingCTS.Token);
+                {                    
+                    bool a = _awaitingQueue.TryTake(out command, 150, _cancelProcessingCTS.Token);
+
+                    if(a) Console.WriteLine($"CommandIngester - Took command {command.Id} for processing");
+                    else
+                    {
+                        if(++debugLoopCounter % 10 == 0)Console.WriteLine($@"CommandIngester - Could not take command for processing: tried {++debugCounter} times,        {_awaitingQueue.Count} awailible.");
+                    }
+                        
                 }
                 catch
                 {
                     break;
                 }
-
-                TryIngest(command, out message);
+                if(command != null)
+                    TryIngest(command, out message);
             }
 
             lock (_lock)
             {
+                Console.WriteLine("CommandIngester - StartProcessingCommands ENDED");
                 _isProcessing = false;
             }
         }
@@ -172,6 +195,7 @@ namespace Shield.HardwareCom
         /// <returns></returns>
         public BlockingCollection<IMessageHWComModel> GetProcessedMessages()
         {
+            Console.WriteLine($@"CommandIngester - Requested Processed Messages ({_processedMessages.Count} available)");
             return _processedMessages;
         }
 

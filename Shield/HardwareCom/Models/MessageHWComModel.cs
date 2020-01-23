@@ -27,6 +27,7 @@ namespace Shield.HardwareCom.Models
 
         public long Timestamp { get; set; }
         public string Id { get { return _messageId; } set { AssaignID(value); } }
+        public int CommandCount => _commands.Count;
         public MessageType Type { get; set; } = MessageType.Unknown;
         public Direction Direction { get; set; } = Direction.Unknown;
         public Errors Errors { get; set; } = Errors.None;

@@ -30,7 +30,7 @@ namespace Shield.HardwareCom
 
         private BlockingCollection<string> _rawDataBuffer = new BlockingCollection<string>();
 
-        private bool _setupSuccessufl = false;
+        private bool _setupSuccessuful = false;
         private bool _disposed = false;
         private bool _decoderRunning = false;
         private bool _receiverRunning = false;
@@ -57,14 +57,14 @@ namespace Shield.HardwareCom
         {
             _device = _communicationDeviceFactory.Device(type);
             if (_device is null)
-                return _setupSuccessufl = false;
+                return _setupSuccessuful = false;
 
-            return _setupSuccessufl = true;
+            return _setupSuccessuful = true;
         }
 
         public void Open()
         {
-            if (_setupSuccessufl && IsOpen == false)
+            if (_setupSuccessuful && IsOpen == false)
                 _device.Open();
         }
 
@@ -83,7 +83,7 @@ namespace Shield.HardwareCom
             {
                 lock (_receiverLock)
                 {
-                    if (_receiverRunning || !IsOpen || !_setupSuccessufl)
+                    if (_receiverRunning || !IsOpen || !_setupSuccessuful)
                         return;
                     _receiverRunning = true;
                 }
@@ -189,6 +189,23 @@ namespace Shield.HardwareCom
         }
 
         public async Task<bool> SendAsync(IMessageModel message)
+        {
+            if (message is null)
+                return false;
+
+            List<bool> results = new List<bool>();
+
+            foreach (ICommandModel c in message)
+            {
+                results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
+            }
+
+            if (results.Contains(false))
+                return false;
+            return true;
+        }
+
+        public async Task<bool> SendAsync(IMessageHWComModel message)
         {
             if (message is null)
                 return false;

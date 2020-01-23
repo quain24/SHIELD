@@ -123,7 +123,7 @@ namespace Shield.HardwareCom.Adapters
                 try
                 {
                     ct.ThrowIfCancellationRequested();
-                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(true);
+                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
                     string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
                     OnDataReceived(rawData);
                     return rawData;

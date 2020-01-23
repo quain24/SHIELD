@@ -122,7 +122,7 @@ namespace Shield.Data.Models
             _separator = '*';
             _filler = '.';
             _confirmationTimeout = 0;
-            _completitionTimeout = 1;
+            _completitionTimeout = 1000;
             _type = SettingsType.Application;
         }
 

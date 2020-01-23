@@ -22,23 +22,25 @@ namespace Shield.WpfGui.ViewModels
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
         private IMessanger _messanger;
-        private ComCommander _comCommander;
         private ISettings _settings;
         private ICommandModelFactory _commandFactory;
-        private IMessageInfoAndErrorChecks _msgInfoError;
+        private ICommandIngester _commandIngester;
+        private IMessageProcessor _incomingMessageProcessor;
+
+
         private string _selectedCommand;
         private string _dataInput;
 
         private BindableCollection<string> _possibleCommands = new BindableCollection<string>(Enum.GetNames(typeof(CommandType)));
-        private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
+        private BindableCollection<IMessageHWComModel> _receivedMessages = new BindableCollection<IMessageHWComModel>();
         private BindableCollection<ICommandModel> _newMessageCommands = new BindableCollection<ICommandModel>();
-        private BindableCollection<IMessageModel> _sentMessages = new BindableCollection<IMessageModel>();
+        private BindableCollection<IMessageHWComModel> _sentMessages = new BindableCollection<IMessageHWComModel>();
         private ICommandModel _selectedNewMessageCommand;
-        private IMessageModel _selectedSentMessage;
+        private IMessageHWComModel _selectedSentMessage;
 
-        private Func<IMessageModel> _messageFactory;
+        private Func<IMessageHWComModel> _messageFactory;
 
-        private IMessageModel _selectedReceivedMessage;
+        private IMessageHWComModel _selectedReceivedMessage;
 
         private bool _receivingButtonActivated = false;
         private bool _sending = false;
@@ -50,30 +52,61 @@ namespace Shield.WpfGui.ViewModels
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessanger messanger, ISettings settings, ICommandModelFactory commandFactory, IMessageInfoAndErrorChecks msgInfoError)
+        public ShellViewModel(IMessanger messanger,
+                              ISettings settings,
+                              ICommandModelFactory commandFactory,
+                              ICommandIngester commandIngester,
+                              IMessageProcessor incomingMessageProcessor)
         {
             _settings = settings;
             _messanger = messanger;
             _commandFactory = commandFactory;
+            _commandIngester = commandIngester;
+            _incomingMessageProcessor = incomingMessageProcessor;
+
             _settings.LoadFromFile();
-
-            //_settings.GetSettingsFor<ISerialPortSettingsModel>().BaudRate = 19200;
-            //_settings.SaveToFile();
-
             _messanger.Setup(DeviceType.Serial);
-            _messageFactory = new Func<IMessageModel>(() => { return new MessageModel(); });
-
-            _msgInfoError = msgInfoError;
-
-            _comCommander = new ComCommander(_commandFactory, _messageFactory, _msgInfoError);
-            _comCommander.AssignMessanger(_messanger);
-
-            _comCommander.IncomingMasterReceived += AddIncomingMessageToDisplay;
-            _comCommander.IncomingSlaveReceived += AddIncomingMessageToDisplay;
-            _comCommander.IncomingConfirmationReceived += AddIncomingMessageToDisplay;
-            _comCommander.IncomingErrorReceived += AddIncomingMessageErrorToDisplay;
-
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
+
+            //Task.Run
+            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
+            
+            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+
+            
+
+
+
+            
+
+            _messanger.CommandReceived += AddCommandToProcessing;
+            
+        }
+
+        // new tryouts
+
+        public void AddCommandToProcessing(object sender, ICommandModel e)
+        {
+            
+            
+            Task.Run(() => _commandIngester.AddCommandToProcess(e));
+            Task.Run(() =>
+            {
+
+            
+            foreach(var c in _commandIngester.GetProcessedMessages().GetConsumingEnumerable())
+            {
+                _incomingMessageProcessor.AddMessageToProcess(c);
+            }  
+            });
+
+            Task.Run(() =>
+            {
+                foreach(var m in _incomingMessageProcessor.GetProcessedMessages().GetConsumingEnumerable())
+                {
+                    AddIncomingMessageToDisplay(this, m);
+                }
+            });
         }
 
         public int DataPackLength()
@@ -84,7 +117,7 @@ namespace Shield.WpfGui.ViewModels
         public char DataPackFiller()
         {
             return _settings.ForTypeOf<IApplicationSettingsModel>().Filler;
-        }
+        } 
 
         public List<string> DataPackGenerator(string data)
         {
@@ -107,23 +140,23 @@ namespace Shield.WpfGui.ViewModels
             return packs;
         }
 
-        public void AddIncomingMessageToDisplay(object sender, MessageEventArgs e)
+        public void AddIncomingMessageToDisplay(object sender, IMessageHWComModel e)
         {
-            ReceivedMessages.Add(e.Message);
+            ReceivedMessages.Add(e);
         }
 
-        public void AddIncomingMessageErrorToDisplay(object sender, MessageErrorEventArgs e)
+        public void AddIncomingMessageErrorToDisplay(object sender, IMessageHWComModel e)
         {
-            ReceivedMessages.Add(e.Message);
+            ReceivedMessages.Add(e);
         }
 
-        public BindableCollection<IMessageModel> ReceivedMessages
+        public BindableCollection<IMessageHWComModel> ReceivedMessages
         {
             get { return _receivedMessages; }
             set { _receivedMessages = value; }
         }
 
-        public IMessageModel SelectedReceivedMessage
+        public IMessageHWComModel SelectedReceivedMessage
         {
             get { return _selectedReceivedMessage; }
             set
@@ -226,8 +259,8 @@ namespace Shield.WpfGui.ViewModels
 
         public void StartReceiving()
         {
-            Task.Run(async () => await _messanger.StartReceiveAsync());
-            Task.Run(async () => await _messanger.StartDecodingAsync());
+            Task.Run(/*async*/ () => /*await*/ _messanger.StartReceiveAsync());
+            Task.Run(/*async*/ () => /*await*/ _messanger.StartDecodingAsync());
             _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
@@ -371,7 +404,7 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        public BindableCollection<IMessageModel> SentMessages
+        public BindableCollection<IMessageHWComModel> SentMessages
         {
             get { return _sentMessages; }
             set
@@ -394,7 +427,7 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        public IMessageModel SelectedSentMessage
+        public IMessageHWComModel SelectedSentMessage
         {
             get => _selectedSentMessage;
 
@@ -444,31 +477,32 @@ namespace Shield.WpfGui.ViewModels
             var message = GenerateMessage(NewMessageCommands);
             if (message is null)
                 return;
-            _comCommander.AddToSendingQueue(message);
+            //_comCommander.AddToSendingQueue(message);
 
             // hack!
             _sending = true;
             NotifyOfPropertyChange(() => CanSendMessage);
             // hack end
-            bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
+            
+            //bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
 
             // hack
             _sending = false;
-            if (sent)
-            {
-                SentMessages.Add(message);
-                NewMessageCommands.Clear();
-                NotifyOfPropertyChange(() => NewMessageCommands);
-                NotifyOfPropertyChange(() => SentMessages);
-                NotifyOfPropertyChange(() => CanSendMessage);
-            }
+            //if (sent)
+            //{
+            //    SentMessages.Add(message);
+            //    NewMessageCommands.Clear();
+            //    NotifyOfPropertyChange(() => NewMessageCommands);
+            //    NotifyOfPropertyChange(() => SentMessages);
+            //    NotifyOfPropertyChange(() => CanSendMessage);
+            //}
         }
 
         public bool CanSendMessage
         {
             get
             {
-                if (NewMessageCommands.Count < 1 || _comCommander.DeviceIsOpen == false || _sending == true)
+                if (NewMessageCommands.Count < 1 || _messanger.IsOpen == false || _sending == true)
                 {
                     return false;
                 }
@@ -476,12 +510,12 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
+        private IMessageHWComModel GenerateMessage(IEnumerable<ICommandModel> commands)
         {
             if (commands.Count() == 0 || commands is null)
                 return null;
 
-            IMessageModel message = _messageFactory();
+            IMessageHWComModel message = _messageFactory();
 
             foreach (var c in commands)
             {

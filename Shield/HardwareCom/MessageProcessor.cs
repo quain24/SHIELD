@@ -34,6 +34,7 @@ namespace Shield.HardwareCom
             if (message is null)
                 throw new ArgumentNullException(nameof(message), "MessageProcessor - AddMessageToProcess: Cannot add a NULL to processing queue");
             _messagesToProcess.Add(message);
+            Console.WriteLine("message added to be processed");
         }
 
         /// <summary>
@@ -45,9 +46,13 @@ namespace Shield.HardwareCom
             lock (_processingLock)
             {
                 if (_isProcessing)
+                {
+                    Console.WriteLine($@"MessageProcessor already running.");
                     return;
+                }
                 _isProcessing = true;
             }
+            Console.WriteLine("MessageProcessor - Continuous Message processing started");
 
             while (true)
             {
@@ -55,14 +60,21 @@ namespace Shield.HardwareCom
 
                 try
                 {
-                    IMessageHWComModel message = _messagesToProcess.Take(_processingCTS.Token);
+                    IMessageHWComModel message = null;
+                    bool wasTaken = _messagesToProcess.TryTake(out message, 150, _processingCTS.Token);
+
                     IMessageHWComModel processedMessage = null;
 
-                    bool isProcessedWithoutErrors = TryProcess(message, out processedMessage);
-                    _processedMessages.Add(processedMessage);
+                    if (wasTaken)
+                    {
+                        TryProcess(message, out processedMessage);
+                        _processedMessages.Add(processedMessage);
+                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process");
+                    }
                 }
                 catch
                 {
+                    Console.WriteLine("MessageProcessor continuous ENDED");
                     _isProcessing = false;
                     break;
                 }
