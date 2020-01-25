@@ -77,7 +77,8 @@
     <Compile Include="Enums\Message.cs" />
     <Compile Include="Enums\MessageErrors.cs" />
     <Compile Include="Enums\SettingsType.cs" />
-    <Compile Include="Extensions\StringExtension.cs" />
+    <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
     <Compile Include="HardwareCom\ComCommander.cs" />

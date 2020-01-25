@@ -1,6 +1,8 @@
-﻿using Shield.HardwareCom.Models;
+﻿using Shield.Extensions;
+using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.Contracts;
 using System.Threading;
 
 namespace Shield.HardwareCom
@@ -11,11 +13,12 @@ namespace Shield.HardwareCom
     public abstract class MessageProcessor : IMessageProcessor
     {
         private const int TakeTimeout = 150;
-        private readonly BlockingCollection<IMessageHWComModel> _messagesToProcess = new BlockingCollection<IMessageHWComModel>();
+        private BlockingCollection<IMessageHWComModel> _messagesToProcess = new BlockingCollection<IMessageHWComModel>();
         private readonly BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
         private bool _isProcessing = false;
         private object _processingLock = new object();
+        private ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed
@@ -37,27 +40,40 @@ namespace Shield.HardwareCom
             Console.WriteLine("message added to be processed");
         }
 
+        public void SwitchSourceCollection(BlockingCollection<IMessageHWComModel> newSourceCollection)
+        {
+            Contract.Requires<ArgumentNullException>(newSourceCollection != null, "new source collection cannot be NULL");
+
+            using (_sourceCollectionSwithLock.Read())
+            {
+                _messagesToProcess = newSourceCollection;
+            }
+        }
+
         /// <summary>
         /// Starts continuous message processing.
         /// Thread safe.
         /// </summary>
         public void StartProcessingMessagesContinous()
         {
-            lock (_processingLock)
+            if (!_isProcessing)
             {
-                if (_isProcessing)
+                lock (_processingLock)
                 {
-                    Console.WriteLine($@"MessageProcessor already running.");
-                    return;
+                    if (_isProcessing)
+                    {
+                        Console.WriteLine($@"MessageProcessor already running.");
+                        return;
+                    }
+                    _isProcessing = true;
                 }
-                _isProcessing = true;
             }
+
             Console.WriteLine("MessageProcessor - Continuous Message processing started");
 
             while (true)
             {
                 _isProcessing = true;
-
                 try
                 {
                     IMessageHWComModel message = null;
@@ -67,12 +83,16 @@ namespace Shield.HardwareCom
 
                     if (wasTaken)
                     {
-                        TryProcess(message, out processedMessage);
+                        using (_sourceCollectionSwithLock.Write())
+                        {
+                            TryProcess(message, out processedMessage);
+                        }
+
                         _processedMessages.Add(processedMessage);
-                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process");
+                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process"); 
                     }
                 }
-                catch
+                catch (OperationCanceledException)
                 {
                     Console.WriteLine("MessageProcessor continuous ENDED");
                     _isProcessing = false;
@@ -87,11 +107,14 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessages()
         {
-            lock (_processingLock)
+            if (!_isProcessing)
             {
-                if (_isProcessing)
-                    return;
-                _isProcessing = true;
+                lock (_processingLock)
+                {
+                    if (_isProcessing)
+                        return;
+                    _isProcessing = true;
+                }
             }
 
             while (_messagesToProcess.Count > 0)

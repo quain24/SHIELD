@@ -2,7 +2,7 @@
 
 namespace Shield.Extensions
 {
-    public static class StringExtension
+    public static class StringExtensions
     {
         public static string RemoveASCIIChars(this string input)
         {

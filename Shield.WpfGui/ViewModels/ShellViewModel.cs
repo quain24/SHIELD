@@ -27,7 +27,6 @@ namespace Shield.WpfGui.ViewModels
         private ICommandIngester _commandIngester;
         private IMessageProcessor _incomingMessageProcessor;
 
-
         private string _selectedCommand;
         private string _dataInput;
 
@@ -69,44 +68,29 @@ namespace Shield.WpfGui.ViewModels
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
             //Task.Run
-            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
-            
+
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
 
-            
+            _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
+            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
 
-
-
-            
+            // Updating table in gui
+            Task.Run(() =>
+            {
+                while(true)
+                {
+                    AddIncomingMessageToDisplay(this, _incomingMessageProcessor.GetProcessedMessages().Take());
+                }
+            });
 
             _messanger.CommandReceived += AddCommandToProcessing;
-            
         }
 
         // new tryouts
 
         public void AddCommandToProcessing(object sender, ICommandModel e)
         {
-            
-            
-            Task.Run(() => _commandIngester.AddCommandToProcess(e));
-            Task.Run(() =>
-            {
-
-            
-            foreach(var c in _commandIngester.GetProcessedMessages().GetConsumingEnumerable())
-            {
-                _incomingMessageProcessor.AddMessageToProcess(c);
-            }  
-            });
-
-            Task.Run(() =>
-            {
-                foreach(var m in _incomingMessageProcessor.GetProcessedMessages().GetConsumingEnumerable())
-                {
-                    AddIncomingMessageToDisplay(this, m);
-                }
-            });
+            _commandIngester.AddCommandToProcess(e);
         }
 
         public int DataPackLength()
@@ -117,7 +101,7 @@ namespace Shield.WpfGui.ViewModels
         public char DataPackFiller()
         {
             return _settings.ForTypeOf<IApplicationSettingsModel>().Filler;
-        } 
+        }
 
         public List<string> DataPackGenerator(string data)
         {
@@ -483,7 +467,7 @@ namespace Shield.WpfGui.ViewModels
             _sending = true;
             NotifyOfPropertyChange(() => CanSendMessage);
             // hack end
-            
+
             //bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
 
             // hack
