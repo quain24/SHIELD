@@ -3,7 +3,6 @@ using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +52,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public IMessageHWComModel GetConfirmationOf(IMessageHWComModel message)
         {
-            Contract.Requires<ArgumentNullException>(message != null, "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
+            if(message is null) throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
 
             IMessageHWComModel output;
             _confirmations.TryGetValue(message.Id, out output);
@@ -143,7 +142,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public void ProcessMessageConfirmedBy(IMessageHWComModel confirmation)
         {
-            Contract.Requires<ArgumentNullException>(confirmation != null);
+            if(confirmation is null) throw new ArgumentNullException(nameof(confirmation));
 
             IMessageHWComModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
 

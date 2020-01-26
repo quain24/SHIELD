@@ -1,7 +1,6 @@
 ﻿using Shield.Enums;
 using Shield.HardwareCom.Models;
 using System;
-using System.Diagnostics.Contracts;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -18,7 +17,7 @@ namespace Shield.HardwareCom.Factories
 
         public IMessageHWComModel GenetateConfirmationOf(IMessageHWComModel message)
         {
-            Contract.Requires<ArgumentNullException>(message != null, "ConfirmationFactory - GenerateConfirmationOf: Cannot create confirmation of NULL");
+            if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationFactory - GenerateConfirmationOf: Cannot create confirmation of NULL");
 
             IMessageHWComModel confirmation = _messageFactory.CreateNew(Direction.Outgoing,
                                                                         MessageType.Confirmation,

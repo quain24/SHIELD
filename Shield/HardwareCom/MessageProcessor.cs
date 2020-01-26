@@ -2,7 +2,6 @@
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics.Contracts;
 using System.Threading;
 
 namespace Shield.HardwareCom
@@ -40,9 +39,14 @@ namespace Shield.HardwareCom
             Console.WriteLine("message added to be processed");
         }
 
+        /// <summary>
+        /// Replace built in source collection with external collection, that for example will be updated by another object
+        /// </summary>
+        /// <param name="newSourceCollection">external collection</param>
         public void SwitchSourceCollection(BlockingCollection<IMessageHWComModel> newSourceCollection)
         {
-            Contract.Requires<ArgumentNullException>(newSourceCollection != null, "new source collection cannot be NULL");
+            if (newSourceCollection is null)
+                throw new ArgumentNullException(nameof(newSourceCollection), "New source collection cannot be NULL.");
 
             using (_sourceCollectionSwithLock.Read())
             {
@@ -89,7 +93,7 @@ namespace Shield.HardwareCom
                         }
 
                         _processedMessages.Add(processedMessage);
-                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process"); 
+                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process");
                     }
                 }
                 catch (OperationCanceledException)
