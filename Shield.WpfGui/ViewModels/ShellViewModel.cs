@@ -4,6 +4,7 @@ using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using Shield.WpfGui.Validators;
@@ -26,6 +27,8 @@ namespace Shield.WpfGui.ViewModels
         private ICommandModelFactory _commandFactory;
         private ICommandIngester _commandIngester;
         private IMessageProcessor _incomingMessageProcessor;
+        private IConfirmationFactory _confirmationFactory;
+        private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
 
         private string _selectedCommand;
         private string _dataInput;
@@ -54,32 +57,52 @@ namespace Shield.WpfGui.ViewModels
         public ShellViewModel(IMessanger messanger,
                               ISettings settings,
                               ICommandModelFactory commandFactory,
+                              Func<IMessageHWComModel> messageFactory,
                               ICommandIngester commandIngester,
-                              IMessageProcessor incomingMessageProcessor)
+                              IMessageProcessor incomingMessageProcessor, 
+                              IConfirmationFactory confirmationFactory,
+                              IConfirmationTimeoutChecker confirmationTimeoutChecker)
         {
             _settings = settings;
             _messanger = messanger;
             _commandFactory = commandFactory;
             _commandIngester = commandIngester;
             _incomingMessageProcessor = incomingMessageProcessor;
+            _confirmationFactory = confirmationFactory;
+            _confirmationTimeoutChecker = confirmationTimeoutChecker;
+            _messageFactory = messageFactory;
 
             _settings.LoadFromFile();
             _messanger.Setup(DeviceType.Serial);
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-            //Task.Run
 
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
 
             _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
 
+
+            if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
+                Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+
             // Updating table in gui
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while(true)
                 {
-                    AddIncomingMessageToDisplay(this, _incomingMessageProcessor.GetProcessedMessages().Take());
+                    IMessageHWComModel message = _incomingMessageProcessor.GetProcessedMessages().Take();
+                    AddIncomingMessageToDisplay(this, message);
+                    if(message.Type != MessageType.Confirmation)
+                    {
+                        IMessageHWComModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
+                        await _messanger.SendAsync(confirmation).ConfigureAwait(false);
+                        SentMessages.Add(confirmation);
+                    }
+                    else
+                    {
+                        _confirmationTimeoutChecker.ProcessMessageConfirmedBy(message);
+                    }
                 }
             });
 
@@ -470,16 +493,20 @@ namespace Shield.WpfGui.ViewModels
 
             //bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
 
+            bool sent = await _messanger.SendAsync(message).ConfigureAwait(false);
+
             // hack
             _sending = false;
-            //if (sent)
-            //{
-            //    SentMessages.Add(message);
-            //    NewMessageCommands.Clear();
-            //    NotifyOfPropertyChange(() => NewMessageCommands);
-            //    NotifyOfPropertyChange(() => SentMessages);
-            //    NotifyOfPropertyChange(() => CanSendMessage);
-            //}
+            if (sent)
+            {
+                SentMessages.Add(message);
+                _confirmationTimeoutChecker.AddToCheckingQueue(message);
+
+                NewMessageCommands.Clear();
+                NotifyOfPropertyChange(() => NewMessageCommands);
+                NotifyOfPropertyChange(() => SentMessages);
+                NotifyOfPropertyChange(() => CanSendMessage);
+            }
         }
 
         public bool CanSendMessage

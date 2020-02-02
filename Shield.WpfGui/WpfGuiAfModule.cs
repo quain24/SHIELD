@@ -4,6 +4,10 @@ using System.Linq;
 using System.Reflection;
 using Shield.WpfGui.ViewModels;
 using Autofac.Core;
+using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.MessageProcessing;
+using System;
+using Shield.HardwareCom.Models;
 
 namespace Shield.WpfGui
 {
@@ -38,6 +42,9 @@ namespace Shield.WpfGui
                            (pi, ctx) => pi.Name == "settings",
                            (pi, ctx) => ctx.Resolve<Data.ISettings>()),
                        new ResolvedParameter(
+                           (pi, ctx) => pi.Name == "messageFactory",
+                           (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()),
+                       new ResolvedParameter(
                            (pi, ctx) => pi.Name == "commandFactory",
                            (pi, ctx) => ctx.Resolve<HardwareCom.Factories.ICommandModelFactory>()),
                        new ResolvedParameter(
@@ -45,7 +52,13 @@ namespace Shield.WpfGui
                            (pi, ctx) => ctx.Resolve<HardwareCom.ICommandIngester>()),
                        new ResolvedParameter(
                            (pi, ctx) => pi.Name == "incomingMessageProcessor",
-                           (pi, ctx) => ctx.ResolveKeyed<HardwareCom.IMessageProcessor>(nameof(HardwareCom.IncomingMessageProcessor)))
+                           (pi, ctx) => ctx.ResolveKeyed<HardwareCom.IMessageProcessor>(nameof(HardwareCom.IncomingMessageProcessor))),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.Name == "confirmationFactory",
+                           (pi, ctx) => ctx.Resolve<IConfirmationFactory>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.Name == "confirmationTimeoutChecker",
+                           (pi, ctx) => ctx.Resolve<IConfirmationTimeoutChecker>())
                    })
                    .AsSelf();
 

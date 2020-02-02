@@ -41,7 +41,7 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout/* = null*/)
+        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout = null)
         {
             _msgFactory = messageFactory;
             _completness = completeness;
@@ -64,7 +64,7 @@ namespace Shield.HardwareCom
 
             message = null;
 
-            Console.WriteLine($@"Commandingester TryIngest command {incomingCommand.Id}");
+            Console.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
 
             // In any case, add command id to used-up pool on this machine
             Helpers.IdGenerator.UsedThisID(incomingCommand.Id);
@@ -161,7 +161,7 @@ namespace Shield.HardwareCom
                     if(a) Console.WriteLine($"CommandIngester - Took command {command.Id} for processing");
                     else
                     {
-                        if(++debugLoopCounter % 10 == 0)Console.WriteLine($@"CommandIngester - Could not take command for processing: tried {++debugCounter} times,        {_awaitingQueue.Count} awailible.");
+                        if(++debugLoopCounter % 10 == 0)Console.WriteLine($@"CommandIngester - Could not take command for processing: tried {++debugCounter} times, {_awaitingQueue.Count} available.");
                     }
                         
                 }

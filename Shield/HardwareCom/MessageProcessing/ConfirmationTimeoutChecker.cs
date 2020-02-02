@@ -1,4 +1,5 @@
 ﻿using Shield.Enums;
+using Shield.Extensions;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
@@ -38,6 +39,8 @@ namespace Shield.HardwareCom.MessageProcessing
             }
         }
 
+        public int NoTimeoutValue => _timeoutCheck.NoTimeoutValue;
+
         public ConfirmationTimeoutChecker(ITimeoutCheck timeoutCheck)
         {
             if (timeoutCheck is null)
@@ -52,7 +55,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public IMessageHWComModel GetConfirmationOf(IMessageHWComModel message)
         {
-            if(message is null) throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
+            if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
 
             IMessageHWComModel output;
             _confirmations.TryGetValue(message.Id, out output);
@@ -79,7 +82,7 @@ namespace Shield.HardwareCom.MessageProcessing
             return isTimeoutExceeded;
         }
 
-        public async Task CheckUnconfirmedMessagesAsync()
+        public async Task CheckUnconfirmedMessagesContinousAsync()
         {
             if (!_isProcessing)
             {
@@ -91,32 +94,40 @@ namespace Shield.HardwareCom.MessageProcessing
                 }
             }
 
+            Console.WriteLine("ConfirmationTimeoutChecker: Started checking timeouts of sent messages.");
+
             try
             {
                 IMessageHWComModel message;
 
-                while (_storage.Count > 0 && !_processingCTS.IsCancellationRequested)
+                while (!_processingCTS.IsCancellationRequested)
                 {
                     message = _storage.FirstOrDefault().Value;
                     if (message is null)
-                        break;
+                    {
+                        await Task.Delay(_checkinterval, _processingCTS.Token).ConfigureAwait(false);
+                        continue;
+                    }
 
                     ClearTimeoutError(message);
 
-                    _currentlyProcessingIdLock.EnterReadLock();
-                    if (_currentlyProcessingId == message.Id)
+                    using (_currentlyProcessingIdLock.Read())
                     {
-                        _currentlyProcessingIdLock.ExitReadLock();
-                        _processingCTS.Token.ThrowIfCancellationRequested();
-                        continue;
+                        if (_currentlyProcessingId == message.Id)
+                        {
+                            _processingCTS.Token.ThrowIfCancellationRequested();
+                            continue;
+                        }
                     }
-                    _currentlyProcessingIdLock.ExitReadLock();
 
                     if (IsExceeded(message))
                     {
                         SetTimeoutError(message);
                         _processedMessages.Add(message);
                         _storage.Remove(_storage.Keys.First());
+
+                        Console.WriteLine($@"ConfirmationTimeoutChecker: {message.Id} - Confirmation timeout exceeded.");
+
                         _processingCTS.Token.ThrowIfCancellationRequested();
                     }
                     else
@@ -142,36 +153,47 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public void ProcessMessageConfirmedBy(IMessageHWComModel confirmation)
         {
-            if(confirmation is null) throw new ArgumentNullException(nameof(confirmation));
+            if (confirmation is null) throw new ArgumentNullException(nameof(confirmation));
 
             IMessageHWComModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
 
-            _currentlyProcessingIdLock.EnterWriteLock();
-            _currentlyProcessingId = message is null ? string.Empty : message.Id;
-            _currentlyProcessingIdLock.ExitWriteLock();
+            using (_currentlyProcessingIdLock.Write())
+            {
+                _currentlyProcessingId = message is null ? string.Empty : message.Id;
+            }
 
             if (message is null)
             {
+                Console.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} tried to confirm nonexistent message.");
                 confirmation.Errors |= Errors.ConfirmedNonexistent;
             }
             else
             {
                 message = IsExceeded(message, confirmation) ? SetTimeoutError(message) : message;
+
+                string diagMessage = string.Empty;
+                if(message.Errors.HasFlag(Errors.ConfirmationTimeout))
+                    diagMessage = "with timeout!";
+                else
+                    diagMessage = "in time";
+
+                Console.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} confirmed message " + diagMessage );
+
                 message.IsConfirmed = true;
                 _processedMessages.Add(message);
             }
             _processedConfirmations.Add(confirmation);
 
-            _currentlyProcessingIdLock.EnterWriteLock();
-            _currentlyProcessingId = string.Empty;
-            _currentlyProcessingIdLock.ExitWriteLock();
+            using (_currentlyProcessingIdLock.Write())
+            {
+                _currentlyProcessingId = string.Empty;
+            }
         }
 
         public void AddToCheckingQueue(IMessageHWComModel message)
         {
             if (message is null)
                 return;
-            //_storage.Add(message.Id, message);
             _storage.Add(message.Timestamp, message);
         }
 
@@ -223,20 +245,25 @@ namespace Shield.HardwareCom.MessageProcessing
             return message;
         }
 
+        /// <summary>
+        /// Calculates timeout checking interval from given timeout value
+        /// </summary>
+        /// <param name="timeout">Calculating checking interval from this value</param>
+        /// <returns>Timeout checking interval</returns>
         private int CalcCheckInterval(long timeout)
         {
             switch (timeout)
             {
-                case var _ when timeout <= 0:
-                return _noTimeout;
+                case var _ when timeout <= NoTimeoutValue:
+                return 250;
 
                 case var _ when timeout <= 100:
                 return 10;
 
-                case var _ when timeout <= 1000:
+                case var _ when timeout <= 3000:
                 return 100;
 
-                case var _ when timeout > 1000:
+                case var _ when timeout > 3000:
                 return 250;
 
                 default:
