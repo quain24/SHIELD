@@ -188,23 +188,6 @@ namespace Shield.HardwareCom
             return status;
         }
 
-        public async Task<bool> SendAsync(IMessageModel message)
-        {
-            if (message is null)
-                return false;
-
-            List<bool> results = new List<bool>();
-
-            foreach (ICommandModel c in message)
-            {
-                results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
-            }
-
-            if (results.Contains(false))
-                return false;
-            return true;
-        }
-
         public async Task<bool> SendAsync(IMessageHWComModel message)
         {
             if (message is null)
@@ -220,23 +203,6 @@ namespace Shield.HardwareCom
             if (results.Contains(false))
                 return false;
             return true;
-        }
-
-        public bool Send(IMessageModel message)
-        {
-            if (message is null)
-                return false;
-
-            bool wasSentWithoutError = true;
-
-            foreach (ICommandModel c in message)
-            {
-                if (_device.Send(_commandTranslator.FromCommand(c)))
-                    continue;
-                else
-                    wasSentWithoutError = false;
-            }
-            return wasSentWithoutError;
         }
 
         protected virtual void OnCommandReceived(ICommandModel command)

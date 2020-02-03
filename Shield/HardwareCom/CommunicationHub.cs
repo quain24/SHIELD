@@ -22,7 +22,6 @@ namespace Shield.HardwareCom
         private CancellationTokenSource _incomingCommandProcessingCTS = new CancellationTokenSource();
 
         private IMessanger _messanger;
-        private IMessageInfoAndErrorChecks _messageInfoError;
         private ICommandIngester _commandIngester;
 
         // main message collections

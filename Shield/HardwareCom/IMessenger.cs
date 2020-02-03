@@ -15,10 +15,6 @@ namespace Shield.HardwareCom
 
         Task<bool> SendAsync(ICommandModel comand);
 
-        Task<bool> SendAsync(IMessageModel message);
-
-        bool Send(IMessageModel message);
-
         bool Setup(DeviceType type);
 
         void Open();

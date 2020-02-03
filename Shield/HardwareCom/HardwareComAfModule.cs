@@ -227,8 +227,6 @@ namespace Shield.HardwareCom
 
             // Additional objects, some may be temporary
 
-            builder.RegisterType<MessageInfoAndErrorChecks>()
-                .As<IMessageInfoAndErrorChecks>();
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

@@ -81,10 +81,8 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
-    <Compile Include="HardwareCom\ComCommander.cs" />
     <Compile Include="HardwareCom\CommandEventArgs.cs" />
     <Compile Include="HardwareCom\CommandTranslator.cs" />
-    <Compile Include="HardwareCom\CommunicationHub.cs" />
     <Compile Include="HardwareCom\Factories\CommandModelFactory.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
     <Compile Include="HardwareCom\Factories\ConfirmationFactory.cs" />
@@ -96,7 +94,6 @@
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
     <Compile Include="HardwareCom\IInherittest.cs" />
-    <Compile Include="HardwareCom\IMessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\IMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
@@ -106,9 +103,6 @@
     <Compile Include="HardwareCom\Inherittest.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Decoding.cs" />
     <Compile Include="HardwareCom\MessageHWComEventArgs.cs" />
-    <Compile Include="HardwareCom\MessageInfoAndErrorChecks.cs" />
-    <Compile Include="HardwareCom\MessageErrorEventArgs.cs" />
-    <Compile Include="HardwareCom\MessageEventArgs.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Completeness.cs" />
     <Compile Include="HardwareCom\ICommandIngester.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />
@@ -128,7 +122,6 @@
     <Compile Include="HardwareCom\Models\IMessageHWComModel.cs" />
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
     <Compile Include="HardwareCom\Models\MessageHWComModel.cs" />
-    <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
     <Compile Include="Data\Settings.cs" />
