@@ -5,6 +5,6 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public interface ITypeDetector
     {
-        MessageType DetectTypeOf(IMessageHWComModel message);
+        MessageType DetectTypeOf(IMessageModel message);
     }
 }

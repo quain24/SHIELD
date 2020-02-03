@@ -69,8 +69,8 @@ namespace Shield.HardwareCom
                    .WithParameters(new[]
                    {
                        new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(Func<IMessageHWComModel>) && pi.Name == "messageFactory",
-                           (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()),
+                           (pi, ctx) => pi.ParameterType == typeof(Func<IMessageModel>) && pi.Name == "messageFactory",
+                           (pi, ctx) => ctx.Resolve<Func<IMessageModel>>()),
                        new ResolvedParameter(
                            (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
                            (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)

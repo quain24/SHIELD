@@ -34,15 +34,15 @@ namespace Shield.WpfGui.ViewModels
         private string _dataInput;
 
         private BindableCollection<string> _possibleCommands = new BindableCollection<string>(Enum.GetNames(typeof(CommandType)));
-        private BindableCollection<IMessageHWComModel> _receivedMessages = new BindableCollection<IMessageHWComModel>();
+        private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
         private BindableCollection<ICommandModel> _newMessageCommands = new BindableCollection<ICommandModel>();
-        private BindableCollection<IMessageHWComModel> _sentMessages = new BindableCollection<IMessageHWComModel>();
+        private BindableCollection<IMessageModel> _sentMessages = new BindableCollection<IMessageModel>();
         private ICommandModel _selectedNewMessageCommand;
-        private IMessageHWComModel _selectedSentMessage;
+        private IMessageModel _selectedSentMessage;
 
-        private Func<IMessageHWComModel> _messageFactory;
+        private Func<IMessageModel> _messageFactory;
 
-        private IMessageHWComModel _selectedReceivedMessage;
+        private IMessageModel _selectedReceivedMessage;
 
         private bool _receivingButtonActivated = false;
         private bool _sending = false;
@@ -57,7 +57,7 @@ namespace Shield.WpfGui.ViewModels
         public ShellViewModel(IMessanger messanger,
                               ISettings settings,
                               ICommandModelFactory commandFactory,
-                              Func<IMessageHWComModel> messageFactory,
+                              Func<IMessageModel> messageFactory,
                               ICommandIngester commandIngester,
                               IMessageProcessor incomingMessageProcessor, 
                               IConfirmationFactory confirmationFactory,
@@ -91,11 +91,11 @@ namespace Shield.WpfGui.ViewModels
             {
                 while(true)
                 {
-                    IMessageHWComModel message = _incomingMessageProcessor.GetProcessedMessages().Take();
+                    IMessageModel message = _incomingMessageProcessor.GetProcessedMessages().Take();
                     AddIncomingMessageToDisplay(this, message);
                     if(message.Type != MessageType.Confirmation)
                     {
-                        IMessageHWComModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
+                        IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
                         await _messanger.SendAsync(confirmation).ConfigureAwait(false);
                         SentMessages.Add(confirmation);
                     }
@@ -147,23 +147,23 @@ namespace Shield.WpfGui.ViewModels
             return packs;
         }
 
-        public void AddIncomingMessageToDisplay(object sender, IMessageHWComModel e)
+        public void AddIncomingMessageToDisplay(object sender, IMessageModel e)
         {
             ReceivedMessages.Add(e);
         }
 
-        public void AddIncomingMessageErrorToDisplay(object sender, IMessageHWComModel e)
+        public void AddIncomingMessageErrorToDisplay(object sender, IMessageModel e)
         {
             ReceivedMessages.Add(e);
         }
 
-        public BindableCollection<IMessageHWComModel> ReceivedMessages
+        public BindableCollection<IMessageModel> ReceivedMessages
         {
             get { return _receivedMessages; }
             set { _receivedMessages = value; }
         }
 
-        public IMessageHWComModel SelectedReceivedMessage
+        public IMessageModel SelectedReceivedMessage
         {
             get { return _selectedReceivedMessage; }
             set
@@ -411,7 +411,7 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        public BindableCollection<IMessageHWComModel> SentMessages
+        public BindableCollection<IMessageModel> SentMessages
         {
             get { return _sentMessages; }
             set
@@ -434,7 +434,7 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        public IMessageHWComModel SelectedSentMessage
+        public IMessageModel SelectedSentMessage
         {
             get => _selectedSentMessage;
 
@@ -521,12 +521,12 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        private IMessageHWComModel GenerateMessage(IEnumerable<ICommandModel> commands)
+        private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
         {
             if (commands.Count() == 0 || commands is null)
                 return null;
 
-            IMessageHWComModel message = _messageFactory();
+            IMessageModel message = _messageFactory();
 
             foreach (var c in commands)
             {

@@ -12,8 +12,8 @@ namespace Shield.HardwareCom
     public abstract class MessageProcessor : IMessageProcessor
     {
         private const int TakeTimeout = 150;
-        private BlockingCollection<IMessageHWComModel> _messagesToProcess = new BlockingCollection<IMessageHWComModel>();
-        private readonly BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
+        private BlockingCollection<IMessageModel> _messagesToProcess = new BlockingCollection<IMessageModel>();
+        private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
         private bool _isProcessing = false;
         private object _processingLock = new object();
@@ -31,7 +31,7 @@ namespace Shield.HardwareCom
         /// Add a message to be processed (thread safe)
         /// </summary>
         /// <param name="message"></param>
-        public void AddMessageToProcess(IMessageHWComModel message)
+        public void AddMessageToProcess(IMessageModel message)
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message), "MessageProcessor - AddMessageToProcess: Cannot add a NULL to processing queue");
@@ -43,7 +43,7 @@ namespace Shield.HardwareCom
         /// Replace built in source collection with external collection, that for example will be updated by another object
         /// </summary>
         /// <param name="newSourceCollection">external collection</param>
-        public void SwitchSourceCollection(BlockingCollection<IMessageHWComModel> newSourceCollection)
+        public void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection)
         {
             if (newSourceCollection is null)
                 throw new ArgumentNullException(nameof(newSourceCollection), "New source collection cannot be NULL.");
@@ -80,10 +80,10 @@ namespace Shield.HardwareCom
                 _isProcessing = true;
                 try
                 {
-                    IMessageHWComModel message = null;
+                    IMessageModel message = null;
                     bool wasTaken = _messagesToProcess.TryTake(out message, 150, _processingCTS.Token);
 
-                    IMessageHWComModel processedMessage = null;
+                    IMessageModel processedMessage = null;
 
                     if (wasTaken)
                     {
@@ -127,8 +127,8 @@ namespace Shield.HardwareCom
 
                 try
                 {
-                    IMessageHWComModel processedMessage = null;
-                    IMessageHWComModel message = null;
+                    IMessageModel processedMessage = null;
+                    IMessageModel message = null;
 
                     if (_messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token))
                     {
@@ -161,7 +161,7 @@ namespace Shield.HardwareCom
         /// Gets thread safe collection that contains processed messages.
         /// </summary>
         /// <returns>Collection of processed messages</returns>
-        public BlockingCollection<IMessageHWComModel> GetProcessedMessages()
+        public BlockingCollection<IMessageModel> GetProcessedMessages()
         {
             return _processedMessages;
         }
@@ -173,6 +173,6 @@ namespace Shield.HardwareCom
         /// <param name="messageToProcess">Message to be processed</param>
         /// <param name="processedMessage">If successful - processed message, otherwise processed message with set errors</param>
         /// <returns>TRUE if message was processed without errors</returns>
-        public abstract bool TryProcess(IMessageHWComModel messageToProcess, out IMessageHWComModel processedMessage);
+        public abstract bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage);
     }
 }

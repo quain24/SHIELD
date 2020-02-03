@@ -4,6 +4,6 @@ namespace Shield.HardwareCom.Factories
 {
     public interface IConfirmationFactory
     {
-        IMessageHWComModel GenetateConfirmationOf(IMessageHWComModel message);
+        IMessageModel GenetateConfirmationOf(IMessageModel message);
     }
 }

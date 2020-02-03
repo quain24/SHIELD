@@ -7,6 +7,6 @@ namespace Shield.HardwareCom.MessageProcessing
         long Timeout { get; set; }
         int NoTimeoutValue { get; }
 
-        bool IsExceeded(IMessageHWComModel message, IMessageHWComModel inCompareTo = null);
+        bool IsExceeded(IMessageModel message, IMessageModel inCompareTo = null);
     }
 }

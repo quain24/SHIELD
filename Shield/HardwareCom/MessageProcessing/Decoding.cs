@@ -7,7 +7,7 @@ namespace Shield.HardwareCom
 {
     public class Decoding : IDecoding
     {
-        public Errors Check(IMessageHWComModel message)
+        public Errors Check(IMessageModel message)
         {
             if (message is null)
                 return Errors.IsNull;

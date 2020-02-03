@@ -119,9 +119,8 @@
     <Compile Include="HardwareCom\Messenger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />
     <Compile Include="HardwareCom\Models\ICommandModel.cs" />
-    <Compile Include="HardwareCom\Models\IMessageHWComModel.cs" />
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
-    <Compile Include="HardwareCom\Models\MessageHWComModel.cs" />
+    <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
     <Compile Include="Data\Settings.cs" />

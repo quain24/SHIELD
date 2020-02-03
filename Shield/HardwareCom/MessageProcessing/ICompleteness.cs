@@ -4,6 +4,6 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public interface ICompleteness
     {
-        bool IsComplete(IMessageHWComModel message);
+        bool IsComplete(IMessageModel message);
     }
 }

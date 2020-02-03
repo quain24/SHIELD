@@ -7,9 +7,9 @@ namespace Shield.HardwareCom
     {
         bool AddCommandToProcess(ICommandModel command);
         BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout();
-        BlockingCollection<IMessageHWComModel> GetProcessedMessages();
+        BlockingCollection<IMessageModel> GetProcessedMessages();
         void StartProcessingCommands();
         void StopProcessingCommands();
-        bool TryIngest(ICommandModel incomingCommand, out IMessageHWComModel message);
+        bool TryIngest(ICommandModel incomingCommand, out IMessageModel message);
     }
 }

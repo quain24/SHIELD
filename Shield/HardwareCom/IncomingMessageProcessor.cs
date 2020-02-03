@@ -25,7 +25,7 @@ namespace Shield.HardwareCom
             _typeDetector = typeDetector;
         }
 
-        public override bool TryProcess(IMessageHWComModel messageToProcess, out IMessageHWComModel processedMessage)
+        public override bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage)
         {
             if (messageToProcess is null)
                 throw new ArgumentNullException(nameof(messageToProcess), "IncomingMessageProcessor - TryProcess: Cannot process NULL.");

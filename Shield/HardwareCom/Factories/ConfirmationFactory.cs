@@ -15,11 +15,11 @@ namespace Shield.HardwareCom.Factories
             _messageFactory = messageFactory;
         }
 
-        public IMessageHWComModel GenetateConfirmationOf(IMessageHWComModel message)
+        public IMessageModel GenetateConfirmationOf(IMessageModel message)
         {
             if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationFactory - GenerateConfirmationOf: Cannot create confirmation of NULL");
 
-            IMessageHWComModel confirmation = _messageFactory.CreateNew(Direction.Outgoing,
+            IMessageModel confirmation = _messageFactory.CreateNew(Direction.Outgoing,
                                                                         MessageType.Confirmation,
                                                                         message.Id);
 

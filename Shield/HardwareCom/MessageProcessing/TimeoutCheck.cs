@@ -24,7 +24,7 @@ namespace Shield.HardwareCom.MessageProcessing
             return (timeout <= NoTimeout || timeout % 1 != 0) ? NoTimeout : timeout;
         }
 
-        public virtual bool IsExceeded(IMessageHWComModel message, IMessageHWComModel inCompareTo = null)
+        public virtual bool IsExceeded(IMessageModel message, IMessageModel inCompareTo = null)
         {
             if (message is null || Timeout <= NoTimeoutValue)
                 return false;

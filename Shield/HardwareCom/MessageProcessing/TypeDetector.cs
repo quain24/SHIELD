@@ -6,7 +6,7 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public class TypeDetector : ITypeDetector
     {
-        public MessageType DetectTypeOf(IMessageHWComModel message)
+        public MessageType DetectTypeOf(IMessageModel message)
         {
             if (message is null || message.Count() < 2)
                 return MessageType.Unknown;

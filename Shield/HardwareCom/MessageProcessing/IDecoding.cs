@@ -5,6 +5,6 @@ namespace Shield.HardwareCom
 {
     public interface IDecoding
     {
-        Errors Check(IMessageHWComModel message);
+        Errors Check(IMessageModel message);
     }
 }

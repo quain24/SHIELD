@@ -188,7 +188,7 @@ namespace Shield.HardwareCom
             return status;
         }
 
-        public async Task<bool> SendAsync(IMessageHWComModel message)
+        public async Task<bool> SendAsync(IMessageModel message)
         {
             if (message is null)
                 return false;

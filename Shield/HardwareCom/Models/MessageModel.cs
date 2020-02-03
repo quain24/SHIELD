@@ -1,24 +1,59 @@
-﻿using System.Collections;
+﻿using Shield.Enums;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-
-/// <summary>
-/// Contains list of commands that will be sent or were received
-/// Single message is preferred unit of communication between devices
-/// </summary>
 
 namespace Shield.HardwareCom.Models
 {
     public class MessageModel : IMessageModel
     {
         private string _messageId = string.Empty;
+        private Errors _errors = Errors.None;
         private List<ICommandModel> _commands = new List<ICommandModel>();
 
-        public long Timestamp { get; set; } = 0;
-        public int CommandCount { get { return _commands.Count(); } }
-        public string Id { get { return _messageId; } set { AssaignID(value); } }
+        #region IEnumerable implementation
 
+        public IEnumerator<ICommandModel> GetEnumerator()
+        {
+            for (int i = 0; i < _commands.Count; i++)
+                yield return _commands[i];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion IEnumerable implementation
+
+        public long Timestamp { get; set; }
+        public string Id { get { return _messageId; } set { AssaignID(value); } }
+        public int CommandCount => _commands.Count;
+        public MessageType Type { get; set; } = MessageType.Unknown;
+        public Direction Direction { get; set; } = Direction.Unknown;
+        public Errors Errors { get; set; } = Errors.None;
         public List<ICommandModel> Commands { get { return _commands; } }
+
+        public bool IsConfirmed { get; set; } = false;
+        public bool IsCompleted { get; set; } = false;
+
+        public bool IsCorrect
+        {
+            get { return Errors == Errors.None ? true : false; }
+        }
+
+        public bool IsTransfered { get; set; } = false;
+
+        #region Indexer
+
+        public int Count { get => _commands.Count; }
+
+        public ICommandModel this[int index]
+        {
+            get => _commands[index];
+            set => _commands[index] = value;
+        }
+
+        #endregion Indexer
 
         public string AssaignID(string id)
         {
@@ -54,20 +89,5 @@ namespace Shield.HardwareCom.Models
             _commands[targetIndex] = replacement;
             return true;
         }
-
-        #region IEnumerable implementation
-
-        public IEnumerator<ICommandModel> GetEnumerator()
-        {
-            for (int i = 0; i < _commands.Count; i++)
-                yield return _commands[i];
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        #endregion IEnumerable implementation
     }
 }

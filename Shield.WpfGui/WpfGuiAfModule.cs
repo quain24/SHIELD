@@ -43,7 +43,7 @@ namespace Shield.WpfGui
                            (pi, ctx) => ctx.Resolve<Data.ISettings>()),
                        new ResolvedParameter(
                            (pi, ctx) => pi.Name == "messageFactory",
-                           (pi, ctx) => ctx.Resolve<Func<IMessageHWComModel>>()),
+                           (pi, ctx) => ctx.Resolve<Func<IMessageModel>>()),
                        new ResolvedParameter(
                            (pi, ctx) => pi.Name == "commandFactory",
                            (pi, ctx) => ctx.Resolve<HardwareCom.Factories.ICommandModelFactory>()),

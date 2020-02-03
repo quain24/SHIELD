@@ -12,10 +12,10 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public class ConfirmationTimeoutChecker : IConfirmationTimeoutChecker
     {
-        private SortedDictionary<long, IMessageHWComModel> _storage = new SortedDictionary<long, IMessageHWComModel>();
-        private BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
-        private BlockingCollection<IMessageHWComModel> _processedConfirmations = new BlockingCollection<IMessageHWComModel>();
-        private Dictionary<string, IMessageHWComModel> _confirmations = new Dictionary<string, IMessageHWComModel>(StringComparer.InvariantCultureIgnoreCase);
+        private SortedDictionary<long, IMessageModel> _storage = new SortedDictionary<long, IMessageModel>();
+        private BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
+        private BlockingCollection<IMessageModel> _processedConfirmations = new BlockingCollection<IMessageModel>();
+        private Dictionary<string, IMessageModel> _confirmations = new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly ITimeoutCheck _timeoutCheck;
         private int _checkinterval = 0;
@@ -53,16 +53,16 @@ namespace Shield.HardwareCom.MessageProcessing
             _checkinterval = CalcCheckInterval(Timeout);
         }
 
-        public IMessageHWComModel GetConfirmationOf(IMessageHWComModel message)
+        public IMessageModel GetConfirmationOf(IMessageModel message)
         {
             if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
 
-            IMessageHWComModel output;
+            IMessageModel output;
             _confirmations.TryGetValue(message.Id, out output);
             return output;
         }
 
-        public bool IsExceeded(IMessageHWComModel message, IMessageHWComModel confirmation = null)
+        public bool IsExceeded(IMessageModel message, IMessageModel confirmation = null)
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message), "TimeoutChecker - Check: Cannot check timeout for NULL.");
@@ -98,7 +98,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
             try
             {
-                IMessageHWComModel message;
+                IMessageModel message;
 
                 while (!_processingCTS.IsCancellationRequested)
                 {
@@ -151,11 +151,11 @@ namespace Shield.HardwareCom.MessageProcessing
             _processingCTS = new CancellationTokenSource();
         }
 
-        public void ProcessMessageConfirmedBy(IMessageHWComModel confirmation)
+        public void ProcessMessageConfirmedBy(IMessageModel confirmation)
         {
             if (confirmation is null) throw new ArgumentNullException(nameof(confirmation));
 
-            IMessageHWComModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
+            IMessageModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
 
             using (_currentlyProcessingIdLock.Write())
             {
@@ -190,14 +190,14 @@ namespace Shield.HardwareCom.MessageProcessing
             }
         }
 
-        public void AddToCheckingQueue(IMessageHWComModel message)
+        public void AddToCheckingQueue(IMessageModel message)
         {
             if (message is null)
                 return;
             _storage.Add(message.Timestamp, message);
         }
 
-        public void AddConfirmation(IMessageHWComModel confirmation)
+        public void AddConfirmation(IMessageModel confirmation)
         {
             if (confirmation is null)
                 return;
@@ -205,17 +205,17 @@ namespace Shield.HardwareCom.MessageProcessing
             _confirmations.Add(confirmation.Id, confirmation);
         }
 
-        public BlockingCollection<IMessageHWComModel> ProcessedMessages()
+        public BlockingCollection<IMessageModel> ProcessedMessages()
         {
             return _processedMessages;
         }
 
-        public BlockingCollection<IMessageHWComModel> ProcessedConfirmations()
+        public BlockingCollection<IMessageModel> ProcessedConfirmations()
         {
             return _processedConfirmations;
         }
 
-        private IMessageHWComModel SetTimeoutError(IMessageHWComModel message)
+        private IMessageModel SetTimeoutError(IMessageModel message)
         {
             if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
                 message.Errors &= ~Errors.ConfirmationTimeout;
@@ -223,14 +223,14 @@ namespace Shield.HardwareCom.MessageProcessing
             return message;
         }
 
-        private IMessageHWComModel ClearTimeoutError(IMessageHWComModel message)
+        private IMessageModel ClearTimeoutError(IMessageModel message)
         {
             if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
                 message.Errors &= ~Errors.ConfirmationTimeout;
             return message;
         }
 
-        private IMessageHWComModel SetNoConfirmatioError(IMessageHWComModel message)
+        private IMessageModel SetNoConfirmatioError(IMessageModel message)
         {
             if (message.Errors.HasFlag(Errors.NotConfirmed))
                 message.Errors &= ~Errors.NotConfirmed;
@@ -238,7 +238,7 @@ namespace Shield.HardwareCom.MessageProcessing
             return message;
         }
 
-        private IMessageHWComModel ClearNoConfirmationError(IMessageHWComModel message)
+        private IMessageModel ClearNoConfirmationError(IMessageModel message)
         {
             if (message.Errors.HasFlag(Errors.NotConfirmed))
                 message.Errors &= ~Errors.NotConfirmed;

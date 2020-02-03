@@ -28,7 +28,7 @@ namespace Shield.HardwareCom
         Task StartDecodingAsync(CancellationToken ct = default);
 
         void StopDecoding();
-        Task<bool> SendAsync(IMessageHWComModel message);
+        Task<bool> SendAsync(IMessageModel message);
 
         event System.EventHandler<ICommandModel> CommandReceived;
     }

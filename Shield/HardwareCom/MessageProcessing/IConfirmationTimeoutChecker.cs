@@ -9,13 +9,13 @@ namespace Shield.HardwareCom.MessageProcessing
         long Timeout { get; set; }
         int NoTimeoutValue { get; }
 
-        void AddConfirmation(IMessageHWComModel confirmation);
+        void AddConfirmation(IMessageModel confirmation);
 
-        void AddToCheckingQueue(IMessageHWComModel message);
+        void AddToCheckingQueue(IMessageModel message);
         Task CheckUnconfirmedMessagesContinousAsync();
-        bool IsExceeded(IMessageHWComModel message, IMessageHWComModel confirmation = null);
+        bool IsExceeded(IMessageModel message, IMessageModel confirmation = null);
 
-        BlockingCollection<IMessageHWComModel> ProcessedMessages();
-        void ProcessMessageConfirmedBy(IMessageHWComModel confirmation);
+        BlockingCollection<IMessageModel> ProcessedMessages();
+        void ProcessMessageConfirmedBy(IMessageModel confirmation);
     }
 }

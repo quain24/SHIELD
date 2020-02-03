@@ -82,7 +82,7 @@ namespace Shield.ConsoleUI
             _settings.SaveToFile();
             _settings.LoadFromFile();
 
-            Dictionary<string, IMessageHWComModel> msgcol = new Dictionary<string, IMessageHWComModel>();
+            Dictionary<string, IMessageModel> msgcol = new Dictionary<string, IMessageModel>();
 
             _comMessanger.Setup(DeviceType.Serial);
 

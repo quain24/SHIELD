@@ -16,10 +16,10 @@ namespace Shield.HardwareCom
 
         private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
 
-        private readonly Dictionary<string, IMessageHWComModel> _incompleteMessages =
-            new Dictionary<string, IMessageHWComModel>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, IMessageModel> _incompleteMessages =
+            new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
-        private readonly BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
+        private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
         private readonly BlockingCollection<ICommandModel> _errCommands = new BlockingCollection<ICommandModel>();
 
         private object _lock = new object();
@@ -55,7 +55,7 @@ namespace Shield.HardwareCom
         /// <param name="incomingCommand">Command to be ingested</param>
         /// <param name="message">Message that the command was ingested into</param>
         /// <returns>True if command was ingested, false if a corresponding message was already completed</returns>
-        public bool TryIngest(ICommandModel incomingCommand, out IMessageHWComModel message)
+        public bool TryIngest(ICommandModel incomingCommand, out IMessageModel message)
         {
             if (_completness is null)
                 throw new Exception("CommandIngester: TryIngest - Completeness checker is NULL");
@@ -148,7 +148,7 @@ namespace Shield.HardwareCom
             Console.WriteLine("CommandIngester - Command processing started");
 
             ICommandModel command = null;
-            IMessageHWComModel message;
+            IMessageModel message;
             int debugCounter = 0;
             int debugLoopCounter = 0;
 
@@ -193,7 +193,7 @@ namespace Shield.HardwareCom
         /// Gives a thread safe collection of completed and timeout messages for further processing
         /// </summary>
         /// <returns></returns>
-        public BlockingCollection<IMessageHWComModel> GetProcessedMessages()
+        public BlockingCollection<IMessageModel> GetProcessedMessages()
         {
             Console.WriteLine($@"CommandIngester - Requested Processed Messages ({_processedMessages.Count} available)");
             return _processedMessages;
