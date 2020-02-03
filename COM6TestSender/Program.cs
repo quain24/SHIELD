@@ -269,14 +269,16 @@ namespace COM6TestSender
                 Console.WriteLine("7 - ReceivedAsError");
                 Console.WriteLine("8 - ReceivedAsUnknown");
                 Console.WriteLine("9 - ReceivedAsPartial");
-                Console.WriteLine("10 - Error");
-                Console.WriteLine("11 - Unknown");
-                Console.WriteLine("12 - Partial");
-                Console.WriteLine("13 - Confirm");
-                Console.WriteLine("14 - Cancel");
-                Console.WriteLine("15 - RetryLast");
-                Console.WriteLine("16 - Data");
-                Console.WriteLine("17 - Renew ID!");
+                Console.WriteLine("10 - ConfirmationTimeout");
+                Console.WriteLine("11 - CompletitionTimeout");
+                Console.WriteLine("12 - Error");
+                Console.WriteLine("13 - Unknown");
+                Console.WriteLine("14 - Partial");
+                Console.WriteLine("15 - Confirm");
+                Console.WriteLine("16 - Cancel");
+                Console.WriteLine("17 - RetryLast");
+                Console.WriteLine("18 - Data");
+                Console.WriteLine("19 - Renew ID!");
 
                 string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
 
@@ -296,12 +298,12 @@ namespace COM6TestSender
                     Console.WriteLine("OK");
 
                     string packet = $@"*{choose.ToString().PadLeft(4, '0')}*{id}*";
-                    if (choose == 16)
+                    if (choose == 18)
                     {
                         packet += data;
                         num++;
                     }
-                    else if (choose == 17)
+                    else if (choose == 19)
                     {
                         id = Shield.Helpers.IdGenerator.GetID(4);
                         Console.WriteLine($@"ID changed to {id}");

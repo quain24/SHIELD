@@ -20,8 +20,8 @@ namespace Shield.HardwareCom.Factories
             if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationFactory - GenerateConfirmationOf: Cannot create confirmation of NULL");
 
             IMessageModel confirmation = _messageFactory.CreateNew(Direction.Outgoing,
-                                                                        MessageType.Confirmation,
-                                                                        message.Id);
+                                                                   MessageType.Confirmation,
+                                                                   message.Id);
 
             confirmation.Add(_commandFactory.Create(CommandType.HandShake));
             confirmation.Add(_commandFactory.Create(CommandType.Confirmation));
@@ -33,6 +33,7 @@ namespace Shield.HardwareCom.Factories
                 {
                     case CommandType.Error:
                     responseCommand.CommandType = CommandType.ReceivedAsError;
+
                     break;
 
                     case CommandType.Unknown:
@@ -50,6 +51,16 @@ namespace Shield.HardwareCom.Factories
                 confirmation.Add(responseCommand);
             }
 
+            if (message.Errors.HasFlag(Errors.CompletitionTimeout))
+            {
+                confirmation.Add(_commandFactory.Create(CommandType.CompletitionTimeoutOccured));
+            }
+
+            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
+            {
+                confirmation.Add(_commandFactory.Create(CommandType.ConfirmationTimeoutOccurred));
+            }
+
             confirmation.Add(_commandFactory.Create(CommandType.EndMessage));
 
             // Assigns id also to all commands inside
@@ -58,4 +69,4 @@ namespace Shield.HardwareCom.Factories
             return confirmation;
         }
     }
-}
+} 

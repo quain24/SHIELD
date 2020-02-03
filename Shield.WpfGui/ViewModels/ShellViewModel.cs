@@ -83,7 +83,7 @@ namespace Shield.WpfGui.ViewModels
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
 
 
-            if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
+            //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
                 Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
 
             // Updating table in gui

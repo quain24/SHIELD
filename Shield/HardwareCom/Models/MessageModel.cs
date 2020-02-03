@@ -8,7 +8,7 @@ namespace Shield.HardwareCom.Models
     {
         private string _messageId = string.Empty;
         private Errors _errors = Errors.None;
-        private List<ICommandModel> _commands = new List<ICommandModel>();
+        private readonly List<ICommandModel> _commands = new List<ICommandModel>();
 
         #region IEnumerable implementation
 

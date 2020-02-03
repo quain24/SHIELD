@@ -71,6 +71,16 @@
         /// </summary>
         ReceivedAsPartial,
 
+        /// <summary>
+        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="MessageErrors.ConfirmationTimeout"/> 
+        /// </summary>
+        ConfirmationTimeoutOccurred,
+
+        /// <summary>
+        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="MessageErrors.CompletitionTimeout"/> 
+        /// </summary>
+        CompletitionTimeoutOccured,
+
         #endregion Message response status codes
 
         #region Message decoded status codes
