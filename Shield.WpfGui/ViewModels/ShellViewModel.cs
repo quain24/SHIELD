@@ -489,9 +489,6 @@ namespace Shield.WpfGui.ViewModels
             // hack!
             _sending = true;
             NotifyOfPropertyChange(() => CanSendMessage);
-            // hack end
-
-            //bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
 
             bool sent = await _messanger.SendAsync(message).ConfigureAwait(false);
 

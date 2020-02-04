@@ -7,15 +7,13 @@ namespace Shield.HardwareCom.Models
     public class MessageModel : IMessageModel
     {
         private string _messageId = string.Empty;
-        private Errors _errors = Errors.None;
-        private readonly List<ICommandModel> _commands = new List<ICommandModel>();
 
         #region IEnumerable implementation
 
         public IEnumerator<ICommandModel> GetEnumerator()
         {
-            for (int i = 0; i < _commands.Count; i++)
-                yield return _commands[i];
+            for (int i = 0; i < Commands.Count; i++)
+                yield return Commands[i];
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -27,30 +25,24 @@ namespace Shield.HardwareCom.Models
 
         public long Timestamp { get; set; }
         public string Id { get { return _messageId; } set { AssaignID(value); } }
-        public int CommandCount => _commands.Count;
         public MessageType Type { get; set; } = MessageType.Unknown;
         public Direction Direction { get; set; } = Direction.Unknown;
         public Errors Errors { get; set; } = Errors.None;
-        public List<ICommandModel> Commands { get { return _commands; } }
+        public List<ICommandModel> Commands { get; }
 
         public bool IsConfirmed { get; set; } = false;
         public bool IsCompleted { get; set; } = false;
-
-        public bool IsCorrect
-        {
-            get { return Errors == Errors.None ? true : false; }
-        }
-
+        public bool IsCorrect => Errors == Errors.None ? true : false;
         public bool IsTransfered { get; set; } = false;
 
         #region Indexer
 
-        public int Count { get => _commands.Count; }
+        public int Count { get => Commands.Count; }
 
         public ICommandModel this[int index]
         {
-            get => _commands[index];
-            set => _commands[index] = value;
+            get => Commands[index];
+            set => Commands[index] = value;
         }
 
         #endregion Indexer
@@ -59,11 +51,7 @@ namespace Shield.HardwareCom.Models
         {
             _messageId = id.ToUpperInvariant();
 
-            foreach (var c in _commands)
-            {
-                c.Id = _messageId;
-            }
-
+            Commands.ForEach(command => command.Id = _messageId);
             return _messageId;
         }
 
@@ -72,21 +60,21 @@ namespace Shield.HardwareCom.Models
             if (command is null)
                 return false;
             command.Id = _messageId;
-            _commands.Add(command);
+            Commands.Add(command);
             return true;
         }
 
         public bool Remove(ICommandModel command)
         {
-            return _commands.Remove(command);
+            return Commands.Remove(command);
         }
 
         public bool Replace(ICommandModel target, ICommandModel replacement)
         {
-            var targetIndex = _commands.IndexOf(target);
+            var targetIndex = Commands.IndexOf(target);
             if (targetIndex == -1)
                 return false;
-            _commands[targetIndex] = replacement;
+            Commands[targetIndex] = replacement;
             return true;
         }
     }

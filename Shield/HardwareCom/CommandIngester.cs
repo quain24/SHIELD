@@ -8,6 +8,8 @@ using System.Threading;
 
 namespace Shield.HardwareCom
 {
+    // TODO: Add a monitoring solution as a separate continuous method started in task.run or similar.
+    // should have lock to not interfere with message check in tryingest
     public class CommandIngester : ICommandIngester
     {
         private readonly IMessageFactory _msgFactory;
@@ -62,8 +64,6 @@ namespace Shield.HardwareCom
             if (incomingCommand is null)
                 throw new ArgumentNullException(nameof(incomingCommand), "CommandIngester: TryIngest - tried to ingest NULL");
 
-            message = null;
-
             Console.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
 
             // In any case, add command id to used-up pool on this machine
@@ -78,7 +78,7 @@ namespace Shield.HardwareCom
             {
                 message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: incomingCommand.Id);
                 _incompleteMessages.Add(message.Id, message);
-                Console.WriteLine($@"CommandIngester - new message created, command count: {message.CommandCount}");
+                Console.WriteLine($@"CommandIngester - new message created, command count: {message.Commands.Count}");
             }
 
             // check for old completes or removed otherwise
@@ -155,21 +155,20 @@ namespace Shield.HardwareCom
             while (true)
             {
                 try
-                {                    
+                {
                     bool a = _awaitingQueue.TryTake(out command, 150, _cancelProcessingCTS.Token);
 
-                    if(a) Console.WriteLine($"CommandIngester - Took command {command.Id} for processing");
+                    if (a) Console.WriteLine($"CommandIngester - Took command {command.Id} for processing");
                     else
                     {
-                        if(++debugLoopCounter % 10 == 0)Console.WriteLine($@"CommandIngester - Could not take command for processing: tried {++debugCounter} times, {_awaitingQueue.Count} available.");
+                        if (++debugLoopCounter % 10 == 0) Console.WriteLine($@"CommandIngester - Could not take command for processing: tried {++debugCounter} times, {_awaitingQueue.Count} available.");
                     }
-                        
                 }
                 catch
                 {
                     break;
                 }
-                if(command != null)
+                if (command != null)
                     TryIngest(command, out message);
             }
 

@@ -160,7 +160,7 @@ namespace Shield.HardwareCom
 
             builder.RegisterType<CommandIngester>()
                    .As<ICommandIngester>()
-                   .WithParameter(                   
+                   .WithParameter(
                        new ResolvedParameter(
                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
                            (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("completition" + nameof(TimeoutCheck)))
@@ -178,9 +178,6 @@ namespace Shield.HardwareCom
             #endregion Message object processing
 
             // Additional objects, some may be temporary
-
-
-            
 
             //builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
             //    .Where(t => t.IsInNamespace($@"Shield.HardwareCom.MessageProcessing"))
