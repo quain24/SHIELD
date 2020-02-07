@@ -5,11 +5,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    // TODO: Add a monitoring solution as a separate continuous method started in task.run or similar.
-    // should have lock to not interfere with message check in tryingest
     public class CommandIngester : ICommandIngester
     {
         private readonly IMessageFactory _msgFactory;
@@ -25,8 +24,11 @@ namespace Shield.HardwareCom
         private readonly BlockingCollection<ICommandModel> _errCommands = new BlockingCollection<ICommandModel>();
 
         private object _lock = new object();
+        private object _timeoutCheckLock = new object();
         private bool _isProcessing = false;
+        private bool _isTimeoutChecking = false;
         private CancellationTokenSource _cancelProcessingCTS = new CancellationTokenSource();
+        private CancellationTokenSource _cancelTimeoutCheckCTS = new CancellationTokenSource();
 
         /// <summary>
         /// Returns true if commands are being processed or object waits for new commands to be processed
@@ -72,13 +74,13 @@ namespace Shield.HardwareCom
             if (_incompleteMessages.ContainsKey(incomingCommand.Id))
             {
                 message = _incompleteMessages[incomingCommand.Id];
-                Console.WriteLine("CommandIngester - command added to incomplete message");
+                Console.WriteLine("CommandIngester - Incomplete message with command id found!");
             }
             else
             {
                 message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: incomingCommand.Id);
                 _incompleteMessages.Add(message.Id, message);
-                Console.WriteLine($@"CommandIngester - new message created, command count: {message.Commands.Count}");
+                Console.WriteLine($@"CommandIngester - new message created");
             }
 
             // check for old completes or removed otherwise
@@ -171,12 +173,8 @@ namespace Shield.HardwareCom
                 if (command != null)
                     TryIngest(command, out message);
             }
-
-            lock (_lock)
-            {
-                Console.WriteLine("CommandIngester - StartProcessingCommands ENDED");
-                _isProcessing = false;
-            }
+            Console.WriteLine("CommandIngester - StartProcessingCommands ENDED");
+            _isProcessing = false;
         }
 
         /// <summary>
@@ -186,6 +184,56 @@ namespace Shield.HardwareCom
         {
             _cancelProcessingCTS.Cancel();
             _cancelProcessingCTS = new CancellationTokenSource();
+        }
+
+        public async Task StartTimeoutCheck(int interval = 0)
+        {
+            if (_completitionTimeout is null)
+                return;
+
+            lock (_timeoutCheckLock)
+            {
+                if (!_isTimeoutChecking)
+                    _isTimeoutChecking = true;
+                else
+                    return;
+            }
+
+            int checkInterval = CalcCheckInterval(interval);
+
+            while (true)
+            {
+                try
+                {
+                    _cancelTimeoutCheckCTS.Token.ThrowIfCancellationRequested();
+
+                    var timeouts = _completitionTimeout?.GetTimeoutsFromCollection(GetIncompletedMessages());
+
+                    foreach (var message in timeouts)
+                    {
+                        message.Errors |= Enums.Errors.CompletitionTimeout;
+                        _processedMessages.Add(message);
+                        _incompleteMessages[message.Id] = null;
+                        Console.WriteLine("ContinousTimeoutChecker - Error - message  completition timeoutted");
+                        _cancelTimeoutCheckCTS.Token.ThrowIfCancellationRequested();
+                    }
+
+                    await Task.Delay(checkInterval, _cancelTimeoutCheckCTS.Token).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    if (e is TaskCanceledException || e is OperationCanceledException)
+                        _isTimeoutChecking = false;
+                    else
+                        throw;
+                }
+            }
+        }
+
+        public void StopTimeoutCheck()
+        {
+            _cancelTimeoutCheckCTS.Cancel();
+            _cancelTimeoutCheckCTS = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -198,6 +246,11 @@ namespace Shield.HardwareCom
             return _processedMessages;
         }
 
+        public Dictionary<string, IMessageModel> GetIncompletedMessages()
+        {
+            return _incompleteMessages;
+        }
+
         /// <summary>
         /// Gives a thread safe collection of commands that were received, but corresponding messages were already completed or completition timeout
         /// was exceeded.
@@ -206,6 +259,27 @@ namespace Shield.HardwareCom
         public BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout()
         {
             return _errCommands;
+        }
+
+        private int CalcCheckInterval(long timeout)
+        {
+            switch (timeout)
+            {
+                case var _ when timeout <= _completitionTimeout.NoTimeoutValue:
+                return 250;
+
+                case var _ when timeout <= 100:
+                return 10;
+
+                case var _ when timeout <= 3000:
+                return 100;
+
+                case var _ when timeout > 3000:
+                return 250;
+
+                default:
+                return _completitionTimeout.NoTimeoutValue;
+            }
         }
     }
 }

@@ -60,18 +60,15 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessagesContinous()
         {
-            if (!_isProcessing)
+            lock (_processingLock)
             {
-                lock (_processingLock)
+                if (_isProcessing)
                 {
-                    if (_isProcessing)
-                    {
-                        Console.WriteLine($@"MessageProcessor already running.");
-                        return;
-                    }
-                    _isProcessing = true;
+                    Console.WriteLine($@"MessageProcessor already running.");
+                    return;
                 }
-            }
+                _isProcessing = true;
+            }            
 
             Console.WriteLine("MessageProcessor - Continuous Message processing started");
 
@@ -111,15 +108,12 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessages()
         {
-            if (!_isProcessing)
+            lock (_processingLock)
             {
-                lock (_processingLock)
-                {
-                    if (_isProcessing)
-                        return;
-                    _isProcessing = true;
-                }
-            }
+                if (_isProcessing)
+                    return;
+                _isProcessing = true;
+            }         
 
             while (_messagesToProcess.Count > 0)
             {

@@ -28,7 +28,8 @@ namespace Shield.HardwareCom.Models
         public MessageType Type { get; set; } = MessageType.Unknown;
         public Direction Direction { get; set; } = Direction.Unknown;
         public Errors Errors { get; set; } = Errors.None;
-        public List<ICommandModel> Commands { get; }
+        public List<ICommandModel> Commands { get; } = new List<ICommandModel>();
+        public int CommandCount => Commands.Count;
 
         public bool IsConfirmed { get; set; } = false;
         public bool IsCompleted { get; set; } = false;
@@ -51,7 +52,8 @@ namespace Shield.HardwareCom.Models
         {
             _messageId = id.ToUpperInvariant();
 
-            Commands.ForEach(command => command.Id = _messageId);
+            if(Commands != null)
+                Commands.ForEach(command => command.Id = _messageId);
             return _messageId;
         }
 

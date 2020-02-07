@@ -78,6 +78,7 @@ namespace Shield.WpfGui.ViewModels
 
 
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+            Task.Run(() => _commandIngester.StartTimeoutCheck().ConfigureAwait(false)).ConfigureAwait(false);
 
             _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);

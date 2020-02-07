@@ -78,16 +78,13 @@ namespace Shield.HardwareCom
         }
 
         public async Task StartReceiveAsync(CancellationToken ct)
-        {
-            if (!_receiverRunning)
+        {            
+            lock (_receiverLock)
             {
-                lock (_receiverLock)
-                {
-                    if (_receiverRunning || !IsOpen || !_setupSuccessuful)
-                        return;
-                    _receiverRunning = true;
-                }
-            }
+                if (_receiverRunning || !IsOpen || !_setupSuccessuful)
+                    return;
+                _receiverRunning = true;
+            }            
 
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
             if (internalCT == ct)
@@ -108,24 +105,25 @@ namespace Shield.HardwareCom
                 }
                 _receiverRunning = false;
             }
-            catch (OperationCanceledException)
+            catch (Exception e)
             {
-                _receiverRunning = false;
+                if(e is TaskCanceledException || e is OperationCanceledException)
+                    _receiverRunning = false;
+                else
+                    throw;
             }
         }
 
         public async Task StartDecodingAsync(CancellationToken ct)
-        {
-            if (!_decoderRunning)
+        {            
+            lock (_decoderLock)
             {
-                lock (_decoderLock)
-                {
-                    if (!_decoderRunning)
-                        _decoderRunning = true;
-                    else
-                        return;
-                }
+                if (!_decoderRunning)
+                    _decoderRunning = true;
+                else
+                    return;
             }
+            
 
             CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
             if (internalCT == ct)
@@ -157,11 +155,16 @@ namespace Shield.HardwareCom
                     }
                 }
             }
-            catch (OperationCanceledException)
+            catch (Exception e)
             {
-                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
-                _decoderRunning = false;
-                return;
+                if(e is TaskCanceledException || e is OperationCanceledException)
+                {
+                    Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
+                    _decoderRunning = false;
+                    return;
+                }
+                else
+                    throw;
             }
         }
 

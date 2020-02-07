@@ -15,6 +15,7 @@ namespace Shield.HardwareCom.Models
         long Timestamp { get; set; }
         bool IsTransfered { get; set; }
         MessageType Type { get; set; }
+        int CommandCount { get; }
 
         bool Add(ICommandModel command);
 
