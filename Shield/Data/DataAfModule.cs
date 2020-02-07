@@ -10,7 +10,6 @@ namespace Shield.Data
         {
             Assembly current = Assembly.Load(nameof(Shield));
 
-
             // Models registration (general)
             builder.RegisterAssemblyTypes(current)
                    .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Model"))

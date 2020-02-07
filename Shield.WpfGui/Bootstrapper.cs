@@ -26,44 +26,40 @@ namespace Shield.WpfGui
         {
             DisplayRootViewFor<ShellViewModel>();
 
-
             PresentationTraceSources.Refresh();
             PresentationTraceSources.DataBindingSource.Listeners.Add(new ConsoleTraceListener());
             PresentationTraceSources.DataBindingSource.Listeners.Add(new DebugTraceListener());
-            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning | SourceLevels.Error;            
+            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning | SourceLevels.Error;
         }
- 
+
         public class DebugTraceListener : TraceListener
         {
             public override void Write(string message)
             {
             }
- 
+
             public override void WriteLine(string message)
-            {
-              Debugger.Break();
+            {                
+                Debugger.Break();
             }
         }
-
-        
 
         #region AutoFac Configuration
 
         protected override void Configure()
         {
             var builder = new ContainerBuilder();
-
-            builder.RegisterModule<WpfGuiAfModule>();
+                        
             builder.RegisterModule<HardwareComAfModule>();
             builder.RegisterModule<DataAfModule>();
             builder.RegisterModule<ShieldAfModule>();
+            builder.RegisterModule<WpfGuiAfModule>();
 
             _container = builder.Build();
         }
 
         protected override object GetInstance(Type service, string key)
         {
-            // return _container.GetInstance(service, key);
             if (string.IsNullOrWhiteSpace(key))
             {
                 if (_container.IsRegistered(service))
@@ -82,7 +78,6 @@ namespace Shield.WpfGui
 
         protected override IEnumerable<object> GetAllInstances(Type service)
         {
-            //return _container.GetAllInstances(service);
             var type = typeof(IEnumerable<>).MakeGenericType(service);
             return _container.Resolve(type) as IEnumerable<object>;
         }

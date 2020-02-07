@@ -1,18 +1,21 @@
 ﻿using Shield.HardwareCom.Models;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
     public interface IConfirmationTimeoutChecker
     {
         long Timeout { get; set; }
+        int NoTimeoutValue { get; }
 
-        void AddConfirmation(IMessageHWComModel confirmation);
+        void AddConfirmation(IMessageModel confirmation);
 
-        void AddToCheckingQueue(IMessageHWComModel message);
+        void AddToCheckingQueue(IMessageModel message);
+        Task CheckUnconfirmedMessagesContinousAsync();
+        bool IsExceeded(IMessageModel message, IMessageModel confirmation = null);
 
-        bool IsExceeded(IMessageHWComModel message, IMessageHWComModel confirmation = null);
-
-        BlockingCollection<IMessageHWComModel> ProcessedMessages();
+        BlockingCollection<IMessageModel> ProcessedMessages();
+        void ProcessMessageConfirmedBy(IMessageModel confirmation);
     }
 }

@@ -1,16 +1,12 @@
 ﻿using Shield.Enums;
 using Shield.HardwareCom.Models;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
     public class TypeDetector : ITypeDetector
     {
-        public MessageType DetectTypeOf(IMessageHWComModel message)
+        public MessageType DetectTypeOf(IMessageModel message)
         {
             if (message is null || message.Count() < 2)
                 return MessageType.Unknown;
@@ -23,16 +19,16 @@ namespace Shield.HardwareCom.MessageProcessing
             switch (type)
             {
                 case CommandType.Master:
-                    return MessageType.Master;
+                return MessageType.Master;
 
                 case CommandType.Slave:
-                    return MessageType.Slave;
+                return MessageType.Slave;
 
                 case CommandType.Confirmation:
-                    return MessageType.Confirmation;
+                return MessageType.Confirmation;
 
                 default:
-                    return MessageType.Unknown;
+                return MessageType.Unknown;
             }
         }
     }

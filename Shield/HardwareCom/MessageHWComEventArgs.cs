@@ -5,13 +5,13 @@ namespace Shield.HardwareCom
 {
     public class MessageHWComEventArgs : EventArgs
     {
-        private IMessageHWComModel _message;
+        private IMessageModel _message;
 
-        public MessageHWComEventArgs(IMessageHWComModel message)
+        public MessageHWComEventArgs(IMessageModel message)
         {
             _message = message;
         }
 
-        public IMessageHWComModel Message { get { return _message; } }
+        public IMessageModel Message { get { return _message; } }
     }
 }

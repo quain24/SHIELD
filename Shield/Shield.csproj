@@ -25,7 +25,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -61,7 +61,6 @@
     <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
     <Compile Include="CommonInterfaces\ISetting.cs" />
-    <None Include="_Backup\AppSettings.cs" />
     <Compile Include="Data\DataAfModule.cs" />
     <Compile Include="Data\ISettings.cs" />
     <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
@@ -78,13 +77,12 @@
     <Compile Include="Enums\Message.cs" />
     <Compile Include="Enums\MessageErrors.cs" />
     <Compile Include="Enums\SettingsType.cs" />
-    <Compile Include="Extensions\StringExtension.cs" />
+    <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
-    <Compile Include="HardwareCom\ComCommander.cs" />
     <Compile Include="HardwareCom\CommandEventArgs.cs" />
     <Compile Include="HardwareCom\CommandTranslator.cs" />
-    <Compile Include="HardwareCom\CommunicationHub.cs" />
     <Compile Include="HardwareCom\Factories\CommandModelFactory.cs" />
     <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
     <Compile Include="HardwareCom\Factories\ConfirmationFactory.cs" />
@@ -96,7 +94,6 @@
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
     <Compile Include="HardwareCom\IInherittest.cs" />
-    <Compile Include="HardwareCom\IMessageInfoAndErrorChecks.cs" />
     <Compile Include="HardwareCom\IMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
@@ -106,9 +103,6 @@
     <Compile Include="HardwareCom\Inherittest.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Decoding.cs" />
     <Compile Include="HardwareCom\MessageHWComEventArgs.cs" />
-    <Compile Include="HardwareCom\MessageInfoAndErrorChecks.cs" />
-    <Compile Include="HardwareCom\MessageErrorEventArgs.cs" />
-    <Compile Include="HardwareCom\MessageEventArgs.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Completeness.cs" />
     <Compile Include="HardwareCom\ICommandIngester.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />
@@ -125,27 +119,13 @@
     <Compile Include="HardwareCom\Messenger.cs" />
     <Compile Include="HardwareCom\Models\CommandModel.cs" />
     <Compile Include="HardwareCom\Models\ICommandModel.cs" />
-    <Compile Include="HardwareCom\Models\IMessageHWComModel.cs" />
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
-    <Compile Include="HardwareCom\Models\MessageHWComModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="_Backup\Models\ApplicationSettingsModel.cs" />
-    <None Include="_Backup\Models\AppSettingsModel.cs" />
-    <None Include="_Backup\Models\CommandTypesModel.cs" />
-    <None Include="_Backup\Models\IApplicationSettingsModel.cs" />
-    <None Include="_Backup\Models\IAppSettingsModel.cs" />
-    <None Include="_Backup\Models\ICommandTypesModel.cs" />
-    <None Include="_Backup\Models\IMoqPortSettingsModel.cs" />
-    <None Include="_Backup\Models\ISerialPortSettingsModel.cs" />
-    <None Include="_Backup\Models\ISettingsModel.cs" />
-    <None Include="_Backup\Models\MoqPortSettingsModel.cs" />
-    <None Include="_Backup\Models\SerialPortSettingModel.cs" />
-    <None Include="_Backup\Models\SettingsModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

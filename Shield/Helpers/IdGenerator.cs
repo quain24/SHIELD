@@ -54,7 +54,7 @@ namespace Shield.Helpers
         /// <returns></returns>
         public static bool UsedThisID(string id)
         {
-            if(string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(id))
                 return false;
 
             _usedIDs.Add(id.ToUpperInvariant());

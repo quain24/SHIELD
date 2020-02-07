@@ -10,7 +10,7 @@ namespace Shield.HardwareCom
     /// for further processing / handling by another class. Is derived from <see cref="MessageProcessor"/> and implements
     /// <seealso cref="IMessageProcessor"/>
     /// </summary>
-    public class IncomingMessageProcessor : MessageProcessor//, IMessageProcessor
+    public class IncomingMessageProcessor : MessageProcessor
     {
         private readonly IDecoding _decoding;
         private readonly IPattern _pattern;
@@ -25,11 +25,11 @@ namespace Shield.HardwareCom
             _typeDetector = typeDetector;
         }
 
-        public override bool TryProcess(IMessageHWComModel messageToProcess, out IMessageHWComModel processedMessage)
+        public override bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage)
         {
             if (messageToProcess is null)
                 throw new ArgumentNullException(nameof(messageToProcess), "IncomingMessageProcessor - TryProcess: Cannot process NULL.");
-
+            
             processedMessage = messageToProcess;
 
             // check for decoding errors
@@ -43,7 +43,9 @@ namespace Shield.HardwareCom
             messageToProcess.Type = _typeDetector.DetectTypeOf(messageToProcess);
             if (messageToProcess.Type == MessageType.Unknown)
                 messageToProcess.Errors = messageToProcess.Errors | Errors.UndeterminedType;
-            
+
+            Console.WriteLine($@"IncomingMessageProcessor - TryProcess message running with id:{messageToProcess.Id}");
+
             return messageToProcess.Errors == Errors.None ? true : false;
         }
     }

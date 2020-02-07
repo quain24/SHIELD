@@ -4,6 +4,6 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public interface IPattern
     {
-        bool IsCorrect(IMessageHWComModel message);
+        bool IsCorrect(IMessageModel message);
     }
 }

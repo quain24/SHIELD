@@ -10,7 +10,7 @@ namespace Shield.Data.Models
     {
         private Dictionary<SettingsType, ISetting> _settings = new Dictionary<SettingsType, ISetting>();
 
-        [DataMember(Name = "Settings")]        
+        [DataMember(Name = "Settings")]
         public Dictionary<SettingsType, ISetting> Settings
         {
             get => _settings;

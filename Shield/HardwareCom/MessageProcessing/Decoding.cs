@@ -1,16 +1,13 @@
-﻿using System;
+﻿using Shield.Enums;
+using Shield.HardwareCom.Models;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.Enums;
-using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom
 {
     public class Decoding : IDecoding
-    {        
-        public Errors Check(IMessageHWComModel message)
+    {
+        public Errors Check(IMessageModel message)
         {
             if (message is null)
                 return Errors.IsNull;

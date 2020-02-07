@@ -6,7 +6,7 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public class Pattern : IPattern
     {
-        public bool IsCorrect(IMessageHWComModel message)
+        public bool IsCorrect(IMessageModel message)
         {
             // not enough commands in message
             if (message.Count() < 3)

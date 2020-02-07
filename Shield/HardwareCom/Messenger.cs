@@ -30,7 +30,7 @@ namespace Shield.HardwareCom
 
         private BlockingCollection<string> _rawDataBuffer = new BlockingCollection<string>();
 
-        private bool _setupSuccessufl = false;
+        private bool _setupSuccessuful = false;
         private bool _disposed = false;
         private bool _decoderRunning = false;
         private bool _receiverRunning = false;
@@ -57,14 +57,14 @@ namespace Shield.HardwareCom
         {
             _device = _communicationDeviceFactory.Device(type);
             if (_device is null)
-                return _setupSuccessufl = false;
+                return _setupSuccessuful = false;
 
-            return _setupSuccessufl = true;
+            return _setupSuccessuful = true;
         }
 
         public void Open()
         {
-            if (_setupSuccessufl && IsOpen == false)
+            if (_setupSuccessuful && IsOpen == false)
                 _device.Open();
         }
 
@@ -78,16 +78,13 @@ namespace Shield.HardwareCom
         }
 
         public async Task StartReceiveAsync(CancellationToken ct)
-        {
-            if (!_receiverRunning)
+        {            
+            lock (_receiverLock)
             {
-                lock (_receiverLock)
-                {
-                    if (_receiverRunning || !IsOpen || !_setupSuccessufl)
-                        return;
-                    _receiverRunning = true;
-                }
-            }
+                if (_receiverRunning || !IsOpen || !_setupSuccessuful)
+                    return;
+                _receiverRunning = true;
+            }            
 
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
             if (internalCT == ct)
@@ -108,24 +105,25 @@ namespace Shield.HardwareCom
                 }
                 _receiverRunning = false;
             }
-            catch (OperationCanceledException)
+            catch (Exception e)
             {
-                _receiverRunning = false;
+                if(e is TaskCanceledException || e is OperationCanceledException)
+                    _receiverRunning = false;
+                else
+                    throw;
             }
         }
 
         public async Task StartDecodingAsync(CancellationToken ct)
-        {
-            if (!_decoderRunning)
+        {            
+            lock (_decoderLock)
             {
-                lock (_decoderLock)
-                {
-                    if (!_decoderRunning)
-                        _decoderRunning = true;
-                    else
-                        return;
-                }
+                if (!_decoderRunning)
+                    _decoderRunning = true;
+                else
+                    return;
             }
+            
 
             CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
             if (internalCT == ct)
@@ -157,11 +155,16 @@ namespace Shield.HardwareCom
                     }
                 }
             }
-            catch (OperationCanceledException)
+            catch (Exception e)
             {
-                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
-                _decoderRunning = false;
-                return;
+                if(e is TaskCanceledException || e is OperationCanceledException)
+                {
+                    Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
+                    _decoderRunning = false;
+                    return;
+                }
+                else
+                    throw;
             }
         }
 
@@ -203,23 +206,6 @@ namespace Shield.HardwareCom
             if (results.Contains(false))
                 return false;
             return true;
-        }
-
-        public bool Send(IMessageModel message)
-        {
-            if (message is null)
-                return false;
-
-            bool wasSentWithoutError = true;
-
-            foreach (ICommandModel c in message)
-            {
-                if (_device.Send(_commandTranslator.FromCommand(c)))
-                    continue;
-                else
-                    wasSentWithoutError = false;
-            }
-            return wasSentWithoutError;
         }
 
         protected virtual void OnCommandReceived(ICommandModel command)

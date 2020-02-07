@@ -102,7 +102,7 @@ namespace Shield.Enums
 
         /// <summary>
         /// Unconfirmed or confirmed out of time frame
-        /// </summary>       
+        /// </summary>
 
         Timeout
     }

@@ -24,7 +24,7 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="20" />
-            <ColumnDefinition Width="*" MinWidth="510"/>
+            <ColumnDefinition Width="*" MinWidth="510" />
             <ColumnDefinition Width="20" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="20" />
@@ -125,8 +125,8 @@
             <TextBox IsEnabled="{Binding DataInputState}" MinWidth="150" MaxWidth="250">
                 <Validation.ErrorTemplate>
                     <ControlTemplate>
-                        <StackPanel>                            
-                            <!--Placeholder for the TextBox itself-->        
+                        <StackPanel>
+                            <!--Placeholder for the TextBox itself-->
                             <AdornedElementPlaceholder x:Name="textBox" />
                             <ItemsControl ItemsSource="{Binding}">
                                 <ItemsControl.ItemTemplate>
@@ -146,8 +146,8 @@
         <!--Row 3-->
         <Grid x:Name="StackPanelReplace" Grid.Row="3" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -158,16 +158,16 @@
                       Grid.Column="1"
                       HorizontalAlignment="Stretch"
                       SelectedItem="{Binding SelectedSentMessage}"
-                      Margin="5 0 0 0" 
+                      Margin="5 0 0 0"
                       MinHeight="100"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       CanUserSortColumns="False"
                       CanUserReorderColumns="False" MinWidth="250" Grid.RowSpan="2">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}"/>
-                    <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}"/>
-                    <DataGridTextColumn Header="Command count" Binding="{Binding CommandCount}"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" />
+                    <DataGridTextColumn Header="Timestamp" Binding="{Binding Timestamp}" />
+                    <DataGridTextColumn Header="Command count" Binding="{Binding CommandCount}" />
                 </DataGrid.Columns>
             </DataGrid>
             <DataGrid x:Name="NewMessageCommands"
@@ -179,12 +179,12 @@
                       Margin="0 0 5 0"
                       MinHeight="100"
                       AutoGenerateColumns="False"
-                      IsReadOnly="True" 
+                      IsReadOnly="True"
                       CanUserReorderColumns="False"
                       CanUserSortColumns="False" MinWidth="250" Grid.RowSpan="2">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Type" Binding="{Binding CommandTypeString}"/>
-                    <DataGridTextColumn Header="Data pack" Binding="{Binding Data}"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding CommandTypeString}" />
+                    <DataGridTextColumn Header="Data pack" Binding="{Binding Data}" />
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
@@ -194,9 +194,7 @@
         <DataGrid x:Name="SingleMessageCommands" Grid.Column="3" Grid.Row="4" Grid.RowSpan="4">
         </DataGrid>
 
-
         <!--Row 5-->
-
 
         <!--Row 6-->
         <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Height="auto" HorizontalAlignment="Stretch" Grid.RowSpan="2"  MaxWidth="1000" Margin="5 10 0 0 ">
@@ -212,12 +210,11 @@
                   MinWidth="265"
                   Margin="20 0 0 0" HorizontalContentAlignment="Stretch">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Type" Binding="{Binding CommandTypeString}"/>
-                    <DataGridTextColumn Header="Data pack" Binding="{Binding Data}"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding CommandTypeString}" />
+                    <DataGridTextColumn Header="Data pack" Binding="{Binding Data}" />
                 </DataGrid.Columns>
             </DataGrid>
         </StackPanel>
-
 
         <!--Row 7-->
     </Grid>

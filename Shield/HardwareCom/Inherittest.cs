@@ -1,18 +1,12 @@
 ﻿using Shield.HardwareCom.MessageProcessing;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
     public class Inherittest : IInherittest
     {
-
-        ITimeoutCheck _completition;
-        ITimeoutCheck _confirmation;
-
+        private ITimeoutCheck _completition;
+        private ITimeoutCheck _confirmation;
 
         public Inherittest(ITimeoutCheck completitionCheck, ITimeoutCheck confirmationCheck)
         {
@@ -28,8 +22,6 @@ namespace Shield.HardwareCom
             Console.WriteLine(_completition.Timeout);
             _completition.Timeout = 8;
             Console.WriteLine(_completition.Timeout);
-
         }
-
     }
 }

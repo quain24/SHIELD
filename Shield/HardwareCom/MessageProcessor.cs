@@ -1,4 +1,5 @@
-﻿using Shield.HardwareCom.Models;
+﻿using Shield.Extensions;
+using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -11,11 +12,12 @@ namespace Shield.HardwareCom
     public abstract class MessageProcessor : IMessageProcessor
     {
         private const int TakeTimeout = 150;
-        private readonly BlockingCollection<IMessageHWComModel> _messagesToProcess = new BlockingCollection<IMessageHWComModel>();
-        private readonly BlockingCollection<IMessageHWComModel> _processedMessages = new BlockingCollection<IMessageHWComModel>();
+        private BlockingCollection<IMessageModel> _messagesToProcess = new BlockingCollection<IMessageModel>();
+        private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
         private bool _isProcessing = false;
         private object _processingLock = new object();
+        private ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed
@@ -29,11 +31,27 @@ namespace Shield.HardwareCom
         /// Add a message to be processed (thread safe)
         /// </summary>
         /// <param name="message"></param>
-        public void AddMessageToProcess(IMessageHWComModel message)
+        public void AddMessageToProcess(IMessageModel message)
         {
             if (message is null)
                 throw new ArgumentNullException(nameof(message), "MessageProcessor - AddMessageToProcess: Cannot add a NULL to processing queue");
             _messagesToProcess.Add(message);
+            Console.WriteLine("message added to be processed");
+        }
+
+        /// <summary>
+        /// Replace built in source collection with external collection, that for example will be updated by another object
+        /// </summary>
+        /// <param name="newSourceCollection">external collection</param>
+        public void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection)
+        {
+            if (newSourceCollection is null)
+                throw new ArgumentNullException(nameof(newSourceCollection), "New source collection cannot be NULL.");
+
+            using (_sourceCollectionSwithLock.Read())
+            {
+                _messagesToProcess = newSourceCollection;
+            }
         }
 
         /// <summary>
@@ -45,24 +63,39 @@ namespace Shield.HardwareCom
             lock (_processingLock)
             {
                 if (_isProcessing)
+                {
+                    Console.WriteLine($@"MessageProcessor already running.");
                     return;
+                }
                 _isProcessing = true;
-            }
+            }            
+
+            Console.WriteLine("MessageProcessor - Continuous Message processing started");
 
             while (true)
             {
                 _isProcessing = true;
-
                 try
                 {
-                    IMessageHWComModel message = _messagesToProcess.Take(_processingCTS.Token);
-                    IMessageHWComModel processedMessage = null;
+                    IMessageModel message = null;
+                    bool wasTaken = _messagesToProcess.TryTake(out message, 150, _processingCTS.Token);
 
-                    bool isProcessedWithoutErrors = TryProcess(message, out processedMessage);
-                    _processedMessages.Add(processedMessage);
+                    IMessageModel processedMessage = null;
+
+                    if (wasTaken)
+                    {
+                        using (_sourceCollectionSwithLock.Write())
+                        {
+                            TryProcess(message, out processedMessage);
+                        }
+
+                        _processedMessages.Add(processedMessage);
+                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process");
+                    }
                 }
-                catch
+                catch (OperationCanceledException)
                 {
+                    Console.WriteLine("MessageProcessor continuous ENDED");
                     _isProcessing = false;
                     break;
                 }
@@ -80,7 +113,7 @@ namespace Shield.HardwareCom
                 if (_isProcessing)
                     return;
                 _isProcessing = true;
-            }
+            }         
 
             while (_messagesToProcess.Count > 0)
             {
@@ -88,8 +121,8 @@ namespace Shield.HardwareCom
 
                 try
                 {
-                    IMessageHWComModel processedMessage = null;
-                    IMessageHWComModel message = null;
+                    IMessageModel processedMessage = null;
+                    IMessageModel message = null;
 
                     if (_messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token))
                     {
@@ -122,7 +155,7 @@ namespace Shield.HardwareCom
         /// Gets thread safe collection that contains processed messages.
         /// </summary>
         /// <returns>Collection of processed messages</returns>
-        public BlockingCollection<IMessageHWComModel> GetProcessedMessages()
+        public BlockingCollection<IMessageModel> GetProcessedMessages()
         {
             return _processedMessages;
         }
@@ -134,6 +167,6 @@ namespace Shield.HardwareCom
         /// <param name="messageToProcess">Message to be processed</param>
         /// <param name="processedMessage">If successful - processed message, otherwise processed message with set errors</param>
         /// <returns>TRUE if message was processed without errors</returns>
-        public abstract bool TryProcess(IMessageHWComModel messageToProcess, out IMessageHWComModel processedMessage);
+        public abstract bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage);
     }
 }
