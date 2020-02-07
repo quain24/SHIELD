@@ -8,7 +8,7 @@ namespace Shield.ConsoleUI
         {
             var container = ContainerConfig.Configure();
 
-            // App is starting, giving controll to Run method from now on.
+            // App is starting, giving control to Run method from now on.
             using (var scope = container.BeginLifetimeScope())
             {
                 var app = scope.Resolve<IApplication>();

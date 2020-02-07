@@ -12,6 +12,7 @@ namespace Shield.Helpers
         private static HashSet<string> _usedIDs = new HashSet<string>();
         private static int _oldIDLength = 0;
         private static ulong _bufferSize = 0;
+        private static int _idLength = 0;
 
         /// <summary>
         /// Generate alpha-numeric random <c>id</c> of given length. Static class.
@@ -53,7 +54,7 @@ namespace Shield.Helpers
         /// <returns></returns>
         public static bool UsedThisID(string id)
         {
-            if(string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(id))
                 return false;
 
             _usedIDs.Add(id.ToUpperInvariant());

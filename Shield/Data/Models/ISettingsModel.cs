@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 namespace Shield.Data.Models
 {
-    public interface IAppSettingsModel
+    public interface ISettingsModel
     {
-        Dictionary<SettingsType, ISettings> Settings { get; set; }
+        Dictionary<SettingsType, ISetting> Settings { get; set; }
     }
 }

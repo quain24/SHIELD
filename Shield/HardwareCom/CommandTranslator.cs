@@ -18,10 +18,10 @@ namespace Shield.HardwareCom
         private Func<ICommandModel> _commandModelFac;
         private IApplicationSettingsModel _appSettingsModel;
 
-        public CommandTranslator(IAppSettings appSettings, Func<ICommandModel> commandModelFac)
+        public CommandTranslator(ISettings settings, Func<ICommandModel> commandModelFac)
         {
             _commandModelFac = commandModelFac; // Autofac autofactory
-            _appSettingsModel = appSettings.GetSettingsFor<IApplicationSettingsModel>();
+            _appSettingsModel = settings.ForTypeOf<IApplicationSettingsModel>();
             _separator = _appSettingsModel.Separator;
             _filler = _appSettingsModel.Filler;
         }

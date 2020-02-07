@@ -123,14 +123,14 @@ namespace Shield.HardwareCom.Adapters
                 try
                 {
                     ct.ThrowIfCancellationRequested();
-                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(true);
+                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
                     string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
                     OnDataReceived(rawData);
                     return rawData;
                 }
                 catch (IOException exc)
                 {
-                    throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, rethrown. Either task was cancelled or port has been closed", ct);
+                    throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ct);
                 }
             }
             return null;
@@ -158,7 +158,7 @@ namespace Shield.HardwareCom.Adapters
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailible / cancelled?");
+                Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailable / canceled?");
                 Debug.WriteLine(ex.Message);
                 return false;
             }
@@ -171,7 +171,7 @@ namespace Shield.HardwareCom.Adapters
         /// <returns>bool if sends or failes</bool></returns>
         public bool Send(string command)
         {
-            if (!IsOpen || string.IsNullOrEmpty(command))
+            if (!IsOpen || string.IsNullOrWhiteSpace(command))
                 return false;
 
             try
@@ -181,7 +181,7 @@ namespace Shield.HardwareCom.Adapters
             }
             catch
             {
-                Debug.WriteLine($@"ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailible?");
+                Debug.WriteLine($@"ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailable?");
                 return false;
             }
         }

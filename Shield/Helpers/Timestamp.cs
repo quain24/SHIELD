@@ -44,13 +44,13 @@ namespace Shield.Helpers
         /// <returns>Difference between time stamps</returns>
         public static long Difference(long from, long to)
         {
-            if(from < 0 || to < 0)
+            if (from < 0 || to < 0)
                 return -1;
 
-            if((from - to) % 1 != 0)
+            if ((from - to) % 1 != 0)
                 return -1;
 
-            return from - to < 0 ? (from - to) * -1 : from - to;
+            return from < to ? (from - to) * -1 : from - to;
         }
 
         /// <summary>
@@ -61,10 +61,10 @@ namespace Shield.Helpers
         /// <returns>Difference between time stamps</returns>
         public static long Difference(long from)
         {
-            if(from < 0 || from % 1 != 0)
+            if (from < 0 || from % 1 != 0)
                 return -1;
 
-            return TimestampNow - from;
+            return Difference(from, TimestampNow);
         }
     }
 }

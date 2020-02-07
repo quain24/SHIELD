@@ -5,37 +5,24 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 
 namespace Shield.Data
 {
-    /// <summary>
-    /// Contains all of the application settings, including devices, user info and others
-    /// Saves to and loads from file (xml)
-    /// Serves settings to every other object instance that requires some.
-    /// </summary>
-    public class AppSettings : IAppSettings
+    public class Settings : ISettings
     {
         private const string SETTINGS_LOCATION = @".\Settings\";
         private const string FILE_NAME = @"settings.xml";
 
-        private IAppSettingsModel _appSettingsModel;
-        private bool _wasInitialized = false;
-        private bool _defaultsLoaded = false;
-        private object _lock = new object();
+        private ISettingsModel _settingsModel;
 
-        public AppSettings(IAppSettingsModel AppSettingsModel)
+        public Settings(ISettingsModel settingsModel)
         {
-            _appSettingsModel = AppSettingsModel;
-
-            lock (_lock)
-            {
-                if (!_wasInitialized)
-                {
-                    LoadFromFile();
-                }
-            }
+            _settingsModel = settingsModel;
+            LoadFromFile();
+            AddMissingSettingPacks();
         }
 
         /// <summary>
@@ -43,40 +30,35 @@ namespace Shield.Data
         /// </summary>
         public void Flush()
         {
-            _appSettingsModel.Settings.Clear();
+            _settingsModel.Settings.Clear();
         }
 
         public bool SaveToFile()
         {
             try
             {
-                if (!Directory.Exists(SETTINGS_LOCATION))
+                if (Directory.Exists(SETTINGS_LOCATION) == false)
                     Directory.CreateDirectory(SETTINGS_LOCATION);
 
                 FileStream writer = new FileStream(SETTINGS_LOCATION + FILE_NAME, FileMode.Create, FileAccess.Write);
-                DataContractSerializer ser = new DataContractSerializer(typeof(AppSettingsModel));
-                ser.WriteObject(writer, _appSettingsModel);
+                DataContractSerializer serializer = new DataContractSerializer(_settingsModel.GetType(), KnownSettingTypes());
+                serializer.WriteObject(writer, _settingsModel);
                 writer.Close();
                 return true;
             }
             catch (Exception ex)
             {
                 if (ex is DirectoryNotFoundException)
-                {
                     Debug.WriteLine("ERROR: AppSettings save - 'settings' directory not found and could not be created!");
-                }
+
                 if (ex is FileNotFoundException)
-                {
                     Debug.WriteLine("ERROR: AppSettings save - 'settings' file not found and / or could not be created!");
-                }
+
                 if (ex is SerializationException)
-                {
                     Debug.WriteLine("ERROR: AppSettings save - serialization of settings file failed!");
-                }
+
                 if (ex is UnauthorizedAccessException)
-                {
                     Debug.WriteLine("ERROR: AppSettings save - cannot access settings file - is it read only?");
-                }
 
                 return false;
             }
@@ -88,32 +70,16 @@ namespace Shield.Data
             {
                 FileStream fs = new FileStream(SETTINGS_LOCATION + @"\" + FILE_NAME, FileMode.Open, FileAccess.Read);
                 XmlDictionaryReader reader = XmlDictionaryReader.CreateTextReader(fs, new XmlDictionaryReaderQuotas());
-                DataContractSerializer ser = new DataContractSerializer(typeof(AppSettingsModel));
+                DataContractSerializer ser = new DataContractSerializer(_settingsModel.GetType(), KnownSettingTypes());
 
-                _appSettingsModel = (IAppSettingsModel)ser.ReadObject(reader, true);
+                _settingsModel = (SettingsModel)ser.ReadObject(reader, true);
                 reader.Close();
                 fs.Close();
-                _defaultsLoaded = false;
-                return _wasInitialized = true;
+                return true;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("ERROR: AppSettings load - There was a problem with file loading.\nWill try to set default values instead and save them to file!");
-
-                _appSettingsModel = new AppSettingsModel();
-
-                IApplicationSettingsModel defaultApplicationSettings = new ApplicationSettingsModel();
-                ISerialPortSettingsModel defaultSerialPortSettings = new SerialPortSettingsModel();
-                IMoqPortSettingsModel defaultMoqPortSettings = new MoqPortSettingsModel();
-
-                _appSettingsModel.Settings.Add(SettingsType.Application, defaultApplicationSettings);
-                _appSettingsModel.Settings.Add(SettingsType.SerialDevice, defaultSerialPortSettings);
-                _appSettingsModel.Settings.Add(SettingsType.MoqDevice, defaultMoqPortSettings);
-
-                SaveToFile();
-
-                _defaultsLoaded = true;
-                _wasInitialized = true;
 
                 if (ex is DirectoryNotFoundException)
                 {
@@ -149,47 +115,83 @@ namespace Shield.Data
         /// </summary>
         /// <param name="type">What should be added or replaced?</param>
         /// <param name="settings">with what config pack?</param>
-        public void Add(SettingsType type, ISettings settings)
+        public void AddOrReplace(SettingsType type, CommonInterfaces.ISetting settings)
         {
-            if (_appSettingsModel.Settings.ContainsKey(type))
-                _appSettingsModel.Settings.Remove(type);
-            _appSettingsModel.Settings.Add(type, settings);
+            if (_settingsModel.Settings.ContainsKey(type))
+                _settingsModel.Settings.Remove(type);
+            _settingsModel.Settings.Add(type, settings);
         }
 
         /// <summary>
         /// Gets every settings pack from currently loaded ones
         /// </summary>
         /// <returns>List of currently loaded settings</returns>
-        public Dictionary<SettingsType, ISettings> GetAll()
+        public Dictionary<SettingsType, ISetting> GetAll()
         {
-            return _appSettingsModel.Settings;
+            return _settingsModel.Settings;
         }
 
         public bool Remove(SettingsType type)
         {
-            if (_appSettingsModel.Settings.ContainsKey(type))
+            if (_settingsModel.Settings.ContainsKey(type))
             {
-                _appSettingsModel.Settings.Remove(type);
+                _settingsModel.Settings.Remove(type);
                 return true;
             }
             return false;
         }
 
-        public ISettings GetSettingsFor(SettingsType type)
+        public ISetting For(SettingsType type)
         {
-            if (_appSettingsModel.Settings.ContainsKey(type))
-                return _appSettingsModel.Settings[type];
+            if (_settingsModel.Settings.ContainsKey(type))
+                return _settingsModel.Settings[type];
             return null;
         }
 
-        public T GetSettingsFor<T>() where T : class, ISettings
+        public T ForTypeOf<T>() where T : class, ISetting
         {
-            foreach (var kvp in _appSettingsModel.Settings)
+            foreach (var kvp in _settingsModel.Settings)
             {
                 if (kvp.Value is T)
                     return (T)kvp.Value;
             }
             return default;
+        }
+
+        private List<Type> KnownSettingTypes()
+        {
+            var listOfTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
+                               from assemblyType in domainAssembly.GetTypes()
+                               where typeof(ISetting).IsAssignableFrom(assemblyType)
+                               select assemblyType).ToList();
+
+            var output = listOfTypes
+                .Where(a => !a.IsInterface)
+                .ToList();
+
+            return output;
+        }
+
+        private List<ISetting> CreateDefaultSettingPacks()
+        {
+            List<ISetting> defaultSettingPacks = new List<ISetting>();
+            foreach (var t in KnownSettingTypes())
+            {
+                defaultSettingPacks.Add((ISetting)t.GetConstructor(Array.Empty<Type>()).Invoke(Array.Empty<object>()));
+            }
+
+            return defaultSettingPacks;
+        }
+
+        private void AddMissingSettingPacks()
+        {
+            var settings = CreateDefaultSettingPacks();
+
+            foreach (var con in settings)
+            {
+                if (_settingsModel.Settings.ContainsKey(con.Type) == false)
+                    _settingsModel.Settings.Add(con.Type, con);
+            }
         }
     }
 }

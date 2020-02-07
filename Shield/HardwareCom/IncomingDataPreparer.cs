@@ -105,10 +105,10 @@ namespace Shield.HardwareCom
                         //  Is there enough chars to fill data portion of command?
                         if (_internalBuffer.Length >= CommandLengthWithData + patternIndex)
                         {
-                            //  check for prelimenary correctness of raw data pack
+                            //  check for preliminary correctness of raw data pack
                             int isThereSeparatorInData = FindSeparator(_internalBuffer.ToString(CommandLength, DataPackLength));
 
-                            // Data pack is busted, so throw it into return, recepient will handle this
+                            // Data pack is busted, so throw it into return, recipient will handle this
                             if (isThereSeparatorInData >= 0)
                             {
                                 AddGibberishToOutputCollection();

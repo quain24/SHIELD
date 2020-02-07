@@ -15,10 +15,6 @@ namespace Shield.HardwareCom
 
         Task<bool> SendAsync(ICommandModel comand);
 
-        Task<bool> SendAsync(IMessageModel message);
-
-        bool Send(IMessageModel message);
-
         bool Setup(DeviceType type);
 
         void Open();
@@ -32,6 +28,7 @@ namespace Shield.HardwareCom
         Task StartDecodingAsync(CancellationToken ct = default);
 
         void StopDecoding();
+        Task<bool> SendAsync(IMessageModel message);
 
         event System.EventHandler<ICommandModel> CommandReceived;
     }

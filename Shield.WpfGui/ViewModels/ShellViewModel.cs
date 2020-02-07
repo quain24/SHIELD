@@ -1,20 +1,19 @@
 ﻿using Caliburn.Micro;
 using Shield.Data;
+using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
-using Shield.Data.Models;
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Controls;
-using System.Globalization;
-using System.ComponentModel;
-using Shield.WpfGui.Validators;
-using System.Collections;
 using Shield.Helpers;
+using Shield.WpfGui.Validators;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Shield.WpfGui.ViewModels
 {
@@ -24,15 +23,15 @@ namespace Shield.WpfGui.ViewModels
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
         private IMessanger _messanger;
-        private ComCommander _comCommander;
-        private IAppSettings _settings;
+        private ISettings _settings;
         private ICommandModelFactory _commandFactory;
-        private IMessageInfoAndErrorChecks _msgInfoError;
+        private ICommandIngester _commandIngester;
+        private IMessageProcessor _incomingMessageProcessor;
+        private IConfirmationFactory _confirmationFactory;
+        private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
+
         private string _selectedCommand;
         private string _dataInput;
-
-
-        
 
         private BindableCollection<string> _possibleCommands = new BindableCollection<string>(Enum.GetNames(typeof(CommandType)));
         private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
@@ -48,50 +47,88 @@ namespace Shield.WpfGui.ViewModels
         private bool _receivingButtonActivated = false;
         private bool _sending = false;
 
-
         private CommandDataPackValidation _dataPackValidation;
+
         private readonly Dictionary<string, ICollection<string>>
         _validationErrors = new Dictionary<string, ICollection<string>>();
+
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessanger messanger, IAppSettings settings, ICommandModelFactory commandFactory, IMessageInfoAndErrorChecks msgInfoError)
+        public ShellViewModel(IMessanger messanger,
+                              ISettings settings,
+                              ICommandModelFactory commandFactory,
+                              Func<IMessageModel> messageFactory,
+                              ICommandIngester commandIngester,
+                              IMessageProcessor incomingMessageProcessor, 
+                              IConfirmationFactory confirmationFactory,
+                              IConfirmationTimeoutChecker confirmationTimeoutChecker)
         {
             _settings = settings;
             _messanger = messanger;
             _commandFactory = commandFactory;
+            _commandIngester = commandIngester;
+            _incomingMessageProcessor = incomingMessageProcessor;
+            _confirmationFactory = confirmationFactory;
+            _confirmationTimeoutChecker = confirmationTimeoutChecker;
+            _messageFactory = messageFactory;
+
             _settings.LoadFromFile();
-
-            //_settings.GetSettingsFor<ISerialPortSettingsModel>().BaudRate = 19200;
-            //_settings.SaveToFile();
-
             _messanger.Setup(DeviceType.Serial);
-            _messageFactory = new Func<IMessageModel>(() => { return new MessageModel(); });
+            _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-            _msgInfoError = msgInfoError;
 
-            _comCommander = new ComCommander(_commandFactory, _messageFactory, _msgInfoError);
-            _comCommander.AssignMessanger(_messanger);
+            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+            Task.Run(() => _commandIngester.StartTimeoutCheck().ConfigureAwait(false)).ConfigureAwait(false);
 
-            _comCommander.IncomingMasterReceived += AddIncomingMessageToDisplay;
-            _comCommander.IncomingSlaveReceived += AddIncomingMessageToDisplay;
-            _comCommander.IncomingConfirmationReceived += AddIncomingMessageToDisplay;
-            _comCommander.IncomingErrorReceived += AddIncomingMessageErrorToDisplay;
-            
-            _dataPackValidation = new CommandDataPackValidation(_settings.GetSettingsFor<IApplicationSettingsModel>().Separator, DataPackFiller());
+            _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
+            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
+
+
+            //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
+                Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+
+            // Updating table in gui
+            Task.Run(async () =>
+            {
+                while(true)
+                {
+                    IMessageModel message = _incomingMessageProcessor.GetProcessedMessages().Take();
+                    AddIncomingMessageToDisplay(this, message);
+                    if(message.Type != MessageType.Confirmation)
+                    {
+                        IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
+                        await _messanger.SendAsync(confirmation).ConfigureAwait(false);
+                        SentMessages.Add(confirmation);
+                    }
+                    else
+                    {
+                        _confirmationTimeoutChecker.ProcessMessageConfirmedBy(message);
+                    }
+                }
+            });
+
+            _messanger.CommandReceived += AddCommandToProcessing;
+        }
+
+        // new tryouts
+
+        public void AddCommandToProcessing(object sender, ICommandModel e)
+        {
+            _commandIngester.AddCommandToProcess(e);
         }
 
         public int DataPackLength()
         {
-            return _settings.GetSettingsFor<IApplicationSettingsModel>().DataSize;
+            return _settings.ForTypeOf<IApplicationSettingsModel>().DataSize;
         }
 
         public char DataPackFiller()
         {
-            return _settings.GetSettingsFor<IApplicationSettingsModel>().Filler;
+            return _settings.ForTypeOf<IApplicationSettingsModel>().Filler;
         }
 
         public List<string> DataPackGenerator(string data)
-        {          
+        {
             int dataPackLength = DataPackLength();
             char filler = DataPackFiller();
 
@@ -100,25 +137,25 @@ namespace Shield.WpfGui.ViewModels
                 .ToList();
 
             int packsCumulativeLength = packs.Aggregate(0, (count, val) => count + val.Length);
-            if(packsCumulativeLength < data.Length)
+            if (packsCumulativeLength < data.Length)
             {
                 string lastOne = data.Substring(packsCumulativeLength);
                 packs.Add(lastOne);
             }
 
-            if(packs.Last().Length < dataPackLength)
+            if (packs.Last().Length < dataPackLength)
                 packs[packs.Count - 1] = packs.Last().PadRight(dataPackLength, filler);
             return packs;
         }
 
-        public void AddIncomingMessageToDisplay(object sender, MessageEventArgs e)
+        public void AddIncomingMessageToDisplay(object sender, IMessageModel e)
         {
-            ReceivedMessages.Add(e.Message);
+            ReceivedMessages.Add(e);
         }
 
-        public void AddIncomingMessageErrorToDisplay(object sender, MessageErrorEventArgs e)
+        public void AddIncomingMessageErrorToDisplay(object sender, IMessageModel e)
         {
-            ReceivedMessages.Add(e.Message);
+            ReceivedMessages.Add(e);
         }
 
         public BindableCollection<IMessageModel> ReceivedMessages
@@ -230,8 +267,8 @@ namespace Shield.WpfGui.ViewModels
 
         public void StartReceiving()
         {
-            Task.Run(async () => await _messanger.StartReceiveAsync());
-            Task.Run(async () => await _messanger.StartDecodingAsync());
+            Task.Run(/*async*/ () => /*await*/ _messanger.StartReceiveAsync());
+            Task.Run(/*async*/ () => /*await*/ _messanger.StartDecodingAsync());
             _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
@@ -303,25 +340,25 @@ namespace Shield.WpfGui.ViewModels
                 _dataInput = value;
                 ValidateCommandDataPack(_dataInput);
                 NotifyOfPropertyChange(() => DataInput);
-                NotifyOfPropertyChange(() => CanAddCommand);                
+                NotifyOfPropertyChange(() => CanAddCommand);
             }
         }
 
         public void AddCommand()
         {
-            if(SelectedCommand is null)
+            if (SelectedCommand is null)
                 return;
 
             List<ICommandModel> commands = new List<ICommandModel>();
 
-            if(SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
+            if (SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
             {
                 List<string> packs = DataPackGenerator(DataInput);
 
-                packs.ForEach(pack => 
+                packs.ForEach(pack =>
                 {
                     ICommandModel command = _commandFactory.Create(CommandType.Data);
-                    command.Data = pack;                    
+                    command.Data = pack;
                     commands.Add(command);
                 });
 
@@ -329,7 +366,7 @@ namespace Shield.WpfGui.ViewModels
             }
             else
                 NewMessageCommands.Add(_commandFactory.Create((CommandType)Enum.Parse(typeof(CommandType), SelectedCommand)));
-            NotifyOfPropertyChange(()=> CanSendMessage);
+            NotifyOfPropertyChange(() => CanSendMessage);
             NotifyOfPropertyChange(() => NewMessageCommands);
         }
 
@@ -337,13 +374,13 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if(SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
+                if (SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
                 {
-                    if(_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
+                    if (_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
                         return false;
 
-                    if(DataInput != null && DataInput.Length > 0 && !DataInput.Contains(DataPackFiller()) &&
-                        !DataInput.Contains(_settings.GetSettingsFor<IApplicationSettingsModel>().Separator) &&
+                    if (DataInput != null && DataInput.Length > 0 && !DataInput.Contains(DataPackFiller()) &&
+                        !DataInput.Contains(_settings.ForTypeOf<IApplicationSettingsModel>().Separator) &&
                         !DataInput.Contains(" "))
                     {
                         return true;
@@ -356,7 +393,7 @@ namespace Shield.WpfGui.ViewModels
 
         public bool CanAddCommandEventHandler()
         {
-            if( CanAddCommand)
+            if (CanAddCommand)
             {
                 AddCommand();
                 return true;
@@ -367,7 +404,7 @@ namespace Shield.WpfGui.ViewModels
         public BindableCollection<ICommandModel> NewMessageCommands
         {
             get { return _newMessageCommands; }
-            set 
+            set
             {
                 _newMessageCommands = value;
                 NotifyOfPropertyChange(() => CanRemoveCommand);
@@ -389,7 +426,7 @@ namespace Shield.WpfGui.ViewModels
         public ICommandModel SelectedNewMessageCommand
         {
             get => _selectedNewMessageCommand;
-            
+
             set
             {
                 _selectedNewMessageCommand = value;
@@ -401,7 +438,7 @@ namespace Shield.WpfGui.ViewModels
         public IMessageModel SelectedSentMessage
         {
             get => _selectedSentMessage;
-            
+
             set
             {
                 _selectedSentMessage = value;
@@ -416,10 +453,10 @@ namespace Shield.WpfGui.ViewModels
             {
                 var output = new BindableCollection<ICommandModel>();
 
-                if(SelectedSentMessage is null)
+                if (SelectedSentMessage is null)
                     return output;
-                
-                foreach(var c in SelectedSentMessage)
+
+                foreach (var c in SelectedSentMessage)
                 {
                     output.Add(c);
                 }
@@ -427,18 +464,17 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-
         public void RemoveCommand()
         {
             NewMessageCommands.Remove(SelectedNewMessageCommand);
-            NotifyOfPropertyChange(()=> CanSendMessage);
+            NotifyOfPropertyChange(() => CanSendMessage);
         }
 
         public bool CanRemoveCommand
         {
             get
             {
-                if(SelectedNewMessageCommand is null)
+                if (SelectedNewMessageCommand is null)
                     return false;
                 return true;
             }
@@ -447,25 +483,27 @@ namespace Shield.WpfGui.ViewModels
         public async Task SendMessage()
         {
             var message = GenerateMessage(NewMessageCommands);
-            if(message is null)
+            if (message is null)
                 return;
-            _comCommander.AddToSendingQueue(message);
+            //_comCommander.AddToSendingQueue(message);
 
             // hack!
             _sending = true;
-            NotifyOfPropertyChange(()=> CanSendMessage);
-            // hack end
-            bool sent = await _comCommander.SendQueuedMessages(new System.Threading.CancellationToken());
+            NotifyOfPropertyChange(() => CanSendMessage);
+
+            bool sent = await _messanger.SendAsync(message).ConfigureAwait(false);
 
             // hack
             _sending = false;
             if (sent)
             {
                 SentMessages.Add(message);
+                _confirmationTimeoutChecker.AddToCheckingQueue(message);
+
                 NewMessageCommands.Clear();
-                NotifyOfPropertyChange(()=> NewMessageCommands);
-                NotifyOfPropertyChange(()=> SentMessages);
-                NotifyOfPropertyChange(()=> CanSendMessage);
+                NotifyOfPropertyChange(() => NewMessageCommands);
+                NotifyOfPropertyChange(() => SentMessages);
+                NotifyOfPropertyChange(() => CanSendMessage);
             }
         }
 
@@ -473,7 +511,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if(NewMessageCommands.Count < 1 || _comCommander.DeviceIsOpen == false || _sending == true)
+                if (NewMessageCommands.Count < 1 || _messanger.IsOpen == false || _sending == true)
                 {
                     return false;
                 }
@@ -483,18 +521,18 @@ namespace Shield.WpfGui.ViewModels
 
         private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
         {
-            if(commands.Count() == 0 || commands is null)
+            if (commands.Count() == 0 || commands is null)
                 return null;
 
             IMessageModel message = _messageFactory();
 
-            foreach(var c in commands)
+            foreach (var c in commands)
             {
                 message.Add(c);
             }
 
             message.Timestamp = Timestamp.TimestampNow;
-            message.AssaignID(IdGenerator.GetID(_settings.GetSettingsFor<IApplicationSettingsModel>().IdSize));
+            message.AssaignID(IdGenerator.GetID(_settings.ForTypeOf<IApplicationSettingsModel>().IdSize));
 
             return message;
         }
@@ -509,12 +547,12 @@ namespace Shield.WpfGui.ViewModels
             const string propertyKey = "DataInput";
             ICollection<string> validationErrors = null;
             /* Call service asynchronously */
-            bool isValid = await Task<bool>.Run(() => 
-            { 
-                return _dataPackValidation.ValidateDataPack(data, out validationErrors); 
+            bool isValid = await Task<bool>.Run(() =>
+            {
+                return _dataPackValidation.ValidateDataPack(data, out validationErrors);
             })
             .ConfigureAwait(false);
- 
+
             if (!isValid)
             {
                 /* Update the collection in the dictionary returned by the GetErrors method */
@@ -522,7 +560,7 @@ namespace Shield.WpfGui.ViewModels
                 /* Raise event to tell WPF to execute the GetErrors method */
                 RaiseErrorsChanged(propertyKey);
             }
-            else if(_validationErrors.ContainsKey(propertyKey))
+            else if (_validationErrors.ContainsKey(propertyKey))
             {
                 /* Remove all errors for this property */
                 _validationErrors.Remove(propertyKey);
@@ -536,7 +574,7 @@ namespace Shield.WpfGui.ViewModels
             if (string.IsNullOrEmpty(propertyName)
                 || !_validationErrors.ContainsKey(propertyName))
                 return null;
- 
+
             return _validationErrors[propertyName];
         }
 
@@ -545,6 +583,5 @@ namespace Shield.WpfGui.ViewModels
             if (ErrorsChanged != null)
                 ErrorsChanged(this, new DataErrorsChangedEventArgs(propertyName));
         }
-        
-    }       
+    }
 }

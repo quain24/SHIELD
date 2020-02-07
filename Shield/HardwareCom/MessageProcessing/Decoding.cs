@@ -1,19 +1,16 @@
-﻿using System;
+﻿using Shield.Enums;
+using Shield.HardwareCom.Models;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.Enums;
-using Shield.HardwareCom.Models;
 
 namespace Shield.HardwareCom
 {
-    public static class MessageDecodingCheck
+    public class Decoding : IDecoding
     {
-        public static MessageErrors ErrorsIn(IMessageModel message)
+        public Errors Check(IMessageModel message)
         {
             if (message is null)
-                return MessageErrors.IsNull;
+                return Errors.IsNull;
 
             List<ICommandModel> badOrUnknown = message
                 .Where(c =>
@@ -23,18 +20,18 @@ namespace Shield.HardwareCom
                 .ToList();
 
             if (badOrUnknown.Any() == false)
-                return MessageErrors.None;
+                return Errors.None;
 
-            MessageErrors errors = MessageErrors.None;
+            Errors errors = Errors.None;
 
             foreach (ICommandModel c in badOrUnknown)
             {
                 if (c.CommandType == CommandType.Error)
-                    errors = errors | MessageErrors.GotErrorCommands;
+                    errors = errors | Errors.GotErrorCommands;
                 else if (c.CommandType == CommandType.Unknown)
-                    errors = errors | MessageErrors.GotUnknownCommands;
+                    errors = errors | Errors.GotUnknownCommands;
                 else if (c.CommandType == CommandType.Partial)
-                    errors = errors | MessageErrors.GotPartialCommands;
+                    errors = errors | Errors.GotPartialCommands;
             }
             return errors;
         }

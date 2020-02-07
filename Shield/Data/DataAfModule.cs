@@ -8,18 +8,19 @@ namespace Shield.Data
     {
         protected override void Load(ContainerBuilder builder)
         {
+            Assembly current = Assembly.Load(nameof(Shield));
+
             // Models registration (general)
-            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+            builder.RegisterAssemblyTypes(current)
                    .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Model"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
-            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+            builder.RegisterAssemblyTypes(current)
                    .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Factory"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
-            // Application Settings Class - gives and keeps all the settings
-            builder.RegisterType<AppSettings>().As<IAppSettings>().SingleInstance();
+            builder.RegisterType<Settings>().As<ISettings>().SingleInstance();
 
             base.Load(builder);
         }
