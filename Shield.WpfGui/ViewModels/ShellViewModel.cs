@@ -43,6 +43,7 @@ namespace Shield.WpfGui.ViewModels
 
         private bool _receivingButtonActivated = false;
         private bool _sending = false;
+        private bool _openingError = false;
 
         private CommandDataPackValidation _dataPackValidation;
 
@@ -209,20 +210,37 @@ namespace Shield.WpfGui.ViewModels
             {
                 if (_messanger is null) return false;
                 if (_messanger.IsOpen) return true;
+                if (_openingError)
+                {
+                    _openingError = false;
+                    return true;
+                }
                 return false;
             }
         }
 
         public void OpenDevice()
         {
-            _messanger.Open();
-            NotifyOfPropertyChange(() => CanOpenDevice);
-            NotifyOfPropertyChange(() => CanCloseDevice);
-            NotifyOfPropertyChange(() => CanStartReceiving);
-            NotifyOfPropertyChange(() => CanStopReceiving);
-            NotifyOfPropertyChange(() => ButtonAIsChecked);
-            NotifyOfPropertyChange(() => CanStartReceiving);
-            NotifyOfPropertyChange(() => CanSendMessage);
+            try
+            {            
+                _messanger.Open();
+                NotifyOfPropertyChange(() => CanOpenDevice);
+                NotifyOfPropertyChange(() => CanCloseDevice);
+                NotifyOfPropertyChange(() => CanStartReceiving);
+                NotifyOfPropertyChange(() => CanStopReceiving);
+                NotifyOfPropertyChange(() => ButtonAIsChecked);
+                NotifyOfPropertyChange(() => CanStartReceiving);
+                NotifyOfPropertyChange(() => CanSendMessage);
+            }
+            catch(Exception ex)
+            {
+                System.Windows.MessageBox.Show(ex.Message);
+                
+                // Enables Close port button in case of exception, enables CanOpenDevice to return TRUE
+                _openingError = true;
+                NotifyOfPropertyChange(() => CanOpenDevice);
+                NotifyOfPropertyChange(() => CanCloseDevice);
+            }
         }
 
         public void CloseDevice()
