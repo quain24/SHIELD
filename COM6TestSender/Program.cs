@@ -16,7 +16,7 @@ namespace COM6TestSender
 
         public async static Task MainAsync(string[] args)
         {
-            SerialPort serial = new SerialPort { BaudRate = 19200/*921600*/, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
+            SerialPort serial = new SerialPort { BaudRate = /*19200*/921600, Encoding = Encoding.ASCII, PortName = "COM7", DataBits = 8, Parity = Parity.None, StopBits = StopBits.One, ReadTimeout = -1, ParityReplace = 0 };
             serial.DtrEnable = false;
             serial.RtsEnable = false;
             serial.DiscardNull = true;
@@ -24,7 +24,7 @@ namespace COM6TestSender
 
             int i = 0;
 
-            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good,\n7 - partial, 8 - nodata mixed, 9 - Async test, 10 -- message creator, 11 -- Auto message sender - 2 tasks");
+            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good,\n7 - partial, 8 - nodata mixed, 9 - Async test, 10 -- message creator, 11 -- Auto message sender - 2 tasks, 12 -- rand msg gen");
             string a = Console.ReadLine();
 
             Random rand = new Random();
@@ -424,6 +424,91 @@ namespace COM6TestSender
                     }
                 }
             }
+
+            else if (Int32.Parse(a) == 12)
+            {
+                string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+                int num = 0;
+
+                Regex pat = new Regex(pattern);
+
+                string id = Shield.Helpers.IdGenerator.GetID(4);
+                int choose = 0;
+                int licz = 0;
+
+
+                while (true)
+                {
+                    string data = num.ToString().PadLeft(30, '.');
+                    
+                    switch (choose)
+                    {
+                        case 1:
+                            choose = 2;
+                            break;
+                        case 2: 
+                            choose = 18;
+                            break;
+                        case 18:
+                            choose = 5;
+                            break;
+                        case 5:
+                            choose = 19;
+                            break;
+                        case 19:
+                            choose = 1;
+                            break;
+                        default:
+                            choose = 1;
+                            break;
+                    }
+                    
+
+
+                    string packet = $@"*{choose.ToString().PadLeft(4, '0')}*{id}*";
+                    if (choose == 18)
+                    {
+                        packet += data;
+                        num++;
+                    }
+                    else if (choose == 19)
+                    {
+                        id = Shield.Helpers.IdGenerator.GetID(4);
+                        Console.WriteLine($@"ID changed to {id}");
+                        continue;
+                    }
+                    else if (choose > 19)
+                    {
+                        Console.WriteLine("bad command");
+                        continue;
+                    }
+
+                    serial.Write(packet);
+                    if (choose == 5)
+                    {
+                        await Task.Delay(10);
+                        Console.WriteLine("----    RESPONSE    ----");
+                        //while (serial.BytesToRead > 0)
+                        //{
+                        //    string resp = serial.ReadExisting();
+                        //    string[] rep = new string[licz+2];
+                        //    licz = 0;
+                        //    rep = pat.Split(resp);
+
+                        //    foreach(var s in rep)
+                        //    {
+                        //        Console.WriteLine(s);
+                        //    }
+                        //}
+                        Console.WriteLine(serial.ReadExisting());
+                        Console.WriteLine("----  END RESPONSE  ----");
+                    }
+
+                    
+
+                }
+            }
+
 
             // zle na emulatorze
             else

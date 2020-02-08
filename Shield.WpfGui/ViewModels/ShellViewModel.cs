@@ -17,9 +17,6 @@ using System.Threading.Tasks;
 
 namespace Shield.WpfGui.ViewModels
 {
-    // Data grid inside data grid.
-    // Znalezc metode pobrania wybranego przez usera rzedu danych jako zrodla dla wewnetrznego data gridu
-
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
         private IMessanger _messanger;
@@ -73,15 +70,14 @@ namespace Shield.WpfGui.ViewModels
             _messageFactory = messageFactory;
 
             _settings.LoadFromFile();
+            _settings.ForTypeOf<ISerialPortSettingsModel>().BaudRate = 921600;
             _messanger.Setup(DeviceType.Serial);
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
 
-            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
-            Task.Run(() => _commandIngester.StartTimeoutCheck().ConfigureAwait(false)).ConfigureAwait(false);
+            
 
             _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
-            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
 
 
             //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
@@ -160,13 +156,13 @@ namespace Shield.WpfGui.ViewModels
 
         public BindableCollection<IMessageModel> ReceivedMessages
         {
-            get { return _receivedMessages; }
-            set { _receivedMessages = value; }
+            get => _receivedMessages;
+            set => _receivedMessages = value;
         }
 
         public IMessageModel SelectedReceivedMessage
         {
-            get { return _selectedReceivedMessage; }
+            get => _selectedReceivedMessage;
             set
             {
                 _selectedReceivedMessage = value;
@@ -269,6 +265,12 @@ namespace Shield.WpfGui.ViewModels
         {
             Task.Run(/*async*/ () => /*await*/ _messanger.StartReceiveAsync());
             Task.Run(/*async*/ () => /*await*/ _messanger.StartDecodingAsync());
+
+            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+            Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
+            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
+
+
             _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
@@ -285,6 +287,10 @@ namespace Shield.WpfGui.ViewModels
 
         public void StopReceiving()
         {
+            _incomingMessageProcessor.StopProcessingMessages();
+            _commandIngester.StopTimeoutCheck();
+            _commandIngester.StopProcessingCommands();
+
             _messanger.StopDecoding();
             _messanger.StopReceiving();
             _receivingButtonActivated = false;

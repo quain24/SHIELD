@@ -186,7 +186,7 @@ namespace Shield.HardwareCom
             _cancelProcessingCTS = new CancellationTokenSource();
         }
 
-        public async Task StartTimeoutCheck(int interval = 0)
+        public async Task StartTimeoutCheckAsync(int interval = 0)
         {
             if (_completitionTimeout is null)
                 return;
