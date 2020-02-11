@@ -74,13 +74,12 @@ namespace Shield.HardwareCom
 
             while (true)
             {
-                _isProcessing = true;
                 try
                 {
                     IMessageModel message = null;
-                    bool wasTaken = _messagesToProcess.TryTake(out message, 150, _processingCTS.Token);
-
                     IMessageModel processedMessage = null;
+
+                    bool wasTaken = _messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token);
 
                     if (wasTaken)
                     {
@@ -117,10 +116,10 @@ namespace Shield.HardwareCom
 
             while (_messagesToProcess.Count > 0)
             {
-                _isProcessing = true;
-
                 try
                 {
+                    _processingCTS.Token.ThrowIfCancellationRequested();
+
                     IMessageModel processedMessage = null;
                     IMessageModel message = null;
 
@@ -128,9 +127,16 @@ namespace Shield.HardwareCom
                     {
                         bool isProcessedWithoutErrors = TryProcess(message, out processedMessage);
                         _processedMessages.Add(processedMessage);
+                        _processingCTS.Token.ThrowIfCancellationRequested();
                     }
                     else
+                    {
+                        lock (_processingLock)
+                        {
+                            _isProcessing = false;
+                        }
                         break;
+                    }
                 }
                 catch
                 {
@@ -138,8 +144,6 @@ namespace Shield.HardwareCom
                     break;
                 }
             }
-
-            _isProcessing = false;
         }
 
         /// <summary>

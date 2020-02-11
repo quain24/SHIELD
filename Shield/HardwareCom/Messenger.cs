@@ -77,14 +77,14 @@ namespace Shield.HardwareCom
             _device?.Close();
         }
 
-        public async Task StartReceiveAsync(CancellationToken ct)
-        {            
+        public async Task StartReceiveingAsync(CancellationToken ct)
+        {
             lock (_receiverLock)
             {
                 if (_receiverRunning || !IsOpen || !_setupSuccessuful)
                     return;
                 _receiverRunning = true;
-            }            
+            }
 
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
             if (internalCT == ct)
@@ -97,7 +97,7 @@ namespace Shield.HardwareCom
                     internalCT.ThrowIfCancellationRequested();
                     string toAdd = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
 
-                    if (!string.IsNullOrEmpty(toAdd))
+                    if (!string.IsNullOrWhiteSpace(toAdd))
                     {
                         internalCT.ThrowIfCancellationRequested();
                         _rawDataBuffer.Add(toAdd);
@@ -107,15 +107,15 @@ namespace Shield.HardwareCom
             }
             catch (Exception e)
             {
-                if(e is TaskCanceledException || e is OperationCanceledException)
+                if (e is TaskCanceledException || e is OperationCanceledException)
                     _receiverRunning = false;
                 else
                     throw;
             }
         }
 
-        public async Task StartDecodingAsync(CancellationToken ct)
-        {            
+        public void StartDecoding(CancellationToken ct)
+        {
             lock (_decoderLock)
             {
                 if (!_decoderRunning)
@@ -123,7 +123,6 @@ namespace Shield.HardwareCom
                 else
                     return;
             }
-            
 
             CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
             if (internalCT == ct)
@@ -136,28 +135,22 @@ namespace Shield.HardwareCom
                 while (true && _rawDataBuffer != null)
                 {
                     internalCT.ThrowIfCancellationRequested();
-                    if (_rawDataBuffer.TryTake(out workpiece, 50))
-                    {
-                        List<string> output = _incomingDataPreparer.DataSearch(workpiece);
-                        if (output is null || output.Count == 0)
-                            continue;
-                        foreach (string s in output)
-                        {
-                            internalCT.ThrowIfCancellationRequested();
-                            ICommandModel receivedCommad = _commandTranslator.FromString(s);
-                            OnCommandReceived(receivedCommad);
-                        }
-                    }
-                    else
+                    _rawDataBuffer.TryTake(out workpiece, -1, internalCT);
+
+                    List<string> output = _incomingDataPreparer.DataSearch(workpiece);
+                    if (output is null || output.Count == 0)
+                        continue;
+                    foreach (string s in output)
                     {
                         internalCT.ThrowIfCancellationRequested();
-                        await Task.Delay(1000, internalCT).ConfigureAwait(false);
+                        ICommandModel receivedCommad = _commandTranslator.FromString(s);
+                        OnCommandReceived(receivedCommad);
                     }
                 }
             }
             catch (Exception e)
             {
-                if(e is TaskCanceledException || e is OperationCanceledException)
+                if (e is TaskCanceledException || e is OperationCanceledException)
                 {
                     Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
                     _decoderRunning = false;

@@ -151,27 +151,20 @@ namespace Shield.HardwareCom
 
             ICommandModel command = null;
             IMessageModel message;
-            int debugCounter = 0;
-            int debugLoopCounter = 0;
 
             while (true)
             {
                 try
                 {
-                    bool a = _awaitingQueue.TryTake(out command, 150, _cancelProcessingCTS.Token);
+                    bool a = _awaitingQueue.TryTake(out command, -1, _cancelProcessingCTS.Token);
 
                     if (a) Console.WriteLine($"CommandIngester - Took command {command.Id} for processing");
-                    else
-                    {
-                        if (++debugLoopCounter % 10 == 0) Console.WriteLine($@"CommandIngester - Could not take command for processing: tried {++debugCounter} times, {_awaitingQueue.Count} available.");
-                    }
+                    TryIngest(command, out message);
                 }
                 catch
                 {
                     break;
                 }
-                if (command != null)
-                    TryIngest(command, out message);
             }
             Console.WriteLine("CommandIngester - StartProcessingCommands ENDED");
             _isProcessing = false;

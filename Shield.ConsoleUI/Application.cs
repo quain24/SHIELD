@@ -99,8 +99,8 @@ namespace Shield.ConsoleUI
             //_comcom.AssignMessanger(_comMessanger);
 
             _comMessanger.Open();
-            Task.Run(() => _comMessanger.StartReceiveAsync());
-            Task.Run(() => _comMessanger.StartDecodingAsync());
+            Task.Run(() => _comMessanger.StartReceiveingAsync());
+            Task.Run(() => _comMessanger.StartDecoding());
 
             //int licznik = 0;
 

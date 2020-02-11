@@ -21,11 +21,11 @@ namespace Shield.HardwareCom
 
         void Close();
 
-        Task StartReceiveAsync(CancellationToken ct = default);
+        Task StartReceiveingAsync(CancellationToken ct = default);
 
         void StopReceiving();
 
-        Task StartDecodingAsync(CancellationToken ct = default);
+        void StartDecoding(CancellationToken ct = default);
 
         void StopDecoding();
         Task<bool> SendAsync(IMessageModel message);

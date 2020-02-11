@@ -281,8 +281,8 @@ namespace Shield.WpfGui.ViewModels
 
         public void StartReceiving()
         {
-            Task.Run(/*async*/ () => /*await*/ _messanger.StartReceiveAsync());
-            Task.Run(/*async*/ () => /*await*/ _messanger.StartDecodingAsync());
+            Task.Run(/*async*/ () => /*await*/ _messanger.StartReceiveingAsync());
+            Task.Run(() => _messanger.StartDecoding());
 
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
