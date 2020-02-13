@@ -4,6 +4,7 @@ using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -184,43 +185,87 @@ namespace Shield.HardwareCom
             if (_completitionTimeout is null)
                 return;
 
-            lock (_timeoutCheckLock)
-            {
-                if (!_isTimeoutChecking)
-                    _isTimeoutChecking = true;
-                else
-                    return;
-            }
+            if(!CanStartTiemoutCheck())
+                return;
 
             int checkInterval = CalcCheckInterval(interval);
 
-            while (true)
+            try
             {
-                try
+                while (true)
                 {
                     _cancelTimeoutCheckCTS.Token.ThrowIfCancellationRequested();
 
-                    var timeouts = _completitionTimeout?.GetTimeoutsFromCollection(GetIncompletedMessages());
-
-                    foreach (var message in timeouts)
+                    foreach (var message in TimeouttedMessagesList())
                     {
                         message.Errors |= Enums.Errors.CompletitionTimeout;
-                        _processedMessages.Add(message);
-                        _incompleteMessages[message.Id] = null;
-                        Console.WriteLine("ContinousTimeoutChecker - Error - message  completition timeoutted");
+                        PushFromIncompleteToProcessed(message);
+                        Debug.WriteLine($@"ContinousTimeoutChecker - Error - message {message.Id} completition timeout");
                         _cancelTimeoutCheckCTS.Token.ThrowIfCancellationRequested();
                     }
 
                     await Task.Delay(checkInterval, _cancelTimeoutCheckCTS.Token).ConfigureAwait(false);
                 }
-                catch (Exception e)
-                {
-                    if (e is TaskCanceledException || e is OperationCanceledException)
-                        _isTimeoutChecking = false;
-                    else
-                        throw;
-                }
             }
+            catch (Exception e)
+            {
+                if (!IsTimeoutCheckCorrectlyCancelled(e))
+                    throw;
+            }
+        }
+
+        private bool CanStartTiemoutCheck()
+        {
+            lock (_timeoutCheckLock)
+            {
+                if (!_isTimeoutChecking)
+                    return _isTimeoutChecking = true;
+                else
+                    return false;
+            }
+        }
+
+        private int CalcCheckInterval(long timeout)
+        {
+            switch (timeout)
+            {
+                case var _ when timeout <= _completitionTimeout.NoTimeoutValue:
+                return 250;
+
+                case var _ when timeout <= 100:
+                return 10;
+
+                case var _ when timeout <= 3000:
+                return 100;
+
+                case var _ when timeout > 3000:
+                return 250;
+
+                default:
+                return _completitionTimeout.NoTimeoutValue;
+            }
+        }
+
+        private List<IMessageModel> TimeouttedMessagesList()
+        {
+            return _completitionTimeout?.GetTimeoutsFromCollection(GetIncompletedMessages());
+        }
+
+        private void PushFromIncompleteToProcessed(IMessageModel message)
+        {
+            if (message is null)
+                throw new ArgumentNullException(nameof(message));
+
+            _processedMessages.Add(message);
+            _incompleteMessages[message.Id] = null;
+        }
+
+        private bool IsTimeoutCheckCorrectlyCancelled(Exception e)
+        {
+            lock (_timeoutCheckLock)
+                _isTimeoutChecking = false;
+
+            return (e is TaskCanceledException || e is OperationCanceledException) ? true : false;
         }
 
         public void StopTimeoutCheck()
@@ -252,27 +297,6 @@ namespace Shield.HardwareCom
         public BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout()
         {
             return _errCommands;
-        }
-
-        private int CalcCheckInterval(long timeout)
-        {
-            switch (timeout)
-            {
-                case var _ when timeout <= _completitionTimeout.NoTimeoutValue:
-                return 250;
-
-                case var _ when timeout <= 100:
-                return 10;
-
-                case var _ when timeout <= 3000:
-                return 100;
-
-                case var _ when timeout > 3000:
-                return 250;
-
-                default:
-                return _completitionTimeout.NoTimeoutValue;
-            }
         }
     }
 }

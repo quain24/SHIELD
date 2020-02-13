@@ -2,6 +2,7 @@
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
+using System.Diagnostics;
 
 namespace Shield.HardwareCom
 {
@@ -28,7 +29,7 @@ namespace Shield.HardwareCom
         public override bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage)
         {
             if (messageToProcess is null)
-                throw new ArgumentNullException(nameof(messageToProcess), "IncomingMessageProcessor - TryProcess: Cannot process NULL.");
+                throw new ArgumentNullException(nameof(messageToProcess));
             
             processedMessage = messageToProcess;
 
@@ -44,7 +45,7 @@ namespace Shield.HardwareCom
             if (messageToProcess.Type == MessageType.Unknown)
                 messageToProcess.Errors = messageToProcess.Errors | Errors.UndeterminedType;
 
-            Console.WriteLine($@"IncomingMessageProcessor - TryProcess message running with id:{messageToProcess.Id}");
+            Debug.WriteLine($@"IncomingMessageProcessor - TryProcess message running with id:{messageToProcess.Id}");
 
             return messageToProcess.Errors == Errors.None ? true : false;
         }

@@ -2,7 +2,9 @@
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
@@ -34,9 +36,9 @@ namespace Shield.HardwareCom
         public void AddMessageToProcess(IMessageModel message)
         {
             if (message is null)
-                throw new ArgumentNullException(nameof(message), "MessageProcessor - AddMessageToProcess: Cannot add a NULL to processing queue");
+                throw new ArgumentNullException(nameof(message));
             _messagesToProcess.Add(message);
-            Console.WriteLine("message added to be processed");
+            Debug.WriteLine("message added to be processed");
         }
 
         /// <summary>
@@ -46,9 +48,9 @@ namespace Shield.HardwareCom
         public void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection)
         {
             if (newSourceCollection is null)
-                throw new ArgumentNullException(nameof(newSourceCollection), "New source collection cannot be NULL.");
+                throw new ArgumentNullException(nameof(newSourceCollection));
 
-            using (_sourceCollectionSwithLock.Read())
+            using (_sourceCollectionSwithLock.Write())
             {
                 _messagesToProcess = newSourceCollection;
             }
@@ -60,44 +62,20 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessagesContinous()
         {
-            lock (_processingLock)
+            try
             {
-                if (_isProcessing)
-                {
-                    Console.WriteLine($@"MessageProcessor already running.");
+                if (!CanStartProcessingMessages())
                     return;
+
+                while (true)
+                {
+                    TryProcessNextMessage();
                 }
-                _isProcessing = true;
-            }            
-
-            Console.WriteLine("MessageProcessor - Continuous Message processing started");
-
-            while (true)
+            }
+            catch (Exception e)
             {
-                try
-                {
-                    IMessageModel message = null;
-                    IMessageModel processedMessage = null;
-
-                    bool wasTaken = _messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token);
-
-                    if (wasTaken)
-                    {
-                        using (_sourceCollectionSwithLock.Write())
-                        {
-                            TryProcess(message, out processedMessage);
-                        }
-
-                        _processedMessages.Add(processedMessage);
-                        Console.WriteLine($@"MessageProcessor - Took single message ({message.Id}) to process");
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    Console.WriteLine("MessageProcessor continuous ENDED");
-                    _isProcessing = false;
-                    break;
-                }
+                if (!IsMessageProcessingCorrectlyCancelled(e))
+                    throw;
             }
         }
 
@@ -107,43 +85,63 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingMessages()
         {
+            try
+            {
+                if (!CanStartProcessingMessages())
+                    return;
+
+                while (_messagesToProcess.Count > 0)
+                {
+                    TryProcessNextMessage();
+                }
+            }
+            catch (Exception e)
+            {
+                if (!IsMessageProcessingCorrectlyCancelled(e))
+                    throw;
+            }
+        }
+
+        private bool CanStartProcessingMessages()
+        {
             lock (_processingLock)
             {
                 if (_isProcessing)
-                    return;
-                _isProcessing = true;
-            }         
-
-            while (_messagesToProcess.Count > 0)
-            {
-                try
-                {
-                    _processingCTS.Token.ThrowIfCancellationRequested();
-
-                    IMessageModel processedMessage = null;
-                    IMessageModel message = null;
-
-                    if (_messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token))
-                    {
-                        bool isProcessedWithoutErrors = TryProcess(message, out processedMessage);
-                        _processedMessages.Add(processedMessage);
-                        _processingCTS.Token.ThrowIfCancellationRequested();
-                    }
-                    else
-                    {
-                        lock (_processingLock)
-                        {
-                            _isProcessing = false;
-                        }
-                        break;
-                    }
-                }
-                catch
-                {
-                    _isProcessing = false;
-                    break;
-                }
+                    return false;
+                return _isProcessing = true;
             }
+        }
+
+        private void TryProcessNextMessage()
+        {
+            _processingCTS.Token.ThrowIfCancellationRequested();
+
+            IMessageModel message;
+            IMessageModel processedMessage;
+            bool wasTaken = false;
+
+            // Taking element from thread safe collection - no need to lock. Locking only when collection is switched to other one
+            using (_sourceCollectionSwithLock.Read())
+                wasTaken = _messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token);
+
+            if (wasTaken)
+            {
+                TryProcess(message, out processedMessage);
+                _processedMessages.Add(processedMessage);
+                Debug.WriteLine($@"MessageProcessor - Took message ({message.Id}) and added it to output queue.");
+                _processingCTS.Token.ThrowIfCancellationRequested();
+            }
+        }
+
+        private bool IsMessageProcessingCorrectlyCancelled(Exception e)
+        {
+            if (e is TaskCanceledException || e is OperationCanceledException)
+            {
+                lock (_processingLock)
+                    _isProcessing = false;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -166,7 +164,7 @@ namespace Shield.HardwareCom
 
         /// <summary>
         /// Check given message for errors by given injected objects and return true if message was processed without errors
-        /// or false if processed with some internal errors.
+        /// or false if processed with some internal errors. Sets according error flags.
         /// </summary>
         /// <param name="messageToProcess">Message to be processed</param>
         /// <param name="processedMessage">If successful - processed message, otherwise processed message with set errors</param>
