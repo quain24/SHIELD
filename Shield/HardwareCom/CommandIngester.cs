@@ -63,57 +63,85 @@ namespace Shield.HardwareCom
         public bool TryIngest(ICommandModel incomingCommand, out IMessageModel message)
         {
             if (_completness is null)
-                throw new Exception("CommandIngester: TryIngest - Completeness checker is NULL");
+                throw new NullReferenceException($@"{nameof(_completness)} is NULL");
             if (incomingCommand is null)
-                throw new ArgumentNullException(nameof(incomingCommand), "CommandIngester: TryIngest - tried to ingest NULL");
+                throw new ArgumentNullException(nameof(incomingCommand));
 
-            Console.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
+            Debug.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
 
-            // In any case, add command id to used-up pool on this machine
-            Helpers.IdGenerator.UsedThisID(incomingCommand.Id);
+            SetIdAsUsedUp(incomingCommand.Id);
 
-            if (_incompleteMessages.ContainsKey(incomingCommand.Id))
+            if (!TryGetExistingMessage(incomingCommand.Id, out message))
             {
-                message = _incompleteMessages[incomingCommand.Id];
-                Console.WriteLine("CommandIngester - Incomplete message with command id found!");
-            }
-            else
-            {
-                message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: incomingCommand.Id);
+                message = CreateNewIncomingMessage(incomingCommand.Id);
                 _incompleteMessages.Add(message.Id, message);
-                Console.WriteLine($@"CommandIngester - new message created");
             }
 
-            // check for old completes or removed otherwise
-            if (message is null || _completness.IsComplete(message))
+            if (IsMessageNullOrAlreadyComplete(message))
             {
                 _errCommands.Add(incomingCommand);
-                Console.WriteLine("CommandIngester - ERROR - tried to add new command to completed message");
+                Debug.WriteLine("CommandIngester - ERROR - tried to add new command to completed / null message");
                 return false;
             }
 
             // check for completition timeout if checker exists
             if (_completitionTimeout?.IsExceeded(message) ?? false)
             {
-                message.Errors |= Enums.Errors.CompletitionTimeout;
-                _processedMessages.Add(message);
-                _errCommands.Add(incomingCommand);
-                _incompleteMessages[incomingCommand.Id] = null;
-                Console.WriteLine("CommandIngester - Error - message  completition timeoutted");
+                HandleMessageTimeout(message, incomingCommand);
                 return false;
             }
 
             message.Add(incomingCommand);
 
             // if completed after last command, then move to processed
-            if (_completness.IsComplete(message))
+            if (IsMessageNullOrAlreadyComplete(message))
             {
-                _processedMessages.Add(message);
-                _incompleteMessages[message.Id] = null;
-                Console.WriteLine("CommandIngester - Message was processed, adding to processed messages collection");
+                PushFromIncompleteToProcessed(message);
+                Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
             }
 
             return true;
+        }
+
+        private void SetIdAsUsedUp(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+                Helpers.IdGenerator.UsedThisID(id);
+        }
+
+        private bool TryGetExistingMessage(string id, out IMessageModel message)
+        {
+            if (_incompleteMessages.ContainsKey(id))
+            {
+                Debug.WriteLine("CommandIngester - Incomplete message with command id found!");
+                message = _incompleteMessages[id];
+                return true;
+            }
+            message = null;
+            return false;
+        }
+
+        private bool IsMessageNullOrAlreadyComplete(IMessageModel message)
+        {
+            return message is null || _completness.IsComplete(message) ? true : false;
+        }
+
+        private IMessageModel CreateNewIncomingMessage(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentException("Id cannot be empty", nameof(id));
+
+            IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id);
+            Debug.WriteLine($@"CommandIngester - new {id} message created");
+            return message;
+        }
+
+        private void HandleMessageTimeout(IMessageModel message, ICommandModel lastCommand)
+        {
+            message.Errors |= Enums.Errors.CompletitionTimeout;
+            PushFromIncompleteToProcessed(message);
+            _errCommands.Add(lastCommand);
+            Debug.WriteLine("CommandIngester - Error - message  completition timeoutted");
         }
 
         /// <summary>
@@ -167,7 +195,7 @@ namespace Shield.HardwareCom
                     break;
                 }
             }
-            Console.WriteLine("CommandIngester - StartProcessingCommands ENDED");
+            Debug.WriteLine("CommandIngester - StartProcessingCommands ENDED");
             _isProcessing = false;
         }
 
@@ -182,10 +210,7 @@ namespace Shield.HardwareCom
 
         public async Task StartTimeoutCheckAsync(int interval = 0)
         {
-            if (_completitionTimeout is null)
-                return;
-
-            if(!CanStartTiemoutCheck())
+            if (!CanStartTiemoutCheck())
                 return;
 
             int checkInterval = CalcCheckInterval(interval);
@@ -216,6 +241,9 @@ namespace Shield.HardwareCom
 
         private bool CanStartTiemoutCheck()
         {
+            if (_completitionTimeout is null)
+                return false;
+
             lock (_timeoutCheckLock)
             {
                 if (!_isTimeoutChecking)

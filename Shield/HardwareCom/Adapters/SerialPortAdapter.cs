@@ -51,23 +51,32 @@ namespace Shield.HardwareCom.Adapters
 
             ISerialPortSettingsModel internalSettings = (ISerialPortSettingsModel)settings;
 
-            if (!SerialPort.GetPortNames().Contains($"COM{internalSettings.PortNumber}"))
+            if (!PortNumberExists(internalSettings.PortNumber))
                 return _wasSetupCorrectly = false;
 
-            _port.PortName = $"COM{internalSettings.PortNumber}";
-            _port.BaudRate = internalSettings.BaudRate;
-            _port.DataBits = internalSettings.DataBits;
-            _port.Parity = internalSettings.Parity;
-            _port.StopBits = internalSettings.StopBits;
-            _port.ReadTimeout = internalSettings.ReadTimeout;
-            _port.WriteTimeout = internalSettings.WriteTimeout;
-            _port.Encoding = Encoding.GetEncoding(internalSettings.Encoding);
+            SetUpDeviceOptions(internalSettings);
 
+            return _wasSetupCorrectly = true;
+        }
+
+        private bool PortNumberExists(int portNumber)
+        {
+            return SerialPort.GetPortNames().Contains($"COM{portNumber}");
+        }
+
+        private void SetUpDeviceOptions(ISerialPortSettingsModel settings)
+        {
+            _port.PortName = $"COM{settings.PortNumber}";
+            _port.BaudRate = settings.BaudRate;
+            _port.DataBits = settings.DataBits;
+            _port.Parity = settings.Parity;
+            _port.StopBits = settings.StopBits;
+            _port.ReadTimeout = settings.ReadTimeout;
+            _port.WriteTimeout = settings.WriteTimeout;
+            _port.Encoding = Encoding.GetEncoding(settings.Encoding);
             _port.DtrEnable = false;
             _port.RtsEnable = false;
             _port.DiscardNull = true;
-
-            return _wasSetupCorrectly = true;
         }
 
         public void Open()

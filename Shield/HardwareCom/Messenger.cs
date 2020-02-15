@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,10 +42,10 @@ namespace Shield.HardwareCom
 
         public event EventHandler<ICommandModel> CommandReceived;
 
-        public bool IsOpen { get => _device.IsOpen; }
-        public bool IsReceiving { get => _receiverRunning; }
-        public bool IsDecoding { get => _decoderRunning; }
-        public bool IsSending { get => _isSending; }
+        public bool IsOpen => _device.IsOpen;
+        public bool IsReceiving => _receiverRunning;
+        public bool IsDecoding => _decoderRunning;
+        public bool IsSending => _isSending;
 
         public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
@@ -56,10 +57,7 @@ namespace Shield.HardwareCom
         public bool Setup(DeviceType type)
         {
             _device = _communicationDeviceFactory.Device(type);
-            if (_device is null)
-                return _setupSuccessuful = false;
-
-            return _setupSuccessuful = true;
+            return _device is null ? _setupSuccessuful = false : _setupSuccessuful = true;
         }
 
         public void Open()
@@ -79,12 +77,8 @@ namespace Shield.HardwareCom
 
         public async Task StartReceiveingAsync(CancellationToken ct)
         {
-            lock (_receiverLock)
-            {
-                if (_receiverRunning || !IsOpen || !_setupSuccessuful)
-                    return;
-                _receiverRunning = true;
-            }
+            if (!CanStartReceiving())
+                return;
 
             CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
             if (internalCT == ct)
@@ -107,22 +101,40 @@ namespace Shield.HardwareCom
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException || e is OperationCanceledException)
-                    _receiverRunning = false;
-                else
+                if (!WasStartReceivingCorrectlyCancelled(e))
                     throw;
             }
         }
 
+        private bool CanStartReceiving()
+        {
+            lock (_receiverLock)
+                return _receiverRunning || !IsOpen || !_setupSuccessuful ? false : _receiverRunning = true;
+        }
+
+        private bool WasStartReceivingCorrectlyCancelled(Exception e)
+        {
+            if (e is TaskCanceledException || e is OperationCanceledException)
+            {
+                lock (_receiverLock)
+                    _receiverRunning = false;
+                return true;
+            }
+            return false;
+        }
+
+        public void StopReceiving()
+        {
+            _receiveCTS.Cancel();
+            _device.DiscardInBuffer();
+            _receiveCTS.Dispose();
+            _receiveCTS = new CancellationTokenSource();
+        }
+
         public void StartDecoding(CancellationToken ct)
         {
-            lock (_decoderLock)
-            {
-                if (!_decoderRunning)
-                    _decoderRunning = true;
-                else
-                    return;
-            }
+            if (!CanStartDecoding())
+                return;
 
             CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
             if (internalCT == ct)
@@ -132,14 +144,15 @@ namespace Shield.HardwareCom
 
             try
             {
-                while (true && _rawDataBuffer != null)
+                while (_rawDataBuffer != null)
                 {
                     internalCT.ThrowIfCancellationRequested();
                     _rawDataBuffer.TryTake(out workpiece, -1, internalCT);
 
                     List<string> output = _incomingDataPreparer.DataSearch(workpiece);
-                    if (output is null || output.Count == 0)
+                    if (output is null || !output.Any())
                         continue;
+
                     foreach (string s in output)
                     {
                         internalCT.ThrowIfCancellationRequested();
@@ -150,24 +163,28 @@ namespace Shield.HardwareCom
             }
             catch (Exception e)
             {
-                if (e is TaskCanceledException || e is OperationCanceledException)
-                {
-                    Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
-                    _decoderRunning = false;
-                    return;
-                }
-                else
+                if (!WasStartDecodingCorrectlyCancelled(e))
                     throw;
             }
         }
 
-        public void StopReceiving()
+        private bool CanStartDecoding()
         {
-            _receiveCTS.Cancel();
-            _device.DiscardInBuffer();
-            _receiveCTS.Dispose();
-            _receiveCTS = new CancellationTokenSource();
+            lock (_decoderLock)
+                return _decoderRunning ? false : _decoderRunning = true;
         }
+
+        private bool WasStartDecodingCorrectlyCancelled(Exception e)
+        {
+            if (e is TaskCanceledException || e is OperationCanceledException)
+            {
+                lock (_decoderLock)
+                    _decoderRunning = false;
+                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
+                return true;
+            }
+            return false;
+        }        
 
         public void StopDecoding()
         {
@@ -191,14 +208,10 @@ namespace Shield.HardwareCom
 
             List<bool> results = new List<bool>();
 
-            foreach (ICommandModel c in message)
-            {
+            foreach (ICommandModel c in message)            
                 results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
-            }
-
-            if (results.Contains(false))
-                return false;
-            return true;
+            
+            return results.Contains(false) ? false : true;
         }
 
         protected virtual void OnCommandReceived(ICommandModel command)
