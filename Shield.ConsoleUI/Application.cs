@@ -149,16 +149,5 @@ namespace Shield.ConsoleUI
             //Console.WriteLine("end after enter");
             Console.ReadLine();
         }
-
-        public void OnErrorReceived(object sender, MessageErrorEventArgs e)
-        {
-            Console.WriteLine("-------------------------------------------------------------------");
-            Console.WriteLine(e.Message.Id);
-            Console.WriteLine(e.Errors.ToString());
-            foreach (var c in e.Message)
-            {
-                Console.WriteLine(c.CommandTypeString);
-            }
-        }
     }
 }

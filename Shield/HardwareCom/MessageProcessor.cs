@@ -50,8 +50,8 @@ namespace Shield.HardwareCom
             if (newSourceCollection is null)
                 throw new ArgumentNullException(nameof(newSourceCollection));
 
-            using (_sourceCollectionSwithLock.Write())            
-                _messagesToProcess = newSourceCollection;            
+            using (_sourceCollectionSwithLock.Write())
+                _messagesToProcess = newSourceCollection;
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Shield.HardwareCom
                 if (!CanStartProcessingMessages())
                     return;
 
-                while (true)                
-                    TryProcessNextMessage();                
+                while (true)
+                    TryProcessNextMessage();
             }
             catch (Exception e)
             {
@@ -86,8 +86,8 @@ namespace Shield.HardwareCom
                 if (!CanStartProcessingMessages())
                     return;
 
-                while (_messagesToProcess.Count > 0)                
-                    TryProcessNextMessage();                
+                while (_messagesToProcess.Count > 0)
+                    TryProcessNextMessage();
             }
             catch (Exception e)
             {

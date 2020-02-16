@@ -57,7 +57,7 @@ namespace Shield.WpfGui.ViewModels
                               ICommandModelFactory commandFactory,
                               Func<IMessageModel> messageFactory,
                               ICommandIngester commandIngester,
-                              IMessageProcessor incomingMessageProcessor, 
+                              IMessageProcessor incomingMessageProcessor,
                               IConfirmationFactory confirmationFactory,
                               IConfirmationTimeoutChecker confirmationTimeoutChecker)
         {
@@ -75,23 +75,19 @@ namespace Shield.WpfGui.ViewModels
             _messanger.Setup(DeviceType.Serial);
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-
-            
-
             _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
 
-
             //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
-                Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+            Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
 
             // Updating table in gui
             Task.Run(async () =>
             {
-                while(true)
+                while (true)
                 {
                     IMessageModel message = _incomingMessageProcessor.GetProcessedMessages().Take();
                     AddIncomingMessageToDisplay(this, message);
-                    if(message.Type != MessageType.Confirmation)
+                    if (message.Type != MessageType.Confirmation)
                     {
                         IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
                         await _messanger.SendAsync(confirmation).ConfigureAwait(false);
@@ -222,7 +218,7 @@ namespace Shield.WpfGui.ViewModels
         public void OpenDevice()
         {
             try
-            {            
+            {
                 _messanger.Open();
                 NotifyOfPropertyChange(() => CanOpenDevice);
                 NotifyOfPropertyChange(() => CanCloseDevice);
@@ -232,10 +228,10 @@ namespace Shield.WpfGui.ViewModels
                 NotifyOfPropertyChange(() => CanStartReceiving);
                 NotifyOfPropertyChange(() => CanSendMessage);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 System.Windows.MessageBox.Show(ex.Message);
-                
+
                 // Enables Close port button in case of exception, enables CanOpenDevice to return TRUE
                 _openingError = true;
                 NotifyOfPropertyChange(() => CanOpenDevice);
@@ -263,32 +259,16 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        public bool ButtonAIsChecked
-        {
-            get
-            {
-                if (_messanger.IsOpen)
-                {
-                    return true;
-                }
-                else
-                {
-                    _receivingButtonActivated = false;
-                    return false;
-                }
-            }
-        }
+        public bool ButtonAIsChecked => _messanger.IsOpen ? true : _receivingButtonActivated = false;
 
         public void StartReceiving()
         {
-            Task.Run(/*async*/ () => /*await*/ _messanger.StartReceiveingAsync());
+            Task.Run(() => _messanger.StartReceiveingAsync());
             Task.Run(() => _messanger.StartDecoding());
 
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
-            Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
-
 
             _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
@@ -319,22 +299,13 @@ namespace Shield.WpfGui.ViewModels
 
         public BindableCollection<string> CommandTypes
         {
-            set
-            {
-                _possibleCommands = value;
-            }
-            get
-            {
-                return _possibleCommands;
-            }
+            set => _possibleCommands = value;
+            get => _possibleCommands;
         }
 
         public string SelectedCommand
         {
-            get
-            {
-                return _selectedCommand;
-            }
+            get => _selectedCommand;
             set
             {
                 _selectedCommand = value;
@@ -348,18 +319,20 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_selectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
+                if (_selectedCommand == GetNameFromEnumValue(CommandType.Data))
                     return true;
                 return false;
             }
         }
 
+        private string GetNameFromEnumValue(CommandType value)
+        {
+            return Enum.GetName(value.GetType(), value);
+        }
+
         public string DataInput
         {
-            get
-            {
-                return _dataInput;
-            }
+            get => _dataInput;
             set
             {
                 _dataInput = value;
@@ -374,9 +347,9 @@ namespace Shield.WpfGui.ViewModels
             if (SelectedCommand is null)
                 return;
 
-            List<ICommandModel> commands = new List<ICommandModel>();
+            var commands = new List<ICommandModel>();
 
-            if (SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
+            if (SelectedCommand == GetNameFromEnumValue(CommandType.Data))
             {
                 List<string> packs = DataPackGenerator(DataInput);
 
@@ -399,7 +372,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (SelectedCommand == Enum.GetName(typeof(CommandType), CommandType.Data))
+                if (SelectedCommand == GetNameFromEnumValue(CommandType.Data))
                 {
                     if (_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
                         return false;
@@ -428,7 +401,7 @@ namespace Shield.WpfGui.ViewModels
 
         public BindableCollection<ICommandModel> NewMessageCommands
         {
-            get { return _newMessageCommands; }
+            get => _newMessageCommands;
             set
             {
                 _newMessageCommands = value;
@@ -439,7 +412,7 @@ namespace Shield.WpfGui.ViewModels
 
         public BindableCollection<IMessageModel> SentMessages
         {
-            get { return _sentMessages; }
+            get => _sentMessages;
             set
             {
                 _sentMessages = value;
@@ -482,9 +455,8 @@ namespace Shield.WpfGui.ViewModels
                     return output;
 
                 foreach (var c in SelectedSentMessage)
-                {
                     output.Add(c);
-                }
+
                 return output;
             }
         }
@@ -497,12 +469,7 @@ namespace Shield.WpfGui.ViewModels
 
         public bool CanRemoveCommand
         {
-            get
-            {
-                if (SelectedNewMessageCommand is null)
-                    return false;
-                return true;
-            }
+            get => SelectedNewMessageCommand is null ? false : true;
         }
 
         public async Task SendMessage()
@@ -510,7 +477,6 @@ namespace Shield.WpfGui.ViewModels
             var message = GenerateMessage(NewMessageCommands);
             if (message is null)
                 return;
-            //_comCommander.AddToSendingQueue(message);
 
             // hack!
             _sending = true;
@@ -537,9 +503,8 @@ namespace Shield.WpfGui.ViewModels
             get
             {
                 if (NewMessageCommands.Count < 1 || _messanger.IsOpen == false || _sending == true)
-                {
                     return false;
-                }
+
                 return true;
             }
         }
@@ -564,7 +529,7 @@ namespace Shield.WpfGui.ViewModels
 
         public bool HasErrors
         {
-            get { return _validationErrors.Count > 0; }
+            get => _validationErrors.Count > 0;
         }
 
         private async void ValidateCommandDataPack(string data)

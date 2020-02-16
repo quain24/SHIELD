@@ -22,7 +22,7 @@ namespace Shield.HardwareCom.Adapters
 
         private const int ByteBufferSize = 4092;
 
-        private readonly SerialPort _port;
+        private readonly SerialPort _port = new SerialPort();
 
         private object _lock = new object();
         private bool _disposed = false;
@@ -33,9 +33,11 @@ namespace Shield.HardwareCom.Adapters
 
         #endregion Internal variables and events
 
-        public bool IsOpen { get { if (_port != null && _port.IsOpen) return true; return false; } }
+        public bool IsOpen => _port != null && _port.IsOpen ? true : false;
 
-        public SerialPortAdapter() => _port = new SerialPort();
+        public SerialPortAdapter()
+        {
+        }
 
         public SerialPortAdapter(ISerialPortSettingsModel settings) : this() => Setup(settings);
 
@@ -43,20 +45,23 @@ namespace Shield.HardwareCom.Adapters
         /// Sets up all of the necessary parameters for this instance of the device
         /// </summary>
         /// <param name="settings">Configuration from AppSettings for this type of device</param>
-        /// <returns>True if successfull</returns>
+        /// <returns>True if successful</returns>
         public bool Setup(ICommunicationDeviceSettings settings)
         {
-            if (_port is null || settings is null || !(settings is ISerialPortSettingsModel))
+            if (settings is null) throw new ArgumentNullException(nameof(settings));
+
+            if (!WasSetupCorrectly(settings))
                 return _wasSetupCorrectly = false;
 
-            ISerialPortSettingsModel internalSettings = (ISerialPortSettingsModel)settings;
-
-            if (!PortNumberExists(internalSettings.PortNumber))
-                return _wasSetupCorrectly = false;
-
-            SetUpDeviceOptions(internalSettings);
-
+            SetUpDeviceOptions((ISerialPortSettingsModel)settings);
             return _wasSetupCorrectly = true;
+        }
+
+        private bool WasSetupCorrectly(ICommunicationDeviceSettings settings)
+        {
+            if (_port is null || settings is null || !(settings is ISerialPortSettingsModel))
+                return false;
+            return PortNumberExists(((ISerialPortSettingsModel)settings).PortNumber);
         }
 
         private bool PortNumberExists(int portNumber)
@@ -66,6 +71,8 @@ namespace Shield.HardwareCom.Adapters
 
         private void SetUpDeviceOptions(ISerialPortSettingsModel settings)
         {
+            if(settings is null) throw new ArgumentNullException(nameof(settings));
+
             _port.PortName = $"COM{settings.PortNumber}";
             _port.BaudRate = settings.BaudRate;
             _port.DataBits = settings.DataBits;
@@ -115,7 +122,6 @@ namespace Shield.HardwareCom.Adapters
                 }
                 catch (Exception e)
                 {
-                    // Port was not open
                     Debug.WriteLine("MESSAGE: SerialPortAdapter Close - Port was not open! " + e.Message);
                     throw;
                 }
@@ -137,19 +143,19 @@ namespace Shield.HardwareCom.Adapters
                     OnDataReceived(rawData);
                     return rawData;
                 }
-                catch (IOException exc)
+                catch (IOException)
                 {
                     throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ct);
                 }
             }
-            return null;
+            return string.Empty;
         }
 
         /// <summary>
         /// Sends a raw command string taken from input CommandModel to the receiving device.
         /// </summary>
         /// <param name="command">Single command to transfer</param>
-        /// <returns>Task<bool> if sends or failes</bool></returns>
+        /// <returns>Task<bool> if sends or fails</returns>
         public async Task<bool> SendAsync(string command, CancellationToken ct)
         {
             if (!IsOpen || string.IsNullOrEmpty(command))
