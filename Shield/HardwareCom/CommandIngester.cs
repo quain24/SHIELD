@@ -54,97 +54,6 @@ namespace Shield.HardwareCom
         }
 
         /// <summary>
-        /// Tries to ingest command into a message in internal collection if this message is not completed
-        /// or there is no such message - in which case a new message is created and added to collection with this given command.
-        /// </summary>
-        /// <param name="incomingCommand">Command to be ingested</param>
-        /// <param name="message">Message that the command was ingested into</param>
-        /// <returns>True if command was ingested, false if a corresponding message was already completed</returns>
-        public bool TryIngest(ICommandModel incomingCommand, out IMessageModel message)
-        {
-            if (_completness is null)
-                throw new NullReferenceException($@"{nameof(_completness)} is NULL");
-            if (incomingCommand is null)
-                throw new ArgumentNullException(nameof(incomingCommand));
-
-            Debug.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
-
-            SetIdAsUsedUp(incomingCommand.Id);
-
-            if (!TryGetExistingMessage(incomingCommand.Id, out message))
-            {
-                message = CreateNewIncomingMessage(incomingCommand.Id);
-                _incompleteMessages.Add(message.Id, message);
-            }
-
-            if (IsMessageNullOrAlreadyComplete(message))
-            {
-                _errCommands.Add(incomingCommand);
-                Debug.WriteLine("CommandIngester - ERROR - tried to add new command to completed / null message");
-                return false;
-            }
-
-            // check for completition timeout if checker exists
-            if (_completitionTimeout?.IsExceeded(message) ?? false)
-            {
-                HandleMessageTimeout(message, incomingCommand);
-                return false;
-            }
-
-            message.Add(incomingCommand);
-
-            // if completed after last command, then move to processed
-            if (IsMessageNullOrAlreadyComplete(message))
-            {
-                PushFromIncompleteToProcessed(message);
-                Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
-            }
-
-            return true;
-        }
-
-        private void SetIdAsUsedUp(string id)
-        {
-            if (!string.IsNullOrWhiteSpace(id))
-                Helpers.IdGenerator.UsedThisID(id);
-        }
-
-        private bool TryGetExistingMessage(string id, out IMessageModel message)
-        {
-            if (_incompleteMessages.ContainsKey(id))
-            {
-                Debug.WriteLine("CommandIngester - Incomplete message with command id found!");
-                message = _incompleteMessages[id];
-                return true;
-            }
-            message = null;
-            return false;
-        }
-
-        private bool IsMessageNullOrAlreadyComplete(IMessageModel message)
-        {
-            return message is null || _completness.IsComplete(message) ? true : false;
-        }
-
-        private IMessageModel CreateNewIncomingMessage(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("Id cannot be empty", nameof(id));
-
-            IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id);
-            Debug.WriteLine($@"CommandIngester - new {id} message created");
-            return message;
-        }
-
-        private void HandleMessageTimeout(IMessageModel message, ICommandModel lastCommand)
-        {
-            message.Errors |= Enums.Errors.CompletitionTimeout;
-            PushFromIncompleteToProcessed(message);
-            _errCommands.Add(lastCommand);
-            Debug.WriteLine("CommandIngester - Error - message  completition timeoutted");
-        }
-
-        /// <summary>
         /// Add single command to be processed / injected into corresponding / new message in internal collection.
         /// Thread safe
         /// </summary>
@@ -197,6 +106,104 @@ namespace Shield.HardwareCom
             }
             Debug.WriteLine("CommandIngester - StartProcessingCommands ENDED");
             _isProcessing = false;
+        }
+
+        /// <summary>
+        /// Tries to ingest command into a message in internal collection if this message is not completed
+        /// or there is no such message - in which case a new message is created and added to collection with this given command.
+        /// </summary>
+        /// <param name="incomingCommand">Command to be ingested</param>
+        /// <param name="message">Message that the command was ingested into</param>
+        /// <returns>True if command was ingested, false if a corresponding message was already completed</returns>
+        private bool TryIngest(ICommandModel incomingCommand, out IMessageModel message)
+        {
+            if (_completness is null)
+                throw new NullReferenceException($@"{nameof(_completness)} is NULL");
+            if (incomingCommand is null)
+                throw new ArgumentNullException(nameof(incomingCommand));
+
+            Debug.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
+
+            SetIdAsUsedUp(incomingCommand.Id);
+
+            if (!TryGetExistingMessage(incomingCommand.Id, out message))
+            {
+                message = CreateNewIncomingMessage(incomingCommand.Id);
+                _incompleteMessages.Add(message.Id, message);
+            }
+
+            if (IsMessageNullOrAlreadyComplete(message))
+            {
+                _errCommands.Add(incomingCommand);
+                Debug.WriteLine("CommandIngester - ERROR - tried to add new command to completed / null message");
+                return false;
+            }
+
+            // check for completition timeout if checker exists
+            if (_completitionTimeout?.IsExceeded(message) ?? false)
+            {
+                HandleMessageTimeout(message, incomingCommand);
+                return false;
+            }
+
+            message.Add(incomingCommand);
+
+            // if completed after last command, then move to processed
+            if (IsMessageNullOrAlreadyComplete(message))
+                PushFromIncompleteToProcessed(message);
+
+            return true;
+        }
+
+        private void SetIdAsUsedUp(string id)
+        {
+            if (!string.IsNullOrWhiteSpace(id))
+                Helpers.IdGenerator.UsedThisID(id);
+        }
+
+        private bool TryGetExistingMessage(string id, out IMessageModel message)
+        {
+            if (_incompleteMessages.ContainsKey(id))
+            {
+                Debug.WriteLine("CommandIngester - Incomplete message with command id found!");
+                message = _incompleteMessages[id];
+                return true;
+            }
+            message = null;
+            return false;
+        }
+
+        private IMessageModel CreateNewIncomingMessage(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentException("Id cannot be empty", nameof(id));
+
+            IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id);
+            Debug.WriteLine($@"CommandIngester - new {id} message created");
+            return message;
+        }
+
+        private bool IsMessageNullOrAlreadyComplete(IMessageModel message)
+        {
+            return message is null || _completness.IsComplete(message) ? true : false;
+        }
+
+        private void HandleMessageTimeout(IMessageModel message, ICommandModel lastCommand)
+        {
+            message.Errors |= Enums.Errors.CompletitionTimeout;
+            PushFromIncompleteToProcessed(message);
+            _errCommands.Add(lastCommand);
+            Debug.WriteLine("CommandIngester - Error - message  completition timeoutted");
+        }
+
+        private void PushFromIncompleteToProcessed(IMessageModel message)
+        {
+            if (message is null)
+                throw new ArgumentNullException(nameof(message));
+
+            _processedMessages.Add(message);
+            _incompleteMessages[message.Id] = null;
+            Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
         }
 
         /// <summary>
@@ -277,15 +284,6 @@ namespace Shield.HardwareCom
         private List<IMessageModel> TimeouttedMessagesList()
         {
             return _completitionTimeout?.GetTimeoutsFromCollection(GetIncompletedMessages());
-        }
-
-        private void PushFromIncompleteToProcessed(IMessageModel message)
-        {
-            if (message is null)
-                throw new ArgumentNullException(nameof(message));
-
-            _processedMessages.Add(message);
-            _incompleteMessages[message.Id] = null;
         }
 
         private bool IsTimeoutCheckCorrectlyCancelled(Exception e)

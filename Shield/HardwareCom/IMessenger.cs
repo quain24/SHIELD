@@ -9,8 +9,6 @@ namespace Shield.HardwareCom
     {
         bool IsOpen { get; }
         bool IsReceiving { get; }
-        bool IsDecoding { get; }
-
         bool IsSending { get; }
 
         Task<bool> SendAsync(ICommandModel comand);
@@ -25,9 +23,6 @@ namespace Shield.HardwareCom
 
         void StopReceiving();
 
-        void StartDecoding(CancellationToken ct = default);
-
-        void StopDecoding();
         Task<bool> SendAsync(IMessageModel message);
 
         event System.EventHandler<ICommandModel> CommandReceived;

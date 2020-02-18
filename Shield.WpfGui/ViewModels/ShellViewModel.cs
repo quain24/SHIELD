@@ -264,7 +264,7 @@ namespace Shield.WpfGui.ViewModels
         public void StartReceiving()
         {
             Task.Run(() => _messanger.StartReceiveingAsync());
-            Task.Run(() => _messanger.StartDecoding());
+            //Task.Run(() => _messanger.StartDecoding());
 
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
@@ -290,7 +290,6 @@ namespace Shield.WpfGui.ViewModels
             _commandIngester.StopTimeoutCheck();
             _commandIngester.StopProcessingCommands();
 
-            _messanger.StopDecoding();
             _messanger.StopReceiving();
             _receivingButtonActivated = false;
             NotifyOfPropertyChange(() => CanStartReceiving);

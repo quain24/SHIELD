@@ -3,9 +3,7 @@ using Shield.Enums;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,30 +19,23 @@ namespace Shield.HardwareCom
     /// </summary>
     public class Messenger : IMessanger
     {
-        private ICommunicationDeviceFactory _communicationDeviceFactory;
+        private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private ICommunicationDevice _device;
-        private ICommandTranslator _commandTranslator;
-        private IIncomingDataPreparer _incomingDataPreparer;
+        private readonly ICommandTranslator _commandTranslator;
+        private readonly IIncomingDataPreparer _incomingDataPreparer;
 
         private CancellationTokenSource _receiveCTS = new CancellationTokenSource();
-        private CancellationTokenSource _decodingCTS = new CancellationTokenSource();
-
-        private BlockingCollection<string> _rawDataBuffer = new BlockingCollection<string>();
 
         private bool _setupSuccessuful = false;
         private bool _disposed = false;
-        private bool _decoderRunning = false;
         private bool _receiverRunning = false;
         private bool _isSending = false;
-
-        private object _decoderLock = new object();
-        private object _receiverLock = new object();
+        private readonly object _receiverLock = new object();
 
         public event EventHandler<ICommandModel> CommandReceived;
 
         public bool IsOpen => _device.IsOpen;
         public bool IsReceiving => _receiverRunning;
-        public bool IsDecoding => _decoderRunning;
         public bool IsSending => _isSending;
 
         public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
@@ -62,16 +53,18 @@ namespace Shield.HardwareCom
 
         public void Open()
         {
-            if (_setupSuccessuful && IsOpen == false)
+            if (CanOpenDevice())
                 _device.Open();
+        }
+
+        private bool CanOpenDevice()
+        {
+            return _setupSuccessuful && IsOpen == false;
         }
 
         public void Close()
         {
-            StopDecoding();
             StopReceiving();
-            _rawDataBuffer.Dispose();
-            _rawDataBuffer = new BlockingCollection<string>();
             _device?.Close();
         }
 
@@ -80,21 +73,25 @@ namespace Shield.HardwareCom
             if (!CanStartReceiving())
                 return;
 
-            CancellationToken internalCT = ct == default ? _receiveCTS.Token : ct;
-            if (internalCT == ct)
-                internalCT.Register(StopReceiving);
+            CancellationToken internalCT = SetupCancellationTokenReceiving(ct);
 
             try
             {
                 while (_device.IsOpen)
                 {
                     internalCT.ThrowIfCancellationRequested();
-                    string toAdd = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
+                    string rawData = await _device.ReceiveAsync(internalCT).ConfigureAwait(false);
+                    internalCT.ThrowIfCancellationRequested();
 
-                    if (!string.IsNullOrWhiteSpace(toAdd))
+                    List<string> rawCommands = _incomingDataPreparer.DataSearch(rawData);
+                    if (rawCommands is null || !rawCommands.Any())
+                        continue;
+
+                    foreach (string c in rawCommands)
                     {
                         internalCT.ThrowIfCancellationRequested();
-                        _rawDataBuffer.Add(toAdd);
+                        ICommandModel receivedCommad = _commandTranslator.FromString(c);
+                        OnCommandReceived(receivedCommad);
                     }
                 }
                 _receiverRunning = false;
@@ -104,6 +101,14 @@ namespace Shield.HardwareCom
                 if (!WasStartReceivingCorrectlyCancelled(e))
                     throw;
             }
+        }
+
+        private CancellationToken SetupCancellationTokenReceiving(CancellationToken passedDownToken)
+        {
+            CancellationToken internalCT = passedDownToken == default ? _receiveCTS.Token : passedDownToken;
+            if (internalCT == passedDownToken)
+                internalCT.Register(StopReceiving);
+            return internalCT;
         }
 
         private bool CanStartReceiving()
@@ -131,68 +136,6 @@ namespace Shield.HardwareCom
             _receiveCTS = new CancellationTokenSource();
         }
 
-        public void StartDecoding(CancellationToken ct)
-        {
-            if (!CanStartDecoding())
-                return;
-
-            CancellationToken internalCT = ct == default ? _decodingCTS.Token : ct;
-            if (internalCT == ct)
-                internalCT.Register(StopDecoding);
-
-            string workpiece = string.Empty;
-
-            try
-            {
-                while (_rawDataBuffer != null)
-                {
-                    internalCT.ThrowIfCancellationRequested();
-                    _rawDataBuffer.TryTake(out workpiece, -1, internalCT);
-
-                    List<string> output = _incomingDataPreparer.DataSearch(workpiece);
-                    if (output is null || !output.Any())
-                        continue;
-
-                    foreach (string s in output)
-                    {
-                        internalCT.ThrowIfCancellationRequested();
-                        ICommandModel receivedCommad = _commandTranslator.FromString(s);
-                        OnCommandReceived(receivedCommad);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                if (!WasStartDecodingCorrectlyCancelled(e))
-                    throw;
-            }
-        }
-
-        private bool CanStartDecoding()
-        {
-            lock (_decoderLock)
-                return _decoderRunning ? false : _decoderRunning = true;
-        }
-
-        private bool WasStartDecodingCorrectlyCancelled(Exception e)
-        {
-            if (e is TaskCanceledException || e is OperationCanceledException)
-            {
-                lock (_decoderLock)
-                    _decoderRunning = false;
-                Debug.WriteLine("EXCEPTION: Messenger - StartDecoding: Operation was canceled.");
-                return true;
-            }
-            return false;
-        }        
-
-        public void StopDecoding()
-        {
-            _decodingCTS.Cancel();
-            _decodingCTS.Dispose();
-            _decodingCTS = new CancellationTokenSource();
-        }
-
         public async Task<bool> SendAsync(ICommandModel command)
         {
             _isSending = true;
@@ -208,9 +151,9 @@ namespace Shield.HardwareCom
 
             List<bool> results = new List<bool>();
 
-            foreach (ICommandModel c in message)            
+            foreach (ICommandModel c in message)
                 results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
-            
+
             return results.Contains(false) ? false : true;
         }
 
@@ -238,17 +181,6 @@ namespace Shield.HardwareCom
                     _receiveCTS?.Cancel();
                     _receiveCTS?.Dispose();
                     _receiveCTS = null;
-                }
-                if (_decodingCTS != null)
-                {
-                    _receiveCTS?.Cancel();
-                    _receiveCTS?.Dispose();
-                    _receiveCTS = null;
-                }
-                if (_rawDataBuffer != null)
-                {
-                    _rawDataBuffer?.Dispose();
-                    _rawDataBuffer = null;
                 }
                 if (_device != null)
                 {

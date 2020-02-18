@@ -19,7 +19,7 @@ namespace Shield.HardwareCom
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
         private bool _isProcessing = false;
         private object _processingLock = new object();
-        private ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed

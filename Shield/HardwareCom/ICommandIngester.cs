@@ -15,6 +15,5 @@ namespace Shield.HardwareCom
         Task StartTimeoutCheckAsync(int interval = 0);
         void StopProcessingCommands();
         void StopTimeoutCheck();
-        bool TryIngest(ICommandModel incomingCommand, out IMessageModel message);
     }
 }
