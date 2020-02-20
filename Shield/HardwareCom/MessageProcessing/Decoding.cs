@@ -1,39 +1,50 @@
 ﻿using Shield.Enums;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 
 namespace Shield.HardwareCom
 {
-    public class Decoding : IDecoding
+    public class Decoding : IMessageAnalyzer
     {
-        public Errors Check(IMessageModel message)
+        private IMessageModel _message;
+
+        public IMessageModel CheckAndSetFlagsIn(IMessageModel message)
         {
-            if (message is null)
-                return Errors.IsNull;
+            _message = ClearFlagsIn(message);
 
-            List<ICommandModel> badOrUnknown = message
-                .Where(c =>
-                    c.CommandType == CommandType.Unknown ||
-                    c.CommandType == CommandType.Error ||
-                    c.CommandType == CommandType.Partial)
-                .ToList();
+            if (HasCommandsOfType(CommandType.Unknown))
+                SetErrorFlag(Errors.GotUnknownCommands);
+            if (HasCommandsOfType(CommandType.Error))
+                SetErrorFlag(Errors.GotErrorCommands);
+            if (HasCommandsOfType(CommandType.Partial))
+                SetErrorFlag(Errors.GotPartialCommands);
 
-            if (badOrUnknown.Any() == false)
-                return Errors.None;
-
-            Errors errors = Errors.None;
-
-            foreach (ICommandModel c in badOrUnknown)
-            {
-                if (c.CommandType == CommandType.Error)
-                    errors = errors | Errors.GotErrorCommands;
-                else if (c.CommandType == CommandType.Unknown)
-                    errors = errors | Errors.GotUnknownCommands;
-                else if (c.CommandType == CommandType.Partial)
-                    errors = errors | Errors.GotPartialCommands;
-            }
-            return errors;
+            return _message;
         }
+
+        public IMessageModel ClearFlagsIn(IMessageModel message)
+        {
+            _ = message ?? throw new ArgumentNullException(nameof(message));
+
+            ClearErrorFlag(Errors.GotUnknownCommands, message);
+            ClearErrorFlag(Errors.GotErrorCommands, message);
+            ClearErrorFlag(Errors.GotPartialCommands, message);
+
+            return message;
+        }
+
+        private void ClearErrorFlag(Errors error, IMessageModel message)
+        {
+            if (message.Errors.HasFlag(error))
+                message.Errors &= ~error;
+        }
+
+        private bool HasCommandsOfType(CommandType type) =>
+            _message.Any(c => c.CommandType == type);
+
+        private void SetErrorFlag(Errors error) =>
+            _message.Errors |= error;
     }
 }

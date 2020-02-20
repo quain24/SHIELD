@@ -84,8 +84,6 @@ namespace Shield.HardwareCom
                     internalCT.ThrowIfCancellationRequested();
 
                     List<string> rawCommands = _incomingDataPreparer.DataSearch(rawData);
-                    if (rawCommands is null || !rawCommands.Any())
-                        continue;
 
                     foreach (string c in rawCommands)
                     {
@@ -103,18 +101,18 @@ namespace Shield.HardwareCom
             }
         }
 
+        private bool CanStartReceiving()
+        {
+            lock (_receiverLock)
+                return _receiverRunning || !IsOpen || !_setupSuccessuful ? false : _receiverRunning = true;
+        }
+
         private CancellationToken SetupCancellationTokenReceiving(CancellationToken passedDownToken)
         {
             CancellationToken internalCT = passedDownToken == default ? _receiveCTS.Token : passedDownToken;
             if (internalCT == passedDownToken)
                 internalCT.Register(StopReceiving);
             return internalCT;
-        }
-
-        private bool CanStartReceiving()
-        {
-            lock (_receiverLock)
-                return _receiverRunning || !IsOpen || !_setupSuccessuful ? false : _receiverRunning = true;
         }
 
         private bool WasStartReceivingCorrectlyCancelled(Exception e)

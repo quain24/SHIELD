@@ -101,6 +101,29 @@ namespace Shield.HardwareCom
 
             #region Classes for checking correctness
 
+            builder.RegisterType<TypeDetector>()
+                   .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.TypeDetector);
+
+            builder.RegisterType<Pattern>()
+                   .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Pattern);
+
+            builder.RegisterType<Decoding>()
+                   .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding);
+
+            builder.RegisterType<IncomingMessageProcessor>()
+                   .Keyed<IMessageProcessor>(nameof(IncomingMessageProcessor))
+                   .WithParameter(
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.Name == "analyzers",
+                           (pi, ctx) => new[]
+                           {
+                               ctx.ResolveKeyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding),
+                               ctx.ResolveKeyed<IMessageAnalyzer>(MessageAnalyzerTypes.Pattern),
+                               ctx.ResolveKeyed<IMessageAnalyzer>(MessageAnalyzerTypes.TypeDetector)
+                           }
+                       )
+                   );
+
             builder.RegisterType<Completeness>()
                    .As<ICompleteness>();
 
@@ -125,15 +148,6 @@ namespace Shield.HardwareCom
                    .WithParameter(new ResolvedParameter(
                             (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "timeoutCheck",
                             (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("confirmation" + nameof(TimeoutCheck))));
-
-            builder.RegisterType<Decoding>()
-                   .As<IDecoding>();
-
-            builder.RegisterType<Pattern>()
-                   .As<IPattern>();
-
-            builder.RegisterType<TypeDetector>()
-                   .As<ITypeDetector>();
 
             #endregion Classes for checking correctness
 
@@ -167,13 +181,8 @@ namespace Shield.HardwareCom
                    );
 
             builder.RegisterType<MessageProcessor>()
-                   .As<IMessageProcessor>()
                    .AsSelf()
                    .Keyed<IMessageProcessor>(nameof(MessageProcessor));
-
-            builder.RegisterType<IncomingMessageProcessor>()
-                   .As<IMessageProcessor>()
-                   .Keyed<IMessageProcessor>(nameof(IncomingMessageProcessor));
 
             #endregion Message object processing
 

@@ -18,6 +18,7 @@ namespace Shield.HardwareCom
 
         private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
 
+        // TODO - think about changing it to concurrent dictionary - getting timeout list throws exception when modified externally
         private readonly Dictionary<string, IMessageModel> _incompleteMessages =
             new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -74,18 +75,10 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingCommands()
         {
-            lock (_lock)
-            {
-                if (_isProcessing)
-                {
-                    Console.WriteLine("CommandIngester - commands are already being processed");
-                    return;
-                }
-                else
-                    _isProcessing = true;
-            }
+            if(!CanStartProcessing())
+                return;
 
-            Console.WriteLine("CommandIngester - Command processing started");
+            Debug.WriteLine("CommandIngester - Command processing started");
 
             ICommandModel command = null;
             IMessageModel message;
@@ -108,6 +101,14 @@ namespace Shield.HardwareCom
             _isProcessing = false;
         }
 
+        private bool CanStartProcessing()
+        {
+            lock (_lock)            
+                return _isProcessing 
+                    ? false
+                    : _isProcessing = true;            
+        }
+
         /// <summary>
         /// Tries to ingest command into a message in internal collection if this message is not completed
         /// or there is no such message - in which case a new message is created and added to collection with this given command.
@@ -117,10 +118,8 @@ namespace Shield.HardwareCom
         /// <returns>True if command was ingested, false if a corresponding message was already completed</returns>
         private bool TryIngest(ICommandModel incomingCommand, out IMessageModel message)
         {
-            if (_completness is null)
-                throw new NullReferenceException($@"{nameof(_completness)} is NULL");
-            if (incomingCommand is null)
-                throw new ArgumentNullException(nameof(incomingCommand));
+            _ = _completness ?? throw new NullReferenceException($@"{nameof(_completness)} is NULL");
+            _ = incomingCommand ?? throw new ArgumentNullException(nameof(incomingCommand));
 
             Debug.WriteLine($@"CommandIngester TryIngest command {incomingCommand.Id}");
 

@@ -73,10 +73,10 @@
     <Compile Include="Data\Models\SettingsModel.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
-    <Compile Include="Enums\IncomingMessageType.cs" />
     <Compile Include="Enums\Message.cs" />
-    <Compile Include="Enums\MessageErrors.cs" />
+    <Compile Include="Enums\MessageAnalyzerTypes.cs" />
     <Compile Include="Enums\SettingsType.cs" />
+    <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
@@ -107,10 +107,8 @@
     <Compile Include="HardwareCom\ICommandIngester.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IConfirmationTimeoutChecker.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\IDecoding.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\IPattern.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\IMessageAnalyzer.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ITimeoutCheck.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\ITypeDetector.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Pattern.cs" />
     <Compile Include="HardwareCom\MessageProcessing\TimeoutCheck.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ConfirmationTimeoutChecker.cs" />

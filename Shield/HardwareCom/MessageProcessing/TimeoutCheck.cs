@@ -1,6 +1,10 @@
 ﻿using Shield.HardwareCom.Models;
 using Shield.Helpers;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
@@ -33,31 +37,38 @@ namespace Shield.HardwareCom.MessageProcessing
             long difference = inCompareTo is null ?
                 Timestamp.Difference(message.Timestamp) :
                 Timestamp.Difference(message.Timestamp, inCompareTo.Timestamp);
-            if (difference > Timeout) System.Console.WriteLine($@"Timeout - difference: {difference}");
-            return difference > Timeout ? true : false;
+            if (difference > Timeout)
+                Debug.WriteLine($@"Timeout - difference: {difference}");
+            return difference > Timeout;
         }
 
         public virtual List<T> GetTimeoutsFromCollection<T>(Dictionary<string, T> source) where T : IMessageModel
-        {
-            return source is null ? null : GetTimeoutsFromCollection(source.Values);
-        }
+            => source is null ? null : GetTimeoutsFromCollection(source.Values);
+
+        public virtual List<T> GetTimeoutsFromCollection<T>(ConcurrentDictionary<string, T> source) where T : IMessageModel
+            => source is null ? null : GetTimeoutsFromCollection(source.Values);
 
         public virtual List<T> GetTimeoutsFromCollection<T>(IEnumerable<T> source) where T : IMessageModel
+        {
+            try
+            {
+                return TryGetTimeoutsFrom(source);
+            }
+            catch (InvalidOperationException e)
+            {
+                Debug.WriteLine($@"Something happened when trying to get Timeouts list: {e.Message}");
+                return null;
+            }
+        }
+
+        private List<T> TryGetTimeoutsFrom<T>(IEnumerable<T> source) where T : IMessageModel
         {
             if (source is null)
                 return null;
 
-            List<T> output = new List<T>();
-
-            foreach (T message in source)
-            {
-                if (IsExceeded(message))
-                {
-                    output.Add(message);
-                }
-            }
-
-            return output;
+            return source.Where(message => IsExceeded(message))
+                         .Select(message => message)
+                         .ToList();
         }
     }
 }

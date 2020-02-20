@@ -72,12 +72,12 @@
         ReceivedAsPartial,
 
         /// <summary>
-        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="MessageErrors.ConfirmationTimeout"/> 
+        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="Errors.ConfirmationTimeout"/> 
         /// </summary>
         ConfirmationTimeoutOccurred,
 
         /// <summary>
-        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="MessageErrors.CompletitionTimeout"/> 
+        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="Errors.CompletitionTimeout"/> 
         /// </summary>
         CompletitionTimeoutOccured,
 

@@ -25,15 +25,11 @@ namespace Shield.ConsoleUI
         private IInherittest _inheritest;
 
         private ICommandIngester _ingester;
-        private IDecoding _decoding;
         private ICompleteness _completness;
-        private IPattern _pattern;
 
         public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ISettings settings,
             ICommandIngester ingester,
-            IDecoding decoding,
             ICompleteness completness,
-            IPattern pattern,
             IInherittest inheritest)
         {
             _command = command;
@@ -45,9 +41,7 @@ namespace Shield.ConsoleUI
             _settings = settings;
 
             _ingester = ingester;
-            _decoding = decoding;
             _completness = completness;
-            _pattern = pattern;
 
             _inheritest = inheritest;
             //_comcom.IncomingErrorReceived += OnErrorReceived;
@@ -100,7 +94,6 @@ namespace Shield.ConsoleUI
 
             _comMessanger.Open();
             Task.Run(() => _comMessanger.StartReceiveingAsync());
-            Task.Run(() => _comMessanger.StartDecoding());
 
             //int licznik = 0;
 

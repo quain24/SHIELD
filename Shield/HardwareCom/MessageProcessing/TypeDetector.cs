@@ -4,19 +4,42 @@ using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class TypeDetector : ITypeDetector
+    public class TypeDetector : IMessageAnalyzer
     {
-        public MessageType DetectTypeOf(IMessageModel message)
+        private IMessageModel _message;
+
+        public IMessageModel CheckAndSetFlagsIn(IMessageModel message)
         {
-            if (message is null || message.Count() < 2)
-                return MessageType.Unknown;
+            _message = ClearFlagsIn(message);
 
-            if (message.Type != MessageType.Unknown)
-                return message.Type;
+            _message.Type = DetectType();
+            if (_message.Type == MessageType.Unknown)
+                _message.Errors |= Errors.UndeterminedType;
+            return _message;
+        }
 
-            CommandType type = message.ElementAt(1).CommandType;
+        public IMessageModel ClearFlagsIn(IMessageModel message)
+        {
+            _ = message ?? throw new System.ArgumentNullException(nameof(message));
 
-            switch (type)
+            if (message.Errors.HasFlag(Errors.UndeterminedType))
+                message.Errors &= ~Errors.UndeterminedType;
+            return message;
+        }
+
+        private MessageType DetectType() =>
+            CanFindAnyTypeIn()
+            ? GetTypeFromCommand(_message.ElementAt(1))
+            : MessageType.Unknown;
+
+        private bool CanFindAnyTypeIn() =>
+            _message is null || _message.Count() < 2
+            ? false
+            : true;
+
+        private MessageType GetTypeFromCommand(ICommandModel command)
+        {
+            switch (command.CommandType)
             {
                 case CommandType.Master:
                 return MessageType.Master;
