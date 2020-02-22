@@ -33,9 +33,7 @@ namespace Shield.HardwareCom.MessageProcessing
             : MessageType.Unknown;
 
         private bool CanFindAnyTypeIn() =>
-            _message is null || _message.Count() < 2
-            ? false
-            : true;
+            _message != null || _message.Count() >= 2;
 
         private MessageType GetTypeFromCommand(ICommandModel command)
         {

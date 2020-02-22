@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class CommandIngester : ICommandIngester
+    internal class CommandIngester : ICommandIngester
     {
         private readonly IMessageFactory _msgFactory;
         private ICompleteness _completness;
@@ -35,10 +35,7 @@ namespace Shield.HardwareCom
         /// <summary>
         /// Returns true if commands are being processed or object waits for new commands to be processed
         /// </summary>
-        public bool IsProcessingCommands
-        {
-            get => _isProcessing;
-        }
+        public bool IsProcessingCommands => _isProcessing;
 
         /// <summary>
         /// Will ingest given commands into corresponding messages or will create new messages for those commands.
@@ -75,7 +72,7 @@ namespace Shield.HardwareCom
         /// </summary>
         public void StartProcessingCommands()
         {
-            if(!CanStartProcessing())
+            if (!CanStartProcessing())
                 return;
 
             Debug.WriteLine("CommandIngester - Command processing started");
@@ -103,10 +100,10 @@ namespace Shield.HardwareCom
 
         private bool CanStartProcessing()
         {
-            lock (_lock)            
-                return _isProcessing 
+            lock (_lock)
+                return _isProcessing
                     ? false
-                    : _isProcessing = true;            
+                    : _isProcessing = true;
         }
 
         /// <summary>
@@ -182,23 +179,21 @@ namespace Shield.HardwareCom
             return message;
         }
 
-        private bool IsMessageNullOrAlreadyComplete(IMessageModel message)
-        {
-            return message is null || _completness.IsComplete(message) ? true : false;
-        }
+        private bool IsMessageNullOrAlreadyComplete(IMessageModel message) =>
+            message is null || _completness.IsComplete(message);
 
-        private void HandleMessageTimeout(IMessageModel message, ICommandModel lastCommand)
+        private void HandleMessageTimeout(IMessageModel message, ICommandModel lastCommand = null)
         {
             message.Errors |= Enums.Errors.CompletitionTimeout;
             PushFromIncompleteToProcessed(message);
-            _errCommands.Add(lastCommand);
-            Debug.WriteLine("CommandIngester - Error - message  completition timeoutted");
+            if (lastCommand != null)
+                _errCommands.Add(lastCommand);
+            Debug.WriteLine($@"ContinousTimeoutChecker - Error - message {message.Id} completition timeout");
         }
 
         private void PushFromIncompleteToProcessed(IMessageModel message)
         {
-            if (message is null)
-                throw new ArgumentNullException(nameof(message));
+            _ = message ?? throw new ArgumentNullException(nameof(message));
 
             _processedMessages.Add(message);
             _incompleteMessages[message.Id] = null;
@@ -229,9 +224,7 @@ namespace Shield.HardwareCom
 
                     foreach (var message in TimeouttedMessagesList())
                     {
-                        message.Errors |= Enums.Errors.CompletitionTimeout;
-                        PushFromIncompleteToProcessed(message);
-                        Debug.WriteLine($@"ContinousTimeoutChecker - Error - message {message.Id} completition timeout");
+                        HandleMessageTimeout(message);
                         _cancelTimeoutCheckCTS.Token.ThrowIfCancellationRequested();
                     }
 
@@ -280,10 +273,8 @@ namespace Shield.HardwareCom
             }
         }
 
-        private List<IMessageModel> TimeouttedMessagesList()
-        {
-            return _completitionTimeout?.GetTimeoutsFromCollection(GetIncompletedMessages());
-        }
+        private List<IMessageModel> TimeouttedMessagesList() =>
+            _completitionTimeout?.GetTimeoutsFromCollection(GetIncompletedMessages());
 
         private bool IsTimeoutCheckCorrectlyCancelled(Exception e)
         {
@@ -309,19 +300,13 @@ namespace Shield.HardwareCom
             return _processedMessages;
         }
 
-        public Dictionary<string, IMessageModel> GetIncompletedMessages()
-        {
-            return _incompleteMessages;
-        }
+        public Dictionary<string, IMessageModel> GetIncompletedMessages() => _incompleteMessages;
 
         /// <summary>
         /// Gives a thread safe collection of commands that were received, but corresponding messages were already completed or completition timeout
         /// was exceeded.
         /// </summary>
         /// <returns></returns>
-        public BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout()
-        {
-            return _errCommands;
-        }
+        public BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout() => _errCommands;
     }
 }

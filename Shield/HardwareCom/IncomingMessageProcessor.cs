@@ -32,7 +32,7 @@ namespace Shield.HardwareCom
         {
             if (_analyzers?.Length > 0)
                 for (int i = 0; i < _analyzers.Length; i++)
-                    _analyzers[i].CheckAndSetFlagsIn(message);
+                    _analyzers[i]?.CheckAndSetFlagsIn(message);
         }
     }
 }

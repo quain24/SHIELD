@@ -12,11 +12,7 @@ namespace Shield.HardwareCom.MessageProcessing
             _ = message ?? throw new ArgumentNullException(nameof(message));
 
             if (message.IsCompleted == true || (message.Any() && message.Last().CommandType == CommandType.EndMessage))
-            {
-                message.IsCompleted = true;
-                return true;
-            }
-
+                return message.IsCompleted = true;
             return false;
         }
     }

@@ -4,7 +4,6 @@ using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -117,13 +116,9 @@ namespace Shield.HardwareCom
 
         private bool WasStartReceivingCorrectlyCancelled(Exception e)
         {
-            if (e is TaskCanceledException || e is OperationCanceledException)
-            {
-                lock (_receiverLock)
-                    _receiverRunning = false;
-                return true;
-            }
-            return false;
+            lock (_receiverLock)
+                _receiverRunning = false;
+            return e is TaskCanceledException || e is OperationCanceledException;
         }
 
         public void StopReceiving()
@@ -134,25 +129,25 @@ namespace Shield.HardwareCom
             _receiveCTS = new CancellationTokenSource();
         }
 
+        public async Task<bool> SendAsync(IMessageModel message)
+        {
+            if (message is null)
+                return false;
+
+            var results = new List<bool>();
+
+            foreach (ICommandModel c in message)
+                results.Add(await SendAsync(c).ConfigureAwait(false));
+
+            return results.Contains(false) ? false : true;
+        }
+
         public async Task<bool> SendAsync(ICommandModel command)
         {
             _isSending = true;
             bool status = await _device.SendAsync(_commandTranslator.FromCommand(command)).ConfigureAwait(false);
             _isSending = false;
             return status;
-        }
-
-        public async Task<bool> SendAsync(IMessageModel message)
-        {
-            if (message is null)
-                return false;
-
-            List<bool> results = new List<bool>();
-
-            foreach (ICommandModel c in message)
-                results.Add(await _device.SendAsync(_commandTranslator.FromCommand(c)).ConfigureAwait(false));
-
-            return results.Contains(false) ? false : true;
         }
 
         protected virtual void OnCommandReceived(ICommandModel command)

@@ -24,10 +24,7 @@ namespace Shield.HardwareCom
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed
         /// </summary>
-        public bool IsProcessingMessages
-        {
-            get => _isProcessing;
-        }
+        public bool IsProcessingMessages => _isProcessing;        
 
         /// <summary>
         /// Add a message to be processed (thread safe)
@@ -35,8 +32,7 @@ namespace Shield.HardwareCom
         /// <param name="message"></param>
         public void AddMessageToProcess(IMessageModel message)
         {
-            if (message is null)
-                throw new ArgumentNullException(nameof(message));
+            _ = message ?? throw new ArgumentNullException(nameof(message));
             _messagesToProcess.Add(message);
             Debug.WriteLine($@"message {message.Id} added to be processed");
         }
@@ -47,8 +43,7 @@ namespace Shield.HardwareCom
         /// <param name="newSourceCollection">external collection</param>
         public void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection)
         {
-            if (newSourceCollection is null)
-                throw new ArgumentNullException(nameof(newSourceCollection));
+            _ = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
 
             using (_sourceCollectionSwithLock.Write())
                 _messagesToProcess = newSourceCollection;
@@ -129,13 +124,9 @@ namespace Shield.HardwareCom
 
         private bool IsMessageProcessingCorrectlyCancelled(Exception e)
         {
-            if (e is TaskCanceledException || e is OperationCanceledException)
-            {
-                lock (_processingLock)
-                    _isProcessing = false;
-                return true;
-            }
-            return false;
+            lock (_processingLock)
+                _isProcessing = false;
+            return e is TaskCanceledException || e is OperationCanceledException;
         }
 
         /// <summary>

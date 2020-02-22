@@ -13,11 +13,7 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             _message = ClearFlagsIn(message);
 
-            if (IsOfMinimalLength() &&
-                IsBeginningAndEndPositionCorrect() &&
-                HasOneBeginningAndEnd() &&
-                IsMessageTypeInCorrectPlace() &&
-                HasOnlyOneTypeCommand())
+            if (CheckPattern())
                 return _message;
             else
             {
@@ -35,16 +31,22 @@ namespace Shield.HardwareCom.MessageProcessing
             return message;
         }
 
-        private bool IsOfMinimalLength() =>
-            _message.Count() < 3 ? false : true;
-
-        private bool IsBeginningAndEndPositionCorrect()
+        private bool CheckPattern()
         {
-            if (_message.First().CommandType != CommandType.HandShake ||
-                _message.Last().CommandType != CommandType.EndMessage)
-                return false;
-            return true;
+            return IsOfMinimalLength() &&
+                   IsBeginningAndEndPositionCorrect() &&
+                   HasOneBeginningAndEnd() &&
+                   IsMessageTypeInCorrectPlace() &&
+                   HasOnlyOneTypeCommand();
         }
+
+        private bool IsOfMinimalLength() =>
+            _message.Count() >= 3;
+
+        private bool IsBeginningAndEndPositionCorrect() =>        
+            _message.First().CommandType == CommandType.HandShake ||
+            _message.Last().CommandType == CommandType.EndMessage;
+        
 
         private bool HasOneBeginningAndEnd() =>
             _message.Count(c => c.CommandType == CommandType.HandShake && c.CommandType == CommandType.EndMessage) != 2;

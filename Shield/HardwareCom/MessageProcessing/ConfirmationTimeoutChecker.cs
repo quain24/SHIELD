@@ -43,19 +43,17 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public ConfirmationTimeoutChecker(ITimeoutCheck timeoutCheck)
         {
-            if (timeoutCheck is null)
-                throw new ArgumentNullException(nameof(timeoutCheck),
+            _ = timeoutCheck ?? throw new ArgumentNullException(nameof(timeoutCheck),
                     "ConfirmationTimeoutChecker - ConfirmationTimeoutChecker: passed NULL instead of proper timeout checking object");
 
             _timeoutCheck = timeoutCheck;
-
             _noTimeout = _timeoutCheck.NoTimeoutValue;
             _checkinterval = CalcCheckInterval(Timeout);
         }
 
         public IMessageModel GetConfirmationOf(IMessageModel message)
         {
-            if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
+            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
 
             IMessageModel output;
             _confirmations.TryGetValue(message.Id, out output);
@@ -64,20 +62,16 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public bool IsExceeded(IMessageModel message, IMessageModel confirmation = null)
         {
-            if (message is null)
-                throw new ArgumentNullException(nameof(message), "TimeoutChecker - Check: Cannot check timeout for NULL.");
+            _ = message ?? throw new ArgumentNullException(nameof(message), "TimeoutChecker - Check: Cannot check timeout for NULL.");
 
             if (Timeout == _noTimeout)
                 return false;
 
-            //ClearTimeoutError(message);
             confirmation = confirmation is null ? GetConfirmationOf(message) : null;
 
-            bool isTimeoutExceeded = confirmation is null ?
-                _timeoutCheck.IsExceeded(message) :
-                _timeoutCheck.IsExceeded(message, confirmation);
-
-            //message = isTimeoutExceeded ? SetTimeoutError(message) : message;
+            bool isTimeoutExceeded = confirmation is null
+                ? _timeoutCheck.IsExceeded(message)
+                : _timeoutCheck.IsExceeded(message, confirmation);
 
             return isTimeoutExceeded;
         }
@@ -172,12 +166,12 @@ namespace Shield.HardwareCom.MessageProcessing
                 message = IsExceeded(message, confirmation) ? SetTimeoutError(message) : message;
 
                 string diagMessage = string.Empty;
-                if(message.Errors.HasFlag(Errors.ConfirmationTimeout))
+                if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
                     diagMessage = "with timeout!";
                 else
                     diagMessage = "in time";
 
-                Console.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} confirmed message " + diagMessage );
+                Console.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} confirmed message " + diagMessage);
 
                 message.IsConfirmed = true;
                 _processedMessages.Add(message);
@@ -205,20 +199,13 @@ namespace Shield.HardwareCom.MessageProcessing
             _confirmations.Add(confirmation.Id, confirmation);
         }
 
-        public BlockingCollection<IMessageModel> ProcessedMessages()
-        {
-            return _processedMessages;
-        }
+        public BlockingCollection<IMessageModel> ProcessedMessages() => _processedMessages;        
 
-        public BlockingCollection<IMessageModel> ProcessedConfirmations()
-        {
-            return _processedConfirmations;
-        }
-
+        public BlockingCollection<IMessageModel> ProcessedConfirmations() => _processedConfirmations;
+        
         private IMessageModel SetTimeoutError(IMessageModel message)
         {
-            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
-                message.Errors &= ~Errors.ConfirmationTimeout;
+            ClearTimeoutError(message);
             message.Errors |= Errors.ConfirmationTimeout;
             return message;
         }
@@ -232,8 +219,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private IMessageModel SetNoConfirmatioError(IMessageModel message)
         {
-            if (message.Errors.HasFlag(Errors.NotConfirmed))
-                message.Errors &= ~Errors.NotConfirmed;
+            ClearNoConfirmationError(message);
             message.Errors |= Errors.NotConfirmed;
             return message;
         }
