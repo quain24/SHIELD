@@ -94,7 +94,7 @@
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
     <Compile Include="HardwareCom\IInherittest.cs" />
-    <Compile Include="HardwareCom\IMessageProcessor.cs" />
+    <Compile Include="HardwareCom\IIncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\CommandIngester.cs" />
@@ -102,7 +102,6 @@
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
     <Compile Include="HardwareCom\Inherittest.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Decoding.cs" />
-    <Compile Include="HardwareCom\MessageHWComEventArgs.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Completeness.cs" />
     <Compile Include="HardwareCom\ICommandIngester.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />

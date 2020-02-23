@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets  xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Base class disposable implementation.</Title>
+      <Shortcut>bdisp</Shortcut>
+      <Description>
+        Code snippet to create a scheleton implementation
+        of the IDisposable pattern for a base class.
+      </Description>
+      <Author>Stefano Ricciardi</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>ClassName</ID>
+          <ToolTip>Name of the class.</ToolTip>
+          <Default>ClassName</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp">
+        <![CDATA[
+    public class $ClassName$: IDisposable
+    {
+        private bool _disposed = false;
+            
+        //Implement IDisposable.
+        public void Dispose()
+        {
+          Dispose(true);
+          GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+          if (!_disposed)
+          {
+            if (disposing)
+            {
+              // Free other state (managed objects).
+            }
+            // Free your own state (unmanaged objects).
+            // Set large fields to null.
+            _disposed = true;
+          }
+        }
+
+        // Use C# destructor syntax for finalization code.
+        ~$ClassName$()
+        {
+          // Simply call Dispose(false).
+          Dispose(false);
+        }
+    }            ]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+  <CodeSnippet Format="1.0.0">
+    <Header>
+      <Title>Base class disposable implementation.</Title>
+      <Shortcut>ddisp</Shortcut>
+      <Description>
+        Code snippet to create a scheleton implementation of the
+        IDisposable pattern	for a derived class.
+      </Description>
+      <Author>Stefano Ricciardi</Author>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Declarations>
+        <Literal>
+          <ID>DerivedClassName</ID>
+          <ToolTip>Name of the derived class.</ToolTip>
+          <Default>Derived</Default>
+        </Literal>
+        <Literal>
+          <ID>BaseClassName</ID>
+          <ToolTip>Name of the base class.</ToolTip>
+          <Default>Base</Default>
+        </Literal>
+      </Declarations>
+      <Code Language="csharp">
+        <![CDATA[
+  public class $DerivedClassName$: $BaseClassName$
+  {
+      private bool _disposed = false;
+
+      protected override void Dispose(bool disposing)
+      {
+          if (!_disposed)
+          {
+              if (disposing)
+              {
+                  // Release managed resources.
+              }
+              // Release unmanaged resources.
+              // Set large fields to null.
+              // Call Dispose on your base class.
+              
+              _disposed = true;
+          }
+            
+          base.Dispose(disposing);
+      }
+      // The derived class does not have a Finalize method
+      // or a Dispose method without parameters because it inherits
+      // them from the base class.
+  }
+]]>
+      </Code>
+    </Snippet>
+  </CodeSnippet>
+</CodeSnippets>

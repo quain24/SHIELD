@@ -18,15 +18,14 @@ namespace Shield.HardwareCom
 
         private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
 
-        // TODO - think about changing it to concurrent dictionary - getting timeout list throws exception when modified externally
         private readonly Dictionary<string, IMessageModel> _incompleteMessages =
             new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
         private readonly BlockingCollection<ICommandModel> _errCommands = new BlockingCollection<ICommandModel>();
 
-        private object _lock = new object();
-        private object _timeoutCheckLock = new object();
+        private readonly object _lock = new object();
+        private readonly object _timeoutCheckLock = new object();
         private bool _isProcessing = false;
         private bool _isTimeoutChecking = false;
         private CancellationTokenSource _cancelProcessingCTS = new CancellationTokenSource();
@@ -77,17 +76,14 @@ namespace Shield.HardwareCom
 
             Debug.WriteLine("CommandIngester - Command processing started");
 
-            ICommandModel command = null;
-            IMessageModel message;
-
             while (true)
             {
                 try
                 {
-                    bool a = _awaitingQueue.TryTake(out command, -1, _cancelProcessingCTS.Token);
+                    bool a = _awaitingQueue.TryTake(out ICommandModel command, -1, _cancelProcessingCTS.Token);
 
                     if (a) Console.WriteLine($"CommandIngester - Took command {command.Id} for processing");
-                    TryIngest(command, out message);
+                    TryIngest(command, out IMessageModel message);
                 }
                 catch
                 {

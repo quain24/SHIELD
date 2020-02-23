@@ -4,18 +4,19 @@ using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class ConfirmationTimeoutChecker : IConfirmationTimeoutChecker
+    internal class ConfirmationTimeoutChecker : IConfirmationTimeoutChecker, IDisposable
     {
-        private SortedDictionary<long, IMessageModel> _storage = new SortedDictionary<long, IMessageModel>();
-        private BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
-        private BlockingCollection<IMessageModel> _processedConfirmations = new BlockingCollection<IMessageModel>();
-        private Dictionary<string, IMessageModel> _confirmations = new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly SortedDictionary<long, IMessageModel> _storage = new SortedDictionary<long, IMessageModel>();
+        private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
+        private readonly BlockingCollection<IMessageModel> _processedConfirmations = new BlockingCollection<IMessageModel>();
+        private readonly Dictionary<string, IMessageModel> _confirmations = new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly ITimeoutCheck _timeoutCheck;
         private int _checkinterval = 0;
@@ -23,9 +24,10 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private object _processLock = new object();
         private bool _isProcessing = false;
+        private bool _disposed = false;
 
         private string _currentlyProcessingId = string.Empty;
-        private ReaderWriterLockSlim _currentlyProcessingIdLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _currentlyProcessingIdLock = new ReaderWriterLockSlim();
 
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
 
@@ -51,16 +53,64 @@ namespace Shield.HardwareCom.MessageProcessing
             _checkinterval = CalcCheckInterval(Timeout);
         }
 
-        public IMessageModel GetConfirmationOf(IMessageModel message)
+        public async Task CheckUnconfirmedMessagesContinousAsync()
         {
-            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
+            if (!CanStartCheckingUnconfirmedMessages())
+                return;
 
-            IMessageModel output;
-            _confirmations.TryGetValue(message.Id, out output);
-            return output;
+            Debug.WriteLine("ConfirmationTimeoutChecker: Started checking timeouts of sent messages.");
+
+            try
+            {
+                while (!_processingCTS.IsCancellationRequested)
+                    await CheckNextUnconfirmedMessage().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                if (!IsCheckUnconfirmedMessagesContinousAsyncCancelledProperly(e))
+                    throw;
+            }
         }
 
-        public bool IsExceeded(IMessageModel message, IMessageModel confirmation = null)
+        private bool CanStartCheckingUnconfirmedMessages()
+        {
+            if (!_isProcessing)
+                lock (_processLock)
+                    return _isProcessing
+                        ? false
+                        : _isProcessing = true;
+            return false;
+        }
+
+        private Task CheckNextUnconfirmedMessage()
+        {
+            IMessageModel message;
+
+            message = _storage.FirstOrDefault().Value;
+            if (message is null)
+                return Task.Delay(_checkinterval, _processingCTS.Token);
+
+            ClearTimeoutError(message);
+
+            using (_currentlyProcessingIdLock.Read())
+            {
+                if (_currentlyProcessingId == message.Id)
+                {
+                    _processingCTS.Token.ThrowIfCancellationRequested();
+                    return Task.CompletedTask;
+                }
+            }
+
+            if (IsTimeoutExceeded(message))
+            {
+                HandleExceededTimeout(message);
+                return Task.CompletedTask;
+            }
+            else
+                return Task.Delay(_checkinterval, _processingCTS.Token);
+        }
+
+        public bool IsTimeoutExceeded(IMessageModel message, IMessageModel confirmation = null)
         {
             _ = message ?? throw new ArgumentNullException(nameof(message), "TimeoutChecker - Check: Cannot check timeout for NULL.");
 
@@ -76,112 +126,37 @@ namespace Shield.HardwareCom.MessageProcessing
             return isTimeoutExceeded;
         }
 
-        public async Task CheckUnconfirmedMessagesContinousAsync()
+        public IMessageModel GetConfirmationOf(IMessageModel message)
         {
-            if (!_isProcessing)
-            {
-                lock (_processLock)
-                {
-                    if (_isProcessing)
-                        return;
-                    _isProcessing = true;
-                }
-            }
+            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
 
-            Console.WriteLine("ConfirmationTimeoutChecker: Started checking timeouts of sent messages.");
+            _confirmations.TryGetValue(message.Id, out IMessageModel output);
+            return output;
+        }
 
-            try
-            {
-                IMessageModel message;
+        private void HandleExceededTimeout(IMessageModel message)
+        {
+            SetTimeoutError(message);
+            if (GetConfirmationOf(message) is null)
+                SetNoConfirmatioError(message);
 
-                while (!_processingCTS.IsCancellationRequested)
-                {
-                    message = _storage.FirstOrDefault().Value;
-                    if (message is null)
-                    {
-                        await Task.Delay(_checkinterval, _processingCTS.Token).ConfigureAwait(false);
-                        continue;
-                    }
+            _processedMessages.Add(message);
+            _storage.Remove(_storage.Keys.First());
+            Console.WriteLine($@"ConfirmationTimeoutChecker: {message.Id} - Confirmation timeout exceeded.");
+            _processingCTS.Token.ThrowIfCancellationRequested();
+        }
 
-                    ClearTimeoutError(message);
-
-                    using (_currentlyProcessingIdLock.Read())
-                    {
-                        if (_currentlyProcessingId == message.Id)
-                        {
-                            _processingCTS.Token.ThrowIfCancellationRequested();
-                            continue;
-                        }
-                    }
-
-                    if (IsExceeded(message))
-                    {
-                        SetTimeoutError(message);
-                        _processedMessages.Add(message);
-                        _storage.Remove(_storage.Keys.First());
-
-                        Console.WriteLine($@"ConfirmationTimeoutChecker: {message.Id} - Confirmation timeout exceeded.");
-
-                        _processingCTS.Token.ThrowIfCancellationRequested();
-                    }
-                    else
-                    {
-                        await Task.Delay(_checkinterval, _processingCTS.Token).ConfigureAwait(false);
-                    }
-                }
-            }
-            finally
-            {
-                lock (_processLock)
-                {
-                    _isProcessing = false;
-                }
-            }
+        private bool IsCheckUnconfirmedMessagesContinousAsyncCancelledProperly(Exception e)
+        {
+            lock (_processLock)
+                _isProcessing = false;
+            return e is TaskCanceledException || e is OperationCanceledException;
         }
 
         public void StopCheckingUnconfirmedMessages()
         {
             _processingCTS.Cancel();
             _processingCTS = new CancellationTokenSource();
-        }
-
-        public void ProcessMessageConfirmedBy(IMessageModel confirmation)
-        {
-            if (confirmation is null) throw new ArgumentNullException(nameof(confirmation));
-
-            IMessageModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
-
-            using (_currentlyProcessingIdLock.Write())
-            {
-                _currentlyProcessingId = message is null ? string.Empty : message.Id;
-            }
-
-            if (message is null)
-            {
-                Console.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} tried to confirm nonexistent message.");
-                confirmation.Errors |= Errors.ConfirmedNonexistent;
-            }
-            else
-            {
-                message = IsExceeded(message, confirmation) ? SetTimeoutError(message) : message;
-
-                string diagMessage = string.Empty;
-                if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
-                    diagMessage = "with timeout!";
-                else
-                    diagMessage = "in time";
-
-                Console.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} confirmed message " + diagMessage);
-
-                message.IsConfirmed = true;
-                _processedMessages.Add(message);
-            }
-            _processedConfirmations.Add(confirmation);
-
-            using (_currentlyProcessingIdLock.Write())
-            {
-                _currentlyProcessingId = string.Empty;
-            }
         }
 
         public void AddToCheckingQueue(IMessageModel message)
@@ -197,12 +172,39 @@ namespace Shield.HardwareCom.MessageProcessing
                 return;
 
             _confirmations.Add(confirmation.Id, confirmation);
+            CheckMessageConfirmedBy(confirmation);
         }
 
-        public BlockingCollection<IMessageModel> ProcessedMessages() => _processedMessages;        
+        private void CheckMessageConfirmedBy(IMessageModel confirmation)
+        {
+            if (confirmation is null) throw new ArgumentNullException(nameof(confirmation));
+
+            IMessageModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
+
+            using (_currentlyProcessingIdLock.Write())
+                _currentlyProcessingId = message is null ? string.Empty : message.Id;
+
+            if (message is null)
+            {
+                Debug.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} tried to confirm nonexistent message.");
+                confirmation.Errors |= Errors.ConfirmedNonexistent;
+            }
+            else
+            {
+                message = IsTimeoutExceeded(message, confirmation) ? SetTimeoutError(message) : message;
+                message.IsConfirmed = true;
+                _processedMessages.Add(message);
+            }
+            _processedConfirmations.Add(confirmation);
+
+            using (_currentlyProcessingIdLock.Write())
+                _currentlyProcessingId = string.Empty;
+        }
+
+        public BlockingCollection<IMessageModel> ProcessedMessages() => _processedMessages;
 
         public BlockingCollection<IMessageModel> ProcessedConfirmations() => _processedConfirmations;
-        
+
         private IMessageModel SetTimeoutError(IMessageModel message)
         {
             ClearTimeoutError(message);
@@ -256,5 +258,32 @@ namespace Shield.HardwareCom.MessageProcessing
                 return _noTimeout;
             }
         }
+
+        #region IDispose implementation
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _processedConfirmations?.Dispose();
+                    _processedMessages?.Dispose();
+                    StopCheckingUnconfirmedMessages();
+                    _processingCTS?.Dispose();
+                }
+                // Free your own state (unmanaged objects).
+                // Set large fields to null.
+                _disposed = true;
+            }
+        }
+
+        #endregion IDispose implementation
     }
 }

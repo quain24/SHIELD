@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CodeSnippet Format="1.0.0" xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">  
+    <Header>
+      <Title>Cancellation handler when using CancellationToken</Title>
+      <Author>Henryk Wiśniewski</Author>
+      <Shortcut>ispropcan</Shortcut>
+      <SnippetTypes>
+        <SnippetType>Expansion</SnippetType>
+      </SnippetTypes>
+    </Header>
+    <Snippet>
+      <Code Language="CSharp">
+        <![CDATA[
+            private bool $name$(Exception e)
+            {
+                lock ($lock$)
+                    $locked$ = false;
+                return e is TaskCanceledException || e is OperationCanceledException;
+            }
+        ]]>
+      </Code>
+      <Declarations>
+        <Literal>
+          <ID>name</ID>
+          <Default>IsMethodHaltedCorrectly</Default>
+        </Literal>
+        <Literal>
+          <ID>lock</ID>
+          <Default>_lock</Default>
+          <ToolTip>Which lock should be used</ToolTip>
+        </Literal>
+        <Literal>
+          <ID>locked</ID>
+          <Default>_isProcessing</Default>
+          <ToolTip>Which flag should be released / set to false</ToolTip>
+        </Literal>
+      </Declarations>      
+    </Snippet>
+</CodeSnippet>

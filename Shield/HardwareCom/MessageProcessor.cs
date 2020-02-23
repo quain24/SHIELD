@@ -11,7 +11,7 @@ namespace Shield.HardwareCom
     /// <summary>
     /// base class for future IncomingMessageProcessor and OutgoingMessageProcessor
     /// </summary>
-    public abstract class MessageProcessor : IMessageProcessor
+    public abstract class MessageProcessor : IIncomingMessageProcessor
     {
         private const int TakeTimeout = 150;
         private BlockingCollection<IMessageModel> _messagesToProcess = new BlockingCollection<IMessageModel>();

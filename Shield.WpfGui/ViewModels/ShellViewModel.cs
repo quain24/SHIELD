@@ -23,7 +23,7 @@ namespace Shield.WpfGui.ViewModels
         private ISettings _settings;
         private ICommandModelFactory _commandFactory;
         private ICommandIngester _commandIngester;
-        private IMessageProcessor _incomingMessageProcessor;
+        private IIncomingMessageProcessor _incomingMessageProcessor;
         private IConfirmationFactory _confirmationFactory;
         private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
 
@@ -57,7 +57,7 @@ namespace Shield.WpfGui.ViewModels
                               ICommandModelFactory commandFactory,
                               Func<IMessageModel> messageFactory,
                               ICommandIngester commandIngester,
-                              IMessageProcessor incomingMessageProcessor,
+                              IIncomingMessageProcessor incomingMessageProcessor,
                               IConfirmationFactory confirmationFactory,
                               IConfirmationTimeoutChecker confirmationTimeoutChecker)
         {
@@ -95,7 +95,7 @@ namespace Shield.WpfGui.ViewModels
                     }
                     else
                     {
-                        _confirmationTimeoutChecker.ProcessMessageConfirmedBy(message);
+                        _confirmationTimeoutChecker.AddConfirmation(message);
                     }
                 }
             });

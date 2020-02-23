@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessageProcessor
+    public interface IIncomingMessageProcessor
     {
         bool IsProcessingMessages { get; }
 
@@ -16,7 +16,9 @@ namespace Shield.HardwareCom
         void StartProcessingMessagesContinous();
 
         void StopProcessingMessages();
+
         void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection);
+
         bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage);
     }
 }

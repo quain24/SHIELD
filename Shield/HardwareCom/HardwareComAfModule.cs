@@ -54,9 +54,6 @@ namespace Shield.HardwareCom
                    .WithParameters(new[]
                    {
                        new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(Func<ICommandModel>) && pi.Name == "commandFactory",
-                           (pi, ctx) => ctx.Resolve<Func<ICommandModel>>()),
-                       new ResolvedParameter(
                            (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
                            (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)
                    })
@@ -111,7 +108,7 @@ namespace Shield.HardwareCom
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding);
 
             builder.RegisterType<IncomingMessageProcessor>()
-                   .Keyed<IMessageProcessor>(nameof(IncomingMessageProcessor))
+                   .As<IIncomingMessageProcessor>()
                    .WithParameter(
                        new ResolvedParameter(
                            (pi, ctx) => pi.Name == "analyzers",
@@ -179,10 +176,6 @@ namespace Shield.HardwareCom
                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
                            (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("completition" + nameof(TimeoutCheck)))
                    );
-
-            builder.RegisterType<MessageProcessor>()
-                   .AsSelf()
-                   .Keyed<IMessageProcessor>(nameof(MessageProcessor));
 
             #endregion Message object processing
 

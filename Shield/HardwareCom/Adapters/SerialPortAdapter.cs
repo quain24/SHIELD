@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
 {
-    public class SerialPortAdapter : ICommunicationDevice
+    internal class SerialPortAdapter : ICommunicationDevice
     {
         /// <summary>
         /// Wraps SerialPort for future use with interfaces
@@ -33,7 +33,7 @@ namespace Shield.HardwareCom.Adapters
 
         #endregion Internal variables and events
 
-        public bool IsOpen => _port != null && _port.IsOpen ? true : false;
+        public bool IsOpen => _port != null && _port.IsOpen;
 
         public SerialPortAdapter()
         {
@@ -64,14 +64,12 @@ namespace Shield.HardwareCom.Adapters
             return PortNumberExists(((ISerialPortSettingsModel)settings).PortNumber);
         }
 
-        private bool PortNumberExists(int portNumber)
-        {
-            return SerialPort.GetPortNames().Contains($"COM{portNumber}");
-        }
+        private bool PortNumberExists(int portNumber) =>
+            SerialPort.GetPortNames().Contains($"COM{portNumber}");
 
         private void SetUpDeviceOptions(ISerialPortSettingsModel settings)
         {
-            if(settings is null) throw new ArgumentNullException(nameof(settings));
+            if (settings is null) throw new ArgumentNullException(nameof(settings));
 
             _port.PortName = $"COM{settings.PortNumber}";
             _port.BaudRate = settings.BaudRate;

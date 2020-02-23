@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
 {
-    public class MoqAdapter : ICommunicationDevice
+    internal class MoqAdapter : ICommunicationDevice
     {
         public event EventHandler<string> DataReceived;
 
