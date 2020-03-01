@@ -2,7 +2,7 @@
 using System.Threading;
 
 namespace Shield.Extensions
-{   
+{
     public static class ReaderWriterLockSlimExtensions
     {
         private sealed class ReadLockToken : IDisposable
@@ -45,6 +45,26 @@ namespace Shield.Extensions
             }
         }
 
+        private sealed class UpgradeableReadLockToken : IDisposable
+        {
+            private ReaderWriterLockSlim _sync;
+
+            public UpgradeableReadLockToken(ReaderWriterLockSlim sync)
+            {
+                _sync = sync;
+                sync.EnterUpgradeableReadLock();
+            }
+
+            public void Dispose()
+            {
+                if (_sync != null)
+                {
+                    _sync.ExitUpgradeableReadLock();
+                    _sync = null;
+                }
+            }
+        }
+
         /// <summary>
         /// Extension method simplifying usage of <see cref="ReaderWriterLockSlim.EnterReadLock"/> by removing need for
         /// try-catch block by replacing it with 'using' statement.
@@ -56,5 +76,11 @@ namespace Shield.Extensions
         /// try-catch block by replacing it with 'using' statement.
         /// </summary>
         public static IDisposable Write(this ReaderWriterLockSlim obj) => new WriteLockToken(obj);
+
+        /// <summary>
+        /// Extension method simplifying usage of <see cref="ReaderWriterLockSlim.EnterUpgradeableReadLock"/> by removing need for
+        /// try-catch block by replacing it with 'using' statement.
+        /// </summary>
+        public static IDisposable UpgradeableRead(this ReaderWriterLockSlim obj) => new UpgradeableReadLockToken(obj);
     }
 }

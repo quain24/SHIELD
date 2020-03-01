@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class Pattern : IMessageAnalyzer
+    public class PatternAnalyzer : IMessageAnalyzer
     {
         private IMessageModel _message;
 

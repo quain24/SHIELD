@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Shield.HardwareCom
 {
-    public class Decoding : IMessageAnalyzer
+    public class DecodingAnalyzer : IMessageAnalyzer
     {
         private IMessageModel _message;
 
@@ -35,11 +35,8 @@ namespace Shield.HardwareCom
             return message;
         }
 
-        private void ClearErrorFlag(Errors error, IMessageModel message)
-        {
-            if (message.Errors.HasFlag(error))
+        private void ClearErrorFlag(Errors error, IMessageModel message) =>
                 message.Errors &= ~error;
-        }
 
         private bool HasCommandsOfType(CommandType type) =>
             _message.Any(c => c.CommandType == type);

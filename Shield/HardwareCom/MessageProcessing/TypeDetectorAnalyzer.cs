@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class TypeDetector : IMessageAnalyzer
+    public class TypeDetectorAnalyzer : IMessageAnalyzer
     {
         private IMessageModel _message;
 
@@ -22,8 +22,7 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             _ = message ?? throw new System.ArgumentNullException(nameof(message));
 
-            if (message.Errors.HasFlag(Errors.UndeterminedType))
-                message.Errors &= ~Errors.UndeterminedType;
+            message.Errors &= ~Errors.UndeterminedType;
             return message;
         }
 

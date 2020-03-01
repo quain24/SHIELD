@@ -98,13 +98,13 @@ namespace Shield.HardwareCom
 
             #region Classes for checking correctness
 
-            builder.RegisterType<TypeDetector>()
+            builder.RegisterType<TypeDetectorAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.TypeDetector);
 
-            builder.RegisterType<Pattern>()
+            builder.RegisterType<PatternAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Pattern);
 
-            builder.RegisterType<Decoding>()
+            builder.RegisterType<DecodingAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding);
 
             builder.RegisterType<IncomingMessageProcessor>()

@@ -4,6 +4,10 @@ using System.IO.Ports;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Shield.HardwareCom;
+using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.Models;
+using Shield.Data;
 
 namespace COM6TestSender
 {
@@ -435,77 +439,67 @@ namespace COM6TestSender
                 string id = Shield.Helpers.IdGenerator.GetID(4);
                 int choose = 0;
                 int licz = 0;
+                bool fl = false;
+
+                var msgFac = new Shield.HardwareCom.Factories.MessageFactory(new Func<IMessageModel>(() => new MessageModel()), 4);
+                var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()), 4);
+
+                var sm = new Shield.Data.Models.SettingsModel();
+                var apset = new Shield.Data.Models.ApplicationSettingsModel();
+                    apset.CommandTypeSize = 4;
+                    apset.CompletitionTimeout = 5000;
+                    apset.ConfirmationTimeout = 5000;
+                    apset.DataSize = 30;
+                    apset.Filler = '.';
+                    apset.IdSize = 4;
+                    apset.Separator = '*';
+                var portset = new Shield.Data.Models.SerialPortSettingsModel();
+                portset.BaudRate = 921600;
+                portset.Encoding = 20127;
+                portset.PortNumber = 7;
+                portset.DataBits = 8;
+                portset.Parity = Parity.None;
+                portset.StopBits = StopBits.One;
+                portset.ReadTimeout = -1;               
+
+                sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
+                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
+                var sett = new Settings(sm);
+                var comtrans = new CommandTranslator(sett, new Func<ICommandModel>(() => new CommandModel()));
+
 
 
                 while (true)
                 {
-                    string data = num.ToString().PadLeft(30, '.');
-                    
-                    switch (choose)
-                    {
-                        case 1:
-                            choose = 2;
-                            break;
-                        case 2: 
-                            choose = 18;
-                            break;
-                        case 18:
-                            choose = 5;
-                            break;
-                        case 5:
-                            choose = 19;
-                            break;
-                        case 19:
-                            choose = 1;
-                            break;
-                        default:
-                            choose = 1;
-                            break;
-                    }
-                    
+                    licz++;
+                    int datalicz = licz;
+                    string data = datalicz.ToString().PadLeft(30, '.');
+                    datalicz++;
+                    string data2 = datalicz.ToString().PadLeft(30, '.');
+                    datalicz++;
+                    string data3 = datalicz.ToString().PadLeft(30, '.');
 
+                    IMessageModel msg = msgFac.CreateNew(Shield.Enums.Direction.Outgoing, Shield.Enums.MessageType.Master, Shield.Helpers.IdGenerator.GetID(4));
+                    msg.Add(comFac.Create(Shield.Enums.CommandType.HandShake));
+                    msg.Add(comFac.Create(Shield.Enums.CommandType.Master));
+                    var datacom = comFac.Create(Shield.Enums.CommandType.Data); datacom.Data = data;
+                    var datacom2 = comFac.Create(Shield.Enums.CommandType.Data); datacom2.Data = data2;
+                    var datacom3 = comFac.Create(Shield.Enums.CommandType.Data); datacom3.Data = data3;
+                    msg.Add(datacom);
+                    msg.Add(datacom2);
+                    msg.Add(datacom3);
+                    if(licz % 10 != 0)
+                        msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
 
-                    string packet = $@"*{choose.ToString().PadLeft(4, '0')}*{id}*";
-                    if (choose == 18)
-                    {
-                        packet += data;
-                        num++;
-                    }
-                    else if (choose == 19)
-                    {
-                        id = Shield.Helpers.IdGenerator.GetID(4);
-                        Console.WriteLine($@"ID changed to {id}");
-                        continue;
-                    }
-                    else if (choose > 19)
-                    {
-                        Console.WriteLine("bad command");
-                        continue;
-                    }
+                    foreach(var c in msg.Commands)
+                        serial.Write(comtrans.FromCommand(c));
 
-                    serial.Write(packet);
-                    if (choose == 5)
-                    {
-                        await Task.Delay(10);
-                        Console.WriteLine("----    RESPONSE    ----");
-                        //while (serial.BytesToRead > 0)
-                        //{
-                        //    string resp = serial.ReadExisting();
-                        //    string[] rep = new string[licz+2];
-                        //    licz = 0;
-                        //    rep = pat.Split(resp);
-
-                        //    foreach(var s in rep)
-                        //    {
-                        //        Console.WriteLine(s);
-                        //    }
-                        //}
-                        Console.WriteLine(serial.ReadExisting());
-                        Console.WriteLine("----  END RESPONSE  ----");
-                    }
-
-                    
-
+                    Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
+                    //if(licz % 100 == 0)
+                    //{   
+                    //    Console.WriteLine(serial.ReadExisting());
+                    //    await Task.Delay(1000);
+                    //}
                 }
             }
 

@@ -2,6 +2,7 @@
 using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.Models;
+using Shield.Helpers;
 using System;
 using System.Text;
 
@@ -69,6 +70,7 @@ namespace Shield.HardwareCom
                 command.Data = rawData.Length > _appSettingsModel.DataSize ? rawData.Substring(0, _appSettingsModel.DataSize) : rawData;
             }
 
+            command.TimeStamp = Timestamp.TimestampNow;
             return command;
         }
 
