@@ -16,12 +16,6 @@ namespace Shield.HardwareCom
 
         public void GetValues()
         {
-            Console.WriteLine(_completition.Timeout);
-            Console.WriteLine(_completition.NoTimeoutValue);
-            _completition.Timeout = 100;
-            Console.WriteLine(_completition.Timeout);
-            _completition.Timeout = 8;
-            Console.WriteLine(_completition.Timeout);
         }
     }
 }

@@ -2,35 +2,22 @@
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    internal class NullTimeoutCheck : ITimeoutCheck
+    public class NullTimeoutCheck : ITimeoutCheck
     {
-        private readonly long _timeout = 0;
-        private static NullTimeoutCheck _instance = null;
-        private static readonly object _lock = new object();
-
-        private NullTimeoutCheck()
-        {
-        }
-        // TODO - add timeoutCheck factory class and register it in autofac - use only it for getting objects of TimeoutCheck type.
-        // It will guarantee null object pattern compliance
+        private readonly int _timeout = 0;
 
         /// <summary>
         /// Null object pattern implementation of ITimeoutCheck interface
         /// </summary>
         /// <returns>Instance of NullTimeoutCheck object (singleton)</returns>
-        public NullTimeoutCheck GetInstance()
+        public NullTimeoutCheck()
         {
-            if (_instance is null)
-                lock (_lock)
-                    if (_instance is null)
-                        _instance = new NullTimeoutCheck();
-            return _instance;
         }
 
         /// <summary>
         /// Returns timeout value for this instance
         /// </summary>
-        public long Timeout => _timeout;
+        public int Timeout => _timeout;
 
         /// <summary>
         /// Will always return false, its a null pattern implementation dummy object

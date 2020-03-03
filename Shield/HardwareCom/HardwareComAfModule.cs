@@ -7,7 +7,6 @@ using Shield.Enums;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
-using Shield.HardwareCom.Models;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -32,6 +31,7 @@ namespace Shield.HardwareCom
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Except<MessageFactory>()
                    .Except<CommandModelFactory>()
+                   .Except<TimeoutCheckFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
@@ -69,6 +69,26 @@ namespace Shield.HardwareCom
                    )
                    .As<IMessageFactory>();
 
+            // TimeOutCheck factory
+
+            builder.RegisterType<NullTimeoutCheck>()
+                   .Named<ITimeoutCheck>("Null" + nameof(TimeoutCheck))
+                   .SingleInstance();
+
+            builder.RegisterInstance<Func<int, ITimeoutCheck>>(timeout => new TimeoutCheck(timeout));
+
+            builder.RegisterType<TimeoutCheckFactory>()
+                   .AsSelf()
+                   .WithParameters(new[]
+                   {
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.Name == "timeoutAutoFactory",
+                           (pi, ctx) => ctx.Resolve<Func<int, ITimeoutCheck>>()),
+                       new ResolvedParameter(
+                           (pi, ctx) => pi.Name == "nullTimeoutCheck",
+                           (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("Null" + nameof(TimeoutCheck)))
+                   });
+
             // End of factories registration ========================================================================================================
 
             // Working classes
@@ -84,9 +104,6 @@ namespace Shield.HardwareCom
                                                      appSet.DataSize,
                                                      new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
                                                      appSet.Separator);
-
-                        var d = c.ResolveNamed<ITimeoutCheck>("completition" + nameof(TimeoutCheck));
-
                         return incomingDataPreparer;
                     })
                    .As<IIncomingDataPreparer>();
@@ -125,19 +142,21 @@ namespace Shield.HardwareCom
                    .As<ICompleteness>();
 
             builder.RegisterType<TimeoutCheck>()
-                   .WithParameter("timeout", 0)
+                   .WithParameter("timeoutInMilliseconds", 0)
                    .Named<ITimeoutCheck>(nameof(TimeoutCheck));
 
             builder.RegisterType<TimeoutCheck>()
                    .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
-                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout))
+                       (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "timeoutInMilliseconds",
+                       (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>()
+                                       .GetTimeoutCheckWithTimeoutSetTo((int)ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout)))
                    .Named<ITimeoutCheck>("completition" + nameof(TimeoutCheck));
 
             builder.RegisterType<TimeoutCheck>()
                    .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.ParameterType == typeof(long) && pi.Name == "timeout",
-                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
+                       (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "timeoutInMilliseconds",
+                       (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>()
+                                       .GetTimeoutCheckWithTimeoutSetTo((int)ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout)))
                    .Named<ITimeoutCheck>("confirmation" + nameof(TimeoutCheck));
 
             builder.RegisterType<ConfirmationTimeoutChecker>()

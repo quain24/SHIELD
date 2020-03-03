@@ -36,21 +36,18 @@ namespace Shield.HardwareCom.MessageProcessing
             get => _timeoutCheck.Timeout;
             set
             {
-                _timeoutCheck.Timeout = value;
-                CalcCheckInterval(_timeoutCheck.Timeout);
+                //_timeoutCheck.Timeout = value;
+                //CalcCheckInterval(_timeoutCheck.Timeout);
             }
         }
-
-        public int NoTimeoutValue => _timeoutCheck.NoTimeoutValue;
+        // todo - implement nullTimout object instead of NoTimeoutValue
+        public int NoTimeoutValue => _timeoutCheck.Timeout;
 
         public ConfirmationTimeoutChecker(ITimeoutCheck timeoutCheck)
         {
-            _ = timeoutCheck ?? throw new ArgumentNullException(nameof(timeoutCheck),
+            _timeoutCheck = timeoutCheck ?? throw new ArgumentNullException(nameof(timeoutCheck),
                     "ConfirmationTimeoutChecker - ConfirmationTimeoutChecker: passed NULL instead of proper timeout checking object");
-
-            _timeoutCheck = timeoutCheck;
-            _noTimeout = _timeoutCheck.NoTimeoutValue;
-            _checkinterval = CalcCheckInterval(Timeout);
+            _checkinterval = CalcCheckInterval(_timeoutCheck.Timeout);
         }
 
         public async Task CheckUnconfirmedMessagesContinousAsync()

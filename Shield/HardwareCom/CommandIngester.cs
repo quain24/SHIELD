@@ -25,6 +25,7 @@ namespace Shield.HardwareCom
         private readonly BlockingCollection<ICommandModel> _errCommands = new BlockingCollection<ICommandModel>();
 
         private readonly ReaderWriterLockSlim _messageProcessingLock = new ReaderWriterLockSlim();
+        private readonly object _transferLock = new object();
         private readonly object _processingLock = new object();
         private readonly object _timeoutCheckLock = new object();
         private bool _isProcessing = false;
@@ -124,19 +125,17 @@ namespace Shield.HardwareCom
                 if (IsMessageAlreadyComplete(command.Id))
                 {
                     HandleBadCommand(command);
-                    return;
                 }
+                else
+                {
+                    IMessageModel message = GetMessageToWorkWith(command);
+                    message.Add(command);
 
-                IMessageModel message;
-
-                message = GetMessageToWorkWith(command);
-
-                message.Add(command);
-
-                if (_completness.IsComplete(message))
-                    PushFromIncompleteToProcessed(message);
-                else if (_completitionTimeoutChecker.IsExceeded(message))
-                    HandleMessageTimeout(message);
+                    if (_completness.IsComplete(message))
+                        PushFromIncompleteToProcessed(message);
+                    else if (_completitionTimeoutChecker.IsExceeded(message))
+                        HandleMessageTimeout(message);
+                }
             }
         }
 
@@ -149,12 +148,7 @@ namespace Shield.HardwareCom
         }
 
         private IMessageModel GetMessageToWorkWith(ICommandModel command) =>
-            IsFoundInIncomplete(command.Id)
-                ? _incompleteMessages[command.Id]
-                : CreateNewIncomingMessage(command.Id);
-
-        private bool IsFoundInIncomplete(string messageId) =>
-            _incompleteMessages.ContainsKey(messageId);
+            _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage(command.Id));
 
         private IMessageModel CreateNewIncomingMessage(string id)
         {
@@ -163,7 +157,6 @@ namespace Shield.HardwareCom
 
             IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id);
             Debug.WriteLine($@"CommandIngester - new {id} message created");
-            _incompleteMessages.TryAdd(message.Id, message);
             return message;
         }
 
@@ -171,9 +164,15 @@ namespace Shield.HardwareCom
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
 
-            _completedMessages.TryAdd(message.Id, message);
-            _incompleteMessages.TryRemove(message.Id, out _);
-            _processedMessages.Add(message);
+            if(_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))
+            {
+                _completedMessages.TryAdd(transferedMessage.Id, transferedMessage);
+                _processedMessages.Add(message);
+            }
+            else
+            {
+                message.Commands.ForEach(c => _errCommands.Add(c));
+            }
             Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
         }
 
@@ -202,14 +201,14 @@ namespace Shield.HardwareCom
             _cancelProcessingCTS = new CancellationTokenSource();
         }
 
-        public async Task StartTimeoutCheckAsync(int interval = 0)
+        public async Task StartTimeoutCheckAsync()
         {
             try
             {
                 if (!CanStartTiemoutCheck())
                     return;
 
-                int checkInterval = CalculateCheckInterval(interval);
+                int checkInterval = CalculateCheckInterval(_completitionTimeoutChecker.Timeout);
 
                 while (true)
                 {
@@ -257,7 +256,7 @@ namespace Shield.HardwareCom
                 return 1000;
 
                 default:
-                return _completitionTimeoutChecker.NoTimeoutValue;
+                return _completitionTimeoutChecker.Timeout;
             }
         }
 

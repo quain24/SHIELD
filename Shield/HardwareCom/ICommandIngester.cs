@@ -12,7 +12,7 @@ namespace Shield.HardwareCom
         Dictionary<string, IMessageModel> GetIncompletedMessages();
         BlockingCollection<IMessageModel> GetProcessedMessages();
         void StartProcessingCommands();
-        Task StartTimeoutCheckAsync(int interval = 0);
+        Task StartTimeoutCheckAsync();
         void StopProcessingCommands();
         void StopTimeoutCheck();
     }

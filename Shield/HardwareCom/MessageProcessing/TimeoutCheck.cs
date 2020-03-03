@@ -8,31 +8,30 @@ using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
+    // TODO figure out null object pattern in here and in classes that are using this
     public class TimeoutCheck : ITimeoutCheck
     {
-        private long _timeout;
-        private const int NoTimeout = 0;
+        private readonly int _timeout;
+        public delegate ITimeoutCheck Factory(int timeoutInMilliseconds);
+        
+        public TimeoutCheck(int timeoutInMilliseconds) =>
+            _timeout = timeoutInMilliseconds > 0
+            ? timeoutInMilliseconds
+            : throw new ArgumentOutOfRangeException(nameof(timeoutInMilliseconds), $@"{nameof(timeoutInMilliseconds)} should be a positive whole number");
 
-        public int NoTimeoutValue => NoTimeout;
+        public int Timeout => _timeout;
 
-        public TimeoutCheck(long timeout = NoTimeout)
-            => _timeout = SetTimeout(timeout);
-
-        public long Timeout
-        {
-            get => _timeout;
-            set => _timeout = SetTimeout(value);
-        }
-
-        private long SetTimeout(long timeout)
-        {
-            return (timeout <= NoTimeout || timeout % 1 != 0) ? NoTimeout : timeout;
-        }
-
+        /// <summary>
+        /// Checks if <paramref name="message"/> timeout was exceeded.
+        /// If <paramref name="inCompareTo"/> message was supplied, then it will check <paramref name="message"/> Timeout against <paramref name="inCompareTo"/>
+        /// Timeout and positive difference will be returned
+        /// </summary>
+        /// <param name="message">Message in which timeout is checked</param>
+        /// <param name="inCompareTo">Optional message that main message timeout will be checked against</param>
+        /// <returns>True if timeout was larger than <see cref="Timeout"/> value</returns>
         public virtual bool IsExceeded(IMessageModel message, IMessageModel inCompareTo = null)
         {
-            if (message is null || Timeout <= NoTimeoutValue)
-                return false;
+            _ = message ?? throw new ArgumentNullException(nameof(message));
 
             long difference = inCompareTo is null ?
                 Timestamp.Difference(message.Timestamp) :
@@ -40,35 +39,6 @@ namespace Shield.HardwareCom.MessageProcessing
             if (difference > Timeout)
                 Debug.WriteLine($@"Timeout - difference: {difference}");
             return difference > Timeout;
-        }
-
-        public virtual List<T> GetTimeoutsFromCollection<T>(Dictionary<string, T> source) where T : IMessageModel
-            => source is null ? null : GetTimeoutsFromCollection(source.Values);
-
-        public virtual List<T> GetTimeoutsFromCollection<T>(ConcurrentDictionary<string, T> source) where T : IMessageModel
-            => source is null ? null : GetTimeoutsFromCollection(source.Values);
-
-        public virtual List<T> GetTimeoutsFromCollection<T>(IEnumerable<T> source) where T : IMessageModel
-        {
-            try
-            {
-                return TryGetTimeoutsFrom(source);
-            }
-            catch (InvalidOperationException e)
-            {
-                Debug.WriteLine($@"Something happened when trying to get Timeouts list: {e.Message}");
-                return null;
-            }
-        }
-
-        private List<T> TryGetTimeoutsFrom<T>(IEnumerable<T> source) where T : IMessageModel
-        {
-            if (source is null)
-                return null;
-
-            return source.Where(message => IsExceeded(message))
-                         .Select(message => message)
-                         .ToList();
         }
     }
 }
