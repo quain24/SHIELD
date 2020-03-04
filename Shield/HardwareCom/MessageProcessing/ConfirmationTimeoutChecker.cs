@@ -20,7 +20,6 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private readonly ITimeoutCheck _timeoutCheck;
         private int _checkinterval = 0;
-        private readonly int _noTimeout;
 
         private object _processLock = new object();
         private bool _isProcessing = false;
@@ -31,18 +30,8 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
 
-        public long Timeout
-        {
-            get => _timeoutCheck.Timeout;
-            set
-            {
-                //_timeoutCheck.Timeout = value;
-                //CalcCheckInterval(_timeoutCheck.Timeout);
-            }
-        }
-        // todo - implement nullTimout object instead of NoTimeoutValue
-        public int NoTimeoutValue => _timeoutCheck.Timeout;
-
+        public int Timeout => _timeoutCheck.Timeout;
+        
         public ConfirmationTimeoutChecker(ITimeoutCheck timeoutCheck)
         {
             _timeoutCheck = timeoutCheck ?? throw new ArgumentNullException(nameof(timeoutCheck),
@@ -110,9 +99,6 @@ namespace Shield.HardwareCom.MessageProcessing
         public bool IsTimeoutExceeded(IMessageModel message, IMessageModel confirmation = null)
         {
             _ = message ?? throw new ArgumentNullException(nameof(message), "TimeoutChecker - Check: Cannot check timeout for NULL.");
-
-            if (Timeout == _noTimeout)
-                return false;
 
             confirmation = confirmation is null ? GetConfirmationOf(message) : null;
 
@@ -235,24 +221,21 @@ namespace Shield.HardwareCom.MessageProcessing
         /// </summary>
         /// <param name="timeout">Calculating checking interval from this value</param>
         /// <returns>Timeout checking interval</returns>
-        private int CalcCheckInterval(long timeout)
+        private int CalcCheckInterval(int timeout)
         {
             switch (timeout)
             {
-                case var _ when timeout <= NoTimeoutValue:
-                return 250;
-
                 case var _ when timeout <= 100:
-                return 10;
-
-                case var _ when timeout <= 3000:
                 return 100;
 
-                case var _ when timeout > 3000:
-                return 250;
+                case var _ when timeout <= 3000:
+                return 500;
+
+                case var _ when timeout <= 5000:
+                return 1000;
 
                 default:
-                return _noTimeout;
+                return 2000;
             }
         }
 

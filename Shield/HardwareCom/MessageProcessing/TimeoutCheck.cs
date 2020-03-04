@@ -12,7 +12,6 @@ namespace Shield.HardwareCom.MessageProcessing
     public class TimeoutCheck : ITimeoutCheck
     {
         private readonly int _timeout;
-        public delegate ITimeoutCheck Factory(int timeoutInMilliseconds);
         
         public TimeoutCheck(int timeoutInMilliseconds) =>
             _timeout = timeoutInMilliseconds > 0

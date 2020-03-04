@@ -10,8 +10,8 @@ namespace Shield.HardwareCom.Factories
 
         public TimeoutCheckFactory(Func<int, ITimeoutCheck> timeoutCheckAutofactory, ITimeoutCheck nullTimeoutCheck)
         {
-            _timeoutCheckAutofactory = timeoutCheckAutofactory;
-            _nullTimeoutCheck = nullTimeoutCheck;
+            _timeoutCheckAutofactory = timeoutCheckAutofactory ?? throw new ArgumentNullException(nameof(timeoutCheckAutofactory));
+            _nullTimeoutCheck = nullTimeoutCheck ?? throw new ArgumentNullException(nameof(nullTimeoutCheck));
         }
 
         public ITimeoutCheck GetTimeoutCheckWithTimeoutSetTo(int milliseconds) =>

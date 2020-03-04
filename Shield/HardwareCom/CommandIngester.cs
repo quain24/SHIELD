@@ -25,7 +25,6 @@ namespace Shield.HardwareCom
         private readonly BlockingCollection<ICommandModel> _errCommands = new BlockingCollection<ICommandModel>();
 
         private readonly ReaderWriterLockSlim _messageProcessingLock = new ReaderWriterLockSlim();
-        private readonly object _transferLock = new object();
         private readonly object _processingLock = new object();
         private readonly object _timeoutCheckLock = new object();
         private bool _isProcessing = false;
@@ -167,11 +166,7 @@ namespace Shield.HardwareCom
             if(_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))
             {
                 _completedMessages.TryAdd(transferedMessage.Id, transferedMessage);
-                _processedMessages.Add(message);
-            }
-            else
-            {
-                message.Commands.ForEach(c => _errCommands.Add(c));
+                _processedMessages.Add(message);                
             }
             Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
         }
@@ -238,14 +233,10 @@ namespace Shield.HardwareCom
             }
         }
 
-        // TODO rethink this method
-        private int CalculateCheckInterval(long timeout)
+        private int CalculateCheckInterval(int timeout)
         {
             switch (timeout)
             {
-                case var _ when timeout <= _completitionTimeoutChecker.Timeout:
-                return 100;
-
                 case var _ when timeout <= 1000:
                 return 250;
 
