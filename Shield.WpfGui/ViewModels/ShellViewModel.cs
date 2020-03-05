@@ -26,7 +26,7 @@ namespace Shield.WpfGui.ViewModels
         private IIncomingMessageProcessor _incomingMessageProcessor;
         private IConfirmationFactory _confirmationFactory;
         private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
-
+        private readonly IIdGenerator _idGenerator;
         private string _selectedCommand;
         private string _dataInput;
 
@@ -59,7 +59,8 @@ namespace Shield.WpfGui.ViewModels
                               ICommandIngester commandIngester,
                               IIncomingMessageProcessor incomingMessageProcessor,
                               IConfirmationFactory confirmationFactory,
-                              IConfirmationTimeoutChecker confirmationTimeoutChecker)
+                              IConfirmationTimeoutChecker confirmationTimeoutChecker,
+                              IIdGenerator idGenerator)
         {
             _settings = settings;
             _messanger = messanger;
@@ -68,6 +69,7 @@ namespace Shield.WpfGui.ViewModels
             _incomingMessageProcessor = incomingMessageProcessor;
             _confirmationFactory = confirmationFactory;
             _confirmationTimeoutChecker = confirmationTimeoutChecker;
+            _idGenerator = idGenerator;
             _messageFactory = messageFactory;
 
             _settings.LoadFromFile();
@@ -523,7 +525,7 @@ namespace Shield.WpfGui.ViewModels
             }
 
             message.Timestamp = Timestamp.TimestampNow;
-            message.AssaignID(IdGenerator.GetID(_settings.ForTypeOf<IApplicationSettingsModel>().IdSize));
+            message.AssaignID(_idGenerator.GetNewID());
 
             return message;
         }

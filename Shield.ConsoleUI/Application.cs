@@ -22,15 +22,13 @@ namespace Shield.ConsoleUI
         private IMessanger _comMessanger;
         private ISettings _settings;
 
-        private IInherittest _inheritest;
 
         private ICommandIngester _ingester;
         private ICompleteness _completness;
 
         public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ISettings settings,
             ICommandIngester ingester,
-            ICompleteness completness,
-            IInherittest inheritest)
+            ICompleteness completness)
         {
             _command = command;
             _deviceFactory = deviceFactory;
@@ -43,7 +41,6 @@ namespace Shield.ConsoleUI
             _ingester = ingester;
             _completness = completness;
 
-            _inheritest = inheritest;
             //_comcom.IncomingErrorReceived += OnErrorReceived;
         }
 
@@ -85,8 +82,6 @@ namespace Shield.ConsoleUI
             {
                 Console.WriteLine(availablePort);
             }
-
-            _inheritest.GetValues();
 
             ////_comMessanger.Setup(DeviceType.Serial);
 

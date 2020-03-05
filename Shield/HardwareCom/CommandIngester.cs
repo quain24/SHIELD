@@ -2,6 +2,7 @@
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
+using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Shield.HardwareCom
         private readonly IMessageFactory _msgFactory;
         private readonly ICompleteness _completness;
         private readonly ITimeoutCheck _completitionTimeoutChecker;
-
+        private readonly IIdGenerator _idGenerator;
         private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
         private readonly ConcurrentDictionary<string, IMessageModel> _incompleteMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _completedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
@@ -45,11 +46,12 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout)
+        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout, IIdGenerator idGenerator)
         {
             _msgFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
             _completness = completeness ?? throw new ArgumentNullException(nameof(completeness));
             _completitionTimeoutChecker = completitionTimeout ?? throw new ArgumentNullException(nameof(completitionTimeout));
+            _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
         }
 
         /// <summary>
@@ -114,7 +116,7 @@ namespace Shield.HardwareCom
         private void SetIdAsUsedUp(string id)
         {
             if (!string.IsNullOrWhiteSpace(id))
-                Helpers.IdGenerator.UsedThisID(id);
+                _idGenerator.MarkAsUsedUp(id);
         }
 
         public void ProcessCommand(ICommandModel command)

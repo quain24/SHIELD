@@ -32,7 +32,7 @@ namespace Shield.WpfGui
                 .Where(t => t.IsInNamespace("Shield.WpfGui.Models") && t.Name.EndsWith("Model"))
                 .AsSelf();
 
-            builder.RegisterType<ShellViewModel>()
+            builder.RegisterType<ShellViewModel>()                   
                    //.WithParameters(new[]
                    //{
                    //    new ResolvedParameter(

@@ -105,13 +105,11 @@
     <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
-    <Compile Include="HardwareCom\IInherittest.cs" />
     <Compile Include="HardwareCom\IIncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\IncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
-    <Compile Include="HardwareCom\Inherittest.cs" />
     <Compile Include="HardwareCom\MessageProcessing\DecodingAnalyzer.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Completeness.cs" />
     <Compile Include="HardwareCom\ICommandIngester.cs" />
@@ -132,6 +130,7 @@
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
+    <Compile Include="Helpers\IIdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
     <Compile Include="Data\Settings.cs" />
     <Compile Include="ShieldAfModule.cs" />

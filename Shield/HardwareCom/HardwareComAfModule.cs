@@ -7,6 +7,7 @@ using Shield.Enums;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
+using Shield.Helpers;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -54,8 +55,8 @@ namespace Shield.HardwareCom
                    .WithParameters(new[]
                    {
                        new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
-                           (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)
+                           (pi, ctx) => pi.ParameterType == typeof(IIdGenerator) && pi.Name == "idGenerator",
+                           (pi, ctx) => ctx.Resolve<IIdGenerator>())
                    })
                    .As<ICommandModelFactory>();
 
@@ -64,8 +65,8 @@ namespace Shield.HardwareCom
             builder.RegisterType<MessageFactory>()
                    .WithParameter(
                        new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(int) && pi.Name == "idLength",
-                           (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize)
+                           (pi, ctx) => pi.ParameterType == typeof(IIdGenerator) && pi.Name == "idGenerator",
+                           (pi, ctx) => ctx.Resolve<IIdGenerator>())
                    )
                    .As<IMessageFactory>();
 
@@ -89,6 +90,12 @@ namespace Shield.HardwareCom
                            (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("Null" + nameof(TimeoutCheck)))
                    });
 
+            builder.Register(c => new TimeoutCheck(c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout))
+                   .Named<ITimeoutCheck>("completition" + nameof(TimeoutCheck));
+
+            builder.Register(c => new TimeoutCheck(c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
+                   .Named<ITimeoutCheck>("confirmation" + nameof(TimeoutCheck));
+
             // End of factories registration ========================================================================================================
 
             // Working classes
@@ -104,7 +111,6 @@ namespace Shield.HardwareCom
                                                      appSet.DataSize,
                                                      new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
                                                      appSet.Separator);
-                       
 
                         return incomingDataPreparer;
                     })
@@ -113,7 +119,7 @@ namespace Shield.HardwareCom
             builder.RegisterType<Messenger>()
                    .As<IMessanger>();
 
-            // MESSAGE PROCESSING: =====================================================================================
+            // MESSAGE PROCESSING: ===================================================================================================================
 
             #region Classes for checking correctness
 
@@ -150,26 +156,7 @@ namespace Shield.HardwareCom
                    .As<IConfirmationTimeoutChecker>();
 
             #endregion Classes for checking correctness
-
-            // TEST =============
-
-            builder.RegisterType<Inherittest>()
-                   .As<IInherittest>()
-                   .WithParameters(new[]
-                   {
-                       new ResolvedParameter(
-                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionCheck",
-                            (pi, ctx) => ctx.Resolve<ITimeoutCheck>(new ResolvedParameter(
-                                (pii, ctxx) => pii.ParameterType == typeof(int) && pii.Name == "timeout",
-                                (pii, ctxx) => ctxx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout))),
-
-                        new ResolvedParameter(
-                            (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "confirmationCheck",
-                            (pi, ctx) => ctx.Resolve<ITimeoutCheck>(new ResolvedParameter(
-                                (pii, ctxx) => pii.ParameterType == typeof(int) && pii.Name == "timeout",
-                                (pii, ctxx) => ctxx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout)))
-                   });
-
+            
             #region Message object processing
 
             builder.RegisterType<CommandIngester>()
@@ -183,13 +170,14 @@ namespace Shield.HardwareCom
 
             #endregion Message object processing
 
-            // Additional objects, some may be temporary
+            // HELPERS ===============================================================================================================================
 
-            //builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
-            //    .Where(t => t.IsInNamespace($@"Shield.HardwareCom.MessageProcessing"))
-            //    .AsImplementedInterfaces();
-
-            //base.Load(builder);
+            builder.Register(c =>
+                {
+                    var idLenght = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().IdSize;
+                    return new IdGenerator(idLenght);
+                })
+                .As<IIdGenerator>();
         }
     }
 }

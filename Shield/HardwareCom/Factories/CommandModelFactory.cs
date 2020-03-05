@@ -1,5 +1,6 @@
 ﻿using Shield.Enums;
 using Shield.HardwareCom.Models;
+using Shield.Helpers;
 using System;
 
 namespace Shield.HardwareCom.Factories
@@ -7,13 +8,14 @@ namespace Shield.HardwareCom.Factories
     public class CommandModelFactory : ICommandModelFactory
     {
         private Func<ICommandModel> _commandFactory;
+        private readonly IIdGenerator _idGenerator;
         private int _idLength = 0;
 
-        public CommandModelFactory(Func<ICommandModel> commandFactory, int idLength)
+        public CommandModelFactory(Func<ICommandModel> commandFactory, IIdGenerator idGenerator)
         {
             // Autofac factory
             _commandFactory = commandFactory;
-            _idLength = idLength;
+            _idGenerator = idGenerator;
         }
 
         public ICommandModel Create(CommandType type = CommandType.Empty, string idOverride = "", long timestampOverride = 0)
@@ -26,7 +28,7 @@ namespace Shield.HardwareCom.Factories
             ICommandModel output = _commandFactory();
 
             output.CommandType = type;
-            output.Id = string.IsNullOrWhiteSpace(idOverride) ? Helpers.IdGenerator.GetID(_idLength) : idOverride;
+            output.Id = string.IsNullOrWhiteSpace(idOverride) ? _idGenerator.GetNewID() : idOverride;
             output.TimeStamp = timestampOverride <= 0 ? Helpers.Timestamp.TimestampNow : timestampOverride;
 
             return output;
