@@ -1,19 +1,18 @@
 ﻿using Shield.Enums;
 using Shield.HardwareCom.Models;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessanger : System.IDisposable
+    public interface IMessenger : System.IDisposable
     {
         bool IsOpen { get; }
         bool IsReceiving { get; }
         bool IsSending { get; }
 
         Task<bool> SendAsync(ICommandModel comand);
-
-        bool Setup(DeviceType type);
 
         void Open();
 
@@ -24,6 +23,7 @@ namespace Shield.HardwareCom
         void StopReceiving();
 
         Task<bool> SendAsync(IMessageModel message);
+        BlockingCollection<ICommandModel> GetReceivedCommands();
 
         event System.EventHandler<ICommandModel> CommandReceived;
     }

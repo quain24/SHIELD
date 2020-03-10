@@ -24,12 +24,12 @@ namespace Shield.HardwareCom.Factories
             _deviceFactory = deviceFactory;
         }
 
-        public ICommunicationDevice Device(DeviceType type)
+        public ICommunicationDevice Device(DeviceType type, int portNumber = 0)
         {
             switch (type)
             {
                 case DeviceType.Serial:
-                ISerialPortSettingsModel settings = _settings.ForTypeOf<ISerialPortSettingsModel>();
+                ISerialPortSettingsModel settings = _settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(portNumber);
                 ICommunicationDevice device = _deviceFactory[type];
                 if (device.Setup(settings)) //-- can replace autofac parameters used when registering.
                     return device;

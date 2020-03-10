@@ -51,15 +51,11 @@ namespace Shield.HardwareCom.Factories
                 confirmation.Add(responseCommand);
             }
 
-            if (message.Errors.HasFlag(Errors.CompletitionTimeout))
-            {
-                confirmation.Add(_commandFactory.Create(CommandType.CompletitionTimeoutOccured));
-            }
+            if (message.Errors.HasFlag(Errors.CompletitionTimeout))            
+                confirmation.Add(_commandFactory.Create(CommandType.CompletitionTimeoutOccured));            
 
-            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
-            {
-                confirmation.Add(_commandFactory.Create(CommandType.ConfirmationTimeoutOccurred));
-            }
+            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))            
+                confirmation.Add(_commandFactory.Create(CommandType.ConfirmationTimeoutOccurred));            
 
             confirmation.Add(_commandFactory.Create(CommandType.EndMessage));
 

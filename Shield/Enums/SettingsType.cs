@@ -5,6 +5,7 @@
         SerialDevice,
         MoqDevice,
         Application,
-        CommandTypes
+        CommandTypes,
+        SerialDeviceContainer
     }
 }

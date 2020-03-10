@@ -28,7 +28,8 @@ namespace Shield.HardwareCom
         private object _processingLock = new object();
         private readonly ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
-        public IncomingMessageProcessor(IMessageAnalyzer[] analyzers) => _analyzers = analyzers;
+        public IncomingMessageProcessor(IMessageAnalyzer[] analyzers) => 
+            _analyzers = analyzers;
 
         public bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage)
         {
@@ -43,7 +44,7 @@ namespace Shield.HardwareCom
 
         private void RunAnalyzersOn(IMessageModel message)
         {
-            if (_analyzers?.Length > 0)
+            if (!_analyzers.IsNullOrEmpty())
                 for (int i = 0; i < _analyzers.Length; i++)
                     _analyzers[i]?.CheckAndSetFlagsIn(message);
         }
@@ -70,10 +71,8 @@ namespace Shield.HardwareCom
         /// <param name="newSourceCollection">external collection</param>
         public void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection)
         {
-            _ = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
-
             using (_sourceCollectionSwithLock.Write())
-                _messagesToProcess = newSourceCollection;
+                _messagesToProcess = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
         }
 
         /// <summary>

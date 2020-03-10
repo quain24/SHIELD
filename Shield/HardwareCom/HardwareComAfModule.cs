@@ -4,6 +4,7 @@ using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
+using Shield.HardwareCom;
 using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
@@ -31,7 +32,6 @@ namespace Shield.HardwareCom
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Factory"))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Except<MessageFactory>()
-                   .Except<CommandModelFactory>()
                    .Except<TimeoutCheckFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
@@ -49,16 +49,6 @@ namespace Shield.HardwareCom
 
             #endregion Communication Device Factory and required devices
 
-            // Command factory
-
-            builder.RegisterType<CommandModelFactory>()
-                   .WithParameters(new[]
-                   {
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(IIdGenerator) && pi.Name == "idGenerator",
-                           (pi, ctx) => ctx.Resolve<IIdGenerator>())
-                   })
-                   .As<ICommandModelFactory>();
 
             // Message factory
 
@@ -117,7 +107,16 @@ namespace Shield.HardwareCom
                    .As<IIncomingDataPreparer>();
 
             builder.RegisterType<Messenger>()
-                   .As<IMessanger>();
+                .WithParameter(new ResolvedParameter(
+                    (pi, ctx) => pi.Name == "device",
+                    (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().Device(DeviceType.Serial, 4)))
+                   .As<IMessenger>();
+
+            builder.RegisterType<IncomingMessagePipeline>()
+                   .WithParameter(new ResolvedParameter(
+                       (pi, ctx) => pi.Name == "device",
+                       (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().Device(DeviceType.Serial, 4)))
+                   .AsSelf();
 
             // MESSAGE PROCESSING: ===================================================================================================================
 

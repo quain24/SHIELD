@@ -1,4 +1,5 @@
 ﻿using Caliburn.Micro;
+using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
@@ -12,6 +13,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,7 +21,7 @@ namespace Shield.WpfGui.ViewModels
 {
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
-        private IMessanger _messanger;
+        private HardwareCom.IMessenger _messanger;
         private ISettings _settings;
         private ICommandModelFactory _commandFactory;
         private ICommandIngester _commandIngester;
@@ -27,6 +29,9 @@ namespace Shield.WpfGui.ViewModels
         private IConfirmationFactory _confirmationFactory;
         private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
+        private readonly IncomingMessagePipeline _incomingMessagePipeline;
+        private readonly ISerialPortSettingsContainer _serialPortSettingsContainer;
+        private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private string _selectedCommand;
         private string _dataInput;
 
@@ -52,7 +57,7 @@ namespace Shield.WpfGui.ViewModels
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessanger messanger,
+        public ShellViewModel(HardwareCom.IMessenger messanger,
                               ISettings settings,
                               ICommandModelFactory commandFactory,
                               Func<IMessageModel> messageFactory,
@@ -60,7 +65,10 @@ namespace Shield.WpfGui.ViewModels
                               IIncomingMessageProcessor incomingMessageProcessor,
                               IConfirmationFactory confirmationFactory,
                               IConfirmationTimeoutChecker confirmationTimeoutChecker,
-                              IIdGenerator idGenerator)
+                              IIdGenerator idGenerator,
+                              IncomingMessagePipeline incomingMessagePipeline,
+                              ISerialPortSettingsContainer serialPortSettingsContainer,
+                              ICommunicationDeviceFactory communicationDeviceFactory)
         {
             _settings = settings;
             _messanger = messanger;
@@ -70,14 +78,26 @@ namespace Shield.WpfGui.ViewModels
             _confirmationFactory = confirmationFactory;
             _confirmationTimeoutChecker = confirmationTimeoutChecker;
             _idGenerator = idGenerator;
+            _incomingMessagePipeline = incomingMessagePipeline;
+            _serialPortSettingsContainer = serialPortSettingsContainer;
+            _communicationDeviceFactory = communicationDeviceFactory;
             _messageFactory = messageFactory;
 
             _settings.LoadFromFile();
-            _settings.ForTypeOf<ISerialPortSettingsModel>().BaudRate = 921600;
-            _messanger.Setup(DeviceType.Serial);
+            _settings.SaveToFile();
+
+            //serial.Setup(port_set);
+            
+            //_serialPortSettingsContainer.Add(portset);
+            //_settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(5);
+
+
+            //_settings.AddOrReplace(SettingsType.SerialDeviceContainer, _serialPortSettingsContainer);
+            //_settings.SaveToFile();
+
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-            _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetProcessedMessages());
+            _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetReceivedMessages());
 
             //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
             Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
@@ -87,22 +107,22 @@ namespace Shield.WpfGui.ViewModels
             {
                 while (true)
                 {
-                    IMessageModel message = _incomingMessageProcessor.GetProcessedMessages().Take();
+                    IMessageModel message = _incomingMessagePipeline.GetReceivedMessages().Take();//_incomingMessageProcessor.GetProcessedMessages().Take();
                     AddIncomingMessageToDisplay(this, message);
-                    if (message.Type != MessageType.Confirmation)
-                    {
-                        IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
-                        await _messanger.SendAsync(confirmation).ConfigureAwait(false);
-                        SentMessages.Add(confirmation);
-                    }
-                    else
-                    {
-                        _confirmationTimeoutChecker.AddConfirmation(message);
-                    }
+                    //if (message.Type != MessageType.Confirmation)
+                    //{
+                    //    IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
+                    //    await _messanger.SendAsync(confirmation).ConfigureAwait(false);
+                    //    SentMessages.Add(confirmation);
+                    //}
+                    //else
+                    //{
+                    //    _confirmationTimeoutChecker.AddConfirmation(message);
+                    //}
                 }
             });
 
-            _messanger.CommandReceived += AddCommandToProcessing;
+            //_messanger.CommandReceived += AddCommandToProcessing;
         }
 
         // new tryouts
@@ -221,7 +241,8 @@ namespace Shield.WpfGui.ViewModels
         {
             try
             {
-                _messanger.Open();
+                //_messanger.Open();
+                _incomingMessagePipeline.Start();
                 NotifyOfPropertyChange(() => CanOpenDevice);
                 NotifyOfPropertyChange(() => CanCloseDevice);
                 NotifyOfPropertyChange(() => CanStartReceiving);
@@ -243,7 +264,8 @@ namespace Shield.WpfGui.ViewModels
 
         public void CloseDevice()
         {
-            _messanger.Close();
+            //_messanger.Close();
+            _incomingMessagePipeline.Stop();
             NotifyOfPropertyChange(() => CanCloseDevice);
             NotifyOfPropertyChange(() => CanOpenDevice);
             NotifyOfPropertyChange(() => CanStartReceiving);

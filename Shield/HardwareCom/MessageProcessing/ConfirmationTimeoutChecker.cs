@@ -31,7 +31,7 @@ namespace Shield.HardwareCom.MessageProcessing
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
 
         public int Timeout => _timeoutCheck.Timeout;
-        
+
         public ConfirmationTimeoutChecker(ITimeoutCheck timeoutCheck)
         {
             _timeoutCheck = timeoutCheck ?? throw new ArgumentNullException(nameof(timeoutCheck),
@@ -49,7 +49,10 @@ namespace Shield.HardwareCom.MessageProcessing
             try
             {
                 while (!_processingCTS.IsCancellationRequested)
-                    await CheckNextUnconfirmedMessage().ConfigureAwait(false);
+                {
+                    CheckNextUnconfirmedMessage();
+                    await WaitForNextIteration().ConfigureAwait(false);
+                }
             }
             catch (Exception e)
             {
@@ -62,39 +65,30 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             if (!_isProcessing)
                 lock (_processLock)
-                    return _isProcessing
-                        ? false
-                        : _isProcessing = true;
+                    return _isProcessing ? false : _isProcessing = true;
             return false;
         }
 
-        private Task CheckNextUnconfirmedMessage()
+        private void CheckNextUnconfirmedMessage()
         {
-            IMessageModel message;
+            IMessageModel message = _storage.FirstOrDefault().Value;
 
-            message = _storage.FirstOrDefault().Value;
             if (message is null)
-                return Task.Delay(_checkinterval, _processingCTS.Token);
+                return;
+
+            using (_currentlyProcessingIdLock.Read())
+                if (_currentlyProcessingId == message.Id)
+                    return;
 
             ClearTimeoutError(message);
 
-            using (_currentlyProcessingIdLock.Read())
-            {
-                if (_currentlyProcessingId == message.Id)
-                {
-                    _processingCTS.Token.ThrowIfCancellationRequested();
-                    return Task.CompletedTask;
-                }
-            }
-
             if (IsTimeoutExceeded(message))
-            {
                 HandleExceededTimeout(message);
-                return Task.CompletedTask;
-            }
-            else
-                return Task.Delay(_checkinterval, _processingCTS.Token);
+            return;
         }
+
+        private Task WaitForNextIteration() =>
+            Task.Delay(_checkinterval, _processingCTS.Token);
 
         public bool IsTimeoutExceeded(IMessageModel message, IMessageModel confirmation = null)
         {

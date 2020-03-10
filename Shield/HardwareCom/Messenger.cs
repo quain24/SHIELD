@@ -1,8 +1,7 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Enums;
-using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,20 +15,20 @@ namespace Shield.HardwareCom
     /// OPEN / START RECEIVING / START DECODING.
     /// Returns decoded commands by <c>CommandReceived</c> event.
     /// </summary>
-    public class Messenger : IMessanger
+    public class Messenger : IMessenger
     {
-        private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
-        private ICommunicationDevice _device;
+        private readonly ICommunicationDevice _device;
         private readonly ICommandTranslator _commandTranslator;
         private readonly IIncomingDataPreparer _incomingDataPreparer;
 
         private CancellationTokenSource _receiveCTS = new CancellationTokenSource();
 
-        private bool _setupSuccessuful = false;
         private bool _disposed = false;
         private bool _receiverRunning = false;
         private bool _isSending = false;
         private readonly object _receiverLock = new object();
+
+        private readonly BlockingCollection<ICommandModel> _output = new BlockingCollection<ICommandModel>();
 
         public event EventHandler<ICommandModel> CommandReceived;
 
@@ -37,17 +36,11 @@ namespace Shield.HardwareCom
         public bool IsReceiving => _receiverRunning;
         public bool IsSending => _isSending;
 
-        public Messenger(ICommunicationDeviceFactory communicationDeviceFactory, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
+        public Messenger(ICommunicationDevice device, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
-            _communicationDeviceFactory = communicationDeviceFactory;
+            _device = device;
             _commandTranslator = commandTranslator;
             _incomingDataPreparer = incomingDataPreparer;
-        }
-
-        public bool Setup(DeviceType type)
-        {
-            _device = _communicationDeviceFactory.Device(type);
-            return _device is null ? _setupSuccessuful = false : _setupSuccessuful = true;
         }
 
         public void Open()
@@ -58,7 +51,7 @@ namespace Shield.HardwareCom
 
         private bool CanOpenDevice()
         {
-            return _setupSuccessuful && IsOpen == false;
+            return IsOpen == false;
         }
 
         public void Close()
@@ -88,6 +81,7 @@ namespace Shield.HardwareCom
                     {
                         internalCT.ThrowIfCancellationRequested();
                         ICommandModel receivedCommad = _commandTranslator.FromString(c);
+                        _output.Add(receivedCommad);
                         OnCommandReceived(receivedCommad);
                     }
                 }
@@ -103,7 +97,7 @@ namespace Shield.HardwareCom
         private bool CanStartReceiving()
         {
             lock (_receiverLock)
-                return _receiverRunning || !IsOpen || !_setupSuccessuful ? false : _receiverRunning = true;
+                return _receiverRunning || !IsOpen ? false : _receiverRunning = true;
         }
 
         private CancellationToken SetupCancellationTokenReceiving(CancellationToken passedDownToken)
@@ -150,6 +144,9 @@ namespace Shield.HardwareCom
             return status;
         }
 
+        public BlockingCollection<ICommandModel> GetReceivedCommands() =>
+            _output;
+
         protected virtual void OnCommandReceived(ICommandModel command)
         {
             CommandReceived?.Invoke(this, command);
@@ -169,17 +166,12 @@ namespace Shield.HardwareCom
             if (disposing)
             {
                 // free managed resources
-                if (_receiveCTS != null)
-                {
-                    _receiveCTS?.Cancel();
-                    _receiveCTS?.Dispose();
-                    _receiveCTS = null;
-                }
-                if (_device != null)
-                {
-                    _device?.Dispose();
-                    _device = null;
-                }
+                _receiveCTS?.Cancel();
+                _receiveCTS?.Dispose();
+                _receiveCTS = null;
+
+                _output?.Dispose();
+                _device?.Dispose();
             }
 
             _disposed = true;

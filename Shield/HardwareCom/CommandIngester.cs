@@ -28,6 +28,7 @@ namespace Shield.HardwareCom
         private readonly ReaderWriterLockSlim _messageProcessingLock = new ReaderWriterLockSlim();
         private readonly object _processingLock = new object();
         private readonly object _timeoutCheckLock = new object();
+        private readonly int _parallelTreshold = 250;
         private bool _isProcessing = false;
         private bool _isTimeoutChecking = false;
         private bool _disposed = false;
@@ -102,8 +103,7 @@ namespace Shield.HardwareCom
             Debug.WriteLine("CommandIngester - Command processing started");
             while (true)
             {
-                ICommandModel command = GetNextCommand();
-                SetIdAsUsedUp(command.Id);
+                ICommandModel command = GetNextCommand();                
                 ProcessCommand(command);
                 _cancelProcessingCTS.Token.ThrowIfCancellationRequested();
             }
@@ -137,6 +137,7 @@ namespace Shield.HardwareCom
                     else if (_completitionTimeoutChecker.IsExceeded(message))
                         HandleMessageTimeout(message);
                 }
+                //SetIdAsUsedUp(command.Id);
             }
         }
 
@@ -165,10 +166,10 @@ namespace Shield.HardwareCom
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
 
-            if(_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))
+            if (_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))
             {
                 _completedMessages.TryAdd(transferedMessage.Id, transferedMessage);
-                _processedMessages.Add(message);                
+                _processedMessages.Add(message);
             }
             Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
         }
@@ -255,7 +256,7 @@ namespace Shield.HardwareCom
 
         private void ProcessTimeouts()
         {
-            if (_incompleteMessages.Count > 250)
+            if (_incompleteMessages.Count > _parallelTreshold)
                 HandleTimeoutsParallel(GetlistOfUnconfirmedMessagesParallel());
             else
                 HandleTimeouts(GetlistOfUnconfirmedMessages());
@@ -308,7 +309,7 @@ namespace Shield.HardwareCom
         /// Gives a thread safe collection of completed and timeout messages for further processing
         /// </summary>
         /// <returns></returns>
-        public BlockingCollection<IMessageModel> GetProcessedMessages()
+        public BlockingCollection<IMessageModel> GetReceivedMessages()
         {
             Console.WriteLine($@"CommandIngester - Requested Processed Messages ({_processedMessages.Count} available)");
             return _processedMessages;
@@ -340,6 +341,7 @@ namespace Shield.HardwareCom
                     _awaitingQueue?.Dispose();
                     _processedMessages?.Dispose();
                     _errCommands?.Dispose();
+                    _messageProcessingLock?.Dispose();
                 }
                 // Free your own state (unmanaged objects).
                 // Set large fields to null.

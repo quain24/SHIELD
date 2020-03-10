@@ -1,4 +1,6 @@
 ﻿using Autofac;
+using Shield.CommonInterfaces;
+using Shield.Data.Models;
 using System.Linq;
 using System.Reflection;
 
@@ -21,6 +23,11 @@ namespace Shield.Data
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             builder.RegisterType<Settings>().As<ISettings>().SingleInstance();
+
+            builder.RegisterType<SerialPortSettingsContainer>()
+                   .AsSelf()
+                   .As<ISerialPortSettingsContainer>()
+                   .Named<ISetting>("SerialPortSettingsContainer");
 
             base.Load(builder);
         }

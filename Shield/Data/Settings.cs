@@ -95,7 +95,7 @@ namespace Shield.Data
                 }
                 if (ex is UnauthorizedAccessException)
                 {
-                    Debug.WriteLine("ERROR: AppSettings load - cannot access settings file - dont have permissions?");
+                    Debug.WriteLine("ERROR: AppSettings load - cannot access settings file - don't have permissions?");
                 }
                 if (ex is NullReferenceException || ex is SerializationException)
                 {
@@ -103,7 +103,7 @@ namespace Shield.Data
                 }
                 else
                 {
-                    Debug.WriteLine("ERROR: AppSettings load - Unknown error / unhandled NULL exception");
+                    Debug.WriteLine("ERROR: AppSettings load - Unknown error / not handled NULL exception");
                 }
 
                 return false;
@@ -115,12 +115,14 @@ namespace Shield.Data
         /// </summary>
         /// <param name="type">What should be added or replaced?</param>
         /// <param name="settings">with what config pack?</param>
-        public void AddOrReplace(SettingsType type, CommonInterfaces.ISetting settings)
+        public void AddOrReplace(SettingsType type, ISetting settings)
         {
             if (_settingsModel.Settings.ContainsKey(type))
                 _settingsModel.Settings.Remove(type);
             _settingsModel.Settings.Add(type, settings);
         }
+
+        // TODO Optimize many adapters of the same type saving and selecting
 
         /// <summary>
         /// Gets every settings pack from currently loaded ones

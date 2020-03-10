@@ -19,14 +19,14 @@ namespace Shield.ConsoleUI
         private IMessageModel _message;
         private ICommandTranslator _commandTranslator;
         private IIncomingDataPreparer _incomingDataPreparer;
-        private IMessanger _comMessanger;
+        private HardwareCom.IMessenger _comMessanger;
         private ISettings _settings;
 
 
         private ICommandIngester _ingester;
         private ICompleteness _completness;
 
-        public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, IMessanger messanger, ISettings settings,
+        public Application(ICommunicationDeviceFactory deviceFactory, ICommandModel command, IMessageModel message, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer, HardwareCom.IMessenger messanger, ISettings settings,
             ICommandIngester ingester,
             ICompleteness completness)
         {
@@ -74,8 +74,6 @@ namespace Shield.ConsoleUI
             _settings.LoadFromFile();
 
             Dictionary<string, IMessageModel> msgcol = new Dictionary<string, IMessageModel>();
-
-            _comMessanger.Setup(DeviceType.Serial);
 
             //wyswietl porty w kompie
             foreach (var availablePort in SerialPort.GetPortNames())

@@ -8,7 +8,6 @@ using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    // TODO figure out null object pattern in here and in classes that are using this
     public class TimeoutCheck : ITimeoutCheck
     {
         private readonly int _timeout;

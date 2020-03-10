@@ -10,7 +10,7 @@ namespace Shield.HardwareCom
         bool AddCommandToProcess(ICommandModel command);
         BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout();
         Dictionary<string, IMessageModel> GetIncompletedMessages();
-        BlockingCollection<IMessageModel> GetProcessedMessages();
+        BlockingCollection<IMessageModel> GetReceivedMessages();
         void StartProcessingCommands();
         Task StartTimeoutCheckAsync();
         void StopProcessingCommands();

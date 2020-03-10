@@ -11,7 +11,7 @@ namespace Shield.ConsoleUI
             var builder = new ContainerBuilder();
 
             builder.RegisterModule<ConsoleUIAfModule>();
-            builder.RegisterModule<HardwareComAfModule>();
+            //builder.RegisterModule<Shield. HardwareComAfModule>();
             builder.RegisterModule<DataAfModule>();
             builder.RegisterModule<ShieldAfModule>();
 

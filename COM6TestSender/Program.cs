@@ -445,7 +445,7 @@ namespace COM6TestSender
                 bool fl = false;
 
                 var msgFac = new Shield.HardwareCom.Factories.MessageFactory(new Func<IMessageModel>(() => new MessageModel()), new IdGenerator(4));
-                var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()), new IdGenerator(4));
+                var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
                 var sm = new Shield.Data.Models.SettingsModel();
                 var apset = new Shield.Data.Models.ApplicationSettingsModel();
