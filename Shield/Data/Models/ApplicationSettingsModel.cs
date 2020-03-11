@@ -54,7 +54,7 @@ namespace Shield.Data.Models
         /// </summary>
         public int DataSize
         {
-            get { return _dataSize; }
+            get => _dataSize;
             set => _dataSize = value >= 1 ? value : 1;
         }
 
@@ -63,7 +63,7 @@ namespace Shield.Data.Models
         /// </summary>
         public int IdSize
         {
-            get { return _idSize; }
+            get => _idSize;
             set => _idSize = value >= 4 ? value : 4;
         }
 
@@ -72,7 +72,7 @@ namespace Shield.Data.Models
         /// </summary>
         public int CommandTypeSize
         {
-            get { return _commandTypeSize; }
+            get => _commandTypeSize;
             set => _commandTypeSize = value >= 4 ? value : 4;
         }
 
@@ -81,8 +81,8 @@ namespace Shield.Data.Models
         /// </summary>
         public char Separator
         {
-            get { return _separator; }
-            set { _separator = value; }
+            get => _separator;
+            set => _separator = value;
         }
 
         /// <summary>
@@ -90,8 +90,8 @@ namespace Shield.Data.Models
         /// </summary>
         public char Filler
         {
-            get { return _filler; }
-            set { _filler = value; }
+            get => _filler;
+            set => _filler = value;
         }
 
         /// <summary>
@@ -99,8 +99,8 @@ namespace Shield.Data.Models
         /// </summary>
         public int ConfirmationTimeout
         {
-            get { return _confirmationTimeout; }
-            set { _confirmationTimeout = value; }
+            get => _confirmationTimeout;
+            set => _confirmationTimeout = value;
         }
 
         /// <summary>
@@ -108,8 +108,8 @@ namespace Shield.Data.Models
         /// </summary>
         public int CompletitionTimeout
         {
-            get { return _completitionTimeout; }
-            set { _completitionTimeout = value; }
+            get => _completitionTimeout;
+            set => _completitionTimeout = value;
         }
 
         public SettingsType Type { get => _type; }

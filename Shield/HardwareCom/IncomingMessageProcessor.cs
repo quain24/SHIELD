@@ -69,7 +69,7 @@ namespace Shield.HardwareCom
         /// Replace built in source collection with external collection, that for example will be updated by another object
         /// </summary>
         /// <param name="newSourceCollection">external collection</param>
-        public void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection)
+        public void SwitchSourceCollectionTo(BlockingCollection<IMessageModel> newSourceCollection)
         {
             using (_sourceCollectionSwithLock.Write())
                 _messagesToProcess = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));

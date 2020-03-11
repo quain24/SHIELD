@@ -97,7 +97,7 @@ namespace Shield.WpfGui.ViewModels
 
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-            _incomingMessageProcessor.SwitchSourceCollection(_commandIngester.GetReceivedMessages());
+            _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
 
             //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
             Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));

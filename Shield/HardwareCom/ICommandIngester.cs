@@ -15,5 +15,6 @@ namespace Shield.HardwareCom
         Task StartTimeoutCheckAsync();
         void StopProcessingCommands();
         void StopTimeoutCheck();
+        void SwitchSourceCollectionTo(BlockingCollection<ICommandModel> newSourceCollection);
     }
 }

@@ -19,7 +19,7 @@ namespace Shield.HardwareCom
         private readonly ICompleteness _completness;
         private readonly ITimeoutCheck _completitionTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
-        private readonly BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
+        private BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
         private readonly ConcurrentDictionary<string, IMessageModel> _incompleteMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _completedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();
@@ -32,6 +32,7 @@ namespace Shield.HardwareCom
         private bool _isProcessing = false;
         private bool _isTimeoutChecking = false;
         private bool _disposed = false;
+        private readonly ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
         private CancellationTokenSource _cancelProcessingCTS = new CancellationTokenSource();
         private CancellationTokenSource _cancelTimeoutCheckCTS = new CancellationTokenSource();
@@ -313,6 +314,12 @@ namespace Shield.HardwareCom
         {
             Console.WriteLine($@"CommandIngester - Requested Processed Messages ({_processedMessages.Count} available)");
             return _processedMessages;
+        }
+
+        public void SwitchSourceCollectionTo(BlockingCollection<ICommandModel> newSourceCollection)
+        {
+            using (_sourceCollectionSwithLock.Write())
+                _awaitingQueue = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
         }
 
         public Dictionary<string, IMessageModel> GetIncompletedMessages() => new Dictionary<string, IMessageModel>(_incompleteMessages);

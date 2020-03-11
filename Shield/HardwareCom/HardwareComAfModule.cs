@@ -118,7 +118,8 @@ namespace Shield.HardwareCom
             builder.RegisterType<MessengingPipeline>()
                    .WithParameter(new ResolvedParameter(
                        (pi, ctx) => pi.Name == "device",
-                       (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
+                       (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(
+                           ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
                    .AsSelf();
 
             // MESSAGE PROCESSING: ===================================================================================================================

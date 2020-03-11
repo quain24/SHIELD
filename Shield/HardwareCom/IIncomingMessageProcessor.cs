@@ -17,7 +17,7 @@ namespace Shield.HardwareCom
 
         void StopProcessingMessages();
 
-        void SwitchSourceCollection(BlockingCollection<IMessageModel> newSourceCollection);
+        void SwitchSourceCollectionTo(BlockingCollection<IMessageModel> newSourceCollection);
 
         bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage);
     }
