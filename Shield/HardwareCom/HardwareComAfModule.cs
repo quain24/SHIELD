@@ -90,6 +90,9 @@ namespace Shield.HardwareCom
 
             // Working classes
             builder.RegisterType<CommandTranslator>()
+                   .WithParameter(new ResolvedParameter(
+                       (pi, ctx) => pi.Name == "applicationSettings",
+                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>()))
                    .As<ICommandTranslator>();
 
             builder.Register(c =>
@@ -109,13 +112,13 @@ namespace Shield.HardwareCom
             builder.RegisterType<Messenger>()
                 .WithParameter(new ResolvedParameter(
                     (pi, ctx) => pi.Name == "device",
-                    (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().Device(DeviceType.Serial, 4)))
+                    (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
                    .As<IMessenger>();
 
-            builder.RegisterType<IncomingMessagePipeline>()
+            builder.RegisterType<MessengingPipeline>()
                    .WithParameter(new ResolvedParameter(
                        (pi, ctx) => pi.Name == "device",
-                       (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().Device(DeviceType.Serial, 4)))
+                       (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
                    .AsSelf();
 
             // MESSAGE PROCESSING: ===================================================================================================================

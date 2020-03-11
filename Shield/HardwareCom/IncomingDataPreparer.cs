@@ -88,7 +88,7 @@ namespace Shield.HardwareCom
 
             while (_internalBuffer.Length > 0)
             {
-                int patternIndex = FindPattern(_internalBuffer.ToString());
+                int patternIndex = FindPatternIndex(_internalBuffer.ToString());
 
                 //  Found pattern
                 if (patternIndex >= 0)
@@ -106,7 +106,7 @@ namespace Shield.HardwareCom
                         if (_internalBuffer.Length >= CommandLengthWithData + patternIndex)
                         {
                             //  check for preliminary correctness of raw data pack
-                            int isThereSeparatorInData = FindSeparator(_internalBuffer.ToString(CommandLength, DataPackLength));
+                            int isThereSeparatorInData = FindSeparatorIndex(_internalBuffer.ToString(CommandLength, DataPackLength));
 
                             // Data pack is busted, so throw it into return, recipient will handle this
                             if (isThereSeparatorInData >= 0)
@@ -149,8 +149,7 @@ namespace Shield.HardwareCom
                 //  No pattern, no data before, lets try to find a separator at least
                 else
                 {
-                    int separatorIndex = FindSeparator(_internalBuffer.ToString());
-                    int lastSeparator = _internalBuffer.ToString().LastIndexOf(Separator);
+                    int separatorIndex = FindSeparatorIndex(_internalBuffer.ToString());
                     //  separator found, but not as one and only char in buffer
                     if (separatorIndex >= 0 && _internalBuffer.Length > 1)
                     {
@@ -178,7 +177,7 @@ namespace Shield.HardwareCom
             return _outputCollection;
         }
 
-        private int FindPattern(string data)
+        private int FindPatternIndex(string data)
         {
             Match match = CommandPattern.Match(data);
             if (match.Success)
@@ -187,7 +186,7 @@ namespace Shield.HardwareCom
                 return -1;
         }
 
-        private int FindSeparator(string data, int startIndex = 0, int count = 0)
+        private int FindSeparatorIndex(string data, int startIndex = 0, int count = 0)
         {
             if (count == 0)
                 return data.IndexOf(Separator, startIndex);

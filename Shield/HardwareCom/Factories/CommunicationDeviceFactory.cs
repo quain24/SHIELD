@@ -24,6 +24,27 @@ namespace Shield.HardwareCom.Factories
             _deviceFactory = deviceFactory;
         }
 
+        public ICommunicationDevice CreateDevice(ICommunicationDeviceSettings settings)
+        {
+            ICommunicationDevice device;
+            switch (settings)
+            {
+                case var _ when settings is ISerialPortSettingsModel:
+                device = _deviceFactory[DeviceType.Serial];
+                break;
+
+                case var _ when settings is IMoqPortSettingsModel:
+                device = _deviceFactory[DeviceType.Moq];
+                break;
+
+                default:
+                device = null;
+                break;
+            }
+            device?.Setup(settings);
+            return device;
+        }
+
         public ICommunicationDevice Device(DeviceType type, int portNumber = 0)
         {
             switch (type)

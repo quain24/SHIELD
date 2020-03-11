@@ -29,7 +29,7 @@ namespace Shield.WpfGui.ViewModels
         private IConfirmationFactory _confirmationFactory;
         private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
-        private readonly IncomingMessagePipeline _incomingMessagePipeline;
+        private readonly MessengingPipeline _incomingMessagePipeline;
         private readonly ISerialPortSettingsContainer _serialPortSettingsContainer;
         private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private string _selectedCommand;
@@ -66,7 +66,7 @@ namespace Shield.WpfGui.ViewModels
                               IConfirmationFactory confirmationFactory,
                               IConfirmationTimeoutChecker confirmationTimeoutChecker,
                               IIdGenerator idGenerator,
-                              IncomingMessagePipeline incomingMessagePipeline,
+                              MessengingPipeline incomingMessagePipeline,
                               ISerialPortSettingsContainer serialPortSettingsContainer,
                               ICommunicationDeviceFactory communicationDeviceFactory)
         {

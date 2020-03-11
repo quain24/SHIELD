@@ -16,13 +16,13 @@ namespace Shield.HardwareCom
         private readonly char _separator;
         private readonly char _filler;
 
-        private Func<ICommandModel> _commandModelFac;
-        private IApplicationSettingsModel _appSettingsModel;
+        private readonly Func<ICommandModel> _commandModelFac;
+        private readonly IApplicationSettingsModel _appSettingsModel;
 
-        public CommandTranslator(ISettings settings, Func<ICommandModel> commandModelFac)
+        public CommandTranslator(IApplicationSettingsModel applicationSettings, Func<ICommandModel> commandModelFac)
         {
             _commandModelFac = commandModelFac; // Autofac autofactory
-            _appSettingsModel = settings.ForTypeOf<IApplicationSettingsModel>();
+            _appSettingsModel = applicationSettings ?? throw new ArgumentNullException(nameof(applicationSettings));
             _separator = _appSettingsModel.Separator;
             _filler = _appSettingsModel.Filler;
         }

@@ -112,7 +112,7 @@
     <Compile Include="HardwareCom\IIncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\IncomingDataPreparer.cs" />
-    <Compile Include="HardwareCom\IncomingMessagePipeline.cs" />
+    <Compile Include="HardwareCom\MessengingPipeline.cs" />
     <Compile Include="HardwareCom\IncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
     <Compile Include="HardwareCom\MessageProcessing\DecodingAnalyzer.cs" />

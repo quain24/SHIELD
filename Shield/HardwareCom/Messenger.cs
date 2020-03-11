@@ -38,9 +38,9 @@ namespace Shield.HardwareCom
 
         public Messenger(ICommunicationDevice device, ICommandTranslator commandTranslator, IIncomingDataPreparer incomingDataPreparer)
         {
-            _device = device;
-            _commandTranslator = commandTranslator;
-            _incomingDataPreparer = incomingDataPreparer;
+            _device = device ?? throw new ArgumentNullException(nameof(device));
+            _commandTranslator = commandTranslator ?? throw new ArgumentNullException(nameof(commandTranslator));
+            _incomingDataPreparer = incomingDataPreparer ?? throw new ArgumentNullException(nameof(incomingDataPreparer));
         }
 
         public void Open()

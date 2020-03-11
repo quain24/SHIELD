@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class IncomingMessagePipeline
+    public class MessengingPipeline
     {
         private readonly ICommunicationDevice _device;
         private readonly IMessengerFactory _messengerFactory;
@@ -19,7 +19,7 @@ namespace Shield.HardwareCom
 
         private readonly IMessenger _messenger;
 
-        public IncomingMessagePipeline(ICommunicationDevice device,
+        public MessengingPipeline(ICommunicationDevice device,
                                        IMessengerFactory messangerFactory,
                                        ICommandIngester ingester,
                                        IIncomingMessageProcessor incomingMessageProcessor)
@@ -46,8 +46,8 @@ namespace Shield.HardwareCom
 
             Task.Run(() => _messenger.StartReceiveingAsync()).ConfigureAwait(false);
             Task.Run(() => _ingester.StartProcessingCommands()).ConfigureAwait(false);
-            Task.Run(() => _ingester.StartTimeoutCheckAsync()).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);            
+            Task.Run(() => _ingester.StartTimeoutCheckAsync()).ConfigureAwait(false);
         }
 
         public void Stop()
@@ -57,6 +57,11 @@ namespace Shield.HardwareCom
             _ingester.StopProcessingCommands();
             _messenger.StopReceiving();
             _messenger.Close();
+        }
+
+        public Task<bool> SendAsync(IMessageModel message)
+        {
+            return _messenger.SendAsync(message);
         }
 
         public BlockingCollection<IMessageModel> GetReceivedMessages()

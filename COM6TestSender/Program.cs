@@ -9,6 +9,7 @@ using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using Shield.Data;
 using Shield.Helpers;
+using Shield.Data.Models;
 
 namespace COM6TestSender
 {
@@ -468,7 +469,7 @@ namespace COM6TestSender
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
                 var sett = new Settings(sm);
-                var comtrans = new CommandTranslator(sett, new Func<ICommandModel>(() => new CommandModel()));
+                var comtrans = new CommandTranslator(sett.ForTypeOf<IApplicationSettingsModel>(), new Func<ICommandModel>(() => new CommandModel()));
 
 
 
