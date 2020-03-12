@@ -79,10 +79,8 @@ namespace Shield.HardwareCom
         {
             try
             {
-                if (!CanStartProcessing())
-                    return;
-
-                ProcessCommandsContinously();
+                if (CanStartProcessing())
+                    ProcessCommandsContinously();
             }
             catch (Exception e)
             {
@@ -104,8 +102,8 @@ namespace Shield.HardwareCom
             Debug.WriteLine("CommandIngester - Command processing started");
             while (true)
             {
-                ICommandModel command = GetNextCommand();                
-                ProcessCommand(command);
+                ICommandModel command = GetNextCommand();
+                Process(command);
                 _cancelProcessingCTS.Token.ThrowIfCancellationRequested();
             }
         }
@@ -114,35 +112,31 @@ namespace Shield.HardwareCom
             _awaitingQueue.Take(_cancelProcessingCTS.Token)
             ?? throw new NullReferenceException("GetNextCommand returned NULL - it really shouldn't");
 
-        private void SetIdAsUsedUp(string id)
-        {
-            if (!string.IsNullOrWhiteSpace(id))
-                _idGenerator.MarkAsUsedUp(id);
-        }
-
-        public void ProcessCommand(ICommandModel command)
+        /// <summary>
+        /// Process single command by trying to inject it into existing / new message and checking this message for completition / timeout.<br/>
+        /// Using this method does not guarantee first priority of processing if <see cref="StartProcessingCommands"/> is running.
+        /// </summary>
+        /// <param name="command">Command to be processed</param>
+        public void Process(ICommandModel command)
         {
             using (_messageProcessingLock.Write())
             {
                 if (IsMessageAlreadyComplete(command.Id))
-                {
                     HandleBadCommand(command);
-                }
                 else
                 {
-                    IMessageModel message = GetMessageToWorkWith(command);
+                    IMessageModel message = GetMessageToWorkWithBasedOn(command);
                     message.Add(command);
 
-                    if (_completness.IsComplete(message))
+                    if (IsComplete(message))
                         PushFromIncompleteToProcessed(message);
                     else if (_completitionTimeoutChecker.IsExceeded(message))
                         HandleMessageTimeout(message);
                 }
-                //SetIdAsUsedUp(command.Id);
             }
         }
 
-        private bool IsMessageAlreadyComplete(string id) => _completedMessages.ContainsKey(id);
+        private bool IsMessageAlreadyComplete(string messageId) => _completedMessages.ContainsKey(messageId);
 
         private void HandleBadCommand(ICommandModel command)
         {
@@ -150,15 +144,19 @@ namespace Shield.HardwareCom
             Debug.WriteLine("CommandIngester - ERROR - tried to add new command to completed / null message");
         }
 
-        private IMessageModel GetMessageToWorkWith(ICommandModel command) =>
-            _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage(command.Id));
+        private IMessageModel GetMessageToWorkWithBasedOn(ICommandModel command) =>
+            _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage);
 
+        private bool IsComplete(IMessageModel message) =>
+            _completness.IsComplete(message);
+        
         private IMessageModel CreateNewIncomingMessage(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Id cannot be empty", nameof(id));
 
             IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id);
+            _idGenerator.MarkAsUsedUp(id);
             Debug.WriteLine($@"CommandIngester - new {id} message created");
             return message;
         }
@@ -316,12 +314,20 @@ namespace Shield.HardwareCom
             return _processedMessages;
         }
 
+        /// <summary>
+        /// Allows switch of source collection for easier data pipelining or producer - consumer design.
+        /// </summary>
+        /// <param name="newSourceCollection">New source collection</param>
         public void SwitchSourceCollectionTo(BlockingCollection<ICommandModel> newSourceCollection)
         {
             using (_sourceCollectionSwithLock.Write())
                 _awaitingQueue = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
         }
 
+        /// <summary>
+        /// Returns incomplete messages till method execution from internal collection.
+        /// </summary>
+        /// <returns>New <see cref="Dictionary{string, IMessageModel}"/> containing incomplete messages</returns>
         public Dictionary<string, IMessageModel> GetIncompletedMessages() => new Dictionary<string, IMessageModel>(_incompleteMessages);
 
         /// <summary>
