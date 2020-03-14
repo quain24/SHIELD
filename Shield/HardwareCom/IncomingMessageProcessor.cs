@@ -28,26 +28,8 @@ namespace Shield.HardwareCom
         private object _processingLock = new object();
         private readonly ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
-        public IncomingMessageProcessor(IMessageAnalyzer[] analyzers) => 
-            _analyzers = analyzers;
-
-        public bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage)
-        {
-            processedMessage = messageToProcess ?? throw new ArgumentNullException(nameof(messageToProcess));
-
-            RunAnalyzersOn(processedMessage);
-
-            Debug.WriteLine($@"IncomingMessageProcessor - TryProcess message running with id:{messageToProcess.Id}");
-
-            return messageToProcess.Errors == Errors.None;
-        }
-
-        private void RunAnalyzersOn(IMessageModel message)
-        {
-            if (!_analyzers.IsNullOrEmpty())
-                for (int i = 0; i < _analyzers.Length; i++)
-                    _analyzers[i]?.CheckAndSetFlagsIn(message);
-        }
+        public IncomingMessageProcessor(IMessageAnalyzer[] analyzers) =>
+            _analyzers = analyzers ?? throw new ArgumentNullException(nameof(analyzers));
 
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed
@@ -83,11 +65,9 @@ namespace Shield.HardwareCom
         {
             try
             {
-                if (!CanStartProcessingMessages())
-                    return;
-
-                while (true)
-                    TryProcessNextMessage();
+                if (CanStartProcessingMessages())
+                    while (true)
+                        TryProcessNextMessage();
             }
             catch (Exception e)
             {
@@ -104,11 +84,9 @@ namespace Shield.HardwareCom
         {
             try
             {
-                if (!CanStartProcessingMessages())
-                    return;
-
-                while (_messagesToProcess.Count > 0)
-                    TryProcessNextMessage();
+                if (CanStartProcessingMessages())
+                    while (_messagesToProcess.Count > 0)
+                        TryProcessNextMessage();
             }
             catch (Exception e)
             {
@@ -146,6 +124,24 @@ namespace Shield.HardwareCom
                 Debug.WriteLine($@"MessageProcessor - Took message ({message.Id}) and added it to output queue.");
                 _processingCTS.Token.ThrowIfCancellationRequested();
             }
+        }
+
+        public bool TryProcess(IMessageModel messageToProcess, out IMessageModel processedMessage)
+        {
+            processedMessage = messageToProcess ?? throw new ArgumentNullException(nameof(messageToProcess));
+
+            RunAnalyzersOn(processedMessage);
+
+            Debug.WriteLine($@"IncomingMessageProcessor - TryProcess message running with id:{messageToProcess.Id}");
+
+            return messageToProcess.Errors == Errors.None;
+        }
+
+        private void RunAnalyzersOn(IMessageModel message)
+        {
+            if (!_analyzers.IsNullOrEmpty())
+                for (int i = 0; i < _analyzers.Length; i++)
+                    _analyzers[i]?.CheckAndSetFlagsIn(message);
         }
 
         private bool IsMessageProcessingCorrectlyCancelled(Exception e)

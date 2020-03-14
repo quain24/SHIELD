@@ -33,6 +33,7 @@ namespace Shield.HardwareCom
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Except<MessageFactory>()
                    .Except<TimeoutCheckFactory>()
+                   //.Except<MessengingPipelineFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
@@ -86,6 +87,15 @@ namespace Shield.HardwareCom
             builder.Register(c => new TimeoutCheck(c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
                    .Named<ITimeoutCheck>("confirmation" + nameof(TimeoutCheck));
 
+            // MessagePipelineFactory
+
+            builder.Register(c => 
+                        new MessengingPipelineFactory(
+                            c.Resolve<IMessengerFactory>(),
+                            c.Resolve<Func<ICommandIngester>>(),
+                            c.Resolve<Func<IIncomingMessageProcessor>>()))
+                    .AsImplementedInterfaces();
+
             // End of factories registration ========================================================================================================
 
             // Working classes
@@ -114,13 +124,6 @@ namespace Shield.HardwareCom
                     (pi, ctx) => pi.Name == "device",
                     (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
                    .As<IMessenger>();
-
-            builder.RegisterType<MessengingPipeline>()
-                   .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.Name == "device",
-                       (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(
-                           ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
-                   .AsSelf();
 
             // MESSAGE PROCESSING: ===================================================================================================================
 

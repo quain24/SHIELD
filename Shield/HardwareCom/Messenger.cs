@@ -49,10 +49,7 @@ namespace Shield.HardwareCom
                 _device.Open();
         }
 
-        private bool CanOpenDevice()
-        {
-            return IsOpen == false;
-        }
+        private bool CanOpenDevice() => IsOpen == false;
 
         public void Close()
         {

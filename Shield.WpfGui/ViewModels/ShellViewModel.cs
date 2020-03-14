@@ -29,7 +29,8 @@ namespace Shield.WpfGui.ViewModels
         private IConfirmationFactory _confirmationFactory;
         private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
-        private readonly MessengingPipeline _incomingMessagePipeline;
+        private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
+        private readonly MessengingPipeline _pipeline;
         private readonly ISerialPortSettingsContainer _serialPortSettingsContainer;
         private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private string _selectedCommand;
@@ -57,7 +58,7 @@ namespace Shield.WpfGui.ViewModels
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(HardwareCom.IMessenger messanger,
+        public ShellViewModel(IMessenger messanger,
                               ISettings settings,
                               ICommandModelFactory commandFactory,
                               Func<IMessageModel> messageFactory,
@@ -66,7 +67,7 @@ namespace Shield.WpfGui.ViewModels
                               IConfirmationFactory confirmationFactory,
                               IConfirmationTimeoutChecker confirmationTimeoutChecker,
                               IIdGenerator idGenerator,
-                              MessengingPipeline incomingMessagePipeline,
+                              IMessengingPipelineFactory incomingMessagePipelineFactory,
                               ISerialPortSettingsContainer serialPortSettingsContainer,
                               ICommunicationDeviceFactory communicationDeviceFactory)
         {
@@ -78,7 +79,7 @@ namespace Shield.WpfGui.ViewModels
             _confirmationFactory = confirmationFactory;
             _confirmationTimeoutChecker = confirmationTimeoutChecker;
             _idGenerator = idGenerator;
-            _incomingMessagePipeline = incomingMessagePipeline;
+            _incomingMessagePipelineFactory = incomingMessagePipelineFactory;
             _serialPortSettingsContainer = serialPortSettingsContainer;
             _communicationDeviceFactory = communicationDeviceFactory;
             _messageFactory = messageFactory;
@@ -99,6 +100,8 @@ namespace Shield.WpfGui.ViewModels
 
             _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
 
+            _pipeline = _incomingMessagePipelineFactory.GetPipelineFor(_communicationDeviceFactory.CreateDevice(_settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4)));
+
             //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
             Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
 
@@ -107,7 +110,7 @@ namespace Shield.WpfGui.ViewModels
             {
                 while (true)
                 {
-                    IMessageModel message = _incomingMessagePipeline.GetReceivedMessages().Take();//_incomingMessageProcessor.GetProcessedMessages().Take();
+                    IMessageModel message = _pipeline.GetReceivedMessages().Take();//_incomingMessageProcessor.GetProcessedMessages().Take();
                     AddIncomingMessageToDisplay(this, message);
                     //if (message.Type != MessageType.Confirmation)
                     //{
@@ -242,7 +245,7 @@ namespace Shield.WpfGui.ViewModels
             try
             {
                 //_messanger.Open();
-                _incomingMessagePipeline.Start();
+                _pipeline.Start();
                 NotifyOfPropertyChange(() => CanOpenDevice);
                 NotifyOfPropertyChange(() => CanCloseDevice);
                 NotifyOfPropertyChange(() => CanStartReceiving);
@@ -265,7 +268,7 @@ namespace Shield.WpfGui.ViewModels
         public void CloseDevice()
         {
             //_messanger.Close();
-            _incomingMessagePipeline.Stop();
+            _pipeline.Stop();
             NotifyOfPropertyChange(() => CanCloseDevice);
             NotifyOfPropertyChange(() => CanOpenDevice);
             NotifyOfPropertyChange(() => CanStartReceiving);

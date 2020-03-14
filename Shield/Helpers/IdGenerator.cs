@@ -10,16 +10,18 @@ namespace Shield.Helpers
     {
         private const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private readonly Random _randomizer = new Random(Guid.NewGuid().GetHashCode());
-        private HashSet<string> _usedIDs = new HashSet<string>();
+        private HashSet<string> _usedIDs = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ulong _bufferSize = 0;
         private readonly int _idLength = 0;
+        private readonly bool _autoResetIfAllIdsUsedUp;
 
-        public IdGenerator(int idLength)
+        public IdGenerator(int idLength, bool autoResetIfAllIdsUsedUp = true)
         {
             _idLength = idLength > 0
                 ? idLength
                 : throw new ArgumentOutOfRangeException(nameof(idLength), "Cannot create IdGenerator with id length less than 0");
             _bufferSize = CalculateBufferSize(_idLength);
+            _autoResetIfAllIdsUsedUp = autoResetIfAllIdsUsedUp;
         }
 
         /// <summary>
@@ -30,29 +32,44 @@ namespace Shield.Helpers
         public string GetNewID()
         {
             if (AreAllIdsUsedUp())
-                FlushUsedUpIdsBuffer();
-            // TODO think about adding some duplicate checks.
-            string result;
+                HandleIdBufferFull();
+
+            string id;
+
             do
-                result = new string(Enumerable
-                    .Range(1, _idLength)
-                    .Select(A => CHARS[_randomizer.Next(CHARS.Length)]).ToArray())
-                    .ToUpper(CultureInfo.InvariantCulture);
+                id = GenerateId();
+            while (IdAlreadyUsed(id));
 
-            while (_usedIDs.Contains(result));
-
-            MarkAsUsedUp(result);
-            return result;
+            MarkAsUsedUp(id);
+            return id;
         }
 
         private bool AreAllIdsUsedUp() =>
             (ulong)_usedIDs.Count >= _bufferSize;
 
+        private void HandleIdBufferFull()
+        {
+            if (_autoResetIfAllIdsUsedUp)
+                FlushUsedUpIdsBuffer();
+            else
+                throw new InvalidOperationException("Tried to get new ID but all are used up and auto reset is disabled.");
+        }
+
         /// <summary>
         /// Clears used up ID's buffer, so they can be reused
         /// </summary>
         public void FlushUsedUpIdsBuffer() =>
-            _usedIDs = new HashSet<string>();
+            _usedIDs = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+        private string GenerateId()
+        {
+            return new string(Enumerable
+                .Range(1, _idLength)
+                .Select(A => CHARS[_randomizer.Next(CHARS.Length)]).ToArray())
+                .ToUpper(CultureInfo.InvariantCulture);
+        }
+
+        private bool IdAlreadyUsed(string id) => _usedIDs.Contains(id);
 
         /// <summary>
         /// Add ID that was used up by, for example, incoming master message or similar,
@@ -74,12 +91,12 @@ namespace Shield.Helpers
         }
 
         public void MarkAsUsedUp(string id)
-        {            
+        {
             if (IsUsedOrEmpty(id)) throw new ArgumentOutOfRangeException(nameof(id), "Cannot add empty or used up value to used up Id's collection");
             _usedIDs.Add(id.ToUpperInvariant());
         }
 
-        private bool IsUsedOrEmpty(string id) => 
+        private bool IsUsedOrEmpty(string id) =>
             String.IsNullOrWhiteSpace(id) || _usedIDs.Contains(id);
 
         /// <summary>

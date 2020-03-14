@@ -12,24 +12,17 @@ namespace Shield.HardwareCom
 {
     public class MessengingPipeline
     {
-        private readonly ICommunicationDevice _device;
-        private readonly IMessengerFactory _messengerFactory;
+        private readonly IMessenger _messenger;
         private readonly ICommandIngester _commandIngester;
         private readonly IIncomingMessageProcessor _incomingMessageProcessor;
 
-        private readonly IMessenger _messenger;
-
-        public MessengingPipeline(ICommunicationDevice device,
-                                  IMessengerFactory messangerFactory,
+        public MessengingPipeline(IMessenger messanger,
                                   ICommandIngester commandIngester,
                                   IIncomingMessageProcessor incomingMessageProcessor)
         {
-            _device = device ?? throw new ArgumentNullException(nameof(device));
-            _messengerFactory = messangerFactory ?? throw new ArgumentNullException(nameof(messangerFactory));
+            _messenger = messanger ?? throw new ArgumentNullException(nameof(messanger));
             _commandIngester = commandIngester ?? throw new ArgumentNullException(nameof(commandIngester));
             _incomingMessageProcessor = incomingMessageProcessor ?? throw new ArgumentNullException(nameof(incomingMessageProcessor));
-
-            _messenger = _messengerFactory.CreateMessangerUsing(device);
 
             _commandIngester.SwitchSourceCollectionTo(_messenger.GetReceivedCommands());
             _incomingMessageProcessor.SwitchSourceCollectionTo(commandIngester.GetReceivedMessages());
@@ -54,15 +47,9 @@ namespace Shield.HardwareCom
             _messenger.Close();
         }
 
-        public Task<bool> SendAsync(IMessageModel message)
-        {
-            return _messenger.SendAsync(message);
-        }
+        public Task<bool> SendAsync(IMessageModel message) => _messenger.SendAsync(message);
 
-        public BlockingCollection<IMessageModel> GetReceivedMessages()
-        {
-            return _incomingMessageProcessor.GetProcessedMessages();
-        }
+        public BlockingCollection<IMessageModel> GetReceivedMessages() => _incomingMessageProcessor.GetProcessedMessages();
 
 
     }

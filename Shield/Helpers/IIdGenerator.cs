@@ -11,6 +11,7 @@ namespace Shield.Helpers
         IEnumerable<string> GetUsedUpIds();
 
         void MarkAsUsedUp(string id);
+
         void MarkAsUsedUp(string[] ids);
     }
 }
