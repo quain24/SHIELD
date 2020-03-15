@@ -12,6 +12,8 @@ namespace Shield.Data.Models
         private SettingsType _type;
 
         public SettingsType Type { get => _type; }
+        public int CompletitionTimeout { get; set; }
+        public int ConfirmationTimeout { get; set; }
 
         public MoqPortSettingsModel()
         {
@@ -22,6 +24,8 @@ namespace Shield.Data.Models
         {
             PortNumber = 2;
             _type = SettingsType.MoqDevice;
+            CompletitionTimeout = 3000;
+            ConfirmationTimeout = 4000;
         }
 
         [OnDeserializing]

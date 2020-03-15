@@ -451,8 +451,6 @@ namespace COM6TestSender
                 var sm = new Shield.Data.Models.SettingsModel();
                 var apset = new Shield.Data.Models.ApplicationSettingsModel();
                     apset.CommandTypeSize = 4;
-                    apset.CompletitionTimeout = 5000;
-                    apset.ConfirmationTimeout = 5000;
                     apset.DataSize = 30;
                     apset.Filler = '.';
                     apset.IdSize = 4;

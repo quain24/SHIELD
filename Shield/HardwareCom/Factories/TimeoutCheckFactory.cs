@@ -3,7 +3,7 @@ using System;
 
 namespace Shield.HardwareCom.Factories
 {
-    public class TimeoutCheckFactory
+    public class TimeoutCheckFactory : ITimeoutCheckFactory
     {
         private readonly Func<int, ITimeoutCheck> _timeoutCheckAutofactory;
         private readonly ITimeoutCheck _nullTimeoutCheck;

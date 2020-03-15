@@ -34,14 +34,6 @@ namespace Shield.Data.Models
         [OptionalField]
         private char _filler;
 
-        [DataMember]
-        [OptionalField]
-        private int _completitionTimeout;
-
-        [DataMember]
-        [OptionalField]
-        private int _confirmationTimeout;
-
         private SettingsType _type;
 
         public ApplicationSettingsModel()
@@ -94,24 +86,6 @@ namespace Shield.Data.Models
             set => _filler = value;
         }
 
-        /// <summary>
-        /// How long a message should be held before it is marked as error because of being incomplete (in milliseconds).
-        /// </summary>
-        public int ConfirmationTimeout
-        {
-            get => _confirmationTimeout;
-            set => _confirmationTimeout = value;
-        }
-
-        /// <summary>
-        /// how long should application wait for message confirmation (in milliseconds)
-        /// </summary>
-        public int CompletitionTimeout
-        {
-            get => _completitionTimeout;
-            set => _completitionTimeout = value;
-        }
-
         public SettingsType Type { get => _type; }
 
         public void SetDefaults()
@@ -121,8 +95,6 @@ namespace Shield.Data.Models
             _commandTypeSize = 4;
             _separator = '*';
             _filler = '.';
-            _confirmationTimeout = 0;
-            _completitionTimeout = 1000;
             _type = SettingsType.Application;
         }
 

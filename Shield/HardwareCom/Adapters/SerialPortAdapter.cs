@@ -35,6 +35,9 @@ namespace Shield.HardwareCom.Adapters
 
         public bool IsOpen => _port != null && _port.IsOpen;
 
+        public int ConfirmationTimeout { get; set; }
+        public int CompletitionTimeout { get; set; }
+
         public SerialPortAdapter()
         {
         }
@@ -82,6 +85,8 @@ namespace Shield.HardwareCom.Adapters
             _port.DtrEnable = false;
             _port.RtsEnable = false;
             _port.DiscardNull = true;
+            CompletitionTimeout = settings.CompletitionTimeout;
+            ConfirmationTimeout = settings.ConfirmationTimeout;
         }
 
         public void Open()

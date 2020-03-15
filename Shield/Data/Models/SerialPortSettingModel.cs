@@ -39,15 +39,24 @@ namespace Shield.Data.Models
         [DataMember]
         public int Encoding { get; set; }
 
+        /// <summary>
+        /// how long should application wait for message confirmation (in milliseconds)
+        /// </summary>
+        [DataMember]
+        public int CompletitionTimeout { get; set; }
+
+        /// <summary>
+        /// How long a message should be held before it is marked as error because of being incomplete (in milliseconds).
+        /// </summary>
+        [DataMember]
+        public int ConfirmationTimeout { get; set; }
+
         private SettingsType _type;
 
         public SettingsType Type { get => _type; }
 
         [OnDeserializing]
-        private void OnDeserializing(StreamingContext context)
-        {
-            SetDefaults();
-        }
+        private void OnDeserializing(StreamingContext context) => SetDefaults();
 
         public void SetDefaults()
         {
@@ -61,6 +70,9 @@ namespace Shield.Data.Models
             ReadTimeout = -1;
             WriteTimeout = -1;
             Encoding = System.Text.Encoding.ASCII.CodePage;
+            CompletitionTimeout = 0;
+            ConfirmationTimeout = 0;
+
             _type = SettingsType.SerialDevice;
         }
     }

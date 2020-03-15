@@ -81,19 +81,33 @@ namespace Shield.HardwareCom
                            (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("Null" + nameof(TimeoutCheck)))
                    });
 
-            builder.Register(c => new TimeoutCheck(c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().CompletitionTimeout))
-                   .Named<ITimeoutCheck>("completition" + nameof(TimeoutCheck));
 
-            builder.Register(c => new TimeoutCheck(c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
-                   .Named<ITimeoutCheck>("confirmation" + nameof(TimeoutCheck));
 
-            // MessagePipelineFactory
+            builder.Register(c =>
+                        new TimeoutCheckFactory(
+                            c.Resolve<Func<int, ITimeoutCheck>>(),
+                            c.ResolveNamed<ITimeoutCheck>("Null" + nameof(TimeoutCheck))))
+                   .As<ITimeoutCheckFactory>();
+
+            // CommandIngester Factory
+            
+            builder.Register(c =>
+                        new CommandIngesterFactory(
+                            c.Resolve<Func<IMessageFactory>>(),
+                            c.Resolve<Func<ICompleteness>>(),
+                            c.Resolve<Func<IIdGenerator>>(),
+                            c.Resolve<ITimeoutCheckFactory>()))
+                   .As<ICommandIngesterFactory>();
+
+            // MessagePipeline Factory
 
             builder.Register(c => 
                         new MessengingPipelineFactory(
                             c.Resolve<IMessengerFactory>(),
-                            c.Resolve<Func<ICommandIngester>>(),
-                            c.Resolve<Func<IIncomingMessageProcessor>>()))
+                            c.Resolve<ICommandIngesterFactory>(),
+                            c.Resolve<Func<IIncomingMessageProcessor>>(),
+                            c.Resolve<IConfirmationTimeoutCheckerFactory>(),
+                            c.Resolve<Func<IConfirmationFactory>>()))
                     .AsImplementedInterfaces();
 
             // End of factories registration ========================================================================================================
@@ -155,24 +169,24 @@ namespace Shield.HardwareCom
             builder.RegisterType<Completeness>()
                    .As<ICompleteness>();
 
-            builder.RegisterType<ConfirmationTimeoutChecker>()
-                   .WithParameter(new ResolvedParameter(
-                            (pi, ctx) => pi.Name == "timeoutCheck",
-                            (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>().GetTimeoutCheckWithTimeoutSetTo(ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout)))
-                   .As<IConfirmationTimeoutChecker>();
+            //builder.RegisterType<ConfirmationTimeoutChecker>()
+            //       .WithParameter(new ResolvedParameter(
+            //                (pi, ctx) => pi.Name == "timeoutCheck",
+            //                (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>().GetTimeoutCheckWithTimeoutSetTo(ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout)))
+            //       .As<IConfirmationTimeoutChecker>();
 
             #endregion Classes for checking correctness
             
             #region Message object processing
 
-            builder.RegisterType<CommandIngester>()
-                   .As<ICommandIngester>()
-                   .WithParameter(
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
-                           (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>().GetTimeoutCheckWithTimeoutSetTo(
-                                            ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
-                   );
+            //builder.RegisterType<CommandIngester>()
+            //       .As<ICommandIngester>()
+            //       .WithParameter(
+            //           new ResolvedParameter(
+            //               (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
+            //               (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>().GetTimeoutCheckWithTimeoutSetTo(
+            //                                ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
+            //       );
 
             #endregion Message object processing
 

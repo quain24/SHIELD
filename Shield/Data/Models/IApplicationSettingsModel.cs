@@ -9,7 +9,5 @@ namespace Shield.Data.Models
         int CommandTypeSize { get; set; }
         char Separator { get; set; }
         char Filler { get; set; }
-        int ConfirmationTimeout { get; set; }
-        int CompletitionTimeout { get; set; }
     }
 }

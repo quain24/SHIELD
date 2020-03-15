@@ -91,7 +91,12 @@
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="HardwareCom\Factories\CommandIngesterFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ConfirmationTimeoutCheckerFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ICommandIngesterFactory.cs" />
+    <Compile Include="HardwareCom\Factories\IConfirmationTimeoutCheckerFactory.cs" />
     <Compile Include="HardwareCom\Factories\IMessengingPipelineFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ITimeoutCheckFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengingPipelineFactory.cs" />
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />

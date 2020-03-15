@@ -11,8 +11,8 @@ namespace Shield.HardwareCom.Factories
 
         public ConfirmationFactory(ICommandModelFactory commandFactory, IMessageFactory messageFactory)
         {
-            _commandFactory = commandFactory;
-            _messageFactory = messageFactory;
+            _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+            _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         }
 
         public IMessageModel GenetateConfirmationOf(IMessageModel message)
@@ -33,7 +33,6 @@ namespace Shield.HardwareCom.Factories
                 {
                     case CommandType.Error:
                     responseCommand.CommandType = CommandType.ReceivedAsError;
-
                     break;
 
                     case CommandType.Unknown:

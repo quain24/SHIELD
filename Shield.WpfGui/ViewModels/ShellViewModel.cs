@@ -1,11 +1,9 @@
 ﻿using Caliburn.Micro;
-using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using Shield.WpfGui.Validators;
@@ -13,7 +11,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,18 +18,13 @@ namespace Shield.WpfGui.ViewModels
 {
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
-        private HardwareCom.IMessenger _messanger;
         private ISettings _settings;
-        private ICommandModelFactory _commandFactory;
-        private ICommandIngester _commandIngester;
-        private IIncomingMessageProcessor _incomingMessageProcessor;
-        private IConfirmationFactory _confirmationFactory;
-        private IConfirmationTimeoutChecker _confirmationTimeoutChecker;
+        private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
+        private readonly ICommandModelFactory _commandFactory;
+        private readonly IMessageFactory _messageFactory1;
         private readonly IIdGenerator _idGenerator;
         private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
         private readonly MessengingPipeline _pipeline;
-        private readonly ISerialPortSettingsContainer _serialPortSettingsContainer;
-        private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private string _selectedCommand;
         private string _dataInput;
 
@@ -58,52 +50,31 @@ namespace Shield.WpfGui.ViewModels
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessenger messanger,
-                              ISettings settings,
-                              ICommandModelFactory commandFactory,
-                              Func<IMessageModel> messageFactory,
-                              ICommandIngester commandIngester,
-                              IIncomingMessageProcessor incomingMessageProcessor,
-                              IConfirmationFactory confirmationFactory,
-                              IConfirmationTimeoutChecker confirmationTimeoutChecker,
-                              IIdGenerator idGenerator,
-                              IMessengingPipelineFactory incomingMessagePipelineFactory,
-                              ISerialPortSettingsContainer serialPortSettingsContainer,
-                              ICommunicationDeviceFactory communicationDeviceFactory)
+        public ShellViewModel(IMessengingPipelineFactory incomingMessagePipelineFactory, ISettings settings,
+                              ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory,
+                              IMessageFactory messageFactory,
+                              IIdGenerator idGenerator)
         {
-            _settings = settings;
-            _messanger = messanger;
-            _commandFactory = commandFactory;
-            _commandIngester = commandIngester;
-            _incomingMessageProcessor = incomingMessageProcessor;
-            _confirmationFactory = confirmationFactory;
-            _confirmationTimeoutChecker = confirmationTimeoutChecker;
-            _idGenerator = idGenerator;
-            _incomingMessagePipelineFactory = incomingMessagePipelineFactory;
-            _serialPortSettingsContainer = serialPortSettingsContainer;
-            _communicationDeviceFactory = communicationDeviceFactory;
-            _messageFactory = messageFactory;
-
+            _incomingMessagePipelineFactory = incomingMessagePipelineFactory ?? throw new ArgumentNullException(nameof(incomingMessagePipelineFactory));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
+            _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+            _messageFactory1 = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
+            _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             _settings.LoadFromFile();
-            _settings.SaveToFile();
+
+            //_settings.SaveToFile();
 
             //serial.Setup(port_set);
-            
+
             //_serialPortSettingsContainer.Add(portset);
             //_settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(5);
 
-
             //_settings.AddOrReplace(SettingsType.SerialDeviceContainer, _serialPortSettingsContainer);
             //_settings.SaveToFile();
-
-            _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
-
-            _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
-
             _pipeline = _incomingMessagePipelineFactory.GetPipelineFor(_communicationDeviceFactory.CreateDevice(_settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4)));
 
-            //if(_confirmationTimeoutChecker.Timeout != _confirmationTimeoutChecker.NoTimeoutValue)
-            Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+            _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
             // Updating table in gui
             Task.Run(async () =>
@@ -112,27 +83,8 @@ namespace Shield.WpfGui.ViewModels
                 {
                     IMessageModel message = _pipeline.GetReceivedMessages().Take();//_incomingMessageProcessor.GetProcessedMessages().Take();
                     AddIncomingMessageToDisplay(this, message);
-                    //if (message.Type != MessageType.Confirmation)
-                    //{
-                    //    IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
-                    //    await _messanger.SendAsync(confirmation).ConfigureAwait(false);
-                    //    SentMessages.Add(confirmation);
-                    //}
-                    //else
-                    //{
-                    //    _confirmationTimeoutChecker.AddConfirmation(message);
-                    //}
                 }
             });
-
-            //_messanger.CommandReceived += AddCommandToProcessing;
-        }
-
-        // new tryouts
-
-        public void AddCommandToProcessing(object sender, ICommandModel e)
-        {
-            _commandIngester.AddCommandToProcess(e);
         }
 
         public int DataPackLength()
@@ -220,7 +172,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_messanger.IsOpen) return false;
+                if (_pipeline.IsOpen) return false;
                 return true;
             }
         }
@@ -229,8 +181,8 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_messanger is null) return false;
-                if (_messanger.IsOpen) return true;
+                if (_pipeline is null) return false;
+                if (_pipeline.IsOpen) return true;
                 if (_openingError)
                 {
                     _openingError = false;
@@ -281,23 +233,23 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_receivingButtonActivated == false && _messanger.IsOpen) return true;
+                if (_receivingButtonActivated == false && _pipeline.IsOpen) return true;
                 return false;
             }
         }
 
-        public bool ButtonAIsChecked => _messanger.IsOpen ? true : _receivingButtonActivated = false;
+        public bool ButtonAIsChecked => _pipeline.IsOpen ? true : _receivingButtonActivated = false;
 
         public void StartReceiving()
         {
-            Task.Run(() => _messanger.StartReceiveingAsync());
-            //Task.Run(() => _messanger.StartDecoding());
+            //Task.Run(() => _messanger.StartReceiveingAsync());
+            ////Task.Run(() => _messanger.StartDecoding());
 
-            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
-            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
-            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
-            Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
-            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
+            //Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+            //Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+            //Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
+            //Task.Run(() => _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false)).ConfigureAwait(false);
+            //Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
 
             _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
@@ -308,18 +260,14 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_receivingButtonActivated == true && _messanger.IsOpen) return true;
+                if (_receivingButtonActivated == true && _pipeline.IsOpen) return true;
                 return false;
             }
         }
 
         public void StopReceiving()
         {
-            _incomingMessageProcessor.StopProcessingMessages();
-            _commandIngester.StopTimeoutCheck();
-            _commandIngester.StopProcessingCommands();
-
-            _messanger.StopReceiving();
+            _pipeline.Stop();
             _receivingButtonActivated = false;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
@@ -510,14 +458,13 @@ namespace Shield.WpfGui.ViewModels
             _sending = true;
             NotifyOfPropertyChange(() => CanSendMessage);
 
-            bool sent = await _messanger.SendAsync(message).ConfigureAwait(false);
+            bool sent = await _pipeline.SendAsync(message).ConfigureAwait(false);
 
             // hack
             _sending = false;
             if (sent)
             {
                 SentMessages.Add(message);
-                _confirmationTimeoutChecker.AddToCheckingQueue(message);
 
                 NewMessageCommands.Clear();
                 NotifyOfPropertyChange(() => NewMessageCommands);
@@ -530,7 +477,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (NewMessageCommands.Count < 1 || _messanger.IsOpen == false || _sending == true)
+                if (NewMessageCommands.Count < 1 || _pipeline.IsOpen == false || _sending == true)
                     return false;
 
                 return true;
