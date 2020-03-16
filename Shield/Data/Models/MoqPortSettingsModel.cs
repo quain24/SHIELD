@@ -14,11 +14,12 @@ namespace Shield.Data.Models
         public SettingsType Type { get => _type; }
         public int CompletitionTimeout { get; set; }
         public int ConfirmationTimeout { get; set; }
+        public string Name { get; private set; }
 
-        public MoqPortSettingsModel()
-        {
-            SetDefaults();
-        }
+        public MoqPortSettingsModel() => SetDefaults();
+
+        [OnDeserializing]
+        private void OnDeserializing(StreamingContext context) => SetDefaults();
 
         public void SetDefaults()
         {
@@ -28,10 +29,7 @@ namespace Shield.Data.Models
             ConfirmationTimeout = 4000;
         }
 
-        [OnDeserializing]
-        private void OnDeserializing(StreamingContext context)
-        {
-            SetDefaults();
-        }
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context) => Name = $"MOQ{PortNumber}";
     }
 }

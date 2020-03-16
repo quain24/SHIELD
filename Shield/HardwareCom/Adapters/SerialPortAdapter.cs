@@ -18,25 +18,23 @@ namespace Shield.HardwareCom.Adapters
         /// Works on commandMNodel's, sends and receives them with translation from and into them
         /// </summary>
 
-        #region Internal variables and events
-
         private const int ByteBufferSize = 4092;
+        private byte[] _buffer = new byte[ByteBufferSize];
 
         private readonly SerialPort _port = new SerialPort();
 
-        private object _lock = new object();
+        private readonly object _lock = new object();
         private bool _disposed = false;
         private bool _wasSetupCorrectly = false;
-        private byte[] _buffer = new byte[ByteBufferSize];
 
         public event EventHandler<string> DataReceived;
 
-        #endregion Internal variables and events
 
         public bool IsOpen => _port != null && _port.IsOpen;
 
-        public int ConfirmationTimeout { get; set; }
-        public int CompletitionTimeout { get; set; }
+        public int ConfirmationTimeout { get; private set; }
+        public int CompletitionTimeout { get; private set; }
+        public string Name {get; private set;}
 
         public SerialPortAdapter()
         {
@@ -87,6 +85,7 @@ namespace Shield.HardwareCom.Adapters
             _port.DiscardNull = true;
             CompletitionTimeout = settings.CompletitionTimeout;
             ConfirmationTimeout = settings.ConfirmationTimeout;
+            Name = settings.Name;
         }
 
         public void Open()

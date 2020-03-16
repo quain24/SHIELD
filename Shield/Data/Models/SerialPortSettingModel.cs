@@ -28,9 +28,6 @@ namespace Shield.Data.Models
         public StopBits StopBits { get; set; }
 
         [DataMember]
-        public DeviceType DeviceType { get; set; }
-
-        [DataMember]
         public int ReadTimeout { get; set; }
 
         [DataMember]
@@ -51,12 +48,17 @@ namespace Shield.Data.Models
         [DataMember]
         public int ConfirmationTimeout { get; set; }
 
+        public string Name { get => $"COM{PortNumber}"; private set { } }
+
         private SettingsType _type;
 
         public SettingsType Type { get => _type; }
 
         [OnDeserializing]
         private void OnDeserializing(StreamingContext context) => SetDefaults();
+
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context) => Name = $"COM{PortNumber}";
 
         public void SetDefaults()
         {
@@ -65,7 +67,6 @@ namespace Shield.Data.Models
             DataBits = 8;
             Parity = Parity.None;
             StopBits = StopBits.One;
-            DeviceType = DeviceType.Serial;
             ReadTimeout = -1;
             ReadTimeout = -1;
             WriteTimeout = -1;

@@ -6,6 +6,6 @@
         MoqDevice,
         Application,
         CommandTypes,
-        SerialDeviceContainer
+        CommunicationDeviceSettingsContainer
     }
 }

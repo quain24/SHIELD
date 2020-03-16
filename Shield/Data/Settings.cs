@@ -25,6 +25,42 @@ namespace Shield.Data
             AddMissingSettingPacks();
         }
 
+        private void AddMissingSettingPacks()
+        {
+            var settings = CreateDefaultSettingPacks();
+
+            foreach (var con in settings)
+            {
+                if (_settingsModel.Settings.ContainsKey(con.Type) == false)
+                    _settingsModel.Settings.Add(con.Type, con);
+            }
+        }
+
+        private List<ISetting> CreateDefaultSettingPacks()
+        {
+            List<ISetting> defaultSettingPacks = new List<ISetting>();
+            foreach (var t in KnownSettingTypes())
+            {
+                defaultSettingPacks.Add((ISetting)t.GetConstructor(Array.Empty<Type>()).Invoke(Array.Empty<object>()));
+            }
+
+            return defaultSettingPacks;
+        }
+
+        private List<Type> KnownSettingTypes()
+        {
+            var listOfTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
+                               from assemblyType in domainAssembly.GetTypes()
+                               where typeof(ISetting).IsAssignableFrom(assemblyType)
+                               select assemblyType).ToList();
+
+            var output = listOfTypes
+                .Where(a => !a.IsInterface)
+                .ToList();
+
+            return output;
+        }
+
         /// <summary>
         /// Clears all settings from memory
         /// </summary>
@@ -122,8 +158,6 @@ namespace Shield.Data
             _settingsModel.Settings.Add(type, settings);
         }
 
-        // TODO Optimize many adapters of the same type saving and selecting
-
         /// <summary>
         /// Gets every settings pack from currently loaded ones
         /// </summary>
@@ -158,42 +192,6 @@ namespace Shield.Data
                     return (T)kvp.Value;
             }
             return default;
-        }
-
-        private List<Type> KnownSettingTypes()
-        {
-            var listOfTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
-                               from assemblyType in domainAssembly.GetTypes()
-                               where typeof(ISetting).IsAssignableFrom(assemblyType)
-                               select assemblyType).ToList();
-
-            var output = listOfTypes
-                .Where(a => !a.IsInterface)
-                .ToList();
-
-            return output;
-        }
-
-        private List<ISetting> CreateDefaultSettingPacks()
-        {
-            List<ISetting> defaultSettingPacks = new List<ISetting>();
-            foreach (var t in KnownSettingTypes())
-            {
-                defaultSettingPacks.Add((ISetting)t.GetConstructor(Array.Empty<Type>()).Invoke(Array.Empty<object>()));
-            }
-
-            return defaultSettingPacks;
-        }
-
-        private void AddMissingSettingPacks()
-        {
-            var settings = CreateDefaultSettingPacks();
-
-            foreach (var con in settings)
-            {
-                if (_settingsModel.Settings.ContainsKey(con.Type) == false)
-                    _settingsModel.Settings.Add(con.Type, con);
-            }
         }
     }
 }

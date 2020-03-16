@@ -24,9 +24,9 @@ namespace Shield.Data
 
             builder.RegisterType<Settings>().As<ISettings>().SingleInstance();
 
-            builder.RegisterType<SerialPortSettingsContainer>()
+            builder.RegisterType<CommunicationDeviceSettingsContainer>()
                    .AsSelf()
-                   .As<ISerialPortSettingsContainer>()
+                   .As<ICommunicationDeviceSettingsContainer>()
                    .Named<ISetting>("SerialPortSettingsContainer");
 
             base.Load(builder);

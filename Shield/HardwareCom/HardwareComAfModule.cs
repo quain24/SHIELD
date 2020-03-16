@@ -136,7 +136,7 @@ namespace Shield.HardwareCom
             builder.RegisterType<Messenger>()
                 .WithParameter(new ResolvedParameter(
                     (pi, ctx) => pi.Name == "device",
-                    (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4))))
+                    (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ICommunicationDeviceSettingsContainer>().GetSettingsByDeviceName("COM4"))))
                    .As<IMessenger>();
 
             // MESSAGE PROCESSING: ===================================================================================================================

@@ -305,14 +305,12 @@ namespace Shield.HardwareCom
         }
 
         /// <summary>
-        /// Gives a thread safe collection of completed and timeout messages for further processing
+        /// Gives a thread safe collection of completed and timeout messages for further processing.<br/>
+        /// New messages are added as long as Ingester gets new CommandModels and can create new Messages.
         /// </summary>
         /// <returns></returns>
-        public BlockingCollection<IMessageModel> GetReceivedMessages()
-        {
-            Console.WriteLine($@"CommandIngester - Requested Processed Messages ({_processedMessages.Count} available)");
-            return _processedMessages;
-        }
+        public BlockingCollection<IMessageModel> GetReceivedMessages() => _processedMessages;
+        
 
         /// <summary>
         /// Allows switch of source collection for easier data pipelining or producer - consumer design.

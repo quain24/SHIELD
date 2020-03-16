@@ -19,6 +19,7 @@ namespace Shield.HardwareCom.Adapters
         public bool IsOpen { get; }
         public int ConfirmationTimeout { get; set; }
         public int CompletitionTimeout { get; set; }
+        public string Name { get; private set; }
 
         public MoqAdapter(string portName)
         {
@@ -88,6 +89,7 @@ namespace Shield.HardwareCom.Adapters
             _portName = internalSettings.PortNumber.ToString();
             CompletitionTimeout = internalSettings.CompletitionTimeout;
             ConfirmationTimeout = internalSettings.ConfirmationTimeout;
+            Name = internalSettings.Name;
 
             return true;
         }

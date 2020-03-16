@@ -62,17 +62,9 @@ namespace Shield.WpfGui.ViewModels
             _messageFactory1 = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
             _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             _settings.LoadFromFile();
+            _settings.SaveToFile();
 
-            //_settings.SaveToFile();
-
-            //serial.Setup(port_set);
-
-            //_serialPortSettingsContainer.Add(portset);
-            //_settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(5);
-
-            //_settings.AddOrReplace(SettingsType.SerialDeviceContainer, _serialPortSettingsContainer);
-            //_settings.SaveToFile();
-            _pipeline = _incomingMessagePipelineFactory.GetPipelineFor(_communicationDeviceFactory.CreateDevice(_settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(4)));
+            _pipeline = _incomingMessagePipelineFactory.GetPipelineFor(_communicationDeviceFactory.CreateDevice("COM4"));
 
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
@@ -81,7 +73,7 @@ namespace Shield.WpfGui.ViewModels
             {
                 while (true)
                 {
-                    IMessageModel message = _pipeline.GetReceivedMessages().Take();//_incomingMessageProcessor.GetProcessedMessages().Take();
+                    IMessageModel message = _pipeline.GetReceivedMessages().Take();
                     AddIncomingMessageToDisplay(this, message);
                 }
             });

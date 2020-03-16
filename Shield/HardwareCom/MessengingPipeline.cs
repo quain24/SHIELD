@@ -40,7 +40,7 @@ namespace Shield.HardwareCom
         {
             _messenger.Open();
 
-            Task.Run(async () => await _messenger.StartReceiveingAsync().ConfigureAwait(false));
+            _messenger.StartReceiveingAsync().ConfigureAwait(false);
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));
@@ -70,6 +70,10 @@ namespace Shield.HardwareCom
                         _sentMessages.TryAdd(confirmation.Id, confirmation);
                     else
                         throw new Exception("Could not send confirmation.");
+                }
+                else
+                {
+                    _confirmationTimeoutChecker.AddConfirmation(receivedMessage);
                 }
                 _internalStorage.TryAdd(receivedMessage.Id, receivedMessage);
             }

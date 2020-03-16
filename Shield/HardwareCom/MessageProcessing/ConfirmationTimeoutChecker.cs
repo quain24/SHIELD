@@ -50,8 +50,8 @@ namespace Shield.HardwareCom.MessageProcessing
             {
                 while (!_processingCTS.IsCancellationRequested)
                 {
-                    CheckNextUnconfirmedMessage();
-                    await WaitForNextIteration().ConfigureAwait(false);
+                    if (!CheckNextUnconfirmedMessage()) // Is true when checked message was a timeout one - if so, immediately check next one.
+                        await WaitForNextIteration().ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -69,23 +69,26 @@ namespace Shield.HardwareCom.MessageProcessing
             return false;
         }
 
-        private void CheckNextUnconfirmedMessage()
+        private bool CheckNextUnconfirmedMessage()
         {
-            IMessageModel message = _storage.FirstOrDefault().Value;
-
-            if (message is null)
-                return;
+            IMessageModel message = GetNextUnconfirmedMessage();
 
             using (_currentlyProcessingIdLock.Read())
-                if (_currentlyProcessingId == message.Id)
-                    return;
+                if (message is null || _currentlyProcessingId == message.Id)
+                    return false;
 
             ClearTimeoutError(message);
 
             if (IsTimeoutExceeded(message))
+            {
                 HandleExceededTimeout(message);
-            return;
+                return true;
+            }
+            return false;
         }
+
+        private IMessageModel GetNextUnconfirmedMessage() =>
+            _storage.FirstOrDefault().Value ?? null;
 
         private Task WaitForNextIteration() =>
             Task.Delay(_checkinterval, _processingCTS.Token);
@@ -105,8 +108,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public IMessageModel GetConfirmationOf(IMessageModel message)
         {
-            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
-
+            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");            
             _confirmations.TryGetValue(message.Id, out IMessageModel output);
             return output;
         }
@@ -184,29 +186,25 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private IMessageModel SetTimeoutError(IMessageModel message)
         {
-            ClearTimeoutError(message);
             message.Errors |= Errors.ConfirmationTimeout;
             return message;
         }
 
         private IMessageModel ClearTimeoutError(IMessageModel message)
         {
-            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
-                message.Errors &= ~Errors.ConfirmationTimeout;
+            message.Errors &= ~Errors.ConfirmationTimeout;
             return message;
         }
 
         private IMessageModel SetNoConfirmatioError(IMessageModel message)
         {
-            ClearNoConfirmationError(message);
             message.Errors |= Errors.NotConfirmed;
             return message;
         }
 
         private IMessageModel ClearNoConfirmationError(IMessageModel message)
         {
-            if (message.Errors.HasFlag(Errors.NotConfirmed))
-                message.Errors &= ~Errors.NotConfirmed;
+            message.Errors &= ~Errors.NotConfirmed;
             return message;
         }
 
@@ -220,16 +218,16 @@ namespace Shield.HardwareCom.MessageProcessing
             switch (timeout)
             {
                 case var _ when timeout <= 100:
-                return 100;
+                    return 100;
 
                 case var _ when timeout <= 3000:
-                return 500;
+                    return 500;
 
                 case var _ when timeout <= 5000:
-                return 1000;
+                    return 1000;
 
                 default:
-                return 2000;
+                    return 2000;
             }
         }
 

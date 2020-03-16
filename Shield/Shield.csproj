@@ -81,7 +81,7 @@
     <Compile Include="Data\Models\ISettingsModel.cs" />
     <Compile Include="Data\Models\MoqPortSettingsModel.cs" />
     <Compile Include="Data\Models\SerialPortSettingModel.cs" />
-    <Compile Include="Data\Models\SerialPortSettingsContainer.cs" />
+    <Compile Include="Data\Models\CommunicationDeviceSettingsContainer.cs" />
     <Compile Include="Data\Models\SettingsModel.cs" />
     <Compile Include="Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />

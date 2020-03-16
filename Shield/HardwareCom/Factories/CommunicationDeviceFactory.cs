@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace Shield.HardwareCom.Factories
 {
     /// <summary>
-    /// Gives a choosen type of communication device based on DeviceType provided
+    /// Gives a chosen type of communication device based on DeviceType provided
     /// Takes optional parameters or a configuration directly from AppSettings (loaded from file)
     /// </summary>
 
@@ -45,32 +45,37 @@ namespace Shield.HardwareCom.Factories
             return device;
         }
 
-        public ICommunicationDevice Device(DeviceType type, int portNumber = 0)
+        public ICommunicationDevice CreateDevice(string name)
         {
-            switch (type)
-            {
-                case DeviceType.Serial:
-                ISerialPortSettingsModel settings = _settings.ForTypeOf<ISerialPortSettingsContainer>().GetSettingsByPortNumber(portNumber);
-                ICommunicationDevice device = _deviceFactory[type];
-                if (device.Setup(settings)) //-- can replace autofac parameters used when registering.
-                    return device;
-                else
-                    break;
+            if(string.IsNullOrWhiteSpace(name))
+                throw new System.ArgumentOutOfRangeException(nameof(name), $"There is no device with {name} name!");
 
-                case DeviceType.Moq:
-                IMoqPortSettingsModel settings2 = _settings.ForTypeOf<IMoqPortSettingsModel>();
-                ICommunicationDevice device2 = _deviceFactory[type];
-                if (device2.Setup(settings2))
-                    return device2;
-                else
-                    break;
+            name = name.ToUpperInvariant();
+            
+            var deviceSettings = _settings.ForTypeOf<ICommunicationDeviceSettingsContainer>().GetSettingsByDeviceName(name)
+                ?? throw new System.ArgumentOutOfRangeException(nameof(name), $"There is no device with {name} name!");
+
+            ICommunicationDevice device;
+
+            switch (deviceSettings)
+            {
+                case ISerialPortSettingsModel settings:
+                device = _deviceFactory[DeviceType.Serial];                
+                break;
+
+                case IMoqPortSettingsModel settings:
+                device = _deviceFactory[DeviceType.Moq];
+                break;
 
                 default:
-                string err = $@"ERROR: CommunicationDeviceFactory Device - no device at ""{type}"" position in deviceType enum";
+                string err = $@"ERROR: CommunicationDeviceFactory Device - no device with name ""{name}"" exists.";
                 Debug.WriteLine(err);
                 return null;
             }
-            return null;
+            
+            return device.Setup(deviceSettings)
+                ? device
+                : null;
         }
     }
 }

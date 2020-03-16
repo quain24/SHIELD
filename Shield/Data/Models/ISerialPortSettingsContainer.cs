@@ -3,12 +3,10 @@ using Shield.Enums;
 
 namespace Shield.Data.Models
 {
-    public interface ISerialPortSettingsContainer : ISetting
+    public interface ICommunicationDeviceSettingsContainer : ISetting
     {
-        SettingsType Type { get; }
-
-        void Add(ISerialPortSettingsModel settings);
-        ISerialPortSettingsModel GetSettingsByPortNumber(int number);
-        bool RemoveByPortNumber(int number);
+        void Add(ICommunicationDeviceSettings settings);
+        ICommunicationDeviceSettings GetSettingsByDeviceName(string name);
+        bool RemoveByDeviceName(string name);
     }
 }

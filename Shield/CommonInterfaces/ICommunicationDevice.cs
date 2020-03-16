@@ -8,8 +8,9 @@ namespace Shield.CommonInterfaces
     {
         bool IsOpen { get; }
 
-        int ConfirmationTimeout { get; set; }
-        int CompletitionTimeout { get; set; }
+        int ConfirmationTimeout { get; }
+        int CompletitionTimeout { get; }
+        string Name { get; }
 
         bool Setup(ICommunicationDeviceSettings settings);
 
