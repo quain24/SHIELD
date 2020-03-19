@@ -189,7 +189,7 @@ namespace Shield.WpfGui.ViewModels
             try
             {
                 //_messanger.Open();
-                _pipeline.Start();
+                _pipeline.Open();
                 NotifyOfPropertyChange(() => CanOpenDevice);
                 NotifyOfPropertyChange(() => CanCloseDevice);
                 NotifyOfPropertyChange(() => CanStartReceiving);
@@ -212,7 +212,7 @@ namespace Shield.WpfGui.ViewModels
         public void CloseDevice()
         {
             //_messanger.Close();
-            _pipeline.Stop();
+            _pipeline.Close();
             NotifyOfPropertyChange(() => CanCloseDevice);
             NotifyOfPropertyChange(() => CanOpenDevice);
             NotifyOfPropertyChange(() => CanStartReceiving);
@@ -259,7 +259,7 @@ namespace Shield.WpfGui.ViewModels
 
         public void StopReceiving()
         {
-            _pipeline.Stop();
+            _pipeline.Close();
             _receivingButtonActivated = false;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);

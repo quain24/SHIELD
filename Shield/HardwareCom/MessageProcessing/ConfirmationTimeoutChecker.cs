@@ -44,8 +44,6 @@ namespace Shield.HardwareCom.MessageProcessing
             if (!CanStartCheckingUnconfirmedMessages())
                 return;
 
-            Debug.WriteLine("ConfirmationTimeoutChecker: Started checking timeouts of sent messages.");
-
             try
             {
                 while (!_processingCTS.IsCancellationRequested)
@@ -76,19 +74,32 @@ namespace Shield.HardwareCom.MessageProcessing
             using (_currentlyProcessingIdLock.Read())
                 if (message is null || _currentlyProcessingId == message.Id)
                     return false;
+                else
+                {
+                    ClearTimeoutError(message);
 
-            ClearTimeoutError(message);
-
-            if (IsTimeoutExceeded(message))
-            {
-                HandleExceededTimeout(message);
-                return true;
-            }
-            return false;
+                    if (IsTimeoutExceeded(message))
+                    {
+                        HandleExceededTimeout(message);
+                        return true;
+                    }
+                    return false;
+                }
         }
 
-        private IMessageModel GetNextUnconfirmedMessage() =>
-            _storage.FirstOrDefault().Value ?? null;
+        private IMessageModel GetNextUnconfirmedMessage()
+        {
+            try
+            {
+                return _storage.FirstOrDefault().Value;
+            }
+            catch
+            {
+                Debug.WriteLine("ConfirmationTimeoutChecker - GetNextUnconfirmedMessage: Collection changed");
+                return null;
+            }
+
+        }
 
         private Task WaitForNextIteration() =>
             Task.Delay(_checkinterval, _processingCTS.Token);
@@ -199,12 +210,14 @@ namespace Shield.HardwareCom.MessageProcessing
         private IMessageModel SetNoConfirmatioError(IMessageModel message)
         {
             message.Errors |= Errors.NotConfirmed;
+            message.IsConfirmed = false;
             return message;
         }
 
         private IMessageModel ClearNoConfirmationError(IMessageModel message)
         {
             message.Errors &= ~Errors.NotConfirmed;
+            message.IsConfirmed = false;
             return message;
         }
 
@@ -249,6 +262,7 @@ namespace Shield.HardwareCom.MessageProcessing
                     _processedMessages?.Dispose();
                     StopCheckingUnconfirmedMessages();
                     _processingCTS?.Dispose();
+                    _currentlyProcessingIdLock?.Dispose();
                 }
                 // Free your own state (unmanaged objects).
                 // Set large fields to null.

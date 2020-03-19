@@ -33,7 +33,7 @@ namespace Shield.HardwareCom.Models
 
         public bool IsConfirmed { get; set; } = false;
         public bool IsCompleted { get; set; } = false;
-        public bool IsCorrect => Errors == Errors.None ? true : false;
+        public bool IsCorrect => Errors == Errors.None;
         public bool IsTransfered { get; set; } = false;
 
         #region Indexer

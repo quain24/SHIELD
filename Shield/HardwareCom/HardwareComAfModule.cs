@@ -69,20 +69,6 @@ namespace Shield.HardwareCom
 
             builder.RegisterInstance<Func<int, ITimeoutCheck>>(timeout => new TimeoutCheck(timeout));
 
-            builder.RegisterType<TimeoutCheckFactory>()
-                   .AsSelf()
-                   .WithParameters(new[]
-                   {
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.Name == "timeoutAutoFactory",
-                           (pi, ctx) => ctx.Resolve<Func<int, ITimeoutCheck>>()),
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.Name == "nullTimeoutCheck",
-                           (pi, ctx) => ctx.ResolveNamed<ITimeoutCheck>("Null" + nameof(TimeoutCheck)))
-                   });
-
-
-
             builder.Register(c =>
                         new TimeoutCheckFactory(
                             c.Resolve<Func<int, ITimeoutCheck>>(),

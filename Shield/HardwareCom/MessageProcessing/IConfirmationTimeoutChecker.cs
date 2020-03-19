@@ -17,5 +17,6 @@ namespace Shield.HardwareCom.MessageProcessing
         bool IsTimeoutExceeded(IMessageModel message, IMessageModel confirmation = null);
 
         BlockingCollection<IMessageModel> ProcessedMessages();
+        void StopCheckingUnconfirmedMessages();
     }
 }

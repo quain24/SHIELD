@@ -30,16 +30,16 @@ namespace Shield.HardwareCom.Factories
             switch (settings)
             {
                 case var _ when settings is ISerialPortSettingsModel:
-                device = _deviceFactory[DeviceType.Serial];
-                break;
+                    device = _deviceFactory[DeviceType.Serial];
+                    break;
 
                 case var _ when settings is IMoqPortSettingsModel:
-                device = _deviceFactory[DeviceType.Moq];
-                break;
+                    device = _deviceFactory[DeviceType.Moq];
+                    break;
 
                 default:
-                device = null;
-                break;
+                    device = null;
+                    break;
             }
             device?.Setup(settings);
             return device;
@@ -47,35 +47,33 @@ namespace Shield.HardwareCom.Factories
 
         public ICommunicationDevice CreateDevice(string name)
         {
-            if(string.IsNullOrWhiteSpace(name))
-                throw new System.ArgumentOutOfRangeException(nameof(name), $"There is no device with {name} name!");
-
-            name = name.ToUpperInvariant();
-            
-            var deviceSettings = _settings.ForTypeOf<ICommunicationDeviceSettingsContainer>().GetSettingsByDeviceName(name)
-                ?? throw new System.ArgumentOutOfRangeException(nameof(name), $"There is no device with {name} name!");
-
             ICommunicationDevice device;
+
+            var deviceSettings = GetSettingsByDeviceName(name ?? "");
 
             switch (deviceSettings)
             {
-                case ISerialPortSettingsModel settings:
-                device = _deviceFactory[DeviceType.Serial];                
-                break;
+                case ISerialPortSettingsModel _:
+                    device = _deviceFactory[DeviceType.Serial];
+                    break;
 
-                case IMoqPortSettingsModel settings:
-                device = _deviceFactory[DeviceType.Moq];
-                break;
+                case IMoqPortSettingsModel _:
+                    device = _deviceFactory[DeviceType.Moq];
+                    break;
 
                 default:
-                string err = $@"ERROR: CommunicationDeviceFactory Device - no device with name ""{name}"" exists.";
-                Debug.WriteLine(err);
-                return null;
+                    string err = $@"ERROR: CommunicationDeviceFactory - no device with name ""{name}"" exists.";
+                    Debug.WriteLine(err);
+                    return null;
             }
-            
-            return device.Setup(deviceSettings)
-                ? device
-                : null;
+
+            device?.Setup(deviceSettings);
+            return device;
         }
+
+        private ICommunicationDeviceSettings GetSettingsByDeviceName(string name) =>
+            _settings?.ForTypeOf<ICommunicationDeviceSettingsContainer>()
+                     ?.GetSettingsByDeviceName(name.ToUpperInvariant())
+            ?? throw new System.ArgumentOutOfRangeException(nameof(name), $"There is no device with {name} name!");
     }
 }

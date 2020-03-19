@@ -214,7 +214,7 @@ namespace Shield.HardwareCom.Adapters
                 _port.DiscardInBuffer();
                 _buffer = new byte[ByteBufferSize];
             }
-            catch (Exception ex)
+            catch
             {
                 Debug.WriteLine(@"ERROR - SerialPortAdaper - DiscardBuffer: Port was closed, nothing to discard.");
             }
