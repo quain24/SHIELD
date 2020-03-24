@@ -1,6 +1,7 @@
 ﻿using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
+using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -16,6 +17,7 @@ namespace Shield.HardwareCom
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;
         private readonly IConfirmationFactory _confirmationFactory;
+        private readonly IIdGenerator _idGenerator;
 
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
@@ -42,12 +44,13 @@ namespace Shield.HardwareCom
             if (context is null)            
                 throw new ArgumentNullException(nameof(context));            
 
-            _messenger = context.Messenger;
-            _commandIngester = context.Ingester;
-            _incomingMessageProcessor = context.Processor;
             _confirmationTimeoutChecker = context.ConfirmationTimeoutChecker;
             _completitionTimeoutChecker = context.CompletitionTimeoutChecker;
             _confirmationFactory = context.ConfirmationFactory;
+            _incomingMessageProcessor = context.Processor;
+            _commandIngester = context.Ingester;
+            _idGenerator = context.IdGenerator;
+            _messenger = context.Messenger;
 
             _commandIngester.SwitchSourceCollectionTo(_messenger.GetReceivedCommands());
             _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
@@ -63,7 +66,6 @@ namespace Shield.HardwareCom
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
             Task.Run(async () => await _completitionTimeoutChecker.StartTimeoutCheckAsync().ConfigureAwait(false));
-            //Task.Run(async () => await _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false));
             //Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));
         }
