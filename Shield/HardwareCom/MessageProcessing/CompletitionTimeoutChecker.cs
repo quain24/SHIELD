@@ -7,9 +7,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.MessageProcessing
 {
-    public class CompletitionTimeoutChecker
+    public class CompletitionTimeoutChecker : ICompletitionTimeoutChecker
     {
         private readonly ICommandIngesterAlt _ingesterToWorkWith;
         private readonly ITimeoutCheck _completitionTimeoutChecker;

@@ -14,12 +14,12 @@ namespace Shield.HardwareCom
         private readonly ICommandIngesterAlt _commandIngester;
         private readonly IIncomingMessageProcessor _incomingMessageProcessor;
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
+        private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;
         private readonly IConfirmationFactory _confirmationFactory;
 
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
-        private CompletitionTimeoutChecker _completitionTimoutChecking;
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
 
@@ -37,22 +37,20 @@ namespace Shield.HardwareCom
 
         // TODO handle events, how to wire them up to inform about completition, timeouts and similar.
 
-        public MessengingPipeline(IMessenger messanger,
-                                  ICommandIngesterAlt commandIngester,
-                                  IIncomingMessageProcessor incomingMessageProcessor,
-                                  IConfirmationTimeoutChecker confirmationTimeoutChecker,
-                                  IConfirmationFactory confirmationFactory)
+        public MessengingPipeline(IMessagePipelineContext context)
         {
-            _messenger = messanger ?? throw new ArgumentNullException(nameof(messanger));
-            _commandIngester = commandIngester ?? throw new ArgumentNullException(nameof(commandIngester));
-            _incomingMessageProcessor = incomingMessageProcessor ?? throw new ArgumentNullException(nameof(incomingMessageProcessor));
-            _confirmationTimeoutChecker = confirmationTimeoutChecker ?? throw new ArgumentNullException(nameof(confirmationTimeoutChecker));
-            _confirmationFactory = confirmationFactory ?? throw new ArgumentNullException(nameof(confirmationFactory));
+            if (context is null)            
+                throw new ArgumentNullException(nameof(context));            
+
+            _messenger = context.Messenger;
+            _commandIngester = context.Ingester;
+            _incomingMessageProcessor = context.Processor;
+            _confirmationTimeoutChecker = context.ConfirmationTimeoutChecker;
+            _completitionTimeoutChecker = context.CompletitionTimeoutChecker;
+            _confirmationFactory = context.ConfirmationFactory;
 
             _commandIngester.SwitchSourceCollectionTo(_messenger.GetReceivedCommands());
             _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
-
-            _completitionTimoutChecking = new CompletitionTimeoutChecker(_commandIngester, new TimeoutCheck(5000));
         }
 
         public bool IsOpen => _messenger.IsOpen;
@@ -64,7 +62,7 @@ namespace Shield.HardwareCom
             _messenger.StartReceiveingAsync().ConfigureAwait(false);
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
-            Task.Run(async () => await _completitionTimoutChecking.StartTimeoutCheckAsync().ConfigureAwait(false));
+            Task.Run(async () => await _completitionTimeoutChecker.StartTimeoutCheckAsync().ConfigureAwait(false));
             //Task.Run(async () => await _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false));
             //Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));

@@ -1,9 +1,10 @@
 ﻿using Shield.HardwareCom.MessageProcessing;
+using Shield.Helpers;
 
 namespace Shield.HardwareCom.Factories
 {
     public interface ICommandIngesterFactory
     {
-        ICommandIngesterAlt GetIngesterUsing(int timeout);
+        ICommandIngesterAlt GetIngesterUsing(IIdGenerator idGenerator);
     }
 }

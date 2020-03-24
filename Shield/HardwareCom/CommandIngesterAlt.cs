@@ -14,7 +14,6 @@ namespace Shield.HardwareCom
     {
         private readonly IMessageFactory _msgFactory;
         private readonly ICompleteness _completness;
-        private readonly ITimeoutCheck _completitionTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
 
         private BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
@@ -41,11 +40,10 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngesterAlt(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout, IIdGenerator idGenerator)
+        public CommandIngesterAlt(IMessageFactory messageFactory, ICompleteness completeness, IIdGenerator idGenerator)
         {
             _msgFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
             _completness = completeness ?? throw new ArgumentNullException(nameof(completeness));
-            _completitionTimeoutChecker = completitionTimeout ?? throw new ArgumentNullException(nameof(completitionTimeout));
             _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
         }
 

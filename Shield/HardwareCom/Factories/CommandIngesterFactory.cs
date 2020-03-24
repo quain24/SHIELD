@@ -13,17 +13,15 @@ namespace Shield.HardwareCom.Factories
         private readonly Func<IMessageFactory> _messageFactory;
         private readonly Func<ICompleteness> _completnessFactory;
         private readonly Func<IIdGenerator> _idGeneratorFactory;
-        private readonly ITimeoutCheckFactory _timeoutCheckFactory;
 
-        public CommandIngesterFactory(Func<IMessageFactory> messageFactory, Func<ICompleteness> completnessFactory, Func<IIdGenerator> idGeneratorFactory, ITimeoutCheckFactory timeoutCheckFactory)
+        public CommandIngesterFactory(Func<IMessageFactory> messageFactory, Func<ICompleteness> completnessFactory, Func<IIdGenerator> idGeneratorFactory)
         {
             _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
             _completnessFactory = completnessFactory ?? throw new ArgumentNullException(nameof(completnessFactory));
             _idGeneratorFactory = idGeneratorFactory ?? throw new ArgumentNullException(nameof(idGeneratorFactory));
-            _timeoutCheckFactory = timeoutCheckFactory ?? throw new ArgumentNullException(nameof(timeoutCheckFactory));
         }
         // todo replaced CommandIngester with ALT version
-        public ICommandIngesterAlt GetIngesterUsing(int timeout) =>
-            new CommandIngesterAlt(_messageFactory(), _completnessFactory(), _timeoutCheckFactory.GetTimeoutCheckWithTimeoutSetTo(timeout), _idGeneratorFactory());
+        public ICommandIngesterAlt GetIngesterUsing(IIdGenerator idGenerator) =>
+            new CommandIngesterAlt(_messageFactory(), _completnessFactory(), idGenerator);
     }
 }

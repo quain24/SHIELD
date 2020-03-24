@@ -81,19 +81,14 @@ namespace Shield.HardwareCom
                         new CommandIngesterFactory(
                             c.Resolve<Func<IMessageFactory>>(),
                             c.Resolve<Func<ICompleteness>>(),
-                            c.Resolve<Func<IIdGenerator>>(),
-                            c.Resolve<ITimeoutCheckFactory>()))
+                            c.Resolve<Func<IIdGenerator>>()))
                    .As<ICommandIngesterFactory>();
 
             // MessagePipeline Factory
 
             builder.Register(c => 
                         new MessengingPipelineFactory(
-                            c.Resolve<IMessengerFactory>(),
-                            c.Resolve<ICommandIngesterFactory>(),
-                            c.Resolve<Func<IIncomingMessageProcessor>>(),
-                            c.Resolve<IConfirmationTimeoutCheckerFactory>(),
-                            c.Resolve<Func<IConfirmationFactory>>()))
+                            c.Resolve<IMessagePipelineContextFactory>()))
                     .AsImplementedInterfaces();
 
             // End of factories registration ========================================================================================================
@@ -117,13 +112,7 @@ namespace Shield.HardwareCom
 
                         return incomingDataPreparer;
                     })
-                   .As<IIncomingDataPreparer>();
-
-            builder.RegisterType<Messenger>()
-                .WithParameter(new ResolvedParameter(
-                    (pi, ctx) => pi.Name == "device",
-                    (pi, ctx) => ctx.Resolve<ICommunicationDeviceFactory>().CreateDevice(ctx.Resolve<ISettings>().ForTypeOf<ICommunicationDeviceSettingsContainer>().GetSettingsByDeviceName("COM4"))))
-                   .As<IMessenger>();
+                   .As<IIncomingDataPreparer>();            
 
             // MESSAGE PROCESSING: ===================================================================================================================
 
