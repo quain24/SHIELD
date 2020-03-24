@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Shield.CommonInterfaces;
 using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.RawDataProcessing;
 
 namespace Shield.HardwareCom.Factories
 {

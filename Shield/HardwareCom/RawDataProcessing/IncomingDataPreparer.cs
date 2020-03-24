@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.RawDataProcessing
 {
     public class IncomingDataPreparer : IIncomingDataPreparer
     {

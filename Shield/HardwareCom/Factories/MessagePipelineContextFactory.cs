@@ -43,7 +43,7 @@ namespace Shield.HardwareCom.Factories
             IIncomingMessageProcessor processor = _processorFactory();
             IConfirmationTimeoutChecker confirmationTimeoutChecker = _confirmationTimeoutCheckerFactory.GetCheckerUsing(device.ConfirmationTimeout);
             ITimeoutCheck completitionTimeoutCheck = _timeoutCheckFactory.GetTimeoutCheckWithTimeoutSetTo(device.CompletitionTimeout);
-            ICompletitionTimeoutChecker completitionTimeoutChecker = _completitionTimeoutCheckerFactory.CreateCompletitionTimoutCheckerUsing(ingester, completitionTimeoutCheck);
+            ICompletitionTimeoutChecker completitionTimeoutChecker = _completitionTimeoutCheckerFactory.GetCheckerUsing(ingester, completitionTimeoutCheck);
             IMessenger messenger = _messengerFactory.CreateMessangerUsing(device);
             IConfirmationFactory confirmationFactory = _confirmationFactory();
 

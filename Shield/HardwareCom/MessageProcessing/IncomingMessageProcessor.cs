@@ -1,6 +1,5 @@
 ﻿using Shield.Enums;
 using Shield.Extensions;
-using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
@@ -8,12 +7,11 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.MessageProcessing
 {
     /// <summary>
     /// Gets incoming messages and checks them for errors using one or more <see cref="IMessageAnalyzer"/> objects. Provides two thread safe collections (clean and 'with errors' messages)
-    /// for further processing / handling by another class. Is derived from <see cref="MessageProcessor"/> and implements
-    /// <seealso cref="IIncomingMessageProcessor"/> by inheritance.
+    /// for further processing / handling by another class.
     /// </summary>
     public class IncomingMessageProcessor : IIncomingMessageProcessor
     {

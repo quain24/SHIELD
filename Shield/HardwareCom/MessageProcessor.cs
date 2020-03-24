@@ -1,4 +1,5 @@
 ﻿using Shield.Extensions;
+using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;

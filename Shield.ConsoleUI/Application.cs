@@ -1,11 +1,11 @@
 ﻿using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
-using Shield.HardwareCom;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
+using Shield.HardwareCom.RawDataProcessing;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;

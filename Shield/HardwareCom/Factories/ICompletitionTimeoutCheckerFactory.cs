@@ -5,6 +5,6 @@ namespace Shield.HardwareCom.Factories
 {
     public interface ICompletitionTimeoutCheckerFactory
     {
-        ICompletitionTimeoutChecker CreateCompletitionTimoutCheckerUsing(ICommandIngester ingesterToWorkWith, ITimeoutCheck completitionTimeoutChecker);
+        ICompletitionTimeoutChecker GetCheckerUsing(ICommandIngester ingesterToWorkWith, ITimeoutCheck completitionTimeoutChecker);
     }
 }

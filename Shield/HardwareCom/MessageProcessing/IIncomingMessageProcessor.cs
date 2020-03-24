@@ -1,7 +1,7 @@
 ﻿using Shield.HardwareCom.Models;
 using System.Collections.Concurrent;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.MessageProcessing
 {
     public interface IIncomingMessageProcessor
     {
