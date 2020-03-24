@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.CommandProcessing
 {
     internal class CommandIngester : ICommandIngester, IDisposable
     {

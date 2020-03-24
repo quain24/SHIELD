@@ -1,6 +1,6 @@
 ﻿using Shield.HardwareCom.Models;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.CommandProcessing
 {
     public interface ICommandTranslator
     {

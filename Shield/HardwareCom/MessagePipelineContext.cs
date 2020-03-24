@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.Helpers;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Shield.CommonInterfaces;
+using Shield.HardwareCom.CommandProcessing;
 
 namespace Shield.HardwareCom.Factories
 {

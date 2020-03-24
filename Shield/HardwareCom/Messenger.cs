@@ -1,4 +1,5 @@
 ﻿using Shield.CommonInterfaces;
+using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;

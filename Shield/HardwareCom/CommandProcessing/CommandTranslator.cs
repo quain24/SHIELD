@@ -6,7 +6,7 @@ using Shield.Helpers;
 using System;
 using System.Text;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.CommandProcessing
 {
     /// <summary>
     /// Translates given CommandModel into 'string' of raw data that could be sent and vice versa.
@@ -46,7 +46,7 @@ namespace Shield.HardwareCom
                     rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
 
                 int rawComInt;
-                if (Int32.TryParse(rawCommandTypeString, out rawComInt))
+                if (int.TryParse(rawCommandTypeString, out rawComInt))
                 {
                     if (Enum.IsDefined(typeof(CommandType), rawComInt))
                         command.CommandType = (CommandType)rawComInt;

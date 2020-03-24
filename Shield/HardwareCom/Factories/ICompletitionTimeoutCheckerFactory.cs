@@ -1,4 +1,5 @@
-﻿using Shield.HardwareCom.MessageProcessing;
+﻿using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.MessageProcessing;
 
 namespace Shield.HardwareCom.Factories
 {

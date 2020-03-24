@@ -2,6 +2,7 @@
 using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom;
+using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;

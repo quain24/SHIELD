@@ -1,4 +1,5 @@
-﻿using Shield.HardwareCom.Factories;
+﻿using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
@@ -11,16 +12,16 @@ namespace Shield.HardwareCom
 {
     public class MessengingPipeline
     {
-        private readonly IMessenger _messenger;
-        private readonly ICommandIngester _commandIngester;
-        private readonly IIncomingMessageProcessor _incomingMessageProcessor;
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;
+        private readonly IIncomingMessageProcessor _incomingMessageProcessor;
         private readonly IConfirmationFactory _confirmationFactory;
+        private readonly ICommandIngester _commandIngester;
         private readonly IIdGenerator _idGenerator;
+        private readonly IMessenger _messenger;
 
-        private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
@@ -75,7 +76,7 @@ namespace Shield.HardwareCom
             CancelHandleIncoming();
             _confirmationTimeoutChecker.StopCheckingUnconfirmedMessages();
             _incomingMessageProcessor.StopProcessingMessages();
-            //_commandIngester.StopTimeoutCheck();
+            _completitionTimeoutChecker.StopTimeoutCheck();
             _commandIngester.StopProcessingCommands();
             _messenger.StopReceiving();
             _messenger.Close();

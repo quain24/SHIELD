@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.CommandProcessing
 {
     public interface ICommandIngester
     {

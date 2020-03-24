@@ -4,12 +4,12 @@ using System.IO.Ports;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using Shield.Data;
 using Shield.Helpers;
 using Shield.Data.Models;
+using Shield.HardwareCom.CommandProcessing;
 
 namespace COM6TestSender
 {
