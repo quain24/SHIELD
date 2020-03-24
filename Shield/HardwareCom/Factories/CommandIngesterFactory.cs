@@ -22,8 +22,8 @@ namespace Shield.HardwareCom.Factories
             _idGeneratorFactory = idGeneratorFactory ?? throw new ArgumentNullException(nameof(idGeneratorFactory));
             _timeoutCheckFactory = timeoutCheckFactory ?? throw new ArgumentNullException(nameof(timeoutCheckFactory));
         }
-
-        public ICommandIngester GetIngesterUsing(int timeout) =>
-            new CommandIngester(_messageFactory(), _completnessFactory(), _timeoutCheckFactory.GetTimeoutCheckWithTimeoutSetTo(timeout), _idGeneratorFactory());
+        // todo replaced CommandIngester with ALT version
+        public ICommandIngesterAlt GetIngesterUsing(int timeout) =>
+            new CommandIngesterAlt(_messageFactory(), _completnessFactory(), _timeoutCheckFactory.GetTimeoutCheckWithTimeoutSetTo(timeout), _idGeneratorFactory());
     }
 }

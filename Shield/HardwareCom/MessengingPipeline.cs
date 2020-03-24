@@ -11,27 +11,34 @@ namespace Shield.HardwareCom
     public class MessengingPipeline
     {
         private readonly IMessenger _messenger;
-        private readonly ICommandIngester _commandIngester;
+        private readonly ICommandIngesterAlt _commandIngester;
         private readonly IIncomingMessageProcessor _incomingMessageProcessor;
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly IConfirmationFactory _confirmationFactory;
 
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
+        private CompletitionTimeoutChecker _completitionTimoutChecking;
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
 
         public event EventHandler<IMessageModel> OnMessageReceived;
+
         public event EventHandler<IMessageModel> OnConfirmationReceived;
+
         public event EventHandler<IMessageModel> OnMessageSent;
+
         public event EventHandler<IMessageModel> OnMessageWasConfirmed;
+
         public event EventHandler<IMessageModel> OnMessageConfirmationTimout;
+
         public event EventHandler<IMessageModel> OnMessageCompletitionTimout;
 
         // TODO handle events, how to wire them up to inform about completition, timeouts and similar.
 
         public MessengingPipeline(IMessenger messanger,
-                                  ICommandIngester commandIngester,
+                                  ICommandIngesterAlt commandIngester,
                                   IIncomingMessageProcessor incomingMessageProcessor,
                                   IConfirmationTimeoutChecker confirmationTimeoutChecker,
                                   IConfirmationFactory confirmationFactory)
@@ -44,6 +51,8 @@ namespace Shield.HardwareCom
 
             _commandIngester.SwitchSourceCollectionTo(_messenger.GetReceivedCommands());
             _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
+
+            _completitionTimoutChecking = new CompletitionTimeoutChecker(_commandIngester, new TimeoutCheck(5000));
         }
 
         public bool IsOpen => _messenger.IsOpen;
@@ -55,8 +64,9 @@ namespace Shield.HardwareCom
             _messenger.StartReceiveingAsync().ConfigureAwait(false);
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
-            Task.Run(async () => await _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false));
-            Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+            Task.Run(async () => await _completitionTimoutChecking.StartTimeoutCheckAsync().ConfigureAwait(false));
+            //Task.Run(async () => await _commandIngester.StartTimeoutCheckAsync().ConfigureAwait(false));
+            //Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));
         }
 
@@ -65,7 +75,7 @@ namespace Shield.HardwareCom
             CancelHandleIncoming();
             _confirmationTimeoutChecker.StopCheckingUnconfirmedMessages();
             _incomingMessageProcessor.StopProcessingMessages();
-            _commandIngester.StopTimeoutCheck();
+            //_commandIngester.StopTimeoutCheck();
             _commandIngester.StopProcessingCommands();
             _messenger.StopReceiving();
             _messenger.Close();
@@ -105,7 +115,9 @@ namespace Shield.HardwareCom
         private async Task HandleReceivedMessage(IMessageModel message)
         {
             _receivedMessages.TryAdd(message.Id, message);
-            await SendConfirmationOfAsync(message).ConfigureAwait(false);
+            _forGUITemporary.Add(message);
+            // todo this blocks - move it to some kind of buffer?
+            //await SendConfirmationOfAsync(message).ConfigureAwait(false);
         }
 
         private async Task SendConfirmationOfAsync(IMessageModel message)
@@ -133,6 +145,6 @@ namespace Shield.HardwareCom
                 return false;
         }
 
-        public BlockingCollection<IMessageModel> GetReceivedMessages() => _incomingMessageProcessor.GetProcessedMessages();
+        public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
     }
 }

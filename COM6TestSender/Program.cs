@@ -28,11 +28,12 @@ namespace COM6TestSender
             serial.DiscardNull = true;
             serial.Open();
 
+            //IIdGenerator _idGenerator = new IdGeneratorSimplyNext();
             IIdGenerator _idGenerator = new IdGenerator(4);
 
             int i = 0;
 
-            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good,\n7 - partial, 8 - nodata mixed, 9 - Async test, 10 -- message creator, 11 -- Auto message sender - 2 tasks, 12 -- rand msg gen");
+            Console.WriteLine("1 - automat, 2 - co 1 sekunde, 3 - manual, 4 - notdata, 5 - test random, 6 - misc bad / good,\n7 - partial, 8 - nodata mixed, 9 - Async test, 10 -- message creator, 11 -- Auto message sender - 2 tasks, 12 -- rand msg gen, 13 -- rand 30 msg");
             string a = Console.ReadLine();
 
             Random rand = new Random();
@@ -494,7 +495,10 @@ namespace COM6TestSender
                         msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
 
                     foreach(var c in msg.Commands)
-                        serial.Write(comtrans.FromCommand(c));
+                    { 
+                        var aaaa = comtrans.FromCommand(c);
+                        serial.Write(aaaa);
+                    }
 
                     Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
                     //if(licz % 100 == 0)
@@ -503,6 +507,80 @@ namespace COM6TestSender
                     //    await Task.Delay(1000);
                     //}
                 }
+            }
+
+            else if (Int32.Parse(a) == 13)
+            {
+                string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+                int num = 0;
+
+                Regex pat = new Regex(pattern);
+
+                string id = _idGenerator.GetNewID();
+                int choose = 0;
+                int licz = 0;
+                bool fl = false;
+
+                var msgFac = new Shield.HardwareCom.Factories.MessageFactory(new Func<IMessageModel>(() => new MessageModel()), new IdGenerator(4));
+                var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
+
+                var sm = new Shield.Data.Models.SettingsModel();
+                var apset = new Shield.Data.Models.ApplicationSettingsModel();
+                    apset.CommandTypeSize = 4;
+                    apset.DataSize = 30;
+                    apset.Filler = '.';
+                    apset.IdSize = 4;
+                    apset.Separator = '*';
+                var portset = new Shield.Data.Models.SerialPortSettingsModel();
+                portset.BaudRate = 921600;
+                portset.Encoding = 20127;
+                portset.PortNumber = 7;
+                portset.DataBits = 8;
+                portset.Parity = Parity.None;
+                portset.StopBits = StopBits.One;
+                portset.ReadTimeout = -1;               
+
+                sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
+                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
+                var sett = new Settings(sm);
+                var comtrans = new CommandTranslator(sett.ForTypeOf<IApplicationSettingsModel>(), new Func<ICommandModel>(() => new CommandModel()));
+
+                restart:
+                choose = licz + 30;
+
+                while (licz <= choose)
+                {
+                    licz++;
+                    int datalicz = licz;
+                    string data = datalicz.ToString().PadLeft(30, '.');
+                    datalicz++;
+                    string data2 = datalicz.ToString().PadLeft(30, '.');
+                    datalicz++;
+                    string data3 = datalicz.ToString().PadLeft(30, '.');
+
+                    IMessageModel msg = msgFac.CreateNew(Shield.Enums.Direction.Outgoing, Shield.Enums.MessageType.Master, _idGenerator.GetNewID());
+                    msg.Add(comFac.Create(Shield.Enums.CommandType.HandShake));
+                    msg.Add(comFac.Create(Shield.Enums.CommandType.Master));
+                    var datacom = comFac.Create(Shield.Enums.CommandType.Data); datacom.Data = data;
+                    var datacom2 = comFac.Create(Shield.Enums.CommandType.Data); datacom2.Data = data2;
+                    var datacom3 = comFac.Create(Shield.Enums.CommandType.Data); datacom3.Data = data3;
+                    msg.Add(datacom);
+                    msg.Add(datacom2);
+                    msg.Add(datacom3);
+                    if(licz % 10 != 0)
+                        msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
+
+                    foreach(var c in msg.Commands)
+                    { 
+                        var aaaa = comtrans.FromCommand(c);
+                        serial.Write(aaaa);
+                    }
+
+                    Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
+                }
+                Console.WriteLine("Repeat for another 30 - press enter");
+                Console.ReadLine();
+                goto restart;
             }
 
 
@@ -522,7 +600,6 @@ namespace COM6TestSender
                 }
             }
 
-            Console.WriteLine("Wysyłanie trwa w tasku...");
 
             Console.ReadLine();
         }

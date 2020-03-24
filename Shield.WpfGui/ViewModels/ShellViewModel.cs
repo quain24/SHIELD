@@ -69,7 +69,7 @@ namespace Shield.WpfGui.ViewModels
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
             // Updating table in gui
-            Task.Run(async () =>
+            Task.Run(() =>
             {
                 while (true)
                 {

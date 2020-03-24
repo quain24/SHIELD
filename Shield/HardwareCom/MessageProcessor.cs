@@ -34,7 +34,6 @@ namespace Shield.HardwareCom
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
             _messagesToProcess.Add(message);
-            Debug.WriteLine($@"message {message.Id} added to be processed");
         }
 
         /// <summary>
@@ -117,7 +116,6 @@ namespace Shield.HardwareCom
             {
                 TryProcess(message, out processedMessage);
                 _processedMessages.Add(processedMessage);
-                Debug.WriteLine($@"MessageProcessor - Took message ({message.Id}) and added it to output queue.");
                 _processingCTS.Token.ThrowIfCancellationRequested();
             }
         }

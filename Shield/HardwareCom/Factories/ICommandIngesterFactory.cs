@@ -4,6 +4,6 @@ namespace Shield.HardwareCom.Factories
 {
     public interface ICommandIngesterFactory
     {
-        ICommandIngester GetIngesterUsing(int timeout);
+        ICommandIngesterAlt GetIngesterUsing(int timeout);
     }
 }

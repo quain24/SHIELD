@@ -131,6 +131,7 @@ namespace Shield.HardwareCom.MessageProcessing
                 SetNoConfirmatioError(message);
 
             _processedMessages.Add(message);
+            // todo throws kolekcja zmodyfikowana podczas wyliczenia
             _storage.Remove(_storage.Keys.First());
             Console.WriteLine($@"ConfirmationTimeoutChecker: {message.Id} - Confirmation timeout exceeded.");
             _processingCTS.Token.ThrowIfCancellationRequested();
