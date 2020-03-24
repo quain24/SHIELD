@@ -1,13 +1,10 @@
-﻿using Shield.Extensions;
-using Shield.HardwareCom.Factories;
+﻿using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +14,8 @@ namespace Shield.HardwareCom
     {
         private readonly IMessageFactory _msgFactory;
         private readonly ICompleteness _completness;
-        private readonly ITimeoutCheck _completitionTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
+
         private BlockingCollection<ICommandModel> _awaitingQueue = new BlockingCollection<ICommandModel>();
         private readonly ConcurrentDictionary<string, IMessageModel> _incompleteMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _completedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
@@ -27,15 +24,10 @@ namespace Shield.HardwareCom
 
         private readonly ReaderWriterLockSlim _messageProcessingLock = new ReaderWriterLockSlim();
         private readonly object _processingLock = new object();
-        private readonly object _timeoutCheckLock = new object();
-        private readonly int _parallelTreshold = 250;
         private bool _isProcessing = false;
-        private bool _isTimeoutChecking = false;
         private bool _disposed = false;
-        private readonly ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
         private CancellationTokenSource _cancelProcessingCTS = new CancellationTokenSource();
-        private CancellationTokenSource _cancelTimeoutCheckCTS = new CancellationTokenSource();
 
         /// <summary>
         /// Returns true if commands are being processed or object waits for new commands to be processed
@@ -48,11 +40,10 @@ namespace Shield.HardwareCom
         /// <param name="messageFactory">Message factory delegate</param>
         /// <param name="completeness">State check - checks if message is completed</param>
         /// <param name="completitionTimeout">State check - optional - checks if completition time is exceeded</param>
-        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, ITimeoutCheck completitionTimeout, IIdGenerator idGenerator)
+        public CommandIngester(IMessageFactory messageFactory, ICompleteness completeness, IIdGenerator idGenerator)
         {
             _msgFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
             _completness = completeness ?? throw new ArgumentNullException(nameof(completeness));
-            _completitionTimeoutChecker = completitionTimeout ?? throw new ArgumentNullException(nameof(completitionTimeout));
             _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
         }
 
@@ -62,13 +53,10 @@ namespace Shield.HardwareCom
         /// </summary>
         /// <param name="command">command object to be ingested</param>
         /// <returns>true if success</returns>
-        public bool AddCommandToProcess(ICommandModel command)
+        public void AddCommandToProcess(ICommandModel command)
         {
-            if (command is null)
-                return false;
+            _ = command ?? throw new ArgumentNullException(nameof(command));
             _awaitingQueue.Add(command);
-            Console.WriteLine($@"CommandIngester - Command {command.Id} added to be processed.");
-            return true;
         }
 
         /// <summary>
@@ -99,7 +87,6 @@ namespace Shield.HardwareCom
 
         private void ProcessCommandsContinously()
         {
-            Debug.WriteLine("CommandIngester - Command processing started");
             while (true)
             {
                 ICommandModel command = GetNextCommand();
@@ -119,37 +106,31 @@ namespace Shield.HardwareCom
         /// <param name="command">Command to be processed</param>
         public void Process(ICommandModel command)
         {
-            using (_messageProcessingLock.Write())
+            if (IsMessageAlreadyComplete(command.Id))
+                HandleBadCommand(command);
+            else
             {
-                if (IsMessageAlreadyComplete(command.Id))
-                    HandleBadCommand(command);
-                else
-                {
-                    IMessageModel message = GetMessageToWorkWithBasedOn(command);
-                    message.Add(command);
+                IMessageModel message = GetMessageToWorkWithBasedOn(command);
+                message?.Add(command);
 
-                    if (IsComplete(message))
-                        PushFromIncompleteToProcessed(message);
-                    else if (_completitionTimeoutChecker.IsExceeded(message))
-                        HandleMessageTimeout(message);
-                }
+                if (IsComplete(message))
+                    PushFromIncompleteToProcessed(message);
             }
         }
 
         private bool IsMessageAlreadyComplete(string messageId) => _completedMessages.ContainsKey(messageId);
 
-        private void HandleBadCommand(ICommandModel command)
+        private void HandleBadCommand(ICommandModel command) => _errCommands.Add(command);
+        
+        private IMessageModel GetMessageToWorkWithBasedOn(ICommandModel command)
         {
-            _errCommands.Add(command);
-            Debug.WriteLine("CommandIngester - ERROR - tried to add new command to completed / null message");
+            lock(_processingLock)
+                return _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage);
         }
-
-        private IMessageModel GetMessageToWorkWithBasedOn(ICommandModel command) =>
-            _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage);
 
         private bool IsComplete(IMessageModel message) =>
             _completness.IsComplete(message);
-        
+
         private IMessageModel CreateNewIncomingMessage(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -157,35 +138,22 @@ namespace Shield.HardwareCom
 
             IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id);
             _idGenerator.MarkAsUsedUp(id);
-            Debug.WriteLine($@"CommandIngester - new {id} message created");
             return message;
         }
 
-        private void PushFromIncompleteToProcessed(IMessageModel message)
+        public void PushFromIncompleteToProcessed(IMessageModel message)
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
-
-            if (_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))
-            {
-                _completedMessages.TryAdd(transferedMessage.Id, transferedMessage);
-                _processedMessages.Add(message);
-            }
-            Debug.WriteLine($@"CommandIngester - Message {message.Id} was processed, adding to processed messages collection");
-        }
-
-        private void HandleMessageTimeout(IMessageModel message)
-        {
-            if (message is null) return;
-            message.Errors |= Enums.Errors.CompletitionTimeout;
-            PushFromIncompleteToProcessed(message);
-            Debug.WriteLine($@"ContinousTimeoutChecker - Error - message {message.Id} completition timeout");
+            lock(_processingLock)
+                if (_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))            
+                    if(_completedMessages.TryAdd(transferedMessage.Id, transferedMessage))
+                        _processedMessages.Add(message);            
         }
 
         private bool IsStartProcessingCommandProperlyCancelled(Exception e)
         {
             lock (_processingLock)
                 _isProcessing = false;
-            Debug.WriteLine("CommandIngester - StartProcessingCommands ENDED");
             return e is TaskCanceledException || e is OperationCanceledException;
         }
 
@@ -198,135 +166,25 @@ namespace Shield.HardwareCom
             _cancelProcessingCTS = new CancellationTokenSource();
         }
 
-        public async Task StartTimeoutCheckAsync()
-        {
-            try
-            {
-                if (!CanStartTiemoutCheck())
-                    return;
-
-                int checkInterval = CalculateCheckInterval(_completitionTimeoutChecker.Timeout);
-
-                while (true)
-                {
-                    _cancelTimeoutCheckCTS.Token.ThrowIfCancellationRequested();
-                    ProcessTimeouts();
-                    await Task.Delay(checkInterval, _cancelTimeoutCheckCTS.Token).ConfigureAwait(false);
-                }
-            }
-            catch (Exception e)
-            {
-                if (!IsTimeoutCheckCorrectlyCancelled(e))
-                    throw;
-            }
-        }
-
-        private bool CanStartTiemoutCheck()
-        {
-            if (_completitionTimeoutChecker.Timeout == 0)
-                return false;
-
-            lock (_timeoutCheckLock)
-            {
-                if (!_isTimeoutChecking)
-                    return _isTimeoutChecking = true;
-                else
-                    return false;
-            }
-        }
-
-        private int CalculateCheckInterval(int timeout)
-        {
-            switch (timeout)
-            {
-                case var _ when timeout <= 1000:
-                return 250;
-
-                case var _ when timeout <= 3000:
-                return 500;
-
-                case var _ when timeout > 5000:
-                return 1000;
-
-                default:
-                return _completitionTimeoutChecker.Timeout;
-            }
-        }
-
-        private void ProcessTimeouts()
-        {
-            if (_incompleteMessages.Count > _parallelTreshold)
-                HandleTimeoutsParallel(GetlistOfUnconfirmedMessagesParallel());
-            else
-                HandleTimeouts(GetlistOfUnconfirmedMessages());
-        }
-
-        private void HandleTimeoutsParallel(List<IMessageModel> listOfTimeouts)
-        {
-            using (_messageProcessingLock.Write())
-                listOfTimeouts.AsParallel().ForAll(m => HandleMessageTimeout(m));
-        }
-
-        private void HandleTimeouts(List<IMessageModel> listOfTimeouts)
-        {
-            using (_messageProcessingLock.Write())
-                listOfTimeouts.ForEach(m => HandleMessageTimeout(m));
-        }
-
-        private List<IMessageModel> GetlistOfUnconfirmedMessages()
-        {
-            return _incompleteMessages
-                 .Select(kvp => kvp.Value)
-                 .Where(m => _completitionTimeoutChecker.IsExceeded(m))
-                 .ToList();
-        }
-
-        private List<IMessageModel> GetlistOfUnconfirmedMessagesParallel()
-        {
-            return _incompleteMessages
-                 .AsParallel()
-                 .Select(kvp => kvp.Value)
-                 .Where(m => _completitionTimeoutChecker.IsExceeded(m))
-                 .ToList();
-        }
-
-        private bool IsTimeoutCheckCorrectlyCancelled(Exception e)
-        {
-            lock (_timeoutCheckLock)
-                _isTimeoutChecking = false;
-
-            return (e is TaskCanceledException || e is OperationCanceledException) ? true : false;
-        }
-
-        public void StopTimeoutCheck()
-        {
-            _cancelTimeoutCheckCTS.Cancel();
-            _cancelTimeoutCheckCTS = new CancellationTokenSource();
-        }
-
         /// <summary>
         /// Gives a thread safe collection of completed and timeout messages for further processing.<br/>
         /// New messages are added as long as Ingester gets new CommandModels and can create new Messages.
         /// </summary>
         /// <returns></returns>
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _processedMessages;
-        
 
         /// <summary>
         /// Allows switch of source collection for easier data pipelining or producer - consumer design.
         /// </summary>
         /// <param name="newSourceCollection">New source collection</param>
-        public void SwitchSourceCollectionTo(BlockingCollection<ICommandModel> newSourceCollection)
-        {
-            using (_sourceCollectionSwithLock.Write())
-                _awaitingQueue = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
-        }
+        public void SwitchSourceCollectionTo(BlockingCollection<ICommandModel> newSourceCollection) =>
+            _awaitingQueue = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
 
         /// <summary>
         /// Returns incomplete messages till method execution from internal collection.
         /// </summary>
         /// <returns>New <see cref="Dictionary{string, IMessageModel}"/> containing incomplete messages</returns>
-        public Dictionary<string, IMessageModel> GetIncompletedMessages() => new Dictionary<string, IMessageModel>(_incompleteMessages);
+        public ConcurrentDictionary<string, IMessageModel> GetIncompletedMessages() => _incompleteMessages;
 
         /// <summary>
         /// Gives a thread safe collection of commands that were received, but corresponding messages were already completed or completition timeout

@@ -91,7 +91,7 @@
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="HardwareCom\CommandIngesterAlt.cs" />
+    <Compile Include="HardwareCom\CommandIngester.cs" />
     <Compile Include="HardwareCom\Factories\IMessagePipelineContextFactory.cs" />
     <Compile Include="HardwareCom\IMessagePipelineContext.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeoutChecker.cs" />
@@ -108,7 +108,6 @@
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
-    <Compile Include="HardwareCom\CommandIngester.cs" />
     <Compile Include="HardwareCom\CommandTranslator.cs" />
     <Compile Include="HardwareCom\CommunicationHub.cs" />
     <Compile Include="HardwareCom\Factories\CommandModelFactory.cs" />
@@ -120,7 +119,7 @@
     <Compile Include="HardwareCom\Factories\IMessengerFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengerFactory.cs" />
     <Compile Include="HardwareCom\Factories\TimeoutCheckFactory.cs" />
-    <Compile Include="HardwareCom\ICommandIngesterAlt.cs" />
+    <Compile Include="HardwareCom\ICommandIngester.cs" />
     <Compile Include="HardwareCom\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompletitionTimeoutChecker.cs" />
     <Compile Include="HardwareCom\IIncomingDataPreparer.cs" />
@@ -134,7 +133,6 @@
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
     <Compile Include="HardwareCom\MessageProcessing\DecodingAnalyzer.cs" />
     <Compile Include="HardwareCom\MessageProcessing\Completeness.cs" />
-    <Compile Include="HardwareCom\ICommandIngester.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IConfirmationTimeoutChecker.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IMessageAnalyzer.cs" />

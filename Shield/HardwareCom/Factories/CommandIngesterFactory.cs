@@ -21,7 +21,7 @@ namespace Shield.HardwareCom.Factories
             _idGeneratorFactory = idGeneratorFactory ?? throw new ArgumentNullException(nameof(idGeneratorFactory));
         }
         // todo replaced CommandIngester with ALT version
-        public ICommandIngesterAlt GetIngesterUsing(IIdGenerator idGenerator) =>
-            new CommandIngesterAlt(_messageFactory(), _completnessFactory(), idGenerator);
+        public ICommandIngester GetIngesterUsing(IIdGenerator idGenerator) =>
+            new CommandIngester(_messageFactory(), _completnessFactory(), idGenerator);
     }
 }

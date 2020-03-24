@@ -12,7 +12,7 @@ namespace Shield.HardwareCom
     public class MessagePipelineContext : IMessagePipelineContext
     {
         private readonly IMessenger _messenger;
-        private readonly ICommandIngesterAlt _ingester;
+        private readonly ICommandIngester _ingester;
         private readonly IIncomingMessageProcessor _processor;
         private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
@@ -20,7 +20,7 @@ namespace Shield.HardwareCom
         private readonly IConfirmationFactory _confirmationFactory;
 
         public MessagePipelineContext(IMessenger messenger,
-                                      ICommandIngesterAlt ingester,
+                                      ICommandIngester ingester,
                                       IIncomingMessageProcessor processor,
                                       ICompletitionTimeoutChecker completitionTimeoutChecker,
                                       IConfirmationTimeoutChecker confirmationTimeoutChecker,
@@ -38,7 +38,7 @@ namespace Shield.HardwareCom
 
         public IMessenger Messenger => _messenger;
 
-        public ICommandIngesterAlt Ingester => _ingester;
+        public ICommandIngester Ingester => _ingester;
 
         public IIncomingMessageProcessor Processor => _processor;
 

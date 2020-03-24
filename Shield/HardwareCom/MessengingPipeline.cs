@@ -11,7 +11,7 @@ namespace Shield.HardwareCom
     public class MessengingPipeline
     {
         private readonly IMessenger _messenger;
-        private readonly ICommandIngesterAlt _commandIngester;
+        private readonly ICommandIngester _commandIngester;
         private readonly IIncomingMessageProcessor _incomingMessageProcessor;
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;

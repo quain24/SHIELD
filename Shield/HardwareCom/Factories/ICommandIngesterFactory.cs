@@ -5,6 +5,6 @@ namespace Shield.HardwareCom.Factories
 {
     public interface ICommandIngesterFactory
     {
-        ICommandIngesterAlt GetIngesterUsing(IIdGenerator idGenerator);
+        ICommandIngester GetIngesterUsing(IIdGenerator idGenerator);
     }
 }

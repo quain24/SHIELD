@@ -8,7 +8,7 @@ namespace Shield.HardwareCom
     {
         ICompletitionTimeoutChecker CompletitionTimeoutChecker { get; }
         IConfirmationTimeoutChecker ConfirmationTimeoutChecker { get; }
-        ICommandIngesterAlt Ingester { get; }
+        ICommandIngester Ingester { get; }
         IMessenger Messenger { get; }
         IIncomingMessageProcessor Processor { get; }
         IIdGenerator IdGenerator { get; }

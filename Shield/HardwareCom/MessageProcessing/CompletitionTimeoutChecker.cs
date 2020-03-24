@@ -11,7 +11,7 @@ namespace Shield.HardwareCom.MessageProcessing
 {
     public class CompletitionTimeoutChecker : ICompletitionTimeoutChecker
     {
-        private readonly ICommandIngesterAlt _ingesterToWorkWith;
+        private readonly ICommandIngester _ingesterToWorkWith;
         private readonly ITimeoutCheck _completitionTimeoutChecker;
         private readonly ConcurrentDictionary<string, IMessageModel> _workingSet;
 
@@ -22,7 +22,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _cancelTimeoutCheckCTS = new CancellationTokenSource();
 
-        public CompletitionTimeoutChecker(ICommandIngesterAlt ingesterToWorkWith, ITimeoutCheck completitionTimeoutChecker)
+        public CompletitionTimeoutChecker(ICommandIngester ingesterToWorkWith, ITimeoutCheck completitionTimeoutChecker)
         {
             _ingesterToWorkWith = ingesterToWorkWith ?? throw new ArgumentNullException(nameof(ingesterToWorkWith));
             _completitionTimeoutChecker = completitionTimeoutChecker ?? throw new ArgumentNullException(nameof(completitionTimeoutChecker));

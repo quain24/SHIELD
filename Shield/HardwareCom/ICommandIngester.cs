@@ -7,14 +7,13 @@ namespace Shield.HardwareCom
 {
     public interface ICommandIngester
     {
-        bool AddCommandToProcess(ICommandModel command);
+        void AddCommandToProcess(ICommandModel command);
         BlockingCollection<ICommandModel> GetErrAlreadyCompleteOrTimeout();
-        Dictionary<string, IMessageModel> GetIncompletedMessages();
+        ConcurrentDictionary<string, IMessageModel> GetIncompletedMessages();
         BlockingCollection<IMessageModel> GetReceivedMessages();
+        void PushFromIncompleteToProcessed(IMessageModel message);
         void StartProcessingCommands();
-        Task StartTimeoutCheckAsync();
         void StopProcessingCommands();
-        void StopTimeoutCheck();
         void SwitchSourceCollectionTo(BlockingCollection<ICommandModel> newSourceCollection);
     }
 }

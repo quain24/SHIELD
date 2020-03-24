@@ -38,7 +38,7 @@ namespace Shield.HardwareCom.Factories
         public IMessagePipelineContext GetContextFor(ICommunicationDevice device)
         {
             IIdGenerator idGenerator = _idGeneratorAutoFac();
-            ICommandIngesterAlt ingester = _ingesterFactory.GetIngesterUsing(idGenerator);
+            ICommandIngester ingester = _ingesterFactory.GetIngesterUsing(idGenerator);
             IIncomingMessageProcessor processor = _processorFactory();
             IConfirmationTimeoutChecker confirmationTimeoutChecker = _confirmationTimeoutCheckerFactory.GetCheckerUsing(device.ConfirmationTimeout);
             ITimeoutCheck completitionTimeoutCheck = _timeoutCheckFactory.GetTimeoutCheckWithTimeoutSetTo(device.CompletitionTimeout);
