@@ -121,6 +121,11 @@ namespace Shield.HardwareCom
             if (!IsOpen || message is null)
                 return false;
 
+            if(string.IsNullOrWhiteSpace(message.Id))
+                message.Id = _idGenerator.GetNewID();
+            if(message.Timestamp <= 0)
+                message.Timestamp = Timestamp.TimestampNow;
+
             if (!IsConfirmation(message))
                 AddToConfirmationTimeoutChecking(message);
 

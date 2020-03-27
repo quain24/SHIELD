@@ -22,7 +22,6 @@ namespace Shield.WpfGui.ViewModels
         private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private readonly ICommandModelFactory _commandFactory;
         private readonly IMessageFactory _messageFactory1;
-        private readonly IIdGenerator _idGenerator;
         private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
         private readonly MessengingPipeline _pipeline;
         private string _selectedCommand;
@@ -52,15 +51,13 @@ namespace Shield.WpfGui.ViewModels
 
         public ShellViewModel(IMessengingPipelineFactory incomingMessagePipelineFactory, ISettings settings,
                               ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory,
-                              IMessageFactory messageFactory,
-                              IIdGenerator idGenerator)
+                              IMessageFactory messageFactory)
         {
             _incomingMessagePipelineFactory = incomingMessagePipelineFactory ?? throw new ArgumentNullException(nameof(incomingMessagePipelineFactory));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
             _messageFactory1 = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
-            _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             _settings.LoadFromFile();
             _settings.SaveToFile();
 
@@ -488,8 +485,8 @@ namespace Shield.WpfGui.ViewModels
                 message.Add(c);
             }
 
-            message.Timestamp = Timestamp.TimestampNow;
-            message.AssaignID(_idGenerator.GetNewID());
+            //message.Timestamp = Timestamp.TimestampNow;
+            //message.AssaignID(_idGenerator.GetNewID());
 
             return message;
         }

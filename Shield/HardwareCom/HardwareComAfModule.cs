@@ -32,7 +32,6 @@ namespace Shield.HardwareCom
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Factory"))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
-                   .Except<MessageFactory>()
                    .Except<TimeoutCheckFactory>()
                    //.Except<MessengingPipelineFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
@@ -51,16 +50,7 @@ namespace Shield.HardwareCom
 
             #endregion Communication Device Factory and required devices
 
-
-            // Message factory
-
-            builder.RegisterType<MessageFactory>()
-                   .WithParameter(
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.ParameterType == typeof(IIdGenerator) && pi.Name == "idGenerator",
-                           (pi, ctx) => ctx.Resolve<IIdGenerator>())
-                   )
-                   .As<IMessageFactory>();
+            
 
             // TimeOutCheck factory
 
