@@ -10,7 +10,10 @@ using Shield.Helpers;
 
 namespace Shield.HardwareCom
 {
-    public class MessagePipelineContext : IMessagePipelineContext
+    /// <summary>
+    /// Contains all necessary objects for <see cref="MessengingPipeline"/> creation and operation.
+    /// </summary>
+    public class MessengingPipelineContext : IMessengingPipelineContext
     {
         private readonly IMessenger _messenger;
         private readonly ICommandIngester _ingester;
@@ -19,14 +22,14 @@ namespace Shield.HardwareCom
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
         private readonly IConfirmationFactory _confirmationFactory;
-
-        public MessagePipelineContext(IMessenger messenger,
-                                      ICommandIngester ingester,
-                                      IIncomingMessageProcessor processor,
-                                      ICompletitionTimeoutChecker completitionTimeoutChecker,
-                                      IConfirmationTimeoutChecker confirmationTimeoutChecker,
-                                      IIdGenerator idGenerator,
-                                      IConfirmationFactory confirmationFactory)
+                
+        public MessengingPipelineContext(IMessenger messenger,
+                                         ICommandIngester ingester,
+                                         IIncomingMessageProcessor processor,
+                                         ICompletitionTimeoutChecker completitionTimeoutChecker,
+                                         IConfirmationTimeoutChecker confirmationTimeoutChecker,
+                                         IIdGenerator idGenerator,
+                                         IConfirmationFactory confirmationFactory)
         {
             _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
             _ingester = ingester ?? throw new ArgumentNullException(nameof(ingester));

@@ -2,10 +2,6 @@
 using Shield.HardwareCom.MessageProcessing;
 using Shield.Helpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -21,8 +17,11 @@ namespace Shield.HardwareCom.Factories
             _completnessFactory = completnessFactory ?? throw new ArgumentNullException(nameof(completnessFactory));
             _idGeneratorFactory = idGeneratorFactory ?? throw new ArgumentNullException(nameof(idGeneratorFactory));
         }
-        // todo replaced CommandIngester with ALT version
+
         public ICommandIngester GetIngesterUsing(IIdGenerator idGenerator) =>
             new CommandIngester(_messageFactory(), _completnessFactory(), idGenerator);
+
+        public ICommandIngester GetIngetster() => 
+            new CommandIngester(_messageFactory(), _completnessFactory(), _idGeneratorFactory());
     }
 }

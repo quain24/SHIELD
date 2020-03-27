@@ -6,7 +6,7 @@ using System;
 
 namespace Shield.HardwareCom.Factories
 {
-    public class MessagePipelineContextFactory : IMessagePipelineContextFactory
+    public class MessengingPipelineContextFactory : IMessengingPipelineContextFactory
     {
         private readonly ITimeoutCheckFactory _timeoutCheckFactory;
         private readonly IMessengerFactory _messengerFactory;
@@ -17,26 +17,26 @@ namespace Shield.HardwareCom.Factories
         private readonly Func<IConfirmationFactory> _confirmationFactory;
         private readonly Func<IIdGenerator> _idGeneratorAutoFac;
 
-        public MessagePipelineContextFactory(ITimeoutCheckFactory timeoutCheckFactory,
+        public MessengingPipelineContextFactory(ITimeoutCheckFactory timeoutCheckFactory,
                                              IMessengerFactory messengerFactory,
                                              ICommandIngesterFactory ingesterFactory,
-                                             Func<IIncomingMessageProcessor> processorFactory,
                                              IConfirmationTimeoutCheckerFactory confirmationTimeoutCheckerFactory,
                                              ICompletitionTimeoutCheckerFactory completitionTimeoutCheckerFactory,
+                                             Func<IIncomingMessageProcessor> processorFactory,
                                              Func<IConfirmationFactory> confirmationFactory,
-                                             Func<IIdGenerator> idGeneratorAutoFac)
+                                             Func<IIdGenerator> idGeneratorFactory)
         {
             _timeoutCheckFactory = timeoutCheckFactory ?? throw new ArgumentNullException(nameof(timeoutCheckFactory));
             _messengerFactory = messengerFactory ?? throw new ArgumentNullException(nameof(messengerFactory));
             _ingesterFactory = ingesterFactory ?? throw new ArgumentNullException(nameof(ingesterFactory));
-            _processorFactory = processorFactory ?? throw new ArgumentNullException(nameof(processorFactory));
             _confirmationTimeoutCheckerFactory = confirmationTimeoutCheckerFactory ?? throw new ArgumentNullException(nameof(confirmationTimeoutCheckerFactory));
             _completitionTimeoutCheckerFactory = completitionTimeoutCheckerFactory ?? throw new ArgumentNullException(nameof(completitionTimeoutCheckerFactory));
+            _processorFactory = processorFactory ?? throw new ArgumentNullException(nameof(processorFactory));
             _confirmationFactory = confirmationFactory ?? throw new ArgumentNullException(nameof(confirmationFactory));
-            _idGeneratorAutoFac = idGeneratorAutoFac ?? throw new ArgumentNullException(nameof(idGeneratorAutoFac));
+            _idGeneratorAutoFac = idGeneratorFactory ?? throw new ArgumentNullException(nameof(idGeneratorFactory));
         }
 
-        public IMessagePipelineContext GetContextFor(ICommunicationDevice device)
+        public IMessengingPipelineContext GetContextFor(ICommunicationDevice device)
         {
             IIdGenerator idGenerator = _idGeneratorAutoFac();
             ICommandIngester ingester = _ingesterFactory.GetIngesterUsing(idGenerator);
@@ -47,7 +47,7 @@ namespace Shield.HardwareCom.Factories
             IMessenger messenger = _messengerFactory.CreateMessangerUsing(device);
             IConfirmationFactory confirmationFactory = _confirmationFactory();
 
-            return new MessagePipelineContext(messenger, ingester, processor, completitionTimeoutChecker, confirmationTimeoutChecker, idGenerator, confirmationFactory);
+            return new MessengingPipelineContext(messenger, ingester, processor, completitionTimeoutChecker, confirmationTimeoutChecker, idGenerator, confirmationFactory);
         }
     }
 }

@@ -89,7 +89,7 @@ namespace Shield.HardwareCom
 
             builder.Register(c => 
                         new MessengingPipelineFactory(
-                            c.Resolve<IMessagePipelineContextFactory>()))
+                            c.Resolve<IMessengingPipelineContextFactory>()))
                     .AsImplementedInterfaces();
 
             // End of factories registration ========================================================================================================

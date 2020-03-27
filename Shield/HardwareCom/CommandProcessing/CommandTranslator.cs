@@ -1,5 +1,4 @@
-﻿using Shield.Data;
-using Shield.Data.Models;
+﻿using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
@@ -13,6 +12,8 @@ namespace Shield.HardwareCom.CommandProcessing
     /// </summary>
     public class CommandTranslator : ICommandTranslator
     {
+        private readonly int _commandLengthWithData;
+        private readonly int _commandLength;
         private readonly char _separator;
         private readonly char _filler;
 
@@ -21,10 +22,13 @@ namespace Shield.HardwareCom.CommandProcessing
 
         public CommandTranslator(IApplicationSettingsModel applicationSettings, Func<ICommandModel> commandModelFac)
         {
-            _commandModelFac = commandModelFac; // Autofac autofactory
+            _commandModelFac = commandModelFac ?? throw new ArgumentNullException(nameof(commandModelFac)); // Autofac factory
             _appSettingsModel = applicationSettings ?? throw new ArgumentNullException(nameof(applicationSettings));
+
             _separator = _appSettingsModel.Separator;
             _filler = _appSettingsModel.Filler;
+            _commandLengthWithData = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + _appSettingsModel.DataSize + 3;
+            _commandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + 3;
         }
 
         public ICommandModel FromString(string rawData)
@@ -34,15 +38,12 @@ namespace Shield.HardwareCom.CommandProcessing
             string rawDataString = string.Empty;
             string rawIdString = string.Empty;
 
-            int CommandLengthWithData = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + _appSettingsModel.DataSize + 3;
-            int CommandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + 3;
-
-            if (rawData.Length == CommandLengthWithData || rawData.Length == CommandLength)
+            if (rawData.Length == _commandLengthWithData || rawData.Length == _commandLength)
             {
                 rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
                 rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
 
-                if (rawData.Length == CommandLengthWithData)
+                if (rawData.Length == _commandLengthWithData)
                     rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
 
                 int rawComInt;
@@ -54,7 +55,7 @@ namespace Shield.HardwareCom.CommandProcessing
                         command.CommandType = CommandType.Unknown;
 
                     command.Id = rawIdString;
-                    command.Data = rawData.Length == CommandLengthWithData ? rawDataString : string.Empty;
+                    command.Data = rawData.Length == _commandLengthWithData ? rawDataString : string.Empty;
                 }
                 else
                 {
@@ -77,7 +78,7 @@ namespace Shield.HardwareCom.CommandProcessing
         /// <summary>
         /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
         /// </summary>
-        /// <param name="givenCommand">Command to be trasformed into raw string</param>
+        /// <param name="givenCommand">Command to be transformed into raw string</param>
         /// <returns>Raw formatted string that can be understood by connected machine</returns>
         public string FromCommand(ICommandModel givenCommand)
         {

@@ -8,7 +8,6 @@ namespace Shield.HardwareCom.Factories
     {
         private Func<IMessageModel> _messageFactory;
         private readonly IIdGenerator _idGenerator;
-        private int _idLength;
 
         public MessageFactory(Func<IMessageModel> messageFactory, IIdGenerator idGenerator)
         {

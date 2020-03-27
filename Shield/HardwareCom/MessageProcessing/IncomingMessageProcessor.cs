@@ -3,7 +3,6 @@ using Shield.Extensions;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,7 +23,6 @@ namespace Shield.HardwareCom.MessageProcessing
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
         private bool _isProcessing = false;
         private object _processingLock = new object();
-        private readonly ReaderWriterLockSlim _sourceCollectionSwithLock = new ReaderWriterLockSlim();
 
         public IncomingMessageProcessor(IMessageAnalyzer[] analyzers) =>
             _analyzers = analyzers ?? throw new ArgumentNullException(nameof(analyzers));
@@ -42,18 +40,14 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
             _messagesToProcess.Add(message);
-            Debug.WriteLine($@"message {message.Id} added to be processed");
         }
 
         /// <summary>
         /// Replace built in source collection with external collection, that for example will be updated by another object
         /// </summary>
         /// <param name="newSourceCollection">external collection</param>
-        public void SwitchSourceCollectionTo(BlockingCollection<IMessageModel> newSourceCollection)
-        {
-            using (_sourceCollectionSwithLock.Write())
+        public void SwitchSourceCollectionTo(BlockingCollection<IMessageModel> newSourceCollection) =>
                 _messagesToProcess = newSourceCollection ?? throw new ArgumentNullException(nameof(newSourceCollection));
-        }
 
         /// <summary>
         /// Starts continuous message processing.
@@ -107,19 +101,12 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             _processingCTS.Token.ThrowIfCancellationRequested();
 
-            IMessageModel message;
-            IMessageModel processedMessage;
-            bool wasTaken = false;
-
-            // Taking element from thread safe collection - no need to lock. Locking only when collection is switched to other one
-            using (_sourceCollectionSwithLock.Read())
-                wasTaken = _messagesToProcess.TryTake(out message, TakeTimeout, _processingCTS.Token);
+            bool wasTaken = _messagesToProcess.TryTake(out IMessageModel message, TakeTimeout, _processingCTS.Token);
 
             if (wasTaken)
             {
-                TryProcess(message, out processedMessage);
+                TryProcess(message, out IMessageModel processedMessage);
                 _processedMessages.Add(processedMessage);
-                Debug.WriteLine($@"MessageProcessor - Took message ({message.Id}) and added it to output queue.");
                 _processingCTS.Token.ThrowIfCancellationRequested();
             }
         }
@@ -129,8 +116,6 @@ namespace Shield.HardwareCom.MessageProcessing
             processedMessage = messageToProcess ?? throw new ArgumentNullException(nameof(messageToProcess));
 
             RunAnalyzersOn(processedMessage);
-
-            Debug.WriteLine($@"IncomingMessageProcessor - TryProcess message running with id:{messageToProcess.Id}");
 
             return messageToProcess.Errors == Errors.None;
         }
@@ -162,9 +147,7 @@ namespace Shield.HardwareCom.MessageProcessing
         /// Gets thread safe collection that contains processed messages.
         /// </summary>
         /// <returns>Collection of processed messages</returns>
-        public BlockingCollection<IMessageModel> GetProcessedMessages()
-        {
-            return _processedMessages;
-        }
+        public BlockingCollection<IMessageModel> GetProcessedMessages() =>
+            _processedMessages;
     }
 }

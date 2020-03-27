@@ -1,5 +1,4 @@
 ﻿using Shield.HardwareCom.CommandProcessing;
-using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
@@ -117,15 +116,11 @@ namespace Shield.HardwareCom.MessageProcessing
                  .ToList();
         }
 
-        private void HandleTimeoutsParallel(List<IMessageModel> listOfTimeouts)
-        {
+        private void HandleTimeoutsParallel(List<IMessageModel> listOfTimeouts) =>
             listOfTimeouts.AsParallel().ForAll(m => HandleMessageTimeout(m));
-        }
 
-        private void HandleTimeouts(List<IMessageModel> listOfTimeouts)
-        {
+        private void HandleTimeouts(List<IMessageModel> listOfTimeouts) =>
             listOfTimeouts.ForEach(m => HandleMessageTimeout(m));
-        }
 
         private bool IsTimeoutCheckCorrectlyCancelled(Exception e)
         {

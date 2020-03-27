@@ -21,6 +21,7 @@ namespace Shield.HardwareCom.MessageProcessing
         private readonly ITimeoutCheck _timeoutCheck;
         private int _checkinterval = 0;
 
+        private readonly object _getNextMessageLock = new object();
         private object _processLock = new object();
         private bool _isProcessing = false;
         private bool _disposed = false;
@@ -89,16 +90,8 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private IMessageModel GetNextUnconfirmedMessage()
         {
-            try
-            {
+            lock (_getNextMessageLock)
                 return _storage.FirstOrDefault().Value;
-            }
-            catch
-            {
-                Debug.WriteLine("ConfirmationTimeoutChecker - GetNextUnconfirmedMessage: Collection changed");
-                return null;
-            }
-
         }
 
         private Task WaitForNextIteration() =>
@@ -119,7 +112,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         public IMessageModel GetConfirmationOf(IMessageModel message)
         {
-            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");            
+            _ = message ?? throw new ArgumentNullException(nameof(message), "ConfirmationTimeoutchecker - isConfirmed: Cannot check NULL object");
             _confirmations.TryGetValue(message.Id, out IMessageModel output);
             return output;
         }
@@ -131,9 +124,9 @@ namespace Shield.HardwareCom.MessageProcessing
                 SetNoConfirmatioError(message);
 
             _processedMessages.Add(message);
-            // todo throws kolekcja zmodyfikowana podczas wyliczenia
-            _storage.Remove(_storage.Keys.First());
-            Console.WriteLine($@"ConfirmationTimeoutChecker: {message.Id} - Confirmation timeout exceeded.");
+            lock(_getNextMessageLock)
+                if(_storage[_storage.Keys.First()].Timestamp == message.Timestamp)
+                    _storage.Remove(_storage.Keys.First());
             _processingCTS.Token.ThrowIfCancellationRequested();
         }
 
@@ -154,7 +147,8 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             if (message is null)
                 return;
-            _storage.Add(message.Timestamp, message);
+            lock(_getNextMessageLock)
+                _storage.Add(message.Timestamp, message);
         }
 
         public void AddConfirmation(IMessageModel confirmation)
@@ -170,7 +164,9 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             if (confirmation is null) throw new ArgumentNullException(nameof(confirmation));
 
-            IMessageModel message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
+            IMessageModel message;
+            lock(_getNextMessageLock)
+                message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
 
             using (_currentlyProcessingIdLock.Write())
                 _currentlyProcessingId = message is null ? string.Empty : message.Id;
@@ -231,13 +227,13 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             switch (timeout)
             {
-                case var _ when timeout <= 100:
+                case var t when t <= 100:
                     return 100;
 
-                case var _ when timeout <= 3000:
+                case var t when t <= 3000:
                     return 500;
 
-                case var _ when timeout <= 5000:
+                case var t when t <= 5000:
                     return 1000;
 
                 default:

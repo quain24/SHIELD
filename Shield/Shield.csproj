@@ -92,8 +92,8 @@
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandIngester.cs" />
-    <Compile Include="HardwareCom\Factories\IMessagePipelineContextFactory.cs" />
-    <Compile Include="HardwareCom\IMessagePipelineContext.cs" />
+    <Compile Include="HardwareCom\Factories\IMessengingPipelineContextFactory.cs" />
+    <Compile Include="HardwareCom\IMessengingPipelineContext.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeoutChecker.cs" />
     <Compile Include="HardwareCom\Factories\CommandIngesterFactory.cs" />
     <Compile Include="HardwareCom\Factories\CompletitionTimeoutCheckerFactory.cs" />
@@ -103,7 +103,7 @@
     <Compile Include="HardwareCom\Factories\IConfirmationTimeoutCheckerFactory.cs" />
     <Compile Include="HardwareCom\Factories\IMessengingPipelineFactory.cs" />
     <Compile Include="HardwareCom\Factories\ITimeoutCheckFactory.cs" />
-    <Compile Include="HardwareCom\Factories\MessagePipelineContextFactory.cs" />
+    <Compile Include="HardwareCom\Factories\MessengingPipelineContextFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengingPipelineFactory.cs" />
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
@@ -126,7 +126,7 @@
     <Compile Include="HardwareCom\MessageProcessing\IIncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparer.cs" />
-    <Compile Include="HardwareCom\MessagePipelineContext.cs" />
+    <Compile Include="HardwareCom\MessengingPipelineContext.cs" />
     <Compile Include="HardwareCom\MessengingPipeline.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />

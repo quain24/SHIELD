@@ -26,24 +26,10 @@ namespace Shield.HardwareCom
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
 
-        public event EventHandler<IMessageModel> OnMessageReceived;
-
-        public event EventHandler<IMessageModel> OnConfirmationReceived;
-
-        public event EventHandler<IMessageModel> OnMessageSent;
-
-        public event EventHandler<IMessageModel> OnMessageWasConfirmed;
-
-        public event EventHandler<IMessageModel> OnMessageConfirmationTimout;
-
-        public event EventHandler<IMessageModel> OnMessageCompletitionTimout;
-
-        // TODO handle events, how to wire them up to inform about completition, timeouts and similar.
-
-        public MessengingPipeline(IMessagePipelineContext context)
+        public MessengingPipeline(IMessengingPipelineContext context)
         {
-            if (context is null)            
-                throw new ArgumentNullException(nameof(context));            
+            if (context is null)
+                throw new ArgumentNullException(nameof(context));
 
             _confirmationTimeoutChecker = context.ConfirmationTimeoutChecker;
             _completitionTimeoutChecker = context.CompletitionTimeoutChecker;
@@ -67,7 +53,7 @@ namespace Shield.HardwareCom
             Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
             Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
             Task.Run(async () => await _completitionTimeoutChecker.StartTimeoutCheckAsync().ConfigureAwait(false));
-            //Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+            Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));
         }
 
@@ -93,6 +79,7 @@ namespace Shield.HardwareCom
             while (!_handleNewMessagesCTS.IsCancellationRequested)
             {
                 IMessageModel receivedMessage = GetNextReceivedMessage();
+                receivedMessage.IsTransfered = true;
 
                 if (IsConfirmation(receivedMessage))
                     HandleReceivedConfirmation(receivedMessage);
@@ -117,8 +104,7 @@ namespace Shield.HardwareCom
         {
             _receivedMessages.TryAdd(message.Id, message);
             _forGUITemporary.Add(message);
-            // todo this blocks - move it to some kind of buffer?
-            //await SendConfirmationOfAsync(message).ConfigureAwait(false);
+            await SendConfirmationOfAsync(message).ConfigureAwait(false);
         }
 
         private async Task SendConfirmationOfAsync(IMessageModel message)
@@ -135,16 +121,24 @@ namespace Shield.HardwareCom
             if (!IsOpen || message is null)
                 return false;
 
-            _confirmationTimeoutChecker.AddToCheckingQueue(message);
+            if (!IsConfirmation(message))
+                AddToConfirmationTimeoutChecking(message);
 
             if (await _messenger.SendAsync(message).ConfigureAwait(false))
             {
                 _sentMessages.TryAdd(message.Id, message);
+                message.IsTransfered = true;
                 return true;
             }
             else
                 return false;
         }
+
+        private void AddToConfirmationTimeoutChecking(IMessageModel confirmation)
+        {
+            _confirmationTimeoutChecker.AddToCheckingQueue(confirmation);
+        }
+
 
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
     }

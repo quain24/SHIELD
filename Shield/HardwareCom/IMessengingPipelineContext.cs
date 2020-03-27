@@ -5,7 +5,7 @@ using Shield.Helpers;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessagePipelineContext
+    public interface IMessengingPipelineContext
     {
         ICompletitionTimeoutChecker CompletitionTimeoutChecker { get; }
         IConfirmationTimeoutChecker ConfirmationTimeoutChecker { get; }

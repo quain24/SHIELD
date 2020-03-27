@@ -111,7 +111,8 @@ namespace Shield.HardwareCom.CommandProcessing
             else
             {
                 IMessageModel message = GetMessageToWorkWithBasedOn(command);
-                message?.Add(command);
+                if (!message?.Add(command) ?? true)
+                    HandleBadCommand(command);
 
                 if (IsComplete(message))
                     PushFromIncompleteToProcessed(message);
@@ -121,10 +122,10 @@ namespace Shield.HardwareCom.CommandProcessing
         private bool IsMessageAlreadyComplete(string messageId) => _completedMessages.ContainsKey(messageId);
 
         private void HandleBadCommand(ICommandModel command) => _errCommands.Add(command);
-        
+
         private IMessageModel GetMessageToWorkWithBasedOn(ICommandModel command)
         {
-            lock(_processingLock)
+            lock (_processingLock)
                 return _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage);
         }
 
@@ -144,10 +145,10 @@ namespace Shield.HardwareCom.CommandProcessing
         public void PushFromIncompleteToProcessed(IMessageModel message)
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
-            lock(_processingLock)
-                if (_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))            
-                    if(_completedMessages.TryAdd(transferedMessage.Id, transferedMessage))
-                        _processedMessages.Add(message);            
+            lock (_processingLock)
+                if (_incompleteMessages.TryRemove(message.Id, out IMessageModel transferedMessage))
+                    if (_completedMessages.TryAdd(transferedMessage.Id, transferedMessage))
+                        _processedMessages.Add(message);
         }
 
         private bool IsStartProcessingCommandProperlyCancelled(Exception e)

@@ -34,8 +34,6 @@ namespace Shield.HardwareCom.MessageProcessing
             long difference = inCompareTo is null ?
                 Timestamp.Difference(message.Timestamp) :
                 Timestamp.Difference(message.Timestamp, inCompareTo.Timestamp);
-            if (difference > Timeout)
-                Debug.WriteLine($@"Timeout - difference: {difference}");
             return difference > Timeout;
         }
     }
