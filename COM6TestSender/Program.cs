@@ -446,7 +446,7 @@ namespace COM6TestSender
                 int licz = 0;
                 bool fl = false;
 
-                var msgFac = new Shield.HardwareCom.Factories.MessageFactory(new Func<IMessageModel>(() => new MessageModel()), new IdGenerator(4));
+                var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
                 var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
                 var sm = new Shield.Data.Models.SettingsModel();
@@ -521,7 +521,7 @@ namespace COM6TestSender
                 int licz = 0;
                 bool fl = false;
 
-                var msgFac = new Shield.HardwareCom.Factories.MessageFactory(new Func<IMessageModel>(() => new MessageModel()), new IdGenerator(4));
+                var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
                 var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
                 var sm = new Shield.Data.Models.SettingsModel();

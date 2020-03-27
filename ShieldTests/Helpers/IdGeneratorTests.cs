@@ -1,5 +1,6 @@
 ﻿using Shield.Helpers;
 using Xunit;
+using System;
 
 namespace ShieldTests.Helpers
 {
@@ -11,19 +12,16 @@ namespace ShieldTests.Helpers
         [InlineData(1)]
         public void IdGenerator_ReturnsRandomStringWhenGivenCorrectLength(int length)
         {
-            string result = new IdGenerator(length).GetNewID();
-            Assert.NotNull(result);
+            string result = new IdGenerator(length).GetNewID();            
             Assert.Equal(length, result.Length);
         }
 
         [Theory]
         [InlineData(0)]
         [InlineData(-512)]
-        public void IdGenerator_ReturnsNullGuivenWrongData(int length)
-        {
-            string result = new IdGenerator(length).GetNewID();
-
-            Assert.Null(result);
+        public void IdGenerator_ThrowsExceptionWhenLengthIsOutOfBounds(int length)
+        {            
+            Assert.Throws<ArgumentOutOfRangeException>(() => new IdGenerator(length));
         }
     }
 }
