@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Caliburn.Micro;
-using Shield.WpfGui.ViewModels;
 using System.Linq;
 using System.Reflection;
 
@@ -17,7 +16,6 @@ namespace Shield.WpfGui
             builder.RegisterType<EventAggregator>()
                 .As<IEventAggregator>()
                 .SingleInstance();
-
 
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
                 .Where(t => t.IsInNamespace($@"Shield.WpfGui.ViewModels") && t.Name.EndsWith("ViewModel"))

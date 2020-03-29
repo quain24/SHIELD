@@ -43,10 +43,9 @@ namespace Shield.HardwareCom.MessageProcessing
         private bool IsOfMinimalLength() =>
             _message.Count() >= 3;
 
-        private bool IsBeginningAndEndPositionCorrect() =>        
+        private bool IsBeginningAndEndPositionCorrect() =>
             _message.First().CommandType == CommandType.HandShake ||
             _message.Last().CommandType == CommandType.EndMessage;
-        
 
         private bool HasOneBeginningAndEnd() =>
             _message.Count(c => c.CommandType == CommandType.HandShake && c.CommandType == CommandType.EndMessage) != 2;

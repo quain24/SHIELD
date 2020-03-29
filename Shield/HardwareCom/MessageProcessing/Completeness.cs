@@ -11,10 +11,10 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
 
-            if(message.IsCompleted)
+            if (message.IsCompleted)
                 return true;
 
-            if (message.Count() >= 4 && IsSecondCommandAType(message.Commands[1].CommandType) && message.Last().CommandType == CommandType.EndMessage )
+            if (message.Count() >= 4 && IsSecondCommandAType(message.Commands[1].CommandType) && message.Last().CommandType == CommandType.EndMessage)
                 return message.IsCompleted = true;
             return false;
         }

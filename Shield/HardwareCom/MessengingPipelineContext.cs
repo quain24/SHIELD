@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.HardwareCom.CommandProcessing;
+﻿using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.Helpers;
+using System;
 
 namespace Shield.HardwareCom
 {
@@ -22,7 +18,7 @@ namespace Shield.HardwareCom
         private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
         private readonly IIdGenerator _idGenerator;
         private readonly IConfirmationFactory _confirmationFactory;
-                
+
         public MessengingPipelineContext(IMessenger messenger,
                                          ICommandIngester ingester,
                                          IIncomingMessageProcessor processor,

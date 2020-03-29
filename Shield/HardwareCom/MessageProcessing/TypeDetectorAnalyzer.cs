@@ -39,16 +39,16 @@ namespace Shield.HardwareCom.MessageProcessing
             switch (command.CommandType)
             {
                 case CommandType.Master:
-                return MessageType.Master;
+                    return MessageType.Master;
 
                 case CommandType.Slave:
-                return MessageType.Slave;
+                    return MessageType.Slave;
 
                 case CommandType.Confirmation:
-                return MessageType.Confirmation;
+                    return MessageType.Confirmation;
 
                 default:
-                return MessageType.Unknown;
+                    return MessageType.Unknown;
             }
         }
     }

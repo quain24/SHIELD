@@ -121,9 +121,9 @@ namespace Shield.HardwareCom
             if (!IsOpen || message is null)
                 return false;
 
-            if(string.IsNullOrWhiteSpace(message.Id))
+            if (string.IsNullOrWhiteSpace(message.Id))
                 message.Id = _idGenerator.GetNewID();
-            if(message.Timestamp <= 0)
+            if (message.Timestamp <= 0)
                 message.Timestamp = Timestamp.TimestampNow;
 
             if (!IsConfirmation(message))
@@ -143,7 +143,6 @@ namespace Shield.HardwareCom
         {
             _confirmationTimeoutChecker.AddToCheckingQueue(confirmation);
         }
-
 
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
     }

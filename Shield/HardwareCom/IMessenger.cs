@@ -1,5 +1,4 @@
-﻿using Shield.Enums;
-using Shield.HardwareCom.Models;
+﻿using Shield.HardwareCom.Models;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,6 +22,7 @@ namespace Shield.HardwareCom
         void StopReceiving();
 
         Task<bool> SendAsync(IMessageModel message);
+
         BlockingCollection<ICommandModel> GetReceivedCommands();
 
         event System.EventHandler<ICommandModel> CommandReceived;

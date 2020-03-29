@@ -21,7 +21,7 @@ namespace Shield.HardwareCom.Factories
         public ICommandIngester GetIngesterUsing(IIdGenerator idGenerator) =>
             new CommandIngester(_messageFactory(), _completnessFactory(), idGenerator);
 
-        public ICommandIngester GetIngetster() => 
+        public ICommandIngester GetIngetster() =>
             new CommandIngester(_messageFactory(), _completnessFactory(), _idGeneratorFactory());
     }
 }

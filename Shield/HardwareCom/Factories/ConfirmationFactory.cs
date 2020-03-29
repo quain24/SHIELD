@@ -32,29 +32,29 @@ namespace Shield.HardwareCom.Factories
                 switch (c.CommandType)
                 {
                     case CommandType.Error:
-                    responseCommand.CommandType = CommandType.ReceivedAsError;
-                    break;
+                        responseCommand.CommandType = CommandType.ReceivedAsError;
+                        break;
 
                     case CommandType.Unknown:
-                    responseCommand.CommandType = CommandType.ReceivedAsUnknown;
-                    break;
+                        responseCommand.CommandType = CommandType.ReceivedAsUnknown;
+                        break;
 
                     case CommandType.Partial:
-                    responseCommand.CommandType = CommandType.ReceivedAsPartial;
-                    break;
+                        responseCommand.CommandType = CommandType.ReceivedAsPartial;
+                        break;
 
                     default:
-                    responseCommand.CommandType = CommandType.ReceivedAsCorrect;
-                    break;
+                        responseCommand.CommandType = CommandType.ReceivedAsCorrect;
+                        break;
                 }
                 confirmation.Add(responseCommand);
             }
 
-            if (message.Errors.HasFlag(Errors.CompletitionTimeout))            
-                confirmation.Add(_commandFactory.Create(CommandType.CompletitionTimeoutOccured));            
+            if (message.Errors.HasFlag(Errors.CompletitionTimeout))
+                confirmation.Add(_commandFactory.Create(CommandType.CompletitionTimeoutOccured));
 
-            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))            
-                confirmation.Add(_commandFactory.Create(CommandType.ConfirmationTimeoutOccurred));            
+            if (message.Errors.HasFlag(Errors.ConfirmationTimeout))
+                confirmation.Add(_commandFactory.Create(CommandType.ConfirmationTimeoutOccurred));
 
             confirmation.Add(_commandFactory.Create(CommandType.EndMessage));
 
@@ -64,4 +64,4 @@ namespace Shield.HardwareCom.Factories
             return confirmation;
         }
     }
-} 
+}

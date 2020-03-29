@@ -124,8 +124,8 @@ namespace Shield.HardwareCom.MessageProcessing
                 SetNoConfirmatioError(message);
 
             _processedMessages.Add(message);
-            lock(_getNextMessageLock)
-                if(_storage[_storage.Keys.First()].Timestamp == message.Timestamp)
+            lock (_getNextMessageLock)
+                if (_storage[_storage.Keys.First()].Timestamp == message.Timestamp)
                     _storage.Remove(_storage.Keys.First());
             _processingCTS.Token.ThrowIfCancellationRequested();
         }
@@ -147,7 +147,7 @@ namespace Shield.HardwareCom.MessageProcessing
         {
             if (message is null)
                 return;
-            lock(_getNextMessageLock)
+            lock (_getNextMessageLock)
                 _storage.Add(message.Timestamp, message);
         }
 
@@ -165,7 +165,7 @@ namespace Shield.HardwareCom.MessageProcessing
             if (confirmation is null) throw new ArgumentNullException(nameof(confirmation));
 
             IMessageModel message;
-            lock(_getNextMessageLock)
+            lock (_getNextMessageLock)
                 message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
 
             using (_currentlyProcessingIdLock.Write())

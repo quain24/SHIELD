@@ -50,8 +50,6 @@ namespace Shield.HardwareCom
 
             #endregion Communication Device Factory and required devices
 
-            
-
             // TimeOutCheck factory
 
             builder.RegisterType<NullTimeoutCheck>()
@@ -67,7 +65,7 @@ namespace Shield.HardwareCom
                    .As<ITimeoutCheckFactory>();
 
             // CommandIngester Factory
-            
+
             builder.Register(c =>
                         new CommandIngesterFactory(
                             c.Resolve<Func<IMessageFactory>>(),
@@ -77,7 +75,7 @@ namespace Shield.HardwareCom
 
             // MessagePipeline Factory
 
-            builder.Register(c => 
+            builder.Register(c =>
                         new MessengingPipelineFactory(
                             c.Resolve<IMessengingPipelineContextFactory>()))
                     .AsImplementedInterfaces();
@@ -103,7 +101,7 @@ namespace Shield.HardwareCom
 
                         return incomingDataPreparer;
                     })
-                   .As<IIncomingDataPreparer>();            
+                   .As<IIncomingDataPreparer>();
 
             // MESSAGE PROCESSING: ===================================================================================================================
 
@@ -142,7 +140,7 @@ namespace Shield.HardwareCom
             //       .As<IConfirmationTimeoutChecker>();
 
             #endregion Classes for checking correctness
-            
+
             #region Message object processing
 
             //builder.RegisterType<CommandIngester>()

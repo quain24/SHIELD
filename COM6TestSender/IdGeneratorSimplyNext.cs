@@ -1,15 +1,12 @@
 ﻿using Shield.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace COM6TestSender
 {
-    class IdGeneratorSimplyNext : IIdGenerator
+    internal class IdGeneratorSimplyNext : IIdGenerator
     {
-        int id = 0;
+        private int id = 0;
 
         public void FlushUsedUpIdsBuffer()
         {
@@ -17,8 +14,8 @@ namespace COM6TestSender
         }
 
         public string GetNewID()
-        {            
-            string a = id.ToString().PadLeft(4,'0');
+        {
+            string a = id.ToString().PadLeft(4, '0');
             id++;
             return a;
         }

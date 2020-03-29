@@ -3,7 +3,6 @@ using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,7 +24,7 @@ namespace Shield.HardwareCom
         /// <summary>
         /// True if currently processing messages or actively awaiting new ones to be processed
         /// </summary>
-        public bool IsProcessingMessages => _isProcessing;        
+        public bool IsProcessingMessages => _isProcessing;
 
         /// <summary>
         /// Add a message to be processed (thread safe)

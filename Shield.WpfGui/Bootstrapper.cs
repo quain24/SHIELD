@@ -39,7 +39,7 @@ namespace Shield.WpfGui
             }
 
             public override void WriteLine(string message)
-            {                
+            {
                 Debugger.Break();
             }
         }
@@ -49,7 +49,7 @@ namespace Shield.WpfGui
         protected override void Configure()
         {
             var builder = new ContainerBuilder();
-                        
+
             builder.RegisterModule<HardwareComAfModule>();
             builder.RegisterModule<DataAfModule>();
             builder.RegisterModule<ShieldAfModule>();

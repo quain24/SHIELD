@@ -1,15 +1,15 @@
-﻿using System;
+﻿using Shield.Data;
+using Shield.Data.Models;
+using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.Models;
+using Shield.Helpers;
+using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.Models;
-using Shield.Data;
-using Shield.Helpers;
-using Shield.Data.Models;
-using Shield.HardwareCom.CommandProcessing;
 
 namespace COM6TestSender
 {
@@ -433,7 +433,6 @@ namespace COM6TestSender
                     }
                 }
             }
-
             else if (Int32.Parse(a) == 12)
             {
                 string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
@@ -451,11 +450,11 @@ namespace COM6TestSender
 
                 var sm = new Shield.Data.Models.SettingsModel();
                 var apset = new Shield.Data.Models.ApplicationSettingsModel();
-                    apset.CommandTypeSize = 4;
-                    apset.DataSize = 30;
-                    apset.Filler = '.';
-                    apset.IdSize = 4;
-                    apset.Separator = '*';
+                apset.CommandTypeSize = 4;
+                apset.DataSize = 30;
+                apset.Filler = '.';
+                apset.IdSize = 4;
+                apset.Separator = '*';
                 var portset = new Shield.Data.Models.SerialPortSettingsModel();
                 portset.BaudRate = 921600;
                 portset.Encoding = 20127;
@@ -463,14 +462,12 @@ namespace COM6TestSender
                 portset.DataBits = 8;
                 portset.Parity = Parity.None;
                 portset.StopBits = StopBits.One;
-                portset.ReadTimeout = -1;               
+                portset.ReadTimeout = -1;
 
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
                 var sett = new Settings(sm);
                 var comtrans = new CommandTranslator(sett.ForTypeOf<IApplicationSettingsModel>(), new Func<ICommandModel>(() => new CommandModel()));
-
-
 
                 while (true)
                 {
@@ -491,24 +488,23 @@ namespace COM6TestSender
                     msg.Add(datacom);
                     msg.Add(datacom2);
                     msg.Add(datacom3);
-                    if(licz % 10 != 0)
+                    if (licz % 10 != 0)
                         msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
 
-                    foreach(var c in msg.Commands)
-                    { 
+                    foreach (var c in msg.Commands)
+                    {
                         var aaaa = comtrans.FromCommand(c);
                         serial.Write(aaaa);
                     }
 
                     Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
                     //if(licz % 100 == 0)
-                    //{   
+                    //{
                     //    Console.WriteLine(serial.ReadExisting());
                     //    await Task.Delay(1000);
                     //}
                 }
             }
-
             else if (Int32.Parse(a) == 13)
             {
                 string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
@@ -526,11 +522,11 @@ namespace COM6TestSender
 
                 var sm = new Shield.Data.Models.SettingsModel();
                 var apset = new Shield.Data.Models.ApplicationSettingsModel();
-                    apset.CommandTypeSize = 4;
-                    apset.DataSize = 30;
-                    apset.Filler = '.';
-                    apset.IdSize = 4;
-                    apset.Separator = '*';
+                apset.CommandTypeSize = 4;
+                apset.DataSize = 30;
+                apset.Filler = '.';
+                apset.IdSize = 4;
+                apset.Separator = '*';
                 var portset = new Shield.Data.Models.SerialPortSettingsModel();
                 portset.BaudRate = 921600;
                 portset.Encoding = 20127;
@@ -538,14 +534,14 @@ namespace COM6TestSender
                 portset.DataBits = 8;
                 portset.Parity = Parity.None;
                 portset.StopBits = StopBits.One;
-                portset.ReadTimeout = -1;               
+                portset.ReadTimeout = -1;
 
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
                 var sett = new Settings(sm);
                 var comtrans = new CommandTranslator(sett.ForTypeOf<IApplicationSettingsModel>(), new Func<ICommandModel>(() => new CommandModel()));
 
-                restart:
+            restart:
                 choose = licz + 30;
 
                 while (licz <= choose)
@@ -567,11 +563,11 @@ namespace COM6TestSender
                     msg.Add(datacom);
                     msg.Add(datacom2);
                     msg.Add(datacom3);
-                    if(licz % 10 != 0)
+                    if (licz % 10 != 0)
                         msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
 
-                    foreach(var c in msg.Commands)
-                    { 
+                    foreach (var c in msg.Commands)
+                    {
                         var aaaa = comtrans.FromCommand(c);
                         serial.Write(aaaa);
                     }
@@ -582,7 +578,6 @@ namespace COM6TestSender
                 Console.ReadLine();
                 goto restart;
             }
-
 
             // zle na emulatorze
             else
@@ -599,7 +594,6 @@ namespace COM6TestSender
                     i++;
                 }
             }
-
 
             Console.ReadLine();
         }

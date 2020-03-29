@@ -1,10 +1,5 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.HardwareCom.MessageProcessing;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Factories
 {
@@ -18,7 +13,7 @@ namespace Shield.HardwareCom.Factories
         }
 
         /// <summary>
-        /// Creates a <see cref="MessengingPipeline"/> for given <see cref="ICommunicationDevice"/> 
+        /// Creates a <see cref="MessengingPipeline"/> for given <see cref="ICommunicationDevice"/>
         /// </summary>
         /// <param name="device">Device used to send and receive data by pipeline</param>
         /// <returns></returns>
@@ -29,6 +24,5 @@ namespace Shield.HardwareCom.Factories
             var context = _contextFactory.GetContextFor(device);
             return new MessengingPipeline(context);
         }
-
     }
 }

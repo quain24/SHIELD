@@ -29,12 +29,11 @@ namespace Shield.HardwareCom.Adapters
 
         public event EventHandler<string> DataReceived;
 
-
         public bool IsOpen => _port != null && _port.IsOpen;
 
         public int ConfirmationTimeout { get; private set; }
         public int CompletitionTimeout { get; private set; }
-        public string Name {get; private set;}
+        public string Name { get; private set; }
 
         public SerialPortAdapter()
         {

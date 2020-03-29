@@ -31,7 +31,7 @@ namespace Shield.Helpers
         /// <param name="dateTime">Will be converted into (long) time stamp</param>
         /// <returns>Time stamp</returns>
         public static long GetTimestamp(DateTime dateTime)
-        {            
+        {
             return ((DateTimeOffset)dateTime).ToUnixTimeMilliseconds();
         }
 

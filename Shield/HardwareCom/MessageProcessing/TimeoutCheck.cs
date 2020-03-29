@@ -1,17 +1,13 @@
 ﻿using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
     public class TimeoutCheck : ITimeoutCheck
     {
         private readonly int _timeout;
-        
+
         public TimeoutCheck(int timeoutInMilliseconds) =>
             _timeout = timeoutInMilliseconds > 0
             ? timeoutInMilliseconds

@@ -23,7 +23,6 @@ namespace Shield.ConsoleUI
         private HardwareCom.IMessenger _comMessanger;
         private ISettings _settings;
 
-
         private ICommandIngester _ingester;
         private ICompleteness _completness;
 

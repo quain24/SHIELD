@@ -5,7 +5,6 @@ using Shield.Enums;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
-using Shield.Helpers;
 using Shield.WpfGui.Validators;
 using System;
 using System.Collections;

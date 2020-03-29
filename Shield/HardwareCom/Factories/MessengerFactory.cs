@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.CommonInterfaces;
+﻿using Shield.CommonInterfaces;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.RawDataProcessing;
+using System;
 
 namespace Shield.HardwareCom.Factories
 {
