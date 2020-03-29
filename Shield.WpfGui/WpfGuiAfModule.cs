@@ -27,9 +27,6 @@ namespace Shield.WpfGui
                 .Where(t => t.IsInNamespace($@"Shield.WpfGui.Models") && t.Name.EndsWith("Model"))
                 .AsSelf();
 
-            //builder.RegisterType<ShellViewModel>()
-            //       .AsSelf();
-
             base.Load(builder);
         }
     }
