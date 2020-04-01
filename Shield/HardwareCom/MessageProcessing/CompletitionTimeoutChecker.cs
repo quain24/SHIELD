@@ -12,7 +12,7 @@ namespace Shield.HardwareCom.MessageProcessing
     public class CompletitionTimeoutChecker : ICompletitionTimeoutChecker
     {
         private readonly ICommandIngester _ingesterToWorkWith;
-        private readonly ITimeoutCheck _completitionTimeoutChecker;
+        private readonly ITimeout _completitionTimeoutChecker;
         private readonly ConcurrentDictionary<string, IMessageModel> _workingSet;
 
         private bool _isTimeoutChecking = false;
@@ -22,7 +22,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _cancelTimeoutCheckCTS = new CancellationTokenSource();
 
-        public CompletitionTimeoutChecker(ICommandIngester ingesterToWorkWith, ITimeoutCheck completitionTimeoutChecker)
+        public CompletitionTimeoutChecker(ICommandIngester ingesterToWorkWith, ITimeout completitionTimeoutChecker)
         {
             _ingesterToWorkWith = ingesterToWorkWith ?? throw new ArgumentNullException(nameof(ingesterToWorkWith));
             _completitionTimeoutChecker = completitionTimeoutChecker ?? throw new ArgumentNullException(nameof(completitionTimeoutChecker));
@@ -43,7 +43,7 @@ namespace Shield.HardwareCom.MessageProcessing
                 if (!CanStartTiemoutCheck())
                     return;
 
-                int checkInterval = CalculateCheckInterval(_completitionTimeoutChecker.Timeout);
+                int checkInterval = CalculateCheckInterval(_completitionTimeoutChecker.TimeoutValue);
 
                 while (true)
                 {
@@ -61,7 +61,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private bool CanStartTiemoutCheck()
         {
-            if (_completitionTimeoutChecker.Timeout == 0)
+            if (_completitionTimeoutChecker.TimeoutValue == 0)
                 return false;
 
             lock (_timeoutCheckLock)
@@ -87,7 +87,7 @@ namespace Shield.HardwareCom.MessageProcessing
                     return 1000;
 
                 default:
-                    return _completitionTimeoutChecker.Timeout;
+                    return _completitionTimeoutChecker.TimeoutValue;
             }
         }
 

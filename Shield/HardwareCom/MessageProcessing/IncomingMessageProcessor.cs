@@ -3,6 +3,7 @@ using Shield.Extensions;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ namespace Shield.HardwareCom.MessageProcessing
     /// </summary>
     public class IncomingMessageProcessor : IIncomingMessageProcessor
     {
-        private readonly IMessageAnalyzer[] _analyzers;
+        private readonly IList<IMessageAnalyzer> _analyzers;
         private const int TakeTimeout = 150;
 
         private BlockingCollection<IMessageModel> _messagesToProcess = new BlockingCollection<IMessageModel>();
@@ -24,7 +25,7 @@ namespace Shield.HardwareCom.MessageProcessing
         private bool _isProcessing = false;
         private object _processingLock = new object();
 
-        public IncomingMessageProcessor(IMessageAnalyzer[] analyzers) =>
+        public IncomingMessageProcessor(IList<IMessageAnalyzer> analyzers) =>
             _analyzers = analyzers ?? throw new ArgumentNullException(nameof(analyzers));
 
         /// <summary>
@@ -122,8 +123,8 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private void RunAnalyzersOn(IMessageModel message)
         {
-            if (!_analyzers.IsNullOrEmpty())
-                for (int i = 0; i < _analyzers.Length; i++)
+            if (_analyzers.Count > 0)
+                for (int i = 0; i < _analyzers.Count; i++)
                     _analyzers[i]?.CheckAndSetFlagsIn(message);
         }
 

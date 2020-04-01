@@ -2,9 +2,9 @@
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public interface ITimeoutCheck
+    public interface ITimeout
     {
-        int Timeout { get; }
+        int TimeoutValue { get; }
 
         bool IsExceeded(IMessageModel message, IMessageModel inCompareTo = null);
     }

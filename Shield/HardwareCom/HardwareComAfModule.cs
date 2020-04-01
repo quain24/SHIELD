@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Core;
+using Autofac.Features.Indexed;
 using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
@@ -11,6 +12,8 @@ using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.RawDataProcessing;
 using Shield.Helpers;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -21,19 +24,22 @@ namespace Shield.HardwareCom
     {
         protected override void Load(ContainerBuilder builder)
         {
+            var shieldAssembly = Assembly.Load(nameof(Shield));
+
+
             // Models registration (single interface per model)
-            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
+            builder.RegisterAssemblyTypes(shieldAssembly)
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Model"))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
-            // Factories registration (single interface per factory) both normal and autofac's factories
-            // More complicated factories (with params in constructor) are separated below.
+            // Factories registration both normal and autofac's factories
+            // More complicated factories (with parameters in constructor) are separated below.
             // ==================================================================================================================================
-            builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
-                   .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Factory"))
+            builder.RegisterAssemblyTypes(shieldAssembly)
+                   .Where(t => t.IsInNamespace("Shield.HardwareCom.Factories") && t.Name.EndsWith("Factory"))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
-                   .Except<TimeoutCheckFactory>()
-                   //.Except<MessengingPipelineFactory>()
+                   .Except<NormalTimeoutFactory>()
+                   .Except<NullTimeoutFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
@@ -50,35 +56,43 @@ namespace Shield.HardwareCom
 
             #endregion Communication Device Factory and required devices
 
-            // TimeOutCheck factory
+            // Timeout factory
 
-            builder.RegisterType<NullTimeoutCheck>()
-                   .Named<ITimeoutCheck>("Null" + nameof(TimeoutCheck))
+            // new timeout mechanism test
+
+            builder.RegisterType<NormalTimeout>();
+            builder.RegisterType<NullTimeout>()
                    .SingleInstance();
 
-            builder.RegisterInstance<Func<int, ITimeoutCheck>>(timeout => new TimeoutCheck(timeout));
+            builder.RegisterType<NormalTimeoutFactory>()
+                   .Keyed<ITimeoutConcreteFactory>(TimeoutType.NormalTimeout)
+                   .SingleInstance();
+            builder.RegisterType<NullTimeoutFactory>()
+                   .Keyed<ITimeoutConcreteFactory>(TimeoutType.NullTimeout)
+                   .SingleInstance();
 
-            builder.Register(c =>
-                        new TimeoutCheckFactory(
-                            c.Resolve<Func<int, ITimeoutCheck>>(),
-                            c.ResolveNamed<ITimeoutCheck>("Null" + nameof(TimeoutCheck))))
-                   .As<ITimeoutCheckFactory>();
+            builder.RegisterType<TimeoutFactory>()
+                   .As<ITimeoutFactory>()
+                   .SingleInstance();
 
-            // CommandIngester Factory
+            builder.RegisterType<CompletitionTimeoutChecker>()
+                   .As<ICompletitionTimeoutChecker>();
 
-            builder.Register(c =>
-                        new CommandIngesterFactory(
-                            c.Resolve<Func<IMessageFactory>>(),
-                            c.Resolve<Func<ICompleteness>>(),
-                            c.Resolve<Func<IIdGenerator>>()))
-                   .As<ICommandIngesterFactory>();
+            builder.RegisterType<ConfirmationTimeoutChecker>()
+                   .As<IConfirmationTimeoutChecker>();
 
+            
             // MessagePipeline Factory
+            // TODO - clean those dependencies in and out of MessengingPipeline
+
+            builder.RegisterType<MessengingPipelineContext>()
+                   .As<IMessengingPipelineContext>();            
 
             builder.Register(c =>
                         new MessengingPipelineFactory(
                             c.Resolve<IMessengingPipelineContextFactory>()))
                     .AsImplementedInterfaces();
+
 
             // End of factories registration ========================================================================================================
 
@@ -106,38 +120,28 @@ namespace Shield.HardwareCom
             // MESSAGE PROCESSING: ===================================================================================================================
 
             #region Classes for checking correctness
+                       
 
             builder.RegisterType<TypeDetectorAnalyzer>()
+                   .As<IMessageAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.TypeDetector);
 
             builder.RegisterType<PatternAnalyzer>()
+                   .As<IMessageAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Pattern);
 
             builder.RegisterType<DecodingAnalyzer>()
+                   .As<IMessageAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding);
 
             builder.RegisterType<IncomingMessageProcessor>()
-                   .As<IIncomingMessageProcessor>()
-                   .WithParameter(
-                       new ResolvedParameter(
-                           (pi, ctx) => pi.Name == "analyzers",
-                           (pi, ctx) => new[]
-                           {
-                               ctx.ResolveKeyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding),
-                               ctx.ResolveKeyed<IMessageAnalyzer>(MessageAnalyzerTypes.Pattern),
-                               ctx.ResolveKeyed<IMessageAnalyzer>(MessageAnalyzerTypes.TypeDetector)
-                           }
-                       )
-                   );
+                   .As<IIncomingMessageProcessor>();
 
             builder.RegisterType<Completeness>()
                    .As<ICompleteness>();
 
-            //builder.RegisterType<ConfirmationTimeoutChecker>()
-            //       .WithParameter(new ResolvedParameter(
-            //                (pi, ctx) => pi.Name == "timeoutCheck",
-            //                (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>().GetTimeoutCheckWithTimeoutSetTo(ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout)))
-            //       .As<IConfirmationTimeoutChecker>();
+            builder.RegisterType<CommandIngester>()
+                   .As<ICommandIngester>();
 
             #endregion Classes for checking correctness
 
@@ -148,8 +152,8 @@ namespace Shield.HardwareCom
             //       .WithParameter(
             //           new ResolvedParameter(
             //               (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
-            //               (pi, ctx) => ctx.Resolve<TimeoutCheckFactory>().GetTimeoutCheckWithTimeoutSetTo(
-            //                                ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().ConfirmationTimeout))
+            //               (pi, ctx) => ctx.Resolve<ITimeoutFactory>().CreateTimeoutWith(
+            //                                ctx.Resolve<ISettings>().ForTypeOf<ICommunicationDeviceSettingsContainer>().GetSettingsByDeviceName("COM4").CompletitionTimeout))
             //       );
 
             #endregion Message object processing

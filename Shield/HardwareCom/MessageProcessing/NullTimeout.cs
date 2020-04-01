@@ -1,8 +1,13 @@
 ﻿using Shield.HardwareCom.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class NullTimeoutCheck : ITimeoutCheck
+    public class NullTimeout : ITimeout
     {
         private readonly int _timeout = 0;
 
@@ -10,14 +15,14 @@ namespace Shield.HardwareCom.MessageProcessing
         /// Null object pattern implementation of ITimeoutCheck interface
         /// </summary>
         /// <returns>Instance of NullTimeoutCheck object (singleton)</returns>
-        public NullTimeoutCheck()
+        public NullTimeout()
         {
         }
 
         /// <summary>
         /// Returns timeout value for this instance
         /// </summary>
-        public int Timeout => _timeout;
+        public int TimeoutValue => _timeout;
 
         /// <summary>
         /// Will always return false, its a null pattern implementation dummy object

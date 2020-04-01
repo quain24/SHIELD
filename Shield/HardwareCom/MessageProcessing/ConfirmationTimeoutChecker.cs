@@ -18,7 +18,7 @@ namespace Shield.HardwareCom.MessageProcessing
         private readonly BlockingCollection<IMessageModel> _processedConfirmations = new BlockingCollection<IMessageModel>();
         private readonly Dictionary<string, IMessageModel> _confirmations = new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
-        private readonly ITimeoutCheck _timeoutCheck;
+        private readonly ITimeout _timeoutCheck;
         private int _checkinterval = 0;
 
         private readonly object _getNextMessageLock = new object();
@@ -31,13 +31,13 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
 
-        public int Timeout => _timeoutCheck.Timeout;
+        public int Timeout => _timeoutCheck.TimeoutValue;
 
-        public ConfirmationTimeoutChecker(ITimeoutCheck timeoutCheck)
+        public ConfirmationTimeoutChecker(ITimeout timeoutCheck)
         {
             _timeoutCheck = timeoutCheck ?? throw new ArgumentNullException(nameof(timeoutCheck),
                     "ConfirmationTimeoutChecker - ConfirmationTimeoutChecker: passed NULL instead of proper timeout checking object");
-            _checkinterval = CalcCheckInterval(_timeoutCheck.Timeout);
+            _checkinterval = CalcCheckInterval(_timeoutCheck.TimeoutValue);
         }
 
         public async Task CheckUnconfirmedMessagesContinousAsync()

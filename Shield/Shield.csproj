@@ -93,6 +93,11 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandIngester.cs" />
     <Compile Include="HardwareCom\Factories\IMessengingPipelineContextFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ITimeoutConcreteFactory.cs" />
+    <Compile Include="HardwareCom\Factories\ITimeoutFactory.cs" />
+    <Compile Include="HardwareCom\Factories\NormalTimeoutFactory.cs" />
+    <Compile Include="HardwareCom\Factories\NullTimeoutFactory.cs" />
+    <Compile Include="HardwareCom\Factories\TimeoutFactory.cs" />
     <Compile Include="HardwareCom\IMessengingPipelineContext.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeoutChecker.cs" />
     <Compile Include="HardwareCom\Factories\CommandIngesterFactory.cs" />
@@ -102,7 +107,6 @@
     <Compile Include="HardwareCom\Factories\ICompletitionTimeoutCheckerFactory.cs" />
     <Compile Include="HardwareCom\Factories\IConfirmationTimeoutCheckerFactory.cs" />
     <Compile Include="HardwareCom\Factories\IMessengingPipelineFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ITimeoutCheckFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengingPipelineContextFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengingPipelineFactory.cs" />
     <Compile Include="HardwareCom\HardwareComAfModule.cs" />
@@ -117,10 +121,12 @@
     <Compile Include="HardwareCom\Factories\IConfirmationFactory.cs" />
     <Compile Include="HardwareCom\Factories\IMessengerFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengerFactory.cs" />
-    <Compile Include="HardwareCom\Factories\TimeoutCheckFactory.cs" />
     <Compile Include="HardwareCom\CommandProcessing\ICommandIngester.cs" />
     <Compile Include="HardwareCom\CommandProcessing\ICommandTranslator.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ICompletitionTimeoutChecker.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\ITimeout.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\NullTimeout.cs" />
+    <Compile Include="HardwareCom\MessageProcessing\NormalTimeout.cs" />
     <Compile Include="HardwareCom\RawDataProcessing\IIncomingDataPreparer.cs" />
     <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IIncomingMessageProcessor.cs" />
@@ -135,11 +141,8 @@
     <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IConfirmationTimeoutChecker.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IMessageAnalyzer.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\ITimeoutCheck.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\NullTimeoutCheck.cs" />
     <Compile Include="HardwareCom\MessageProcessing\PatternAnalyzer.cs" />
     <Compile Include="HardwareCom\MessageProcessing\ConfirmationTimeoutChecker.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\TimeoutCheck.cs" />
     <Compile Include="HardwareCom\MessageProcessing\TypeDetectorAnalyzer.cs" />
     <Compile Include="HardwareCom\MessageProcessor.cs" />
     <Compile Include="HardwareCom\Messenger.cs" />
@@ -148,6 +151,7 @@
     <Compile Include="HardwareCom\Models\IMessageCollection.cs" />
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
+    <Compile Include="Enums\TimeoutType.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\IIdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />

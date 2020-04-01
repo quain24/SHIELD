@@ -4,16 +4,16 @@ using System;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    public class TimeoutCheck : ITimeoutCheck
+    public class NormalTimeout : ITimeout
     {
         private readonly int _timeout;
 
-        public TimeoutCheck(int timeoutInMilliseconds) =>
-            _timeout = timeoutInMilliseconds > 0
-            ? timeoutInMilliseconds
-            : throw new ArgumentOutOfRangeException(nameof(timeoutInMilliseconds), $@"{nameof(timeoutInMilliseconds)} should be a positive whole number");
+        public NormalTimeout(int milliseconds) =>
+            _timeout = milliseconds > 0
+            ? milliseconds
+            : throw new ArgumentOutOfRangeException(nameof(milliseconds), "timeout has to have more than 0 milliseconds");
 
-        public int Timeout => _timeout;
+        public int TimeoutValue => _timeout;
 
         /// <summary>
         /// Checks if <paramref name="message"/> timeout was exceeded.
@@ -22,7 +22,7 @@ namespace Shield.HardwareCom.MessageProcessing
         /// </summary>
         /// <param name="message">Message in which timeout is checked</param>
         /// <param name="inCompareTo">Optional message that main message timeout will be checked against</param>
-        /// <returns>True if timeout was larger than <see cref="Timeout"/> value</returns>
+        /// <returns>True if timeout was larger than <see cref="TimeoutValue"/> value</returns>
         public virtual bool IsExceeded(IMessageModel message, IMessageModel inCompareTo = null)
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
@@ -30,7 +30,7 @@ namespace Shield.HardwareCom.MessageProcessing
             long difference = inCompareTo is null ?
                 Timestamp.Difference(message.Timestamp) :
                 Timestamp.Difference(message.Timestamp, inCompareTo.Timestamp);
-            return difference > Timeout;
+            return difference > _timeout;
         }
     }
 }
