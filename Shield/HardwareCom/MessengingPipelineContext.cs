@@ -11,14 +11,6 @@ namespace Shield.HardwareCom
     /// </summary>
     public class MessengingPipelineContext : IMessengingPipelineContext
     {
-        private readonly IMessenger _messenger;
-        private readonly ICommandIngester _ingester;
-        private readonly IIncomingMessageProcessor _processor;
-        private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;
-        private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
-        private readonly IIdGenerator _idGenerator;
-        private readonly IConfirmationFactory _confirmationFactory;
-
         public MessengingPipelineContext(IMessenger messenger,
                                          ICommandIngester ingester,
                                          IIncomingMessageProcessor processor,
@@ -27,27 +19,27 @@ namespace Shield.HardwareCom
                                          IIdGenerator idGenerator,
                                          IConfirmationFactory confirmationFactory)
         {
-            _messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
-            _ingester = ingester ?? throw new ArgumentNullException(nameof(ingester));
-            _processor = processor ?? throw new ArgumentNullException(nameof(processor));
-            _completitionTimeoutChecker = completitionTimeoutChecker ?? throw new ArgumentNullException(nameof(completitionTimeoutChecker));
-            _confirmationTimeoutChecker = confirmationTimeoutChecker ?? throw new ArgumentNullException(nameof(confirmationTimeoutChecker));
-            _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
-            _confirmationFactory = confirmationFactory ?? throw new ArgumentNullException(nameof(confirmationFactory));
+            Messenger = messenger ?? throw new ArgumentNullException(nameof(messenger));
+            Ingester = ingester ?? throw new ArgumentNullException(nameof(ingester));
+            Processor = processor ?? throw new ArgumentNullException(nameof(processor));
+            CompletitionTimeoutChecker = completitionTimeoutChecker ?? throw new ArgumentNullException(nameof(completitionTimeoutChecker));
+            ConfirmationTimeoutChecker = confirmationTimeoutChecker ?? throw new ArgumentNullException(nameof(confirmationTimeoutChecker));
+            IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
+            ConfirmationFactory = confirmationFactory ?? throw new ArgumentNullException(nameof(confirmationFactory));
         }
 
-        public IMessenger Messenger => _messenger;
+        public IMessenger Messenger { get; }
 
-        public ICommandIngester Ingester => _ingester;
+        public ICommandIngester Ingester { get; }
 
-        public IIncomingMessageProcessor Processor => _processor;
+        public IIncomingMessageProcessor Processor { get; }
 
-        public ICompletitionTimeoutChecker CompletitionTimeoutChecker => _completitionTimeoutChecker;
+        public ICompletitionTimeoutChecker CompletitionTimeoutChecker { get; }
 
-        public IConfirmationTimeoutChecker ConfirmationTimeoutChecker => _confirmationTimeoutChecker;
+        public IConfirmationTimeoutChecker ConfirmationTimeoutChecker { get; }
 
-        public IIdGenerator IdGenerator => _idGenerator;
+        public IIdGenerator IdGenerator { get; }
 
-        public IConfirmationFactory ConfirmationFactory => _confirmationFactory;
+        public IConfirmationFactory ConfirmationFactory { get; }
     }
 }

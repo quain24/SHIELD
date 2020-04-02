@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shield.Enums
+namespace Shield.HardwareCom.Enums
 {
     public enum TimeoutType
     {

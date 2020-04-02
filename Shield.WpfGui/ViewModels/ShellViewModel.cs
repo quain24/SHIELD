@@ -1,8 +1,8 @@
 ﻿using Caliburn.Micro;
 using Shield.Data;
 using Shield.Data.Models;
-using Shield.Enums;
 using Shield.HardwareCom;
+using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using Shield.WpfGui.Validators;

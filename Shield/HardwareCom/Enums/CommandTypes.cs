@@ -1,4 +1,4 @@
-﻿namespace Shield.Enums
+﻿namespace Shield.HardwareCom.Enums
 {
     /// <summary>
     /// Options for a command type when, for example, transmitting command to a device
@@ -72,12 +72,12 @@
         ReceivedAsPartial,
 
         /// <summary>
-        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="Errors.ConfirmationTimeout"/>
+        /// Used in responding, states that message being confirmed was flagged with <see cref="Models.IMessageModel.Errors"/> = <see cref="Errors.ConfirmationTimeout"/>
         /// </summary>
         ConfirmationTimeoutOccurred,
 
         /// <summary>
-        /// Used in responding, states that message being confirmed was flagged with <see cref="Shield.HardwareCom.Models.IMessageModel.Errors"/> = <see cref="Errors.CompletitionTimeout"/>
+        /// Used in responding, states that message being confirmed was flagged with <see cref="Models.IMessageModel.Errors"/> = <see cref="Errors.CompletitionTimeout"/>
         /// </summary>
         CompletitionTimeoutOccured,
 

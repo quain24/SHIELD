@@ -1,4 +1,4 @@
-﻿using Shield.Enums;
+﻿using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;

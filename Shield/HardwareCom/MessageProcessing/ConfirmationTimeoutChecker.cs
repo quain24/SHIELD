@@ -1,5 +1,5 @@
-﻿using Shield.Enums;
-using Shield.Extensions;
+﻿using Shield.Extensions;
+using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;

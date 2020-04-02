@@ -14,7 +14,7 @@ namespace Shield.Data
     public class Settings : ISettings
     {
         private const string SETTINGS_LOCATION = @".\Settings\";
-        private const string FILE_NAME = @"settings.xml";
+        private const string FILE_NAME = "settings.xml";
 
         private ISettingsModel _settingsModel;
 
@@ -31,7 +31,7 @@ namespace Shield.Data
 
             foreach (var con in settings)
             {
-                if (_settingsModel.Settings.ContainsKey(con.Type) == false)
+                if (!_settingsModel.Settings.ContainsKey(con.Type))
                     _settingsModel.Settings.Add(con.Type, con);
             }
         }
@@ -47,7 +47,7 @@ namespace Shield.Data
             return defaultSettingPacks;
         }
 
-        private List<Type> KnownSettingTypes()
+        private static List<Type> KnownSettingTypes()
         {
             var listOfTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
                                from assemblyType in domainAssembly.GetTypes()
@@ -73,7 +73,7 @@ namespace Shield.Data
         {
             try
             {
-                if (Directory.Exists(SETTINGS_LOCATION) == false)
+                if (!Directory.Exists(SETTINGS_LOCATION))
                     Directory.CreateDirectory(SETTINGS_LOCATION);
 
                 FileStream writer = new FileStream(SETTINGS_LOCATION + FILE_NAME, FileMode.Create, FileAccess.Write);

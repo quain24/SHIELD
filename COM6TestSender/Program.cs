@@ -1,6 +1,7 @@
 ﻿using Shield.Data;
 using Shield.Data.Models;
 using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using Shield.Helpers;
@@ -479,17 +480,17 @@ namespace COM6TestSender
                     datalicz++;
                     string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Shield.Enums.Direction.Outgoing, Shield.Enums.MessageType.Master, _idGenerator.GetNewID());
-                    msg.Add(comFac.Create(Shield.Enums.CommandType.HandShake));
-                    msg.Add(comFac.Create(Shield.Enums.CommandType.Master));
-                    var datacom = comFac.Create(Shield.Enums.CommandType.Data); datacom.Data = data;
-                    var datacom2 = comFac.Create(Shield.Enums.CommandType.Data); datacom2.Data = data2;
-                    var datacom3 = comFac.Create(Shield.Enums.CommandType.Data); datacom3.Data = data3;
+                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID());
+                    msg.Add(comFac.Create(CommandType.HandShake));
+                    msg.Add(comFac.Create(CommandType.Master));
+                    var datacom = comFac.Create(CommandType.Data); datacom.Data = data;
+                    var datacom2 = comFac.Create(CommandType.Data); datacom2.Data = data2;
+                    var datacom3 = comFac.Create(CommandType.Data); datacom3.Data = data3;
                     msg.Add(datacom);
                     msg.Add(datacom2);
                     msg.Add(datacom3);
                     if (licz % 10 != 0)
-                        msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
+                        msg.Add(comFac.Create(CommandType.EndMessage));
 
                     foreach (var c in msg.Commands)
                     {
@@ -554,17 +555,17 @@ namespace COM6TestSender
                     datalicz++;
                     string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Shield.Enums.Direction.Outgoing, Shield.Enums.MessageType.Master, _idGenerator.GetNewID());
-                    msg.Add(comFac.Create(Shield.Enums.CommandType.HandShake));
-                    msg.Add(comFac.Create(Shield.Enums.CommandType.Master));
-                    var datacom = comFac.Create(Shield.Enums.CommandType.Data); datacom.Data = data;
-                    var datacom2 = comFac.Create(Shield.Enums.CommandType.Data); datacom2.Data = data2;
-                    var datacom3 = comFac.Create(Shield.Enums.CommandType.Data); datacom3.Data = data3;
+                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID());
+                    msg.Add(comFac.Create(CommandType.HandShake));
+                    msg.Add(comFac.Create(CommandType.Master));
+                    var datacom = comFac.Create(CommandType.Data); datacom.Data = data;
+                    var datacom2 = comFac.Create(CommandType.Data); datacom2.Data = data2;
+                    var datacom3 = comFac.Create(CommandType.Data); datacom3.Data = data3;
                     msg.Add(datacom);
                     msg.Add(datacom2);
                     msg.Add(datacom3);
                     if (licz % 10 != 0)
-                        msg.Add(comFac.Create(Shield.Enums.CommandType.EndMessage));
+                        msg.Add(comFac.Create(CommandType.EndMessage));
 
                     foreach (var c in msg.Commands)
                     {

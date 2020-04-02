@@ -17,6 +17,9 @@ namespace Shield.HardwareCom.Factories
         private readonly Func<IIdGenerator> _idGeneratorFactory;
         private readonly ITimeoutFactory _timeoutFactory;
 
+        private IIdGenerator _idGenerator = null;
+        private ICommandIngester _ingester = null;
+
         public MessengingPipelineContextFactory(IMessengerFactory messengerFactory,
                                                 ICommandIngesterFactory ingesterFactory,
                                                 Func<ITimeout, IConfirmationTimeoutChecker> confirmationTImeoutChecker,
@@ -36,28 +39,28 @@ namespace Shield.HardwareCom.Factories
             _timeoutFactory = timeoutFactory ?? throw new ArgumentNullException(nameof(timeoutFactory));
         }
 
-        // TODO clean this up
-
         public IMessengingPipelineContext GetContextFor(ICommunicationDevice device)
         {
             _ = device ?? throw new ArgumentNullException(nameof(device));
 
-            IMessenger messenger = _messengerFactory.CreateMessangerUsing(device);
-
-            IIdGenerator idGenerator = _idGeneratorFactory();
-            ICommandIngester ingester = _ingesterFactory.GetIngesterUsing(idGenerator);
-
-            IIncomingMessageProcessor processor = _processorFactory();
-
-            ITimeout confirmationTimoutCheck = _timeoutFactory.CreateTimeoutWith(device.ConfirmationTimeout);
-            IConfirmationTimeoutChecker confirmationTimeoutChecker = _confirmationTImeoutChecker(confirmationTimoutCheck);
-
-            ITimeout completitionTimeoutCheck = _timeoutFactory.CreateTimeoutWith(device.CompletitionTimeout);
-            ICompletitionTimeoutChecker completitionTimeoutChecker = _completitionCheckFactory(ingester, completitionTimeoutCheck);
-
-            IConfirmationFactory confirmationFactory = _confirmationFactory();
-
-            return new MessengingPipelineContext(messenger, ingester, processor, completitionTimeoutChecker, confirmationTimeoutChecker, idGenerator, confirmationFactory);
+            return new MessengingPipelineContext(
+                Messenger(device),
+                Ingester(),
+                IncomingMessageProcessor(),
+                CompletitionTimeoutChecker(device),
+                ConfirmationTimeoutChecker(device),
+                IdGenerator(),
+                ConfirmationFactory());
         }
+        
+        private IMessenger Messenger(ICommunicationDevice device) => _messengerFactory.CreateMessangerUsing(device);
+        private IIdGenerator IdGenerator() => _idGenerator is null ? _idGenerator = _idGeneratorFactory() : _idGenerator;
+        private ICommandIngester Ingester() => _ingester is null ? _ingester = _ingesterFactory.GetIngesterUsing(IdGenerator()) : _ingester;
+        private IIncomingMessageProcessor IncomingMessageProcessor() => _processorFactory();
+        private IConfirmationTimeoutChecker ConfirmationTimeoutChecker(ICommunicationDevice device) =>
+            _confirmationTImeoutChecker(_timeoutFactory.CreateTimeoutWith(device.ConfirmationTimeout));
+        private ICompletitionTimeoutChecker CompletitionTimeoutChecker(ICommunicationDevice device) =>
+            _completitionCheckFactory(Ingester(), _timeoutFactory.CreateTimeoutWith(device.CompletitionTimeout));
+        private IConfirmationFactory ConfirmationFactory() => _confirmationFactory();
     }
 }

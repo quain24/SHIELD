@@ -14,12 +14,12 @@ namespace Shield.Data
 
             // Models registration (general)
             builder.RegisterAssemblyTypes(current)
-                   .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Model"))
+                   .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Model", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
             builder.RegisterAssemblyTypes(current)
-                   .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Factory"))
+                   .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Factory", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             builder.RegisterType<Settings>().As<ISettings>().SingleInstance();

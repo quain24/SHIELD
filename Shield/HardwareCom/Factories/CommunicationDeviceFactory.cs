@@ -3,6 +3,7 @@ using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Shield.HardwareCom.Factories
@@ -14,10 +15,10 @@ namespace Shield.HardwareCom.Factories
 
     public class CommunicationDeviceFactory : ICommunicationDeviceFactory
     {
-        private ISettings _settings;
-        private IIndex<DeviceType, ICommunicationDevice> _deviceFactory;
+        private readonly ISettings _settings;
+        private readonly IReadOnlyDictionary<DeviceType, ICommunicationDevice> _deviceFactory;
 
-        public CommunicationDeviceFactory(IIndex<DeviceType, ICommunicationDevice> deviceFactory,
+        public CommunicationDeviceFactory(IReadOnlyDictionary<DeviceType, ICommunicationDevice> deviceFactory,
                                           ISettings settings)
         {
             _settings = settings;

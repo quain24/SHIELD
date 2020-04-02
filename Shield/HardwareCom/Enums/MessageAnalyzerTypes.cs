@@ -1,4 +1,4 @@
-﻿namespace Shield.Enums
+﻿namespace Shield.HardwareCom.Enums
 {
     public enum MessageAnalyzerTypes
     {

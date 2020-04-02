@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shield.Enums
+namespace Shield.HardwareCom.Enums
 {
     /// <summary>
     /// Message transfer direction

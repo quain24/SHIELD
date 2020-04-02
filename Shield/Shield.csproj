@@ -83,10 +83,11 @@
     <Compile Include="Data\Models\SerialPortSettingModel.cs" />
     <Compile Include="Data\Models\CommunicationDeviceSettingsContainer.cs" />
     <Compile Include="Data\Models\SettingsModel.cs" />
-    <Compile Include="Enums\CommandTypes.cs" />
+    <Compile Include="DependencyDictionary.cs" />
+    <Compile Include="HardwareCom\Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
-    <Compile Include="Enums\Message.cs" />
-    <Compile Include="Enums\MessageAnalyzerTypes.cs" />
+    <Compile Include="HardwareCom\Enums\Message.cs" />
+    <Compile Include="HardwareCom\Enums\MessageAnalyzerTypes.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
@@ -151,7 +152,7 @@
     <Compile Include="HardwareCom\Models\IMessageCollection.cs" />
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
-    <Compile Include="Enums\TimeoutType.cs" />
+    <Compile Include="HardwareCom\Enums\TimeoutType.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\IIdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />

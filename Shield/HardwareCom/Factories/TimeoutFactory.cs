@@ -6,14 +6,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shield.HardwareCom.Enums;
 
 namespace Shield.HardwareCom.Factories
 {
     public class TimeoutFactory : ITimeoutFactory
     {
-        private readonly IIndex<TimeoutType, ITimeoutConcreteFactory> _timeoutFactories;
+        private readonly IReadOnlyDictionary<TimeoutType, ITimeoutConcreteFactory> _timeoutFactories;
 
-        public TimeoutFactory(IIndex<TimeoutType, ITimeoutConcreteFactory> timeoutFactories)
+        public TimeoutFactory(IReadOnlyDictionary<TimeoutType, ITimeoutConcreteFactory> timeoutFactories)
         {
             _timeoutFactories = timeoutFactories ?? throw new ArgumentNullException(nameof(timeoutFactories));
         }
