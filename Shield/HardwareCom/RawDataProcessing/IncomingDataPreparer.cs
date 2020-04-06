@@ -9,37 +9,34 @@ namespace Shield.HardwareCom.RawDataProcessing
         private StringBuilder _internalBuffer = new StringBuilder();
         private StringBuilder _cutoffs = new StringBuilder();
 
-        private int _commandTypeLength = -1;
-        private int _idLength = -1;
-        private int _dataLength = -1;
-        private Regex _commandPattern;
+        private readonly int _commandTypeLength;
+        private readonly int _idLength;
+        private readonly int _dataPackLength;
+        private readonly char _separator;
+        private readonly Regex _commandPattern;
         private List<string> _outputCollection;
 
-        private int _dataCommandNumber = (int)Enums.CommandType.Data;
+        private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
 
-        public int CommandTypeLength { get { return _commandTypeLength; } set { _commandTypeLength = value > 0 ? value : 0; } }
-        public int IDLength { get { return _idLength; } set { _idLength = value > 0 ? value : 0; } }
-        public int DataPackLength { get { return _dataLength; } set { _dataLength = value > 0 ? value : 0; } }
-        public Regex CommandPattern { get => _commandPattern; set => _commandPattern = value; }
-        public char Separator { get; set; }
+        // TODO Refactoring here
 
-        public int CommandLengthWithData
+        internal int CommandLengthWithData
         {
             get
             {
-                if (CommandTypeLength > 0 && IDLength > 0 && DataPackLength > 0)
-                    return CommandTypeLength + IDLength + DataPackLength + 3;
+                if (_commandTypeLength > 0 && _idLength > 0 && _dataPackLength > 0)
+                    return _commandTypeLength + _idLength + _dataPackLength + 3;
                 else
                     return -1;
             }
         }
 
-        public int CommandLength
+        internal int CommandLength
         {
             get
             {
-                if (CommandTypeLength > 0 && IDLength > 0)
-                    return CommandTypeLength + IDLength + 3;
+                if (_commandTypeLength > 0 && _idLength > 0)
+                    return _commandTypeLength + _idLength + 3;
                 else
                     return -1;
             }
@@ -49,15 +46,15 @@ namespace Shield.HardwareCom.RawDataProcessing
         {
             _commandTypeLength = commandTypeLength;
             _idLength = idLength;
-            _dataLength = dataPackLength;
+            _dataPackLength = dataPackLength;
             _commandPattern = commandPattern;
-            Separator = separator;
+            _separator = separator;
         }
 
         public List<string> DataSearch(string data)
         {
             if (CommandLengthWithData <= 0 && !string.IsNullOrEmpty(data))
-                return null;
+                return new List<string>();
 
             _internalBuffer.Append(data);
 
@@ -93,27 +90,27 @@ namespace Shield.HardwareCom.RawDataProcessing
                 //  Found pattern
                 if (patternIndex >= 0)
                 {
-                    int ealierSeparatorIndex = _internalBuffer.ToString().IndexOf(Separator);
-                    if (ealierSeparatorIndex < patternIndex)
+                    int ealier_separatorIndex = _internalBuffer.ToString().IndexOf(_separator);
+                    if (ealier_separatorIndex < patternIndex)
                     {
                         gibberishBuffer.Append(_internalBuffer.ToString(0, patternIndex - 1));
                     }
 
                     //  If its data type
-                    if (int.Parse(_internalBuffer.ToString(patternIndex + 1, CommandTypeLength)) == _dataCommandNumber)
+                    if (int.Parse(_internalBuffer.ToString(patternIndex + 1, _commandTypeLength)) == _dataCommandNumber)
                     {
                         //  Is there enough chars to fill data portion of command?
                         if (_internalBuffer.Length >= CommandLengthWithData + patternIndex)
                         {
                             //  check for preliminary correctness of raw data pack
-                            int isThereSeparatorInData = FindSeparatorIndex(_internalBuffer.ToString(CommandLength, DataPackLength));
+                            int isThere_separatorInData = Find_separatorIndex(_internalBuffer.ToString(CommandLength, _dataPackLength));
 
                             // Data pack is busted, so throw it into return, recipient will handle this
-                            if (isThereSeparatorInData >= 0)
+                            if (isThere_separatorInData >= 0)
                             {
                                 AddGibberishToOutputCollection();
-                                _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLength + isThereSeparatorInData));
-                                _internalBuffer.Remove(0, CommandLength + isThereSeparatorInData);
+                                _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLength + isThere_separatorInData));
+                                _internalBuffer.Remove(0, CommandLength + isThere_separatorInData);
                                 continue;
                             }
 
@@ -149,7 +146,7 @@ namespace Shield.HardwareCom.RawDataProcessing
                 //  No pattern, no data before, lets try to find a separator at least
                 else
                 {
-                    int separatorIndex = FindSeparatorIndex(_internalBuffer.ToString());
+                    int separatorIndex = Find_separatorIndex(_internalBuffer.ToString());
                     //  separator found, but not as one and only char in buffer
                     if (separatorIndex >= 0 && _internalBuffer.Length > 1)
                     {
@@ -161,7 +158,7 @@ namespace Shield.HardwareCom.RawDataProcessing
                     // There is just a separator in buffer
                     else if (separatorIndex >= 0)
                     {
-                        _cutoffs.Append(Separator);
+                        _cutoffs.Append(_separator);
                         _internalBuffer.Clear();
                     }
                     //  Nothing found
@@ -179,19 +176,19 @@ namespace Shield.HardwareCom.RawDataProcessing
 
         private int FindPatternIndex(string data)
         {
-            Match match = CommandPattern.Match(data);
+            Match match = _commandPattern.Match(data);
             if (match.Success)
                 return match.Index;
             else
                 return -1;
         }
 
-        private int FindSeparatorIndex(string data, int startIndex = 0, int count = 0)
+        private int Find_separatorIndex(string data, int startIndex = 0, int count = 0)
         {
             if (count == 0)
-                return data.IndexOf(Separator, startIndex);
+                return data.IndexOf(_separator, startIndex);
             else
-                return data.IndexOf(Separator, startIndex, count);
+                return data.IndexOf(_separator, startIndex, count);
         }
     }
 }

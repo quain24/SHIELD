@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Autofac.Core;
-using Autofac.Features.Indexed;
 using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
@@ -12,10 +11,6 @@ using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.RawDataProcessing;
 using Shield.Helpers;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -28,20 +23,20 @@ namespace Shield.HardwareCom
         {
             var shieldAssembly = Assembly.Load(nameof(Shield));
 
-
             // Models registration (single interface per model)
             builder.RegisterAssemblyTypes(shieldAssembly)
-                   .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Model"))
+                   .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Model", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration both normal and autofac's factories
             // More complicated factories (with parameters in constructor) are separated below.
             // ==================================================================================================================================
             builder.RegisterAssemblyTypes(shieldAssembly)
-                   .Where(t => t.IsInNamespace("Shield.HardwareCom.Factories") && t.Name.EndsWith("Factory"))
+                   .Where(t => t.IsInNamespace("Shield.HardwareCom.Factories") && t.Name.EndsWith("Factory", System.StringComparison.Ordinal))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Except<NormalTimeoutFactory>()
                    .Except<NullTimeoutFactory>()
+                   .Except<TimeoutFactory>()
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
@@ -53,14 +48,12 @@ namespace Shield.HardwareCom
             builder.RegisterType<MoqAdapter>()
                    .Keyed<ICommunicationDevice>(DeviceType.Moq)
                    .WithParameter(new ResolvedParameter(
-                                 (pi, ctx) => pi.ParameterType == typeof(string) && pi.Name == "portName",
-                                 (pi, ctx) => "1"));
+                                 (pi, _) => pi.ParameterType == typeof(string) && pi.Name == "portName",
+                                 (_, __) => "1"));
 
             #endregion Communication Device Factory and required devices
 
-            // Timeout factory
-
-            // new timeout mechanism test
+            #region Timeout factory and required entities
 
             builder.RegisterType<NormalTimeout>();
             builder.RegisterType<NullTimeout>()
@@ -77,52 +70,43 @@ namespace Shield.HardwareCom
                    .As<ITimeoutFactory>()
                    .SingleInstance();
 
-            builder.RegisterType<CompletitionTimeoutChecker>()
-                   .As<ICompletitionTimeoutChecker>();
+            #endregion Timeout factory and required entities
 
-            builder.RegisterType<ConfirmationTimeoutChecker>()
-                   .As<IConfirmationTimeoutChecker>();
-
-            
-            // MessagePipeline Factory
-            // TODO - clean those dependencies in and out of MessengingPipeline
-
-            builder.RegisterType<MessengingPipelineContext>()
-                   .As<IMessengingPipelineContext>();            
+            #region MessengingPipelineFactory factory and required entities
 
             builder.Register(c =>
-                        new MessengingPipelineFactory(
-                            c.Resolve<IMessengingPipelineContextFactory>()))
-                    .AsImplementedInterfaces();
+                             new MessengingPipelineFactory(
+                                 c.Resolve<IMessengingPipelineContextFactory>()))
+                   .AsImplementedInterfaces();
 
+            builder.RegisterType<MessengingPipelineContext>()
+                   .As<IMessengingPipelineContext>();
+
+            #endregion MessengingPipelineFactory factory and required entities
 
             // End of factories registration ========================================================================================================
 
             // Working classes
             builder.RegisterType<CommandTranslator>()
                    .WithParameter(new ResolvedParameter(
-                       (pi, ctx) => pi.Name == "applicationSettings",
-                       (pi, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>()))
+                       (pi, _) => pi.Name == "applicationSettings",
+                       (_, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>()))
                    .As<ICommandTranslator>();
 
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
-                        IIncomingDataPreparer incomingDataPreparer =
-                            new IncomingDataPreparer(appSet.CommandTypeSize,
-                                                     appSet.IdSize,
-                                                     appSet.DataSize,
-                                                     new Regex($@"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
-                                                     appSet.Separator);
-
-                        return incomingDataPreparer;
+                        return (IIncomingDataPreparer)new IncomingDataPreparer(appSet.CommandTypeSize,
+                                                      appSet.IdSize,
+                                                      appSet.DataSize,
+                                                      new Regex($"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
+                                                      appSet.Separator);
                     })
                    .As<IIncomingDataPreparer>();
 
             // MESSAGE PROCESSING: ===================================================================================================================
 
             #region Classes for checking correctness
-                       
 
             builder.RegisterType<TypeDetectorAnalyzer>()
                    .As<IMessageAnalyzer>()
@@ -149,14 +133,11 @@ namespace Shield.HardwareCom
 
             #region Message object processing
 
-            //builder.RegisterType<CommandIngester>()
-            //       .As<ICommandIngester>()
-            //       .WithParameter(
-            //           new ResolvedParameter(
-            //               (pi, ctx) => pi.ParameterType == typeof(ITimeoutCheck) && pi.Name == "completitionTimeout",
-            //               (pi, ctx) => ctx.Resolve<ITimeoutFactory>().CreateTimeoutWith(
-            //                                ctx.Resolve<ISettings>().ForTypeOf<ICommunicationDeviceSettingsContainer>().GetSettingsByDeviceName("COM4").CompletitionTimeout))
-            //       );
+            builder.RegisterType<CompletitionTimeoutChecker>()
+                   .As<ICompletitionTimeoutChecker>();
+
+            builder.RegisterType<ConfirmationTimeoutChecker>()
+                   .As<IConfirmationTimeoutChecker>();
 
             #endregion Message object processing
 

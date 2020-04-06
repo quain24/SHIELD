@@ -144,9 +144,9 @@ namespace Shield.HardwareCom.Adapters
                     OnDataReceived(rawData);
                     return rawData;
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
-                    throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ct);
+                    throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ex, ct);
                 }
             }
             return string.Empty;
