@@ -84,6 +84,7 @@
     <Compile Include="Data\Models\CommunicationDeviceSettingsContainer.cs" />
     <Compile Include="Data\Models\SettingsModel.cs" />
     <Compile Include="DependencyDictionary.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorNew.cs" />
     <Compile Include="HardwareCom\Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
     <Compile Include="HardwareCom\Enums\Message.cs" />
@@ -153,6 +154,7 @@
     <Compile Include="HardwareCom\Models\IMessageModel.cs" />
     <Compile Include="HardwareCom\Models\MessageModel.cs" />
     <Compile Include="HardwareCom\Enums\TimeoutType.cs" />
+    <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparer2.cs" />
     <Compile Include="Helpers\IdGenerator.cs" />
     <Compile Include="Helpers\IIdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
