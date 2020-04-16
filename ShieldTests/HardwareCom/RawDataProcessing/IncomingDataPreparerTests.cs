@@ -1,5 +1,6 @@
 ﻿using Shield.HardwareCom.RawDataProcessing;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -7,19 +8,11 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
 {
     public class IncomingDataPreparerTests
     {
-        public IncomingDataPreparer2 TestPreparer;
-        public string goodData => "*0001*0001*0123456789";
-        public string badDataPack = "*0002*0002*012345*789";
-        public string badDataPackShort = "*0003*0003*012345*7";
-        public string badDataShort = "*0004*0004*01234567";
-        public string good = "*0005*0005*";
-        public string badId = "*0006*.$06*";
-        public string badShort = "*0007*12";
-        public string badMissingFrontSep = "0008*0008*";
+        public IncomingDataPreparer TestPreparer;
 
         public IncomingDataPreparerTests()
         {
-            TestPreparer = new IncomingDataPreparer2(4, 4, 10,
+            TestPreparer = new IncomingDataPreparer(4, 4, 10,
                                                      new Regex("[*][0-9]{4}[*][a-zA-Z0-9]{4}[*]"),
                                                      '*');
         }
@@ -80,7 +73,6 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
             Assert.Equal(expected, actual);
         }
 
-
         [Theory]
         [InlineData("*0018*0001*01234567",
                     "*0018*0002*0123456789")]
@@ -99,6 +91,7 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
                     "*0018*0001*01234567",
                     "*0018*0002*0123456789",
                     "*0018*0001*01234567",
+                    "*********",
                     "*0003*0001*",
                     "*0018*0002*0123456789",
                     "*0001*0001*")]
@@ -112,5 +105,69 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
 
             Assert.Equal(expected, actual);
         }
-    }
+
+        [Fact]
+        public void Returns_empty_list_if_passed_empty_data_string()
+        {
+            var actual = TestPreparer.DataSearch(string.Empty);
+
+            Assert.Empty(actual);
+        }
+
+        [Fact]
+        public void Returns_empty_list_if_passed_null()
+        {
+            var actual = TestPreparer.DataSearch(null);
+
+            Assert.Empty(actual);
+        }
+
+        [Theory]
+        [InlineData("*0018*0001*", "0123456789")]
+        [InlineData("*0018*0001*", "012345", "6789")]
+        [InlineData("*0018", "*0001*", "012345", "6789")]
+        [InlineData("*0001", "*", "00", "01*")]
+        public void Will_compose_whole_command_given_two_or_more_proper_partials_in_order(params string[] expectedData)
+        {
+            var expected = string.Concat(expectedData);
+            var actual = new List<string>();
+
+            foreach (var s in expectedData)
+                actual.AddRange(TestPreparer.DataSearch(s));
+
+            Assert.Equal(expected, actual[0]);
+        }
+
+        [Theory]
+        [InlineData("***aasdjhasfkk*skhf*sdkfhskhfkshf90489235h5*", "***aasdjhasfkk*skhf*sdkfhskhfkshf90489235h5")] // Last separator in buffer in case of future data
+        [InlineData("sdofghjdfilghjsdfgh", "sdofghjdfilghjsdfgh")]
+        [InlineData("*00AB*0001*", "*00AB*0001")]    // Last separator in buffer in case of future data
+        public void Returns_junk_given_completly_bad_data(string data, params string[] expectedData)
+        {
+            var actual = TestPreparer.DataSearch(data);
+            var expected = expectedData.ToList();
+
+            Assert.Equal(expected, actual);
+        }
+
+
+        [Theory]
+        [InlineData("***gsdfgg*",
+                    "**0001*0001**000A*0001**0018*0001*adkkk",
+                    "dkajsd*0002*0002*a___*0018*0003*0123456789*0003*AAAA****",
+                    "***gsdfgg**", "*0001*0001*", "*000A*0001*", "*0018*0001*adkkkdkajs", "d",  "*0002*0002*", "a___", "*0018*0003*0123456789", "*0003*AAAA*")]
+        public void Returns_good_and_bad_commands_given_good_and_bad_commands_or_partials(params string[] expectedData)
+        {
+            var split = new List<string>() { expectedData[0], expectedData[1], expectedData[2]};
+            List<string> actual = new List<string>();
+            foreach(var s in split)
+                actual.AddRange(TestPreparer.DataSearch(s));
+
+            List<string> expected = new List<string>();
+            for(int i = 3 ; i < expectedData.Length ; i++)
+                expected.Add(expectedData[i]);
+
+            Assert.Equal(expected, actual);
+        }
+   }
 }

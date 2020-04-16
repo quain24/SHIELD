@@ -1,31 +1,36 @@
 ﻿using System.Collections.Generic;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Shield.HardwareCom.RawDataProcessing
 {
     public class IncomingDataPreparer : IIncomingDataPreparer
     {
-        private StringBuilder _internalBuffer = new StringBuilder();
-        private StringBuilder _cutoffs = new StringBuilder();
+        private const int IndexNotFound = -1;
+        private const int BufferStart = 0;
+
+        private List<string> _outputCollection = new List<string>();
 
         private readonly int _commandTypeLength;
         private readonly int _idLength;
         private readonly int _dataPackLength;
         private readonly char _separator;
         private readonly Regex _commandPattern;
-        private List<string> _outputCollection;
+
+        private int _patternIndex = IndexNotFound;
+
+        private string _buffer = string.Empty;
+        private string _cutoffsbuffer = string.Empty;
 
         private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
 
-        // TODO Refactoring here
+        // TODO Refactoring here, and a lot of it - its missing many commands when sending lots of them in
 
         internal int CommandLengthWithData
         {
             get
             {
                 if (_commandTypeLength > 0 && _idLength > 0 && _dataPackLength > 0)
-                    return _commandTypeLength + _idLength + _dataPackLength + 3;
+                    return _commandTypeLength + _idLength + _dataPackLength + 3; // +3 becouse there is no separator after data portion
                 else
                     return -1;
             }
@@ -56,139 +61,160 @@ namespace Shield.HardwareCom.RawDataProcessing
             if (CommandLengthWithData <= 0 && !string.IsNullOrEmpty(data))
                 return new List<string>();
 
-            _internalBuffer.Append(data);
+            _buffer += data;
 
-            return Extract();
-        }
+            ResetInternalVariables();
 
-        private List<string> Extract()
-        {
-            StringBuilder gibberishBuffer = new StringBuilder();
+            while (_buffer.Length > 0)
+                ProcessData();
 
-            void AddGibberishToOutputCollection()
-            {
-                if (gibberishBuffer.Length > 0)
-                {
-                    _outputCollection.Add(gibberishBuffer.ToString());
-                    gibberishBuffer.Clear();
-                }
-            }
-
-            _outputCollection = new List<string>();
-
-            //  If there was something left from last raw data portion - add it to current buffer
-            if (_cutoffs.Length > 0)
-            {
-                _internalBuffer.Insert(0, _cutoffs);
-                _cutoffs.Clear();
-            }
-
-            while (_internalBuffer.Length > 0)
-            {
-                int patternIndex = FindPatternIndex(_internalBuffer.ToString());
-
-                //  Found pattern
-                if (patternIndex >= 0)
-                {
-                    int ealier_separatorIndex = _internalBuffer.ToString().IndexOf(_separator);
-                    if (ealier_separatorIndex < patternIndex)
-                    {
-                        gibberishBuffer.Append(_internalBuffer.ToString(0, patternIndex - 1));
-                    }
-
-                    //  If its data type
-                    if (int.Parse(_internalBuffer.ToString(patternIndex + 1, _commandTypeLength)) == _dataCommandNumber)
-                    {
-                        //  Is there enough chars to fill data portion of command?
-                        if (_internalBuffer.Length >= CommandLengthWithData + patternIndex)
-                        {
-                            //  check for preliminary correctness of raw data pack
-                            int isThere_separatorInData = Find_separatorIndex(_internalBuffer.ToString(CommandLength, _dataPackLength));
-
-                            // Data pack is busted, so throw it into return, recipient will handle this
-                            if (isThere_separatorInData >= 0)
-                            {
-                                AddGibberishToOutputCollection();
-                                _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLength + isThere_separatorInData));
-                                _internalBuffer.Remove(0, CommandLength + isThere_separatorInData);
-                                continue;
-                            }
-
-                            //  Correct data pack!!
-                            else
-                            {
-                                AddGibberishToOutputCollection();
-                                _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLengthWithData));
-                                _internalBuffer.Remove(0, patternIndex + CommandLengthWithData);
-                                continue;
-                            }
-                        }
-
-                        //  Data pack is incomplete - lets leave it for next raw data portion
-                        else
-                        {
-                            _cutoffs.Append(_internalBuffer);
-                            _internalBuffer.Clear();
-                            continue;
-                        }
-                    }
-
-                    //  If its not data, then just add it to return
-                    else
-                    {
-                        AddGibberishToOutputCollection();
-                        _outputCollection.Add(_internalBuffer.ToString(patternIndex, CommandLength));
-                        _internalBuffer.Remove(0, patternIndex + CommandLength);
-                        continue;
-                    }
-                }
-
-                //  No pattern, no data before, lets try to find a separator at least
-                else
-                {
-                    int separatorIndex = Find_separatorIndex(_internalBuffer.ToString());
-                    //  separator found, but not as one and only char in buffer
-                    if (separatorIndex >= 0 && _internalBuffer.Length > 1)
-                    {
-                        _cutoffs.Append(_internalBuffer.ToString(separatorIndex, _internalBuffer.Length - separatorIndex));
-                        gibberishBuffer.Append(_internalBuffer.ToString(0, separatorIndex));
-                        _internalBuffer.Remove(0, _internalBuffer.Length - separatorIndex);
-                    }
-
-                    // There is just a separator in buffer
-                    else if (separatorIndex >= 0)
-                    {
-                        _cutoffs.Append(_separator);
-                        _internalBuffer.Clear();
-                    }
-                    //  Nothing found
-                    else
-                    {
-                        gibberishBuffer.Append(_internalBuffer.ToString());
-                        _internalBuffer.Clear();
-                    }
-                }
-            }
-
-            AddGibberishToOutputCollection();
             return _outputCollection;
         }
 
-        private int FindPatternIndex(string data)
+        private void ResetInternalVariables()
         {
-            Match match = _commandPattern.Match(data);
-            if (match.Success)
-                return match.Index;
-            else
-                return -1;
+            _patternIndex = IndexNotFound;
+            _outputCollection = new List<string>();
         }
 
-        private int Find_separatorIndex(string data, int startIndex = 0, int count = 0)
+        public void ProcessData()
         {
-            if (count == 0)
-                return data.IndexOf(_separator, startIndex);
+            MergeBuffers();
+            _patternIndex = FindPatternIndexInBuffer();
+
+            if (_patternIndex != IndexNotFound)
+                ProcessAsPossibleCommand();
             else
-                return data.IndexOf(_separator, startIndex, count);
+                CleanUpBufferFromJunk();
         }
+
+        private void MergeBuffers()
+        {
+            if (_cutoffsbuffer.Length > 0)
+                _buffer = _cutoffsbuffer + _buffer;
+            _cutoffsbuffer = string.Empty;
+        }
+
+        private int FindPatternIndexInBuffer()
+        {
+            Match match = _commandPattern.Match(_buffer);
+            return match.Success
+                ? match.Index
+                : IndexNotFound;
+        }
+
+        private void ProcessAsPossibleCommand()
+        {
+            if (!PatternIndexInFront())
+                MoveFromBufferToOutput(length: _patternIndex);
+
+            if (IsFoundCommandADataType())
+                ProcessAsDataCommand();
+            else
+                ProcessAsNormalCommand();
+        }
+
+        private bool IsFoundCommandADataType()
+        {
+            if (int.TryParse(GetCommandString(), out int result))
+                return result == _dataCommandNumber;
+            return false;
+        }
+
+        private void CleanUpBufferFromJunk()
+        {
+            int separatorIndex = FindLastSeparatorIndexInBuffer();
+
+            if (_buffer.Length < CommandLength)
+                MoveToCutoffsFromBuffer();
+            else if (separatorIndex == IndexNotFound)
+                MoveFromBufferToOutput();
+            else
+            {
+                MoveFromBufferToOutput(length: separatorIndex);
+                MoveToCutoffsFromBuffer();
+            }
+        }
+
+        private int FindLastSeparatorIndexInBuffer() => _buffer.LastIndexOf(_separator);
+
+        private string GetCommandString()
+        {
+            if ((BufferStart + 1 + _commandTypeLength) <= _buffer.Length)
+                return _buffer.Substring(BufferStart + 1, _commandTypeLength);
+            else
+                return string.Empty;
+        }
+
+        private void ProcessAsNormalCommand() => MoveFromBufferToOutput(length: CommandLength);
+
+        private void ProcessAsDataCommand()
+        {
+            int separatorIndex = SeparatorInDataPackIndex();
+            if (separatorIndex > CommandLengthWithData - 1 || (separatorIndex == IndexNotFound && IsDataPackLongEnough()))
+                MoveFromBufferToOutput(length: CommandLengthWithData);
+            else
+                HandleInvalidDataPack(separatorIndex);
+        }
+
+        private int SeparatorInDataPackIndex()
+        {
+            return IsDataPackLongEnough()
+                ? _buffer.IndexOf(_separator, CommandLength)
+                : _buffer.IndexOf(_separator, CommandLength, _buffer.Length - CommandLength);
+        }
+
+        private void HandleInvalidDataPack(int separatorIndex)
+        {
+            if (separatorIndex == IndexNotFound && !IsDataPackLongEnough())
+                MoveToCutoffsFromBuffer();
+            else
+                MoveFromBufferToOutput(length: separatorIndex);
+        }
+
+        private bool PatternIndexInFront() => _patternIndex == 0;
+
+        private bool IsDataPackLongEnough() => _buffer.Length >= CommandLengthWithData;
+
+
+        private void MoveFromBufferToOutput(int index = IndexNotFound, int length = -1)
+        {
+            if (index < IndexNotFound) throw new System.ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be less than {nameof(IndexNotFound)} value({IndexNotFound}).");
+            if (length < -1) throw new System.ArgumentOutOfRangeException(nameof(index), $"{nameof(length)} cannot be negative");
+
+            if (index == IndexNotFound && length == -1)
+            {
+                AddToOutput(_buffer);
+                _buffer = string.Empty;
+            }
+            else
+            {
+                index = index < 0 ? 0 : index;
+                length = length < 0 ? 0 : length;
+                _outputCollection.Add(_buffer.Substring(index, length));
+                _buffer = _buffer.Remove(index, length);
+            }
+        }
+
+        private void MoveToCutoffsFromBuffer(int index = IndexNotFound, int length = -1)
+        {
+            if (index < IndexNotFound) throw new System.ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be less than {nameof(IndexNotFound)} value({IndexNotFound}).");
+            if (length < -1) throw new System.ArgumentOutOfRangeException(nameof(index), $"{nameof(length)} cannot be negative");
+
+            if (index == IndexNotFound && length == -1)
+            {
+                _cutoffsbuffer += _buffer;
+                _buffer = string.Empty;
+            }
+            else
+            {
+                index = index < 0 ? 0 : index;
+                length = length < 0 ? 0 : length;
+                _cutoffsbuffer += _buffer.Substring(index, length);
+                _buffer = _buffer.Remove(index, length);
+            }
+        }
+
+        private void AddToOutput(string data) => _outputCollection.Add(data);
     }
 }

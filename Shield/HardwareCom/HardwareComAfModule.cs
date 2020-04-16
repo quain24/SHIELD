@@ -96,7 +96,7 @@ namespace Shield.HardwareCom
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
-                        return (IIncomingDataPreparer)new IncomingDataPreparer2(appSet.CommandTypeSize,
+                        return (IIncomingDataPreparer)new IncomingDataPreparer(appSet.CommandTypeSize,
                                                       appSet.IdSize,
                                                       appSet.DataSize,
                                                       new Regex($"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
