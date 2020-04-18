@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class MessengingPipeline : IMessengingPipeline
+    public class MessengingPipeline : IMessengingPipeline, IDisposable
     {
         private readonly IMessengingPipelineContext _context;
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
@@ -15,6 +15,8 @@ namespace Shield.HardwareCom
         private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
+        private bool _disposed = false;
+
 
         public bool IsOpen => _context?.Messenger?.IsOpen ?? false;
 
@@ -134,5 +136,28 @@ namespace Shield.HardwareCom
         }
 
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
+
+                           
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _forGUITemporary?.Dispose();
+                    _handleNewMessagesCTS?.Dispose();
+                    // Free other state (managed objects).
+                }
+                // Free your own state (unmanaged objects).
+                // Set large fields to null.
+                _disposed = true;
+            }
+        }
     }
 }
