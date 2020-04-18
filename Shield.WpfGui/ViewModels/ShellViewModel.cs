@@ -17,10 +17,9 @@ namespace Shield.WpfGui.ViewModels
 {
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
-        private ISettings _settings;
+        private readonly ISettings _settings;
         private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private readonly ICommandModelFactory _commandFactory;
-        private readonly IMessageFactory _messageFactory1;
         private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
         private readonly IMessengingPipeline _pipeline;
         private string _selectedCommand;
@@ -49,14 +48,12 @@ namespace Shield.WpfGui.ViewModels
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public ShellViewModel(IMessengingPipelineFactory incomingMessagePipelineFactory, ISettings settings,
-                              ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory,
-                              IMessageFactory messageFactory)
+                              ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory)
         {
             _incomingMessagePipelineFactory = incomingMessagePipelineFactory ?? throw new ArgumentNullException(nameof(incomingMessagePipelineFactory));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-            _messageFactory1 = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
             _settings.LoadFromFile();
             _settings.SaveToFile();
 

@@ -8,49 +8,33 @@ namespace Shield.HardwareCom.Models
     /// </summary>
     public class CommandModel : ICommandModel
     {
-        private string _data = string.Empty;
         private string _id = string.Empty;
-        private long _timestamp = 0;
-        private CommandType _command;
 
-        public long TimeStamp
-        {
-            get { return _timestamp; }
-            set { _timestamp = value; }
-        }
+        public long TimeStamp { get; set; } = 0;
 
         public string Id
         {
             get { return _id; }
-            set { _id = value.ToUpperInvariant(); }
+            set { _id = value?.ToUpperInvariant() ?? string.Empty; }
         }
 
-        public string Data
-        {
-            get { return _data; }
-            set { _data = value; }
-        }
+        public string Data { get; set; } = string.Empty;
 
-        public CommandType CommandType
-        {
-            get { return _command; }
-            set { _command = value; }
-        }
+        public CommandType CommandType { get; set; }
 
-        public string CommandTypeString
-        {
-            get { return Enum.GetName(typeof(CommandType), CommandType); }
-        }
+        public string CommandTypeString => Enum.GetName(typeof(CommandType), CommandType);
 
         public bool Equals(ICommandModel other)
         {
-            if (ReferenceEquals(other, null))
+            if (other is null)
                 return false;
 
             if (ReferenceEquals(this, other))
                 return true;
 
-            return Id.Equals(other.Id) && Data.Equals(other.Data) && CommandType.Equals(other.CommandType);
+            return Id.Equals(other.Id, StringComparison.OrdinalIgnoreCase) &&
+                   Data.Equals(other.Data, StringComparison.OrdinalIgnoreCase) &&
+                   CommandType.Equals(other.CommandType, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()

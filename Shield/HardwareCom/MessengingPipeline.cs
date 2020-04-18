@@ -17,7 +17,6 @@ namespace Shield.HardwareCom
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
         private bool _disposed = false;
 
-
         public bool IsOpen => _context?.Messenger?.IsOpen ?? false;
 
         public MessengingPipeline(IMessengingPipelineContext context)
@@ -137,7 +136,6 @@ namespace Shield.HardwareCom
 
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
 
-                           
         public void Dispose()
         {
             Dispose(true);
