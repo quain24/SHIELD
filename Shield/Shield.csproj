@@ -99,6 +99,7 @@
     <Compile Include="HardwareCom\Factories\NormalTimeoutFactory.cs" />
     <Compile Include="HardwareCom\Factories\NullTimeoutFactory.cs" />
     <Compile Include="HardwareCom\Factories\TimeoutFactory.cs" />
+    <Compile Include="HardwareCom\IMessengingPipeline.cs" />
     <Compile Include="HardwareCom\IMessengingPipelineContext.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeoutChecker.cs" />
     <Compile Include="HardwareCom\Factories\CommandIngesterFactory.cs" />

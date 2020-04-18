@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class MessengingPipeline
+    public class MessengingPipeline : IMessengingPipeline
     {
         private readonly IMessengingPipelineContext _context;
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);

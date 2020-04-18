@@ -74,13 +74,14 @@ namespace Shield.HardwareCom
 
             #region MessengingPipelineFactory factory and required entities
 
-            builder.Register(c =>
-                             new MessengingPipelineFactory(
-                                 c.Resolve<IMessengingPipelineContextFactory>()))
-                   .AsImplementedInterfaces();
+            builder.RegisterType<MessengingPipelineFactory>()
+                   .As<IMessengingPipelineFactory>();
 
             builder.RegisterType<MessengingPipelineContext>()
                    .As<IMessengingPipelineContext>();
+
+            builder.RegisterType<MessengingPipeline>()
+                   .As<IMessengingPipeline>();
 
             #endregion MessengingPipelineFactory factory and required entities
 
@@ -96,7 +97,7 @@ namespace Shield.HardwareCom
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
-                        return (IIncomingDataPreparer)new IncomingDataPreparer(appSet.CommandTypeSize,
+                        return new IncomingDataPreparer(appSet.CommandTypeSize,
                                                       appSet.IdSize,
                                                       appSet.DataSize,
                                                       new Regex($"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),

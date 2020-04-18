@@ -4,6 +4,6 @@ namespace Shield.HardwareCom.Factories
 {
     public interface IMessengingPipelineFactory
     {
-        MessengingPipeline GetPipelineFor(ICommunicationDevice device);
+        IMessengingPipeline GetPipelineFor(ICommunicationDevice device);
     }
 }

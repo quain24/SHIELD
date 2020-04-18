@@ -17,6 +17,15 @@ namespace Shield.HardwareCom.Factories
         private readonly Func<IIdGenerator> _idGeneratorFactory;
         private readonly ITimeoutFactory _timeoutFactory;
 
+        private readonly Func<IMessenger,
+                              ICommandIngester,
+                              IIncomingMessageProcessor,
+                              ICompletitionTimeoutChecker,
+                              IConfirmationTimeoutChecker,
+                              IIdGenerator,
+                              IConfirmationFactory,
+                              IMessengingPipelineContext> _messengingPipelineContextAF;
+
         private IIdGenerator _idGenerator = null;
         private ICommandIngester _ingester = null;
 
@@ -27,7 +36,15 @@ namespace Shield.HardwareCom.Factories
                                                 Func<IIncomingMessageProcessor> processorFactory,
                                                 Func<IConfirmationFactory> confirmationFactory,
                                                 Func<IIdGenerator> idGeneratorFactory,
-                                                ITimeoutFactory timeoutFactory)
+                                                ITimeoutFactory timeoutFactory,
+                                                Func<IMessenger,
+                                                     ICommandIngester,
+                                                     IIncomingMessageProcessor,
+                                                     ICompletitionTimeoutChecker,
+                                                     IConfirmationTimeoutChecker,
+                                                     IIdGenerator,
+                                                     IConfirmationFactory,
+                                                     IMessengingPipelineContext> messengingPipelineContextAF)
         {
             _messengerFactory = messengerFactory ?? throw new ArgumentNullException(nameof(messengerFactory));
             _ingesterFactory = ingesterFactory ?? throw new ArgumentNullException(nameof(ingesterFactory));
@@ -37,13 +54,14 @@ namespace Shield.HardwareCom.Factories
             _confirmationFactory = confirmationFactory ?? throw new ArgumentNullException(nameof(confirmationFactory));
             _idGeneratorFactory = idGeneratorFactory ?? throw new ArgumentNullException(nameof(idGeneratorFactory));
             _timeoutFactory = timeoutFactory ?? throw new ArgumentNullException(nameof(timeoutFactory));
+            _messengingPipelineContextAF = messengingPipelineContextAF ?? throw new ArgumentNullException(nameof(messengingPipelineContextAF));
         }
 
         public IMessengingPipelineContext GetContextFor(ICommunicationDevice device)
         {
             _ = device ?? throw new ArgumentNullException(nameof(device));
 
-            return new MessengingPipelineContext(
+            return _messengingPipelineContextAF(
                 Messenger(device),
                 Ingester(),
                 IncomingMessageProcessor(),
@@ -52,15 +70,21 @@ namespace Shield.HardwareCom.Factories
                 IdGenerator(),
                 ConfirmationFactory());
         }
-        
+
         private IMessenger Messenger(ICommunicationDevice device) => _messengerFactory.CreateMessangerUsing(device);
-        private IIdGenerator IdGenerator() => _idGenerator is null ? _idGenerator = _idGeneratorFactory() : _idGenerator;
-        private ICommandIngester Ingester() => _ingester is null ? _ingester = _ingesterFactory.GetIngesterUsing(IdGenerator()) : _ingester;
+
+        private IIdGenerator IdGenerator() => _idGenerator ?? (_idGenerator = _idGeneratorFactory());
+
+        private ICommandIngester Ingester() => _ingester ?? (_ingester = _ingesterFactory.GetIngesterUsing(IdGenerator()));
+
         private IIncomingMessageProcessor IncomingMessageProcessor() => _processorFactory();
+
         private IConfirmationTimeoutChecker ConfirmationTimeoutChecker(ICommunicationDevice device) =>
             _confirmationTImeoutChecker(_timeoutFactory.CreateTimeoutWith(device.ConfirmationTimeout));
+
         private ICompletitionTimeoutChecker CompletitionTimeoutChecker(ICommunicationDevice device) =>
             _completitionCheckFactory(Ingester(), _timeoutFactory.CreateTimeoutWith(device.CompletitionTimeout));
+
         private IConfirmationFactory ConfirmationFactory() => _confirmationFactory();
     }
 }

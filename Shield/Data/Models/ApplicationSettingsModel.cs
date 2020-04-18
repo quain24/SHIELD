@@ -28,6 +28,14 @@ namespace Shield.Data.Models
 
         [DataMember]
         [OptionalField]
+        private string _hostId;
+
+        [DataMember]
+        [OptionalField]
+        private int _hostIdlength;
+
+        [DataMember]
+        [OptionalField]
         private char _separator;
 
         [DataMember]
@@ -93,6 +101,8 @@ namespace Shield.Data.Models
             _dataSize = 10;
             _idSize = 4;
             _commandTypeSize = 4;
+            _hostId = "home";
+            _hostIdlength = 4;
             _separator = '*';
             _filler = '.';
             _type = SettingsType.Application;
