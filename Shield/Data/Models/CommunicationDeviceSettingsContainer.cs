@@ -28,7 +28,7 @@ namespace Shield.Data.Models
             _adapters.Add(settings);
         }
 
-        public ICommunicationDeviceSettings GetSettingsByDeviceName(string name) => _adapters.Where(a => a.Name == name).FirstOrDefault();
+        public ICommunicationDeviceSettings GetSettingsByDeviceName(string name) => _adapters.Find(a => a.Name == name);
 
         public bool RemoveByDeviceName(string name) => _adapters.Remove(_adapters.Find(a => a.Name == name));
     }

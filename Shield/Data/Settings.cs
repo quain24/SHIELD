@@ -27,9 +27,7 @@ namespace Shield.Data
 
         private void AddMissingSettingPacks()
         {
-            var settings = CreateDefaultSettingPacks();
-
-            foreach (var con in settings)
+            foreach (var con in CreateDefaultSettingPacks())
             {
                 if (!_settingsModel.Settings.ContainsKey(con.Type))
                     _settingsModel.Settings.Add(con.Type, con);
@@ -186,12 +184,10 @@ namespace Shield.Data
 
         public T ForTypeOf<T>() where T : class, ISetting
         {
-            foreach (var kvp in _settingsModel.Settings)
-            {
-                if (kvp.Value is T)
-                    return (T)kvp.Value;
-            }
-            return default;
+            return _settingsModel
+                   .Settings
+                   .Select(s => s.Value)
+                   .FirstOrDefault(s => s is T) as T;
         }
     }
 }
