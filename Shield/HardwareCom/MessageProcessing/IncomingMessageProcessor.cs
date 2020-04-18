@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
@@ -15,7 +16,7 @@ namespace Shield.HardwareCom.MessageProcessing
     /// </summary>
     public class IncomingMessageProcessor : IIncomingMessageProcessor
     {
-        private readonly IList<IMessageAnalyzer> _analyzers;
+        private readonly IEnumerable<IMessageAnalyzer> _analyzers;
         private const int TakeTimeout = 150;
 
         private BlockingCollection<IMessageModel> _messagesToProcess = new BlockingCollection<IMessageModel>();
@@ -25,7 +26,7 @@ namespace Shield.HardwareCom.MessageProcessing
         private bool _isProcessing = false;
         private object _processingLock = new object();
 
-        public IncomingMessageProcessor(IList<IMessageAnalyzer> analyzers) =>
+        public IncomingMessageProcessor(IEnumerable<IMessageAnalyzer> analyzers) =>
             _analyzers = analyzers ?? throw new ArgumentNullException(nameof(analyzers));
 
         /// <summary>
@@ -123,9 +124,8 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private void RunAnalyzersOn(IMessageModel message)
         {
-            if (_analyzers.Count > 0)
-                for (int i = 0; i < _analyzers.Count; i++)
-                    _analyzers[i]?.CheckAndSetFlagsIn(message);
+            foreach(var a in _analyzers)
+                a?.CheckAndSetFlagsIn(message);
         }
 
         private bool IsMessageProcessingCorrectlyCancelled(Exception e)

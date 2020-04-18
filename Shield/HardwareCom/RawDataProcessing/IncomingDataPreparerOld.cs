@@ -4,6 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace Shield.HardwareCom.RawDataProcessing
 {
+
+    /// <summary>
+    /// DEPRECEATED - use IncomingDataPreparer
+    /// </summary>
+
     public class IncomingDataPreparerOld : IIncomingDataPreparer
     {
         private StringBuilder _internalBuffer = new StringBuilder();
@@ -17,8 +22,6 @@ namespace Shield.HardwareCom.RawDataProcessing
         private List<string> _outputCollection;
 
         private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
-
-        // TODO Refactoring here
 
         internal int CommandLengthWithData
         {

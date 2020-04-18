@@ -6,7 +6,7 @@ namespace Shield.HardwareCom.Factories
 {
     public class MessageFactory : IMessageFactory
     {
-        private Func<IMessageModel> _messageFactory;
+        private readonly Func<IMessageModel> _messageFactory;
 
         public MessageFactory(Func<IMessageModel> messageFactory)
         {
@@ -20,10 +20,10 @@ namespace Shield.HardwareCom.Factories
             long timestampOverride = 0)
         {
             IMessageModel output = _messageFactory();
-            output.AssaignID((string.IsNullOrWhiteSpace(idOverride) ? string.Empty : idOverride));
+            output.AssaignID(string.IsNullOrWhiteSpace(idOverride) ? string.Empty : idOverride);
             output.Type = type;
             output.Direction = direction;
-            output.Timestamp = (timestampOverride < 0 ? Timestamp.TimestampNow : timestampOverride);
+            output.Timestamp = timestampOverride < 0 ? Timestamp.TimestampNow : timestampOverride;
             return output;
         }
     }

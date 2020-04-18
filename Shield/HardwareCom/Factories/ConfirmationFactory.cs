@@ -15,7 +15,7 @@ namespace Shield.HardwareCom.Factories
             _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
         }
 
-        public IMessageModel GenetateConfirmationOf(IMessageModel message)
+        public IMessageModel GenerateConfirmationOf(IMessageModel message)
         {
             if (message is null) throw new ArgumentNullException(nameof(message), "ConfirmationFactory - GenerateConfirmationOf: Cannot create confirmation of NULL");
 

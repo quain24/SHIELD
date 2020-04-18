@@ -1,7 +1,4 @@
-﻿using Shield.HardwareCom.CommandProcessing;
-using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.MessageProcessing;
-using Shield.HardwareCom.Models;
+﻿using Shield.HardwareCom.Models;
 using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
@@ -12,60 +9,52 @@ namespace Shield.HardwareCom
 {
     public class MessengingPipeline
     {
-        private readonly IConfirmationTimeoutChecker _confirmationTimeoutChecker;
-        private readonly ICompletitionTimeoutChecker _completitionTimeoutChecker;
-        private readonly IIncomingMessageProcessor _incomingMessageProcessor;
-        private readonly IConfirmationFactory _confirmationFactory;
-        private readonly ICommandIngester _commandIngester;
-        private readonly IIdGenerator _idGenerator;
-        private readonly IMessenger _messenger;
-
-        private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
-        private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly IMessengingPipelineContext _context;
+        private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
+
+        public bool IsOpen => _context?.Messenger?.IsOpen ?? false;
 
         public MessengingPipeline(IMessengingPipelineContext context)
         {
             if (context is null)
                 throw new ArgumentNullException(nameof(context));
 
-            _confirmationTimeoutChecker = context.ConfirmationTimeoutChecker;
-            _completitionTimeoutChecker = context.CompletitionTimeoutChecker;
-            _confirmationFactory = context.ConfirmationFactory;
-            _incomingMessageProcessor = context.Processor;
-            _commandIngester = context.Ingester;
-            _idGenerator = context.IdGenerator;
-            _messenger = context.Messenger;
+            _context = context;
 
-            _commandIngester.SwitchSourceCollectionTo(_messenger.GetReceivedCommands());
-            _incomingMessageProcessor.SwitchSourceCollectionTo(_commandIngester.GetReceivedMessages());
+            SetUpCollections();
         }
 
-        public bool IsOpen => _messenger.IsOpen;
+        private void SetUpCollections()
+        {
+            _context.Ingester.SwitchSourceCollectionTo(_context.Messenger.GetReceivedCommands());
+            _context.Processor.SwitchSourceCollectionTo(_context.Ingester.GetReceivedMessages());
+        }
 
         public void Open()
         {
-            _messenger.Open();
+            _context.Messenger.Open();
 
-            _messenger.StartReceiveingAsync().ConfigureAwait(false);
-            Task.Run(() => _commandIngester.StartProcessingCommands()).ConfigureAwait(false);
-            Task.Run(() => _incomingMessageProcessor.StartProcessingMessagesContinous()).ConfigureAwait(false);
-            Task.Run(async () => await _completitionTimeoutChecker.StartTimeoutCheckAsync().ConfigureAwait(false));
-            Task.Run(async () => await _confirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
+            _context.Messenger.StartReceiveingAsync().ConfigureAwait(false);
+            Task.Run(() => _context.Ingester.StartProcessingCommands()).ConfigureAwait(false);
+            Task.Run(() => _context.Processor.StartProcessingMessagesContinous()).ConfigureAwait(false);
+            Task.Run(async () => await _context.CompletitionTimeoutChecker.StartTimeoutCheckAsync().ConfigureAwait(false));
+            Task.Run(async () => await _context.ConfirmationTimeoutChecker.CheckUnconfirmedMessagesContinousAsync().ConfigureAwait(false));
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));
         }
 
         public void Close()
         {
             CancelHandleIncoming();
-            _confirmationTimeoutChecker.StopCheckingUnconfirmedMessages();
-            _incomingMessageProcessor.StopProcessingMessages();
-            _completitionTimeoutChecker.StopTimeoutCheck();
-            _commandIngester.StopProcessingCommands();
-            _messenger.StopReceiving();
-            _messenger.Close();
+            _context.ConfirmationTimeoutChecker.StopCheckingUnconfirmedMessages();
+            _context.CompletitionTimeoutChecker.StopTimeoutCheck();
+            _context.Processor.StopProcessingMessages();
+            _context.Ingester.StopProcessingCommands();
+            _context.Messenger.StopReceiving();
+            _context.Messenger.Close();
         }
 
         private void CancelHandleIncoming()
@@ -89,14 +78,14 @@ namespace Shield.HardwareCom
         }
 
         private IMessageModel GetNextReceivedMessage() =>
-            _incomingMessageProcessor.GetProcessedMessages().Take(_handleNewMessagesCTS.Token);
+            _context.Processor.GetProcessedMessages().Take(_handleNewMessagesCTS.Token);
 
         private bool IsConfirmation(IMessageModel message) =>
             message.Type == Enums.MessageType.Confirmation;
 
         private void HandleReceivedConfirmation(IMessageModel confirmation)
         {
-            _confirmationTimeoutChecker.AddConfirmation(confirmation);
+            _context.ConfirmationTimeoutChecker.AddConfirmation(confirmation);
             _receivedMessages.TryAdd(confirmation.Id, confirmation);
         }
 
@@ -109,7 +98,7 @@ namespace Shield.HardwareCom
 
         private async Task SendConfirmationOfAsync(IMessageModel message)
         {
-            IMessageModel confirmation = _confirmationFactory.GenetateConfirmationOf(message);
+            IMessageModel confirmation = _context.ConfirmationFactory.GenerateConfirmationOf(message);
             if (await SendAsync(confirmation).ConfigureAwait(false))
                 _sentMessages.TryAdd(confirmation.Id, confirmation);
             else
@@ -122,14 +111,14 @@ namespace Shield.HardwareCom
                 return false;
 
             if (string.IsNullOrWhiteSpace(message.Id))
-                message.Id = _idGenerator.GetNewID();
-            if (message.Timestamp <= 0)
-                message.Timestamp = Timestamp.TimestampNow;
+                message.Id = _context.IdGenerator.GetNewID();
+
+            message.Timestamp = Timestamp.TimestampNow;
 
             if (!IsConfirmation(message))
                 AddToConfirmationTimeoutChecking(message);
 
-            if (await _messenger.SendAsync(message).ConfigureAwait(false))
+            if (await _context.Messenger.SendAsync(message).ConfigureAwait(false))
             {
                 _sentMessages.TryAdd(message.Id, message);
                 message.IsTransfered = true;
@@ -141,7 +130,7 @@ namespace Shield.HardwareCom
 
         private void AddToConfirmationTimeoutChecking(IMessageModel confirmation)
         {
-            _confirmationTimeoutChecker.AddToCheckingQueue(confirmation);
+            _context.ConfirmationTimeoutChecker.AddToCheckingQueue(confirmation);
         }
 
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;

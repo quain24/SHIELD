@@ -73,8 +73,11 @@ namespace Shield.HardwareCom.MessageProcessing
             IMessageModel message = GetNextUnconfirmedMessage();
 
             using (_currentlyProcessingIdLock.Read())
+            {
                 if (message is null || _currentlyProcessingId == message.Id)
+                {
                     return false;
+                }
                 else
                 {
                     ClearTimeoutError(message);
@@ -86,6 +89,7 @@ namespace Shield.HardwareCom.MessageProcessing
                     }
                     return false;
                 }
+            }
         }
 
         private IMessageModel GetNextUnconfirmedMessage()

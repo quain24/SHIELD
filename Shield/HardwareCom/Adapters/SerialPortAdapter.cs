@@ -22,6 +22,7 @@ namespace Shield.HardwareCom.Adapters
         private byte[] _buffer = new byte[ByteBufferSize];
 
         private readonly SerialPort _port = new SerialPort();
+        private Encoding _encoding;
 
         private readonly object _lock = new object();
         private bool _disposed = false;
@@ -78,7 +79,7 @@ namespace Shield.HardwareCom.Adapters
             _port.StopBits = settings.StopBits;
             _port.ReadTimeout = settings.ReadTimeout;
             _port.WriteTimeout = settings.WriteTimeout;
-            _port.Encoding = Encoding.GetEncoding(settings.Encoding);
+            _encoding = _port.Encoding = Encoding.GetEncoding(settings.Encoding);
             _port.DtrEnable = false;
             _port.RtsEnable = false;
             _port.DiscardNull = true;
@@ -140,7 +141,7 @@ namespace Shield.HardwareCom.Adapters
                 {
                     ct.ThrowIfCancellationRequested();
                     int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
-                    string rawData = Encoding.GetEncoding(_port.Encoding.CodePage).GetString(_buffer).Substring(0, bytesRead);
+                    string rawData = _encoding.GetString(_buffer).Substring(0, bytesRead);
                     OnDataReceived(rawData);
                     return rawData;
                 }
@@ -161,20 +162,20 @@ namespace Shield.HardwareCom.Adapters
         {
             if (!IsOpen || string.IsNullOrEmpty(command))
             {
-                Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: Port closed / raw command empty / cancellation requested");
+                Debug.WriteLine("ERROR - SerialPortAdapter - SendAsync: Port closed / raw command empty / cancellation requested");
                 return false;
             }
 
-            byte[] buffer = Encoding.GetEncoding(_port.Encoding.CodePage).GetBytes(command);
+            byte[] buffer = _encoding.GetBytes(command);
             try
             {
                 ct.ThrowIfCancellationRequested();
-                await _port.BaseStream.WriteAsync(buffer, 0, buffer.Count(), ct).ConfigureAwait(false);
+                await _port.BaseStream.WriteAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($@"ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailable / canceled?");
+                Debug.WriteLine("ERROR - SerialPortAdapter - SendAsync: one or more Commands could not be sent - port closed / unavailable / canceled?");
                 Debug.WriteLine(ex.Message);
                 return false;
             }
@@ -197,7 +198,7 @@ namespace Shield.HardwareCom.Adapters
             }
             catch
             {
-                Debug.WriteLine($@"ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailable?");
+                Debug.WriteLine("ERROR - SeiralPortAdapter - Send: could not send a command - port closed / unavailable?");
                 return false;
             }
         }

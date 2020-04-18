@@ -23,29 +23,9 @@ namespace Shield.HardwareCom.RawDataProcessing
 
         private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
 
-        // TODO Refactoring here, and a lot of it - its missing many commands when sending lots of them in
+        internal int CommandLengthWithData { get; }
 
-        internal int CommandLengthWithData
-        {
-            get
-            {
-                if (_commandTypeLength > 0 && _idLength > 0 && _dataPackLength > 0)
-                    return _commandTypeLength + _idLength + _dataPackLength + 3; // +3 becouse there is no separator after data portion
-                else
-                    return -1;
-            }
-        }
-
-        internal int CommandLength
-        {
-            get
-            {
-                if (_commandTypeLength > 0 && _idLength > 0)
-                    return _commandTypeLength + _idLength + 3;
-                else
-                    return -1;
-            }
-        }
+        internal int CommandLength { get; }
 
         public IncomingDataPreparer(int commandTypeLength, int idLength, int dataPackLength, Regex commandPattern, char separator)
         {
@@ -54,6 +34,9 @@ namespace Shield.HardwareCom.RawDataProcessing
             _dataPackLength = dataPackLength;
             _commandPattern = commandPattern;
             _separator = separator;
+
+            CommandLength = _commandTypeLength + _idLength + 3;
+            CommandLengthWithData = CommandLength + _dataPackLength; // no + 1, becouse there is no separator after data portion
         }
 
         public List<string> DataSearch(string data)
@@ -175,7 +158,6 @@ namespace Shield.HardwareCom.RawDataProcessing
         private bool PatternIndexInFront() => _patternIndex == 0;
 
         private bool IsDataPackLongEnough() => _buffer.Length >= CommandLengthWithData;
-
 
         private void MoveFromBufferToOutput(int index = IndexNotFound, int length = -1)
         {
