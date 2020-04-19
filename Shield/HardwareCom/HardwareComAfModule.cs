@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 
 namespace Shield.HardwareCom
 {
+    // TODO implement host id in commands - creation, translation etc. Modify id generation
     public class HardwareComAfModule : Autofac.Module
     {
         protected override void Load(ContainerBuilder builder)

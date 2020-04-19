@@ -7,7 +7,7 @@ namespace Shield.HardwareCom.Factories
 {
     public class CommandModelFactory : ICommandModelFactory
     {
-        private Func<ICommandModel> _commandFactory;
+        private readonly Func<ICommandModel> _commandFactory;
 
         public CommandModelFactory(Func<ICommandModel> commandFactory)
         {
@@ -24,7 +24,7 @@ namespace Shield.HardwareCom.Factories
 
             output.CommandType = type;
             output.Id = idOverride;
-            output.TimeStamp = timestampOverride <= 0 ? Timestamp.TimestampNow : timestampOverride;
+            output.TimeStamp = timestampOverride < 0 ? Timestamp.TimestampNow : timestampOverride;
 
             return output;
         }

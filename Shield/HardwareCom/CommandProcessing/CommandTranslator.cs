@@ -31,6 +31,8 @@ namespace Shield.HardwareCom.CommandProcessing
             _commandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + 3;
         }
 
+
+        // TODO refactor and test
         public ICommandModel FromString(string rawData)
         {
             ICommandModel command = _commandModelFac();

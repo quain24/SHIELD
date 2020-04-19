@@ -68,6 +68,10 @@ namespace Shield.HardwareCom.MessageProcessing
                 if (!IsMessageProcessingCorrectlyCancelled(e))
                     throw;
             }
+            finally
+            {
+                UnlockProcessingMessages();
+            }
         }
 
         /// <summary>
@@ -87,6 +91,10 @@ namespace Shield.HardwareCom.MessageProcessing
                 if (!IsMessageProcessingCorrectlyCancelled(e))
                     throw;
             }
+            finally
+            {
+                UnlockProcessingMessages();
+            }
         }
 
         private bool CanStartProcessingMessages()
@@ -97,6 +105,12 @@ namespace Shield.HardwareCom.MessageProcessing
                     return false;
                 return _isProcessing = true;
             }
+        }
+
+        private void UnlockProcessingMessages()
+        {
+            lock (_processingLock)
+                _isProcessing = false;
         }
 
         private void TryProcessNextMessage()
