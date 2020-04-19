@@ -61,15 +61,8 @@ namespace Shield.WpfGui.ViewModels
 
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-            // Updating table in gui
-            Task.Run(() =>
-            {
-                while (true)
-                {
-                    IMessageModel message = _pipeline.GetReceivedMessages().Take();
-                    AddIncomingMessageToDisplay(this, message);
-                }
-            });
+            _pipeline.MessageReceived += AddIncomingMessageToDisplay;
+            _pipeline.ConfirmationSent += (o, e) => SentMessages.Add(e);
         }
 
         public int DataPackLength()

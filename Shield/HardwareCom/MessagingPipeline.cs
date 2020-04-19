@@ -22,7 +22,7 @@ namespace Shield.HardwareCom
         private readonly IMessengingPipelineContext _context;
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
-        private readonly ConcurrentDictionary<string, IMessageModel> _failedSendmessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, IMessageModel> _failedSendMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
@@ -144,7 +144,7 @@ namespace Shield.HardwareCom
                 }
                 return true;
             }
-            _failedSendmessages.AddOrUpdate(message.Id, message, (_, m) => { m.Timestamp = message.Timestamp; return m; });
+            _failedSendMessages.AddOrUpdate(message.Id, message, (_, m) => { m.Timestamp = message.Timestamp; return m; });
             OnSendingFailed(message);
             return false;
         }
