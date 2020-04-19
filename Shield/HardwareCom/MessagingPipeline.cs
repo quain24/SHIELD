@@ -7,11 +7,22 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public class MessengingPipeline : IMessengingPipeline, IDisposable
+    public class MessagingPipeline : IMessagingPipeline, IDisposable
     {
+        public event EventHandler<IMessageModel> MessageSent;
+
+        public event EventHandler<IMessageModel> ConfirmationSent;
+
+        public event EventHandler<IMessageModel> MessageReceived;
+
+        public event EventHandler<IMessageModel> ConfirmationReceived;
+
+        public event EventHandler<IMessageModel> SendingFailed;
+
         private readonly IMessengingPipelineContext _context;
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, IMessageModel> _failedSendmessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
@@ -19,7 +30,9 @@ namespace Shield.HardwareCom
 
         public bool IsOpen => _context?.Messenger?.IsOpen ?? false;
 
-        public MessengingPipeline(IMessengingPipelineContext context)
+        // TODO refactoring and ordering / regions? 
+
+        public MessagingPipeline(IMessengingPipelineContext context)
         {
             if (context is null)
                 throw new ArgumentNullException(nameof(context));
@@ -82,18 +95,20 @@ namespace Shield.HardwareCom
             _context.Processor.GetProcessedMessages().Take(_handleNewMessagesCTS.Token);
 
         private bool IsConfirmation(IMessageModel message) =>
-            message.Type == Enums.MessageType.Confirmation;
+            message?.Type == Enums.MessageType.Confirmation;
 
         private void HandleReceivedConfirmation(IMessageModel confirmation)
         {
             _context.ConfirmationTimeoutChecker.AddConfirmation(confirmation);
             _receivedMessages.TryAdd(confirmation.Id, confirmation);
+            OnConfirmationReceived(confirmation);
         }
 
         private async Task HandleReceivedMessage(IMessageModel message)
         {
             _receivedMessages.TryAdd(message.Id, message);
             _forGUITemporary.Add(message);
+            OnMessageReceived(message);
             await SendConfirmationOfAsync(message).ConfigureAwait(false);
         }
 
@@ -102,8 +117,6 @@ namespace Shield.HardwareCom
             IMessageModel confirmation = _context.ConfirmationFactory.GenerateConfirmationOf(message);
             if (await SendAsync(confirmation).ConfigureAwait(false))
                 _sentMessages.TryAdd(confirmation.Id, confirmation);
-            else
-                throw new Exception("Could not send confirmation.");
         }
 
         public async Task<bool> SendAsync(IMessageModel message)
@@ -116,17 +129,24 @@ namespace Shield.HardwareCom
 
             message.Timestamp = Timestamp.TimestampNow;
 
-            if (!IsConfirmation(message))
-                AddToConfirmationTimeoutChecking(message);
-
             if (await _context.Messenger.SendAsync(message).ConfigureAwait(false))
             {
                 _sentMessages.TryAdd(message.Id, message);
                 message.IsTransfered = true;
+                if (!IsConfirmation(message))
+                {
+                    AddToConfirmationTimeoutChecking(message);
+                    OnMessageSent(message);
+                }
+                else
+                {
+                    OnConfirmationSent(message);
+                }
                 return true;
             }
-            else
-                return false;
+            _failedSendmessages.AddOrUpdate(message.Id, message, (_, m) => { m.Timestamp = message.Timestamp; return m; });
+            OnSendingFailed(message);
+            return false;
         }
 
         private void AddToConfirmationTimeoutChecking(IMessageModel confirmation)
@@ -135,6 +155,22 @@ namespace Shield.HardwareCom
         }
 
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
+
+        #region Event handlers implementation
+
+        protected virtual void OnMessageSent(IMessageModel e) => MessageSent?.Invoke(this, e);
+
+        protected virtual void OnConfirmationSent(IMessageModel e) => ConfirmationSent?.Invoke(this, e);
+
+        protected virtual void OnMessageReceived(IMessageModel e) => MessageReceived?.Invoke(this, e);
+
+        protected virtual void OnConfirmationReceived(IMessageModel e) => ConfirmationReceived?.Invoke(this, e);
+
+        protected virtual void OnSendingFailed(IMessageModel e) => SendingFailed?.Invoke(this, e);
+
+        #endregion Event handlers implementation
+
+        #region IDispose implementation
 
         public void Dispose()
         {
@@ -157,5 +193,7 @@ namespace Shield.HardwareCom
                 _disposed = true;
             }
         }
+
+        #endregion IDispose implementation
     }
 }

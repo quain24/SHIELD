@@ -7,7 +7,7 @@ using System;
 namespace Shield.HardwareCom
 {
     /// <summary>
-    /// Contains all necessary objects for <see cref="MessengingPipeline"/> creation and operation.
+    /// Contains all necessary objects for <see cref="MessagingPipeline"/> creation and operation.
     /// </summary>
     public class MessengingPipelineContext : IMessengingPipelineContext
     {

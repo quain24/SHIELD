@@ -99,7 +99,7 @@
     <Compile Include="HardwareCom\Factories\NormalTimeoutFactory.cs" />
     <Compile Include="HardwareCom\Factories\NullTimeoutFactory.cs" />
     <Compile Include="HardwareCom\Factories\TimeoutFactory.cs" />
-    <Compile Include="HardwareCom\IMessengingPipeline.cs" />
+    <Compile Include="HardwareCom\IMessagingPipeline.cs" />
     <Compile Include="HardwareCom\IMessengingPipelineContext.cs" />
     <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeoutChecker.cs" />
     <Compile Include="HardwareCom\Factories\CommandIngesterFactory.cs" />
@@ -135,7 +135,7 @@
     <Compile Include="HardwareCom\IMessenger.cs" />
     <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparerOld.cs" />
     <Compile Include="HardwareCom\MessengingPipelineContext.cs" />
-    <Compile Include="HardwareCom\MessengingPipeline.cs" />
+    <Compile Include="HardwareCom\MessagingPipeline.cs" />
     <Compile Include="HardwareCom\MessageProcessing\IncomingMessageProcessor.cs" />
     <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
     <Compile Include="HardwareCom\MessageProcessing\DecodingAnalyzer.cs" />

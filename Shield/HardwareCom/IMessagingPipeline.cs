@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
-    public interface IMessengingPipeline
+    public interface IMessagingPipeline
     {
         bool IsOpen { get; }
 

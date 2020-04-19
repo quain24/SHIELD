@@ -21,7 +21,7 @@ namespace Shield.WpfGui.ViewModels
         private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private readonly ICommandModelFactory _commandFactory;
         private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
-        private readonly IMessengingPipeline _pipeline;
+        private readonly IMessagingPipeline _pipeline;
         private string _selectedCommand;
         private string _dataInput;
 

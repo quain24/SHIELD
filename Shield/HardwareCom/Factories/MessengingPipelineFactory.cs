@@ -6,20 +6,20 @@ namespace Shield.HardwareCom.Factories
     public class MessengingPipelineFactory : IMessengingPipelineFactory
     {
         private readonly IMessengingPipelineContextFactory _contextFactory;
-        private readonly Func<IMessengingPipelineContext, IMessengingPipeline> _pipelineFactory;
+        private readonly Func<IMessengingPipelineContext, IMessagingPipeline> _pipelineFactory;
 
-        public MessengingPipelineFactory(IMessengingPipelineContextFactory contextFactory, Func<IMessengingPipelineContext, IMessengingPipeline> pipelineFactoryAF)
+        public MessengingPipelineFactory(IMessengingPipelineContextFactory contextFactory, Func<IMessengingPipelineContext, IMessagingPipeline> pipelineFactoryAF)
         {
             _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
             _pipelineFactory = pipelineFactoryAF;
         }
 
         /// <summary>
-        /// Creates a <see cref="IMessengingPipeline"/> for given <see cref="ICommunicationDevice"/>
+        /// Creates a <see cref="IMessagingPipeline"/> for given <see cref="ICommunicationDevice"/>
         /// </summary>
         /// <param name="device">Device used to send and receive data by pipeline</param>
-        /// <returns>An instance of <see cref="IMessengingPipeline"/></returns>
-        public IMessengingPipeline GetPipelineFor(ICommunicationDevice device)
+        /// <returns>An instance of <see cref="IMessagingPipeline"/></returns>
+        public IMessagingPipeline GetPipelineFor(ICommunicationDevice device)
         {
             _ = device ?? throw new ArgumentNullException(nameof(device));
 

@@ -81,8 +81,8 @@ namespace Shield.HardwareCom
             builder.RegisterType<MessengingPipelineContext>()
                    .As<IMessengingPipelineContext>();
 
-            builder.RegisterType<MessengingPipeline>()
-                   .As<IMessengingPipeline>();
+            builder.RegisterType<MessagingPipeline>()
+                   .As<IMessagingPipeline>();
 
             #endregion MessengingPipelineFactory factory and required entities
 
