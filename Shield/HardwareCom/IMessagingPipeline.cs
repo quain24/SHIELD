@@ -16,7 +16,6 @@ namespace Shield.HardwareCom
         event EventHandler<IMessageModel> SendingFailed;
 
         void Close();
-        BlockingCollection<IMessageModel> GetReceivedMessages();
         void Open();
         Task<bool> SendAsync(IMessageModel message);
     }

@@ -9,9 +9,9 @@ namespace Shield.HardwareCom
     /// <summary>
     /// Contains all necessary objects for <see cref="MessagingPipeline"/> creation and operation.
     /// </summary>
-    public class MessengingPipelineContext : IMessengingPipelineContext
+    public class MessagingPipelineContext : IMessagingPipelineContext
     {
-        public MessengingPipelineContext(IMessenger messenger,
+        public MessagingPipelineContext(IMessenger messenger,
                                          ICommandIngester ingester,
                                          IIncomingMessageProcessor processor,
                                          ICompletitionTimeoutChecker completitionTimeoutChecker,

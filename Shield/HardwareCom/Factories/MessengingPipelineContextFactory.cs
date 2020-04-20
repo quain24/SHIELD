@@ -24,7 +24,7 @@ namespace Shield.HardwareCom.Factories
                               IConfirmationTimeoutChecker,
                               IIdGenerator,
                               IConfirmationFactory,
-                              IMessengingPipelineContext> _messengingPipelineContextAF;
+                              IMessagingPipelineContext> _messengingPipelineContextAF;
 
         private IIdGenerator _idGenerator = null;
         private ICommandIngester _ingester = null;
@@ -44,7 +44,7 @@ namespace Shield.HardwareCom.Factories
                                                      IConfirmationTimeoutChecker,
                                                      IIdGenerator,
                                                      IConfirmationFactory,
-                                                     IMessengingPipelineContext> messengingPipelineContextAF)
+                                                     IMessagingPipelineContext> messengingPipelineContextAF)
         {
             _messengerFactory = messengerFactory ?? throw new ArgumentNullException(nameof(messengerFactory));
             _ingesterFactory = ingesterFactory ?? throw new ArgumentNullException(nameof(ingesterFactory));
@@ -57,7 +57,7 @@ namespace Shield.HardwareCom.Factories
             _messengingPipelineContextAF = messengingPipelineContextAF ?? throw new ArgumentNullException(nameof(messengingPipelineContextAF));
         }
 
-        public IMessengingPipelineContext GetContextFor(ICommunicationDevice device)
+        public IMessagingPipelineContext GetContextFor(ICommunicationDevice device)
         {
             _ = device ?? throw new ArgumentNullException(nameof(device));
 

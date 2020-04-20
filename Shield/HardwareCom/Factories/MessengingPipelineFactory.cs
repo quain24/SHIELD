@@ -6,9 +6,9 @@ namespace Shield.HardwareCom.Factories
     public class MessengingPipelineFactory : IMessengingPipelineFactory
     {
         private readonly IMessengingPipelineContextFactory _contextFactory;
-        private readonly Func<IMessengingPipelineContext, IMessagingPipeline> _pipelineFactory;
+        private readonly Func<IMessagingPipelineContext, IMessagingPipeline> _pipelineFactory;
 
-        public MessengingPipelineFactory(IMessengingPipelineContextFactory contextFactory, Func<IMessengingPipelineContext, IMessagingPipeline> pipelineFactoryAF)
+        public MessengingPipelineFactory(IMessengingPipelineContextFactory contextFactory, Func<IMessagingPipelineContext, IMessagingPipeline> pipelineFactoryAF)
         {
             _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
             _pipelineFactory = pipelineFactoryAF;

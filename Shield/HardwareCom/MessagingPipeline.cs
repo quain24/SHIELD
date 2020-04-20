@@ -7,23 +7,44 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom
 {
+    /// <summary>
+    /// <see cref="MessagingPipeline"/> use is to send and receive <see cref="IMessageModel"/> objects<br />
+    /// Pipeline handles all needed communication through given <see cref="IMessagingPipelineContext"/><br />
+    /// Pipeline will automatically try to send a <see cref="Enums.CommandType.Confirmation"/> type of <see cref="IMessageModel"/> as a response.<br /><br />
+    /// Raw data decoding, error correction, message creation, timeout checking - all is done here with a <see cref="IMessagingPipelineContext"/> object.<br />
+    /// <see cref="MessagingPipeline"/> is a facade.
+    /// </summary>
     public class MessagingPipeline : IMessagingPipeline, IDisposable
     {
+        /// <summary>
+        /// A <see cref="IMessageModel"/> was sent successfully (excluding confirmation type)
+        /// </summary>
         public event EventHandler<IMessageModel> MessageSent;
 
+        /// <summary>
+        /// A Confirmation type of <see cref="IMessageModel"/> was sent successfully
+        /// </summary>
         public event EventHandler<IMessageModel> ConfirmationSent;
 
+        /// <summary>
+        /// <see cref="IMessageModel"/> has been received
+        /// </summary>
         public event EventHandler<IMessageModel> MessageReceived;
 
+        /// <summary>
+        /// Confirmation of <see cref="IMessageModel"/> has been received
+        /// </summary>
         public event EventHandler<IMessageModel> ConfirmationReceived;
 
+        /// <summary>
+        /// Sending of <see cref="IMessageModel"/> has failed - message was added to internal buffer;
+        /// </summary>
         public event EventHandler<IMessageModel> SendingFailed;
 
-        private readonly IMessengingPipelineContext _context;
+        private readonly IMessagingPipelineContext _context;
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _failedSendMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
-        private readonly BlockingCollection<IMessageModel> _forGUITemporary = new BlockingCollection<IMessageModel>();
 
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
         private bool _disposed = false;
@@ -32,12 +53,9 @@ namespace Shield.HardwareCom
 
         // TODO refactoring and ordering / regions? 
 
-        public MessagingPipeline(IMessengingPipelineContext context)
+        public MessagingPipeline(IMessagingPipelineContext context)
         {
-            if (context is null)
-                throw new ArgumentNullException(nameof(context));
-
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
 
             SetUpCollections();
         }
@@ -48,6 +66,9 @@ namespace Shield.HardwareCom
             _context.Processor.SwitchSourceCollectionTo(_context.Ingester.GetReceivedMessages());
         }
 
+        /// <summary>
+        /// Opens pipeline to receive and send messages.
+        /// </summary>
         public void Open()
         {
             _context.Messenger.Open();
@@ -60,6 +81,9 @@ namespace Shield.HardwareCom
             Task.Run(async () => await HandleIncoming().ConfigureAwait(false));
         }
 
+        /// <summary>
+        /// Close pipeline
+        /// </summary>
         public void Close()
         {
             CancelHandleIncoming();
@@ -94,8 +118,7 @@ namespace Shield.HardwareCom
         private IMessageModel GetNextReceivedMessage() =>
             _context.Processor.GetProcessedMessages().Take(_handleNewMessagesCTS.Token);
 
-        private bool IsConfirmation(IMessageModel message) =>
-            message?.Type == Enums.MessageType.Confirmation;
+        private static bool IsConfirmation(IMessageModel message) => message?.Type == Enums.MessageType.Confirmation;
 
         private void HandleReceivedConfirmation(IMessageModel confirmation)
         {
@@ -107,7 +130,6 @@ namespace Shield.HardwareCom
         private async Task HandleReceivedMessage(IMessageModel message)
         {
             _receivedMessages.TryAdd(message.Id, message);
-            _forGUITemporary.Add(message);
             OnMessageReceived(message);
             await SendConfirmationOfAsync(message).ConfigureAwait(false);
         }
@@ -119,6 +141,11 @@ namespace Shield.HardwareCom
                 _sentMessages.TryAdd(confirmation.Id, confirmation);
         }
 
+        /// <summary>
+        /// Sends a <see cref="IMessageModel"/> by pipeline.
+        /// </summary>
+        /// <param name="message"><see cref="IMessageModel"/> to be sent</param>
+        /// <returns>True if <see cref="IMessageModel"/> sent successfully</returns>
         public async Task<bool> SendAsync(IMessageModel message)
         {
             if (!IsOpen || message is null)
@@ -154,8 +181,6 @@ namespace Shield.HardwareCom
             _context.ConfirmationTimeoutChecker.AddToCheckingQueue(confirmation);
         }
 
-        public BlockingCollection<IMessageModel> GetReceivedMessages() => _forGUITemporary;
-
         #region Event handlers implementation
 
         protected virtual void OnMessageSent(IMessageModel e) => MessageSent?.Invoke(this, e);
@@ -184,7 +209,8 @@ namespace Shield.HardwareCom
             {
                 if (disposing)
                 {
-                    _forGUITemporary?.Dispose();
+                    if(IsOpen)
+                        Close();
                     _handleNewMessagesCTS?.Dispose();
                     // Free other state (managed objects).
                 }

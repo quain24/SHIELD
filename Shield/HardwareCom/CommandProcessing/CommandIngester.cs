@@ -88,11 +88,7 @@ namespace Shield.HardwareCom.CommandProcessing
                 if (CanStartProcessing())
                     ProcessCommandsTillSomethingInBuffer();
             }
-            catch (Exception e)
-            {
-                if (!IsStartProcessingCommandProperlyCancelled(e))
-                    throw;
-            }
+            catch (Exception e) when (IsStartProcessingCommandProperlyCancelled(e)) { }
             finally
             {
                 UnlockProcessing();
@@ -109,7 +105,7 @@ namespace Shield.HardwareCom.CommandProcessing
 
         private void UnlockProcessing()
         {
-            lock(_processingLock)
+            lock (_processingLock)
                 _isProcessing = false;
         }
 
@@ -125,7 +121,7 @@ namespace Shield.HardwareCom.CommandProcessing
 
         private void ProcessCommandsTillSomethingInBuffer()
         {
-            while(_awaitingQueue.Count > 0)
+            while (_awaitingQueue.Count > 0)
             {
                 ICommandModel command = GetNextCommand();
                 Process(command);
@@ -246,6 +242,7 @@ namespace Shield.HardwareCom.CommandProcessing
             {
                 if (disposing)
                 {
+                    _cancelProcessingCTS?.Dispose();
                     _awaitingQueue?.Dispose();
                     _processedMessages?.Dispose();
                     _errCommands?.Dispose();
