@@ -112,15 +112,15 @@ namespace Shield.HardwareCom
 
             builder.RegisterType<TypeDetectorAnalyzer>()
                    .As<IMessageAnalyzer>()
-                   .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.TypeDetector);
+                   .Keyed<IMessageAnalyzer>(MessageAnalyzerType.TypeDetector);
 
             builder.RegisterType<PatternAnalyzer>()
                    .As<IMessageAnalyzer>()
-                   .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Pattern);
+                   .Keyed<IMessageAnalyzer>(MessageAnalyzerType.Pattern);
 
             builder.RegisterType<DecodingAnalyzer>()
                    .As<IMessageAnalyzer>()
-                   .Keyed<IMessageAnalyzer>(MessageAnalyzerTypes.Decoding);
+                   .Keyed<IMessageAnalyzer>(MessageAnalyzerType.Decoding);
 
             builder.RegisterType<IncomingMessageProcessor>()
                    .As<IIncomingMessageProcessor>();

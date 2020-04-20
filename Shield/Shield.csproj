@@ -87,7 +87,7 @@
     <Compile Include="HardwareCom\Enums\CommandTypes.cs" />
     <Compile Include="Enums\DeviceType.cs" />
     <Compile Include="HardwareCom\Enums\Message.cs" />
-    <Compile Include="HardwareCom\Enums\MessageAnalyzerTypes.cs" />
+    <Compile Include="HardwareCom\Enums\MessageAnalyzerType.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
