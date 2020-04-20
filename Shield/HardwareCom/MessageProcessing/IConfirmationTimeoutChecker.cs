@@ -7,6 +7,7 @@ namespace Shield.HardwareCom.MessageProcessing
     public interface IConfirmationTimeoutChecker
     {
         int Timeout { get; }
+        bool IsWorking { get; }
 
         void AddConfirmation(IMessageModel confirmation);
 

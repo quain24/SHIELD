@@ -2,6 +2,7 @@
 using Shield.Helpers;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,6 +17,8 @@ namespace Shield.HardwareCom
     /// </summary>
     public class MessagingPipeline : IMessagingPipeline, IDisposable
     {
+        #region Events
+
         /// <summary>
         /// A <see cref="IMessageModel"/> was sent successfully (excluding confirmation type)
         /// </summary>
@@ -41,6 +44,8 @@ namespace Shield.HardwareCom
         /// </summary>
         public event EventHandler<IMessageModel> SendingFailed;
 
+        #endregion Events
+
         private readonly IMessagingPipelineContext _context;
         private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
@@ -49,9 +54,12 @@ namespace Shield.HardwareCom
         private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
         private bool _disposed = false;
 
+        /// <summary>
+        /// Returns state of the <see cref="IMessagingPipeline"/>
+        /// </summary>
         public bool IsOpen => _context?.Messenger?.IsOpen ?? false;
 
-        // TODO refactoring and ordering / regions? 
+        // TODO refactoring and ordering / regions?
 
         public MessagingPipeline(IMessagingPipelineContext context)
         {
@@ -84,15 +92,18 @@ namespace Shield.HardwareCom
         /// <summary>
         /// Close pipeline
         /// </summary>
-        public void Close()
+        public async Task Close()
         {
             CancelHandleIncoming();
-            _context.ConfirmationTimeoutChecker.StopCheckingUnconfirmedMessages();
-            _context.CompletitionTimeoutChecker.StopTimeoutCheck();
-            _context.Processor.StopProcessingMessages();
-            _context.Ingester.StopProcessingCommands();
-            _context.Messenger.StopReceiving();
-            _context.Messenger.Close();
+            List<Task> tasksToCancell = new List<Task>();
+            if (_context.ConfirmationTimeoutChecker.IsWorking) tasksToCancell.Add(Task.Run(() => _context.ConfirmationTimeoutChecker.StopCheckingUnconfirmedMessages()));
+            if (_context.CompletitionTimeoutChecker.IsWorking) tasksToCancell.Add(Task.Run(() => _context.CompletitionTimeoutChecker.StopTimeoutCheck()));
+            if (_context.Processor.IsProcessingMessages) tasksToCancell.Add(Task.Run(() => _context.Processor.StopProcessingMessages()));
+            if (_context.Ingester.IsProcessingCommands) tasksToCancell.Add(Task.Run(() => _context.Ingester.StopProcessingCommands()));
+            if (_context.Messenger.IsReceiving) tasksToCancell.Add(Task.Run(() => _context.Messenger.StopReceiving()));
+            if (_context.Messenger.IsOpen) tasksToCancell.Add(Task.Run(() => _context.Messenger.Close()));
+
+            await Task.WhenAll(tasksToCancell).ConfigureAwait(false);
         }
 
         private void CancelHandleIncoming()
@@ -148,11 +159,10 @@ namespace Shield.HardwareCom
         /// <returns>True if <see cref="IMessageModel"/> sent successfully</returns>
         public async Task<bool> SendAsync(IMessageModel message)
         {
-            if (!IsOpen || message is null)
+            if (!CanSend(message))
                 return false;
 
-            if (string.IsNullOrWhiteSpace(message.Id))
-                message.Id = _context.IdGenerator.GetNewID();
+            AssignIdIfNeeded(message);
 
             message.Timestamp = Timestamp.TimestampNow;
 
@@ -171,9 +181,22 @@ namespace Shield.HardwareCom
                 }
                 return true;
             }
-            _failedSendMessages.AddOrUpdate(message.Id, message, (_, m) => { m.Timestamp = message.Timestamp; return m; });
+            PushToFailedSentMessages(message);
             OnSendingFailed(message);
             return false;
+        }
+
+        private bool CanSend(IMessageModel message) => !IsOpen || message is null;
+
+        private void AssignIdIfNeeded(IMessageModel message)
+        {
+            if (string.IsNullOrWhiteSpace(message.Id))
+                message.Id = _context.IdGenerator.GetNewID();
+        }
+
+        private void PushToFailedSentMessages(IMessageModel message)
+        {
+            _failedSendMessages.AddOrUpdate(message.Id, message, (_, m) => { m.Timestamp = message.Timestamp; return m; });
         }
 
         private void AddToConfirmationTimeoutChecking(IMessageModel confirmation)
@@ -209,7 +232,7 @@ namespace Shield.HardwareCom
             {
                 if (disposing)
                 {
-                    if(IsOpen)
+                    if (IsOpen)
                         Close();
                     _handleNewMessagesCTS?.Dispose();
                     // Free other state (managed objects).

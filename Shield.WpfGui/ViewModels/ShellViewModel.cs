@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Shield.WpfGui.ViewModels
 {
@@ -48,8 +49,9 @@ namespace Shield.WpfGui.ViewModels
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         public ShellViewModel(IMessengingPipelineFactory incomingMessagePipelineFactory, ISettings settings,
-                              ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory)
+                              ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory, Func<IMessageModel> messageFactoryAF)
         {
+            _messageFactory = messageFactoryAF;
             _incomingMessagePipelineFactory = incomingMessagePipelineFactory ?? throw new ArgumentNullException(nameof(incomingMessagePipelineFactory));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
@@ -63,6 +65,10 @@ namespace Shield.WpfGui.ViewModels
 
             _pipeline.MessageReceived += AddIncomingMessageToDisplay;
             _pipeline.ConfirmationSent += (o, e) => SentMessages.Add(e);
+            _pipeline.SendingFailed += (o, e) =>
+            {
+                MessageBox.Show("sending failed");
+            };
         }
 
         public int DataPackLength()
@@ -195,10 +201,10 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-        public void CloseDevice()
+        public async Task CloseDevice()
         {
             //_messanger.Close();
-            _pipeline.Close();
+            await _pipeline.Close();
             NotifyOfPropertyChange(() => CanCloseDevice);
             NotifyOfPropertyChange(() => CanOpenDevice);
             NotifyOfPropertyChange(() => CanStartReceiving);
@@ -238,7 +244,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_receivingButtonActivated == true && _pipeline.IsOpen) return true;
+                if (_receivingButtonActivated && _pipeline.IsOpen) return true;
                 return false;
             }
         }

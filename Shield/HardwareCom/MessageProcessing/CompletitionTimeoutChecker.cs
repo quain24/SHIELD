@@ -22,6 +22,8 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _cancelTimeoutCheckCTS = new CancellationTokenSource();
 
+        public bool IsWorking => _isTimeoutChecking;
+
         public CompletitionTimeoutChecker(ICommandIngester ingesterToWorkWith, ITimeout completitionTimeoutChecker)
         {
             _ingesterToWorkWith = ingesterToWorkWith ?? throw new ArgumentNullException(nameof(ingesterToWorkWith));
@@ -57,6 +59,10 @@ namespace Shield.HardwareCom.MessageProcessing
                 if (!IsTimeoutCheckCorrectlyCancelled(e))
                     throw;
             }
+            finally
+            {
+                UnlockTimeoutChecking();
+            }
         }
 
         private bool CanStartTiemoutCheck()
@@ -71,6 +77,12 @@ namespace Shield.HardwareCom.MessageProcessing
                 else
                     return false;
             }
+        }
+
+        private void UnlockTimeoutChecking()
+        {
+            lock(_timeoutCheckLock)
+                _isTimeoutChecking = false;
         }
 
         private int CalculateCheckInterval(int timeout)

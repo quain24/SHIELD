@@ -31,6 +31,8 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
 
+        public bool IsWorking => _isProcessing;
+
         public int Timeout => _timeoutCheck.TimeoutValue;
 
         public ConfirmationTimeoutChecker(ITimeout timeoutCheck)
@@ -58,6 +60,10 @@ namespace Shield.HardwareCom.MessageProcessing
                 if (!IsCheckUnconfirmedMessagesContinousAsyncCancelledProperly(e))
                     throw;
             }
+            finally
+            {
+                UnlockTimeoutChecking();
+            }
         }
 
         private bool CanStartCheckingUnconfirmedMessages()
@@ -66,6 +72,12 @@ namespace Shield.HardwareCom.MessageProcessing
                 lock (_processLock)
                     return _isProcessing ? false : _isProcessing = true;
             return false;
+        }
+
+        private void UnlockTimeoutChecking()
+        {
+            lock(_processLock)
+                _isProcessing = false;
         }
 
         private bool CheckNextUnconfirmedMessage()
