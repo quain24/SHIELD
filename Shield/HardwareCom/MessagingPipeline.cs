@@ -106,12 +106,6 @@ namespace Shield.HardwareCom
             await Task.WhenAll(tasksToCancell).ConfigureAwait(false);
         }
 
-        private void CancelHandleIncoming()
-        {
-            _handleNewMessagesCTS.Cancel();
-            _handleNewMessagesCTS = new CancellationTokenSource();
-        }
-
         private async Task HandleIncoming()
         {
             while (!_handleNewMessagesCTS.IsCancellationRequested)
@@ -124,6 +118,12 @@ namespace Shield.HardwareCom
                 else
                     await HandleReceivedMessage(receivedMessage).ConfigureAwait(false);
             }
+        }
+
+        private void CancelHandleIncoming()
+        {
+            _handleNewMessagesCTS.Cancel();
+            _handleNewMessagesCTS = new CancellationTokenSource();
         }
 
         private IMessageModel GetNextReceivedMessage() =>
@@ -203,6 +203,22 @@ namespace Shield.HardwareCom
         {
             _context.ConfirmationTimeoutChecker.AddToCheckingQueue(confirmation);
         }
+
+        public async Task RetryFailedSends()
+        {
+            foreach (var kvp in _failedSendMessages)
+            {
+                IMessageModel message = kvp.Value;
+                if (CanSend(message) && await SendAsync(message).ConfigureAwait(false))
+                    _failedSendMessages.TryRemove(kvp.Key, out _);
+            }
+        }
+
+        public ConcurrentDictionary<string, IMessageModel> GetReceivedMessages() => _receivedMessages;
+
+        public ConcurrentDictionary<string, IMessageModel> GetSentMessages() => _sentMessages;
+
+        public ConcurrentDictionary<string, IMessageModel> GetFailedSendMessages() => _failedSendMessages;
 
         #region Event handlers implementation
 

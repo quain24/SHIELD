@@ -18,5 +18,9 @@ namespace Shield.HardwareCom
         Task Close();
         void Open();
         Task<bool> SendAsync(IMessageModel message);
+        Task RetryFailedSends();
+        ConcurrentDictionary<string, IMessageModel> GetReceivedMessages();
+        ConcurrentDictionary<string, IMessageModel> GetSentMessages();
+        ConcurrentDictionary<string, IMessageModel> GetFailedSendMessages();
     }
 }
