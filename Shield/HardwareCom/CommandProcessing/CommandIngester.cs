@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.CommandProcessing
 {
-    internal class CommandIngester : ICommandIngester, IDisposable
+    public class CommandIngester : ICommandIngester, IDisposable
     {
         private readonly IMessageFactory _msgFactory;
         private readonly ICompleteness _completness;

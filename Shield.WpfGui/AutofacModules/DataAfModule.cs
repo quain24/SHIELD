@@ -1,10 +1,11 @@
 ﻿using Autofac;
 using Shield.CommonInterfaces;
+using Shield.Data;
 using Shield.Data.Models;
 using System.Linq;
 using System.Reflection;
 
-namespace Shield.Data
+namespace Shield.WpfGui.AutofacModules
 {
     public class DataAfModule : Autofac.Module
     {

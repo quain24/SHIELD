@@ -186,7 +186,7 @@ namespace Shield.HardwareCom
             return false;
         }
 
-        private bool CanSend(IMessageModel message) => !IsOpen || message is null;
+        private bool CanSend(IMessageModel message) => IsOpen && message != null;
 
         private void AssignIdIfNeeded(IMessageModel message)
         {

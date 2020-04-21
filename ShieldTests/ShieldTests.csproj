@@ -101,10 +101,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.ConsoleUI\Shield.ConsoleUI.csproj">
-      <Project>{c353cb6c-05d8-474e-a0dc-27b6bc6a1855}</Project>
-      <Name>Shield.ConsoleUI</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>

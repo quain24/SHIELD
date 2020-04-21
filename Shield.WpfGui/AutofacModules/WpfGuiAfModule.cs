@@ -3,7 +3,7 @@ using Caliburn.Micro;
 using System.Linq;
 using System.Reflection;
 
-namespace Shield.WpfGui
+namespace Shield.WpfGui.AutofacModules
 {
     public class WpfGuiAfModule : Autofac.Module
     {
@@ -18,11 +18,11 @@ namespace Shield.WpfGui
                 .SingleInstance();
 
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                .Where(t => t.IsInNamespace($@"Shield.WpfGui.ViewModels") && t.Name.EndsWith("ViewModel"))
+                .Where(t => t.IsInNamespace("Shield.WpfGui.ViewModels") && t.Name.EndsWith("ViewModel"))
                 .AsSelf();
 
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                .Where(t => t.IsInNamespace($@"Shield.WpfGui.Models") && t.Name.EndsWith("Model"))
+                .Where(t => t.IsInNamespace("Shield.WpfGui.Models") && t.Name.EndsWith("Model"))
                 .AsSelf();
 
             base.Load(builder);

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.Adapters
 {
-    internal class SerialPortAdapter : ICommunicationDevice
+    public class SerialPortAdapter : ICommunicationDevice
     {
         /// <summary>
         /// Wraps SerialPort for future use with interfaces

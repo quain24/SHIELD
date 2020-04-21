@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Shield.HardwareCom.MessageProcessing
 {
-    internal class ConfirmationTimeoutChecker : IConfirmationTimeoutChecker, IDisposable
+    public class ConfirmationTimeoutChecker : IConfirmationTimeoutChecker, IDisposable
     {
         private readonly SortedDictionary<long, IMessageModel> _storage = new SortedDictionary<long, IMessageModel>();
         private readonly BlockingCollection<IMessageModel> _processedMessages = new BlockingCollection<IMessageModel>();

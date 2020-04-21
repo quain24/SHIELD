@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Shield
+namespace Shield.WpfGui.AutofacModules
 {
     public class ShieldAfModule : Autofac.Module
     {

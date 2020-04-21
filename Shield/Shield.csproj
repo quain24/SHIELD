@@ -71,7 +71,6 @@
     <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
     <Compile Include="CommonInterfaces\ISetting.cs" />
-    <Compile Include="Data\DataAfModule.cs" />
     <Compile Include="Data\ISettings.cs" />
     <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
     <Compile Include="Data\Models\IApplicationSettingsModel.cs" />
@@ -111,7 +110,6 @@
     <Compile Include="HardwareCom\Factories\IMessengingPipelineFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengingPipelineContextFactory.cs" />
     <Compile Include="HardwareCom\Factories\MessengingPipelineFactory.cs" />
-    <Compile Include="HardwareCom\HardwareComAfModule.cs" />
     <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
     <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandTranslator.cs" />
@@ -159,7 +157,6 @@
     <Compile Include="Helpers\IIdGenerator.cs" />
     <Compile Include="Helpers\Timestamp.cs" />
     <Compile Include="Data\Settings.cs" />
-    <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

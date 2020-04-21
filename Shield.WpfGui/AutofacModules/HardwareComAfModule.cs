@@ -4,18 +4,19 @@ using Shield.CommonInterfaces;
 using Shield.Data;
 using Shield.Data.Models;
 using Shield.Enums;
-using Shield.HardwareCom.Adapters;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.RawDataProcessing;
+using Shield.HardwareCom;
 using Shield.Helpers;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Shield.HardwareCom.Adapters;
 
-namespace Shield.HardwareCom
+namespace Shield.WpfGui.AutofacModules
 {
     // TODO implement host id in commands - creation, translation etc. Modify id generation
     public class HardwareComAfModule : Autofac.Module
