@@ -1,7 +1,7 @@
 ﻿using Shield.Data.Models;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Models;
-using Shield.Helpers;
+using Shield.HardwareCom.Helpers;
 using System;
 using System.Text;
 

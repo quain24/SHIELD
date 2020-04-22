@@ -10,7 +10,7 @@ using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.RawDataProcessing;
 using Shield.HardwareCom;
-using Shield.Helpers;
+using Shield.HardwareCom.Helpers;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;

@@ -141,7 +141,7 @@ namespace Shield.HardwareCom.Adapters
                 {
                     ct.ThrowIfCancellationRequested();
                     int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
-                    string rawData = _encoding.GetString(_buffer).Substring(0, bytesRead);
+                    string rawData = _encoding.GetString(_buffer, 0, bytesRead);
                     OnDataReceived(rawData);
                     return rawData;
                 }

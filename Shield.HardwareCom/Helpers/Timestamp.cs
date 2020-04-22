@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shield.Helpers
+namespace Shield.HardwareCom.Helpers
 {
     /// <summary>
     /// Generates timestamps from current utc time or from given DateTime in

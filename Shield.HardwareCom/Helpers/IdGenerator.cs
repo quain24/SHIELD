@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace Shield.Helpers
+namespace Shield.HardwareCom.Helpers
 {
     public class IdGenerator : IIdGenerator
     {

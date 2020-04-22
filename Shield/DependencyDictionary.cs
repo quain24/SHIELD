@@ -9,7 +9,8 @@ namespace Shield
 {
     /// <summary>
     /// Replaces AutoFac's IIndex for resolving keyed parameters.
-    /// Provides loose-coupling for classes that normally would need to use IIndex.
+    /// Provides loose-coupling for classes that normally would need to use IIndex.<br />
+    /// In classes using <see cref="Autofac.Features.Indexed.IIndex{TKey, TValue}"/> You can replace it with <see cref="IReadOnlyDictionary{TKey, TValue}"/>
     /// </summary>
     /// <typeparam name="TKey">AutoFac Keyed parameter "key" value</typeparam>
     /// <typeparam name="TValue">Resolved object based on provided "key"</typeparam>
