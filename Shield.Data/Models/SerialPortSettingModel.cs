@@ -1,4 +1,5 @@
-﻿using Shield.Enums;
+﻿using Shield.CommonInterfaces;
+using Shield.Enums;
 using System.IO.Ports;
 using System.Runtime.Serialization;
 

@@ -1,7 +1,4 @@
-﻿using Autofac.Features.Indexed;
-using Shield.CommonInterfaces;
-using Shield.Data;
-using Shield.Data.Models;
+﻿using Shield.CommonInterfaces;
 using Shield.Enums;
 using System.Collections.Generic;
 using System.Diagnostics;

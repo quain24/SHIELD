@@ -1,6 +1,5 @@
 ﻿using Caliburn.Micro;
-using Shield.Data;
-using Shield.Data.Models;
+using Shield.CommonInterfaces;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;

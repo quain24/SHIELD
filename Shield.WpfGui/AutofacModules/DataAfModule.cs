@@ -11,15 +11,15 @@ namespace Shield.WpfGui.AutofacModules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            Assembly current = Assembly.Load(nameof(Shield));
+            var dataAssembly = Assembly.Load(typeof(ApplicationSettingsModel).Assembly.FullName);
 
             // Models registration (general)
-            builder.RegisterAssemblyTypes(current)
+            builder.RegisterAssemblyTypes(dataAssembly)
                    .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Model", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
-            builder.RegisterAssemblyTypes(current)
+            builder.RegisterAssemblyTypes(dataAssembly)
                    .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Factory", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 

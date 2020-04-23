@@ -1,7 +1,7 @@
 ﻿using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
-using Shield.Helpers;
+using Shield.HardwareCom.Helpers;
 
 namespace Shield.HardwareCom
 {

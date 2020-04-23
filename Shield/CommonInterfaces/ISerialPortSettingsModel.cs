@@ -1,7 +1,7 @@
 ﻿using Shield.CommonInterfaces;
 using System.IO.Ports;
 
-namespace Shield.Data.Models
+namespace Shield.CommonInterfaces
 {
     public interface ISerialPortSettingsModel : ICommunicationDeviceSettings
     {

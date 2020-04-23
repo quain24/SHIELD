@@ -1,12 +1,7 @@
-﻿using Autofac.Features.Indexed;
+﻿using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.MessageProcessing;
 using System;
-using Shield.Enums;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.HardwareCom.Enums;
 
 namespace Shield.HardwareCom.Factories
 {

@@ -1,5 +1,4 @@
-﻿using Shield.Data.Models;
-using Shield.HardwareCom.Enums;
+﻿using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Models;
 using Shield.HardwareCom.Helpers;
 using System;
@@ -18,17 +17,17 @@ namespace Shield.HardwareCom.CommandProcessing
         private readonly char _filler;
 
         private readonly Func<ICommandModel> _commandModelFac;
-        private readonly IApplicationSettingsModel _appSettingsModel;
+        private readonly CommandTranslatorSettings _settings;
 
-        public CommandTranslator(IApplicationSettingsModel applicationSettings, Func<ICommandModel> commandModelFac)
+        public CommandTranslator(CommandTranslatorSettings settings, Func<ICommandModel> commandModelFac)
         {
             _commandModelFac = commandModelFac ?? throw new ArgumentNullException(nameof(commandModelFac)); // Autofac factory
-            _appSettingsModel = applicationSettings ?? throw new ArgumentNullException(nameof(applicationSettings));
+            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
 
-            _separator = _appSettingsModel.Separator;
-            _filler = _appSettingsModel.Filler;
-            _commandLengthWithData = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + _appSettingsModel.DataSize + 3;
-            _commandLength = _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize + 3;
+            _separator = _settings.Separator;
+            _filler = _settings.Filler;
+            _commandLengthWithData = _settings.CommandWithDataPackSize;
+            _commandLength = _settings.CommandSize;
         }
 
 
@@ -42,11 +41,11 @@ namespace Shield.HardwareCom.CommandProcessing
 
             if (rawData.Length == _commandLengthWithData || rawData.Length == _commandLength)
             {
-                rawCommandTypeString = rawData.Substring(1, _appSettingsModel.CommandTypeSize);
-                rawIdString = rawData.Substring(2 + _appSettingsModel.CommandTypeSize, _appSettingsModel.IdSize);
+                rawCommandTypeString = rawData.Substring(1, _settings.CommandTypeLength);
+                rawIdString = rawData.Substring(2 + _settings.CommandTypeLength, _settings.IdLength);
 
                 if (rawData.Length == _commandLengthWithData)
-                    rawDataString = rawData.Substring(3 + _appSettingsModel.CommandTypeSize + _appSettingsModel.IdSize);
+                    rawDataString = rawData.Substring(3 + _settings.CommandTypeLength + _settings.IdLength);
 
                 int rawComInt;
                 if (int.TryParse(rawCommandTypeString, out rawComInt))
@@ -62,15 +61,15 @@ namespace Shield.HardwareCom.CommandProcessing
                 else
                 {
                     command.CommandType = CommandType.Error;
-                    command.Id = string.Empty.PadLeft(_appSettingsModel.IdSize, _filler);
-                    command.Data = rawData.Length > _appSettingsModel.DataSize ? rawData.Substring(0, _appSettingsModel.DataSize) : rawData;
+                    command.Id = string.Empty.PadLeft(_settings.IdLength, _filler);
+                    command.Data = rawData.Length > _settings.DataPackLength ? rawData.Substring(0, _settings.DataPackLength) : rawData;
                 }
             }
             else
             {
                 command.CommandType = CommandType.Error;
-                command.Id = string.Empty.PadLeft(_appSettingsModel.IdSize, _filler);
-                command.Data = rawData.Length > _appSettingsModel.DataSize ? rawData.Substring(0, _appSettingsModel.DataSize) : rawData;
+                command.Id = string.Empty.PadLeft(_settings.IdLength, _filler);
+                command.Data = rawData.Length > _settings.DataPackLength ? rawData.Substring(0, _settings.DataPackLength) : rawData;
             }
 
             command.TimeStamp = Timestamp.TimestampNow;
@@ -84,14 +83,14 @@ namespace Shield.HardwareCom.CommandProcessing
         /// <returns>Raw formatted string that can be understood by connected machine</returns>
         public string FromCommand(ICommandModel givenCommand)
         {
-            int completeCommandSizeWithSep = _appSettingsModel.CommandTypeSize + 2 + _appSettingsModel.IdSize + 1 + _appSettingsModel.DataSize;
+            int completeCommandSizeWithSep = _settings.CommandWithDataPackSize;
 
             if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
                 return null;
 
             StringBuilder command = new StringBuilder(_separator.ToString());
 
-            command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_appSettingsModel.CommandTypeSize, '0')).Append(_separator);
+            command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_settings.CommandSize, '0')).Append(_separator);
             command.Append(givenCommand.Id).Append(_separator);
 
             if (givenCommand.CommandType == CommandType.Data)

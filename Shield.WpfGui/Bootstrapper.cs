@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Caliburn.Micro;
-using Shield.Data;
 using Shield.HardwareCom;
 using Shield.WpfGui.ViewModels;
 using System;

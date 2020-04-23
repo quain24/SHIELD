@@ -1,5 +1,4 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Data.Models;
 using Shield.HardwareCom.Models;
 using System;
 using System.Diagnostics;

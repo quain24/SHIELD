@@ -1,8 +1,6 @@
 ﻿using Autofac;
 using Autofac.Core;
 using Shield.CommonInterfaces;
-using Shield.Data;
-using Shield.Data.Models;
 using Shield.Enums;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Enums;
@@ -15,6 +13,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Shield.HardwareCom.Adapters;
+using System;
+using Shield.HardwareCom.Models;
 
 namespace Shield.WpfGui.AutofacModules
 {
@@ -23,17 +23,17 @@ namespace Shield.WpfGui.AutofacModules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            var shieldAssembly = Assembly.Load(nameof(Shield));
+            var hardwareComAssembly = Assembly.Load(typeof(SerialPortAdapter).Assembly.FullName);
 
             // Models registration (single interface per model)
-            builder.RegisterAssemblyTypes(shieldAssembly)
+            builder.RegisterAssemblyTypes(hardwareComAssembly)
                    .Where(t => t.IsInNamespace("Shield.HardwareCom") && t.Name.EndsWith("Model", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration both normal and autofac's factories
             // More complicated factories (with parameters in constructor) are separated below.
             // ==================================================================================================================================
-            builder.RegisterAssemblyTypes(shieldAssembly)
+            builder.RegisterAssemblyTypes(hardwareComAssembly)
                    .Where(t => t.IsInNamespace("Shield.HardwareCom.Factories") && t.Name.EndsWith("Factory", System.StringComparison.Ordinal))
                    .Except<CommunicationDeviceFactory>(icdf => icdf.As<ICommunicationDeviceFactory>().SingleInstance())
                    .Except<NormalTimeoutFactory>()
@@ -90,11 +90,25 @@ namespace Shield.WpfGui.AutofacModules
             // End of factories registration ========================================================================================================
 
             // Working classes
-            builder.RegisterType<CommandTranslator>()
-                   .WithParameter(new ResolvedParameter(
-                       (pi, _) => pi.Name == "applicationSettings",
-                       (_, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>()))
-                   .As<ICommandTranslator>();
+            builder.Register(c =>
+                {
+                    IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
+                    var settings = new CommandTranslatorSettings(appSet.Separator,
+                                                                 appSet.Filler,
+                                                                 appSet.CommandTypeSize,
+                                                                 appSet.IdSize,
+                                                                 appSet.DataSize,
+                                                                 appSet.HostIdSize);
+
+                    return new CommandTranslator(settings, c.Resolve<Func<ICommandModel>>());
+                })
+                .As<ICommandTranslator>();
+
+            //builder.RegisterType<CommandTranslator>()
+            //       .WithParameter(new ResolvedParameter(
+            //           (pi, _) => pi.Name == "settings",
+            //           (_, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>()))
+            //       .As<ICommandTranslator>();
 
             builder.Register(c =>
                     {

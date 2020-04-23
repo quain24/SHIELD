@@ -1,5 +1,5 @@
 ﻿using Shield.HardwareCom.Models;
-using Shield.Helpers;
+using Shield.HardwareCom.Helpers;
 using System;
 
 namespace Shield.HardwareCom.Factories

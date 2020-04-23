@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "COM6TestSender", "COM6TestS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shield.HardwareCom", "Shield.HardwareCom\Shield.HardwareCom.csproj", "{2B51F18A-558A-4F92-83F1-92BD0395C875}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shield.Data", "Shield.Data\Shield.Data.csproj", "{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{2B51F18A-558A-4F92-83F1-92BD0395C875}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B51F18A-558A-4F92-83F1-92BD0395C875}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B51F18A-558A-4F92-83F1-92BD0395C875}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

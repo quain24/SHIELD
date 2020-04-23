@@ -1,5 +1,6 @@
 ﻿using Shield.Enums;
 using System.Runtime.Serialization;
+using Shield.CommonInterfaces;
 
 namespace Shield.Data.Models
 {
@@ -65,6 +66,12 @@ namespace Shield.Data.Models
         {
             get => _idSize;
             set => _idSize = value >= 4 ? value : 4;
+        }
+
+        public int HostIdSize
+        {
+            get => _hostIdlength;
+            set => _hostIdlength = value >= 4 ? value : 4;
         }
 
         /// <summary>

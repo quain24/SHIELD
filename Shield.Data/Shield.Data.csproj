@@ -4,28 +4,25 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4751C589-F9C8-47AA-B3EE-3AB059EF41CB}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>COM6TestSender</RootNamespace>
-    <AssemblyName>COM6TestSender</AssemblyName>
+    <ProjectGuid>{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Shield.Data</RootNamespace>
+    <AssemblyName>Shield.Data</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;CONTRACTS_FULL</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -36,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,22 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IdGeneratorSimplyNext.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Models\ApplicationSettingsModel.cs" />
+    <Compile Include="Models\CommunicationDeviceSettingsContainer.cs" />
+    <Compile Include="Models\ISettingsModel.cs" />
+    <Compile Include="Models\MoqPortSettingsModel.cs" />
+    <Compile Include="Models\SerialPortSettingModel.cs" />
+    <Compile Include="Models\SettingsModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
-      <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
-      <Name>Shield.Data</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
-      <Project>{2b51f18a-558a-4f92-83f1-92bd0395c875}</Project>
-      <Name>Shield.HardwareCom</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>

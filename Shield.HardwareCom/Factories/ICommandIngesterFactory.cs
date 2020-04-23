@@ -1,5 +1,5 @@
 ﻿using Shield.HardwareCom.CommandProcessing;
-using Shield.Helpers;
+using Shield.HardwareCom.Helpers;
 
 namespace Shield.HardwareCom.Factories
 {

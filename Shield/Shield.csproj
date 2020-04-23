@@ -66,27 +66,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonInterfaces\IApplicationSettingsModel.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
+    <Compile Include="CommonInterfaces\ICommunicationDeviceSettingsContainer.cs" />
+    <Compile Include="CommonInterfaces\IMoqPortSettingsModel.cs" />
+    <Compile Include="CommonInterfaces\ISerialPortSettingsModel.cs" />
     <Compile Include="CommonInterfaces\ISetting.cs" />
-    <Compile Include="Data\ISettings.cs" />
-    <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
-    <Compile Include="Data\Models\IApplicationSettingsModel.cs" />
-    <Compile Include="Data\Models\IMoqPortSettingsModel.cs" />
-    <Compile Include="Data\Models\ISerialPortSettingsContainer.cs" />
-    <Compile Include="Data\Models\ISerialPortSettingsModel.cs" />
-    <Compile Include="Data\Models\ISettingsModel.cs" />
-    <Compile Include="Data\Models\MoqPortSettingsModel.cs" />
-    <Compile Include="Data\Models\SerialPortSettingModel.cs" />
-    <Compile Include="Data\Models\CommunicationDeviceSettingsContainer.cs" />
-    <Compile Include="Data\Models\SettingsModel.cs" />
-    <Compile Include="DependencyDictionary.cs" />
+    <Compile Include="CommonInterfaces\ISettings.cs" />
     <Compile Include="Enums\DeviceType.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Data\Settings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,4 @@
-﻿using Shield.CommonInterfaces;
-
-namespace Shield.Data.Models
+﻿namespace Shield.CommonInterfaces
 {
     public interface IApplicationSettingsModel : ISetting
     {
@@ -9,5 +7,6 @@ namespace Shield.Data.Models
         int CommandTypeSize { get; set; }
         char Separator { get; set; }
         char Filler { get; set; }
+        int HostIdSize { get; set; }
     }
 }

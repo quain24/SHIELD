@@ -1,7 +1,7 @@
 ﻿using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.MessageProcessing;
 using Shield.HardwareCom.Models;
-using Shield.Helpers;
+using Shield.HardwareCom.Helpers;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

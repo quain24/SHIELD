@@ -2,7 +2,7 @@
 using Shield.Enums;
 using System.Collections.Generic;
 
-namespace Shield.Data
+namespace Shield.CommonInterfaces
 {
     public interface ISettings
     {
