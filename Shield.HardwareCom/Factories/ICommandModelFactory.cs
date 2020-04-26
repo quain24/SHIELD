@@ -5,6 +5,6 @@ namespace Shield.HardwareCom.Factories
 {
     public interface ICommandModelFactory
     {
-        ICommandModel Create(CommandType type = CommandType.Empty, string idOverride = "", long timestampOverride = 0);
+        ICommandModel Create(CommandType type = CommandType.Empty, string idOverride = "", long timestampOverride = 0, string data = "");
     }
 }

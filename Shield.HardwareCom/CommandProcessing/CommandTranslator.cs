@@ -34,6 +34,9 @@ namespace Shield.HardwareCom.CommandProcessing
         // TODO refactor and test
         public ICommandModel FromString(string rawData)
         {
+            if(rawData is null) throw new ArgumentNullException(nameof(rawData), "Cannot create command from NULL.");
+
+
             ICommandModel command = _commandModelFac();
             string rawCommandTypeString = string.Empty;
             string rawDataString = string.Empty;
@@ -90,7 +93,7 @@ namespace Shield.HardwareCom.CommandProcessing
 
             StringBuilder command = new StringBuilder(_separator.ToString());
 
-            command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_settings.CommandSize, '0')).Append(_separator);
+            command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_settings.CommandTypeLength, '0')).Append(_separator);
             command.Append(givenCommand.Id).Append(_separator);
 
             if (givenCommand.CommandType == CommandType.Data)

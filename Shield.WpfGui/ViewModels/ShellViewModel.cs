@@ -469,7 +469,7 @@ namespace Shield.WpfGui.ViewModels
 
         private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
         {
-            if (commands.Count() == 0 || commands is null)
+            if (!commands.Any() || commands is null)
                 return null;
 
             IMessageModel message = _messageFactory();

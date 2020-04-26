@@ -97,7 +97,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />
     <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

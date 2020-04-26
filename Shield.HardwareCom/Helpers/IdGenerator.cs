@@ -27,8 +27,7 @@ namespace Shield.HardwareCom.Helpers
         /// <summary>
         /// Generate alpha-numeric random <c>id</c> of given length. Static class.
         /// </summary>
-        /// <param name="length">how many chars should be generated</param>
-        /// <returns></returns>
+        /// <returns>A new ID string</returns>
         public string GetNewID()
         {
             if (AreAllIdsUsedUp())
@@ -76,10 +75,9 @@ namespace Shield.HardwareCom.Helpers
         /// so it wont be generated later by <c>IdGenerator.GetID</c> method.
         /// </summary>
         /// <param name="ids">Used up ID</param>
-        /// <returns></returns>
         public void MarkAsUsedUp(string[] ids)
         {
-            if (ids.IsNullOrEmpty()) throw new ArgumentOutOfRangeException(nameof(ids), "Cannot add empty value to used up Id's collection");
+            if (ids.IsNullOrEmpty()) return;
 
             foreach (string id in ids)
             {

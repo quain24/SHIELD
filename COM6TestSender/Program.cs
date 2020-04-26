@@ -508,9 +508,6 @@ namespace COM6TestSender
                     //    Console.WriteLine(serial.ReadExisting());
                     //    await Task.Delay(1000);
                     //}
-
-                // TODO throws exception when selected option 12
-
                 }
             }
             else if (Int32.Parse(a) == 13)
@@ -536,14 +533,16 @@ namespace COM6TestSender
                 apset.IdSize = 4;
                 apset.Separator = '*';
                 apset.HostIdSize = 4;
-                var portset = new Shield.Data.Models.SerialPortSettingsModel();
-                portset.BaudRate = 921600;
-                portset.Encoding = 20127;
-                portset.PortNumber = 7;
-                portset.DataBits = 8;
-                portset.Parity = Parity.None;
-                portset.StopBits = StopBits.One;
-                portset.ReadTimeout = -1;
+                var portset = new Shield.Data.Models.SerialPortSettingsModel
+                {
+                    BaudRate = 921600,
+                    Encoding = 20127,
+                    PortNumber = 7,
+                    DataBits = 8,
+                    Parity = Parity.None,
+                    StopBits = StopBits.One,
+                    ReadTimeout = -1
+                };
 
                 var sett = new Settings(sm);
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
