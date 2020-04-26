@@ -1,4 +1,5 @@
 ﻿using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using ShieldTests.HardwareCom.CommandProcessing.TestData;
 using System;
@@ -10,7 +11,7 @@ namespace ShieldTests.HardwareCom.CommandProcessing
     {
         private readonly DefaultConfigForCommandCreation _defaults = new DefaultConfigForCommandCreation();
         private readonly CommandTranslatorSettings _settings;
-        private readonly Func<ICommandModel> _factory = new Func<ICommandModel>(() => new CommandModel());
+        private readonly ICommandModelFactory _factory = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
         public CommandTranslatorTests()
         {
@@ -21,10 +22,10 @@ namespace ShieldTests.HardwareCom.CommandProcessing
                                                       _defaults.DataPackLength,
                                                       _defaults.HostIDLength);
 
-            CommandTranslator = new CommandTranslator(_settings, _factory);
+            CommandTranslator = new CommandTranslator2(_settings, _factory);
         }
 
-        private readonly CommandTranslator CommandTranslator;
+        private readonly CommandTranslator2 CommandTranslator;
 
         [Theory]
         [ClassData(typeof(TestCommandsClassData))]
@@ -32,9 +33,9 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         {
             var actual = CommandTranslator.FromString(commandStrings);
 
-            Assert.Equal(expected.CommandType, actual.CommandType);
-            Assert.Equal(expected.Id, actual.Id);
-            Assert.Equal(expected.Data, actual.Data);
+            Assert.True(expected.Id == actual.Id, $"\nID:\nexpected: {expected.Id}\nactual: {actual.Id}\n");
+            Assert.True(expected.CommandType == actual.CommandType, $"\nCommandType:\nexpected: {expected.CommandType}\nactual: {actual.CommandType}\n");
+            Assert.True(expected.Data == actual.Data, $"\nData:\nexpected: {expected.Data}\nactual: {actual.Data}\n");
         }
 
         [Theory]
@@ -43,9 +44,9 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         {
             var actual = CommandTranslator.FromString(commandString);
 
-            Assert.Equal(expected.Id, actual.Id);
-            Assert.Equal(expected.CommandType, actual.CommandType);
-            Assert.Equal(expected.Data, actual.Data);
+            Assert.True(expected.Id == actual.Id, $"\nID:\nexpected: {expected.Id}\nactual: {actual.Id}\n");
+            Assert.True(expected.CommandType == actual.CommandType, $"\nCommandType:\nexpected: {expected.CommandType}\nactual: {actual.CommandType}\n");
+            Assert.True(expected.Data ==  actual.Data, $"\nData:\nexpected: {expected.Data}\nactual: {actual.Data}\n");
         }
 
         [Theory]
@@ -54,9 +55,9 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         {
             var actual = CommandTranslator.FromString(commandString);
 
-            Assert.Equal(expected.Id, actual.Id);
-            Assert.Equal(expected.CommandType, actual.CommandType);
-            Assert.Equal(expected.Data, actual.Data);
+            Assert.True(expected.Id == actual.Id, $"\nID:\nexpected: {expected.Id}\nactual: {actual.Id}\n");
+            Assert.True(expected.CommandType == actual.CommandType, $"\nCommandType:\nexpected: {expected.CommandType}\nactual: {actual.CommandType}\n");
+            Assert.True(expected.Data == actual.Data, $"\nData:\nexpected: {expected.Data}\nactual: {actual.Data}\n");
         }
 
         [Fact]

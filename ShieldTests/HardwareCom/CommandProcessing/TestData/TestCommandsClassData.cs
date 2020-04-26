@@ -24,6 +24,9 @@ namespace ShieldTests.HardwareCom.CommandProcessing.TestData
 
         private void GenerateCommand(int commandEnumValue)
         {
+            // Ignoring Error Command value - this class tests proper values
+            if((CommandType) commandEnumValue == CommandType.Error)
+                return;
             string data = "";
             string commandType = GetCommandTypeString(commandEnumValue);
             string id = commandType; // The same value for simplification

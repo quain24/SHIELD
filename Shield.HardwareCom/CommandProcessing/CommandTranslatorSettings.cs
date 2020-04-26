@@ -26,7 +26,15 @@ namespace Shield.HardwareCom.CommandProcessing
         public int DataPackSize { get; }
         public int DataPackLength { get; }
         public int HostIdLength { get; }
+
+        /// <summary>
+        /// Full command size including separators
+        /// </summary>
         public int CommandSize => CommandTypeLength + IdLength + 3; // TODO in future add host id to mix
+
+        /// <summary>
+        /// Full command size including data pack and separators
+        /// </summary>
         public int CommandWithDataPackSize => CommandSize + DataPackLength;
 
         private void CheckVariables(char separator, char filler, int commandTypeLength, int idLength, int dataPackLength, int hostIdLength)

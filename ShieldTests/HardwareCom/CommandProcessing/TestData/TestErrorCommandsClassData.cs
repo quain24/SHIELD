@@ -44,6 +44,6 @@ namespace ShieldTests.HardwareCom.CommandProcessing.TestData
 
         private string GetId() => _settings.Filler.ToString().PadLeft(_settings.IDLength, _settings.Filler);
 
-        private string GetDataPack(string data) => data.Length > _settings.DataPackLength ? data.Substring(0, _settings.DataPackLength) : data;
+        private string GetDataPack(string data) => data.Length > _settings.DataPackLength ? data.Substring(0, _settings.DataPackLength) : data.PadLeft(_settings.DataPackLength, _settings.Filler);
     }
 }

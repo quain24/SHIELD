@@ -30,8 +30,6 @@ namespace Shield.HardwareCom.CommandProcessing
             _commandLength = _settings.CommandSize;
         }
 
-
-        // TODO refactor and test
         public ICommandModel FromString(string rawData)
         {
             if(rawData is null) throw new ArgumentNullException(nameof(rawData), "Cannot create command from NULL.");
