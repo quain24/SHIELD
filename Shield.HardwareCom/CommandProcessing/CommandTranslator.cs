@@ -1,6 +1,6 @@
 ﻿using Shield.HardwareCom.Enums;
-using Shield.HardwareCom.Models;
 using Shield.HardwareCom.Helpers;
+using Shield.HardwareCom.Models;
 using System;
 using System.Text;
 
@@ -32,8 +32,7 @@ namespace Shield.HardwareCom.CommandProcessing
 
         public ICommandModel FromString(string rawData)
         {
-            if(rawData is null) throw new ArgumentNullException(nameof(rawData), "Cannot create command from NULL.");
-
+            if (rawData is null) throw new ArgumentNullException(nameof(rawData), "Cannot create command from NULL.");
 
             ICommandModel command = _commandModelFac();
             string rawCommandTypeString = string.Empty;

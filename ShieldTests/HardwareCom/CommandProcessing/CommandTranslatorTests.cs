@@ -9,61 +9,78 @@ namespace ShieldTests.HardwareCom.CommandProcessing
 {
     public class CommandTranslatorTests
     {
-        private readonly DefaultConfigForCommandCreation _defaults = new DefaultConfigForCommandCreation();
-        private readonly CommandTranslatorSettings _settings;
-        private readonly ICommandModelFactory _factory = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
+        private static readonly DefaultConfigForCommandCreation _defaults =
+            new DefaultConfigForCommandCreation();
 
-        public CommandTranslatorTests()
-        {
-            _settings = new CommandTranslatorSettings(_defaults.Separator,
-                                                      _defaults.Filler,
-                                                      _defaults.CommandLength,
-                                                      _defaults.IDLength,
-                                                      _defaults.DataPackLength,
-                                                      _defaults.HostIDLength);
+        private static readonly CommandTranslatorSettings _settings =
+            new CommandTranslatorSettings(
+                _defaults.Separator, _defaults.Filler, _defaults.CommandLength,
+                _defaults.IDLength, _defaults.DataPackLength, _defaults.HostIDLength);
 
-            CommandTranslator = new CommandTranslator2(_settings, _factory);
-        }
+        private readonly ICommandModelFactory _factory =
+            new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
+
+        public CommandTranslatorTests() => CommandTranslator = new CommandTranslator2(_settings, _factory);
 
         private readonly CommandTranslator2 CommandTranslator;
 
+        private string Message(string paramName, string expected, string actual)
+        {
+            return "\n" + paramName + ":\nexpected: " + expected + "\nactual: " + actual + "\n";
+        }
+
         [Theory]
         [ClassData(typeof(TestCommandsClassData))]
-        public void Returns_proper_command_given_proper_string(ICommandModel expected, string commandStrings)
+        public void FromString_should_returns_proper_command_given_proper_string(ICommandModel expected, string commandStrings)
         {
             var actual = CommandTranslator.FromString(commandStrings);
 
-            Assert.True(expected.Id == actual.Id, $"\nID:\nexpected: {expected.Id}\nactual: {actual.Id}\n");
-            Assert.True(expected.CommandType == actual.CommandType, $"\nCommandType:\nexpected: {expected.CommandType}\nactual: {actual.CommandType}\n");
-            Assert.True(expected.Data == actual.Data, $"\nData:\nexpected: {expected.Data}\nactual: {actual.Data}\n");
+            Assert.True(expected.Id == actual.Id, Message("ID", expected.Id, actual.Id));
+            Assert.True(expected.CommandType == actual.CommandType, Message("CommandType", expected.Id, actual.Id));
+            Assert.True(expected.Data == actual.Data, Message("Data", expected.Id, actual.Id));
         }
 
         [Theory]
         [ClassData(typeof(TestErrorCommandsClassData))]
-        public void Returns_error_type_command_filled_with_recovered_data_given_bad_string(ICommandModel expected, string commandString)
+        public void FromString_should_return_error_type_command_filled_with_recovered_data_given_bad_string(ICommandModel expected, string commandString)
         {
             var actual = CommandTranslator.FromString(commandString);
 
-            Assert.True(expected.Id == actual.Id, $"\nID:\nexpected: {expected.Id}\nactual: {actual.Id}\n");
-            Assert.True(expected.CommandType == actual.CommandType, $"\nCommandType:\nexpected: {expected.CommandType}\nactual: {actual.CommandType}\n");
-            Assert.True(expected.Data ==  actual.Data, $"\nData:\nexpected: {expected.Data}\nactual: {actual.Data}\n");
+            Assert.True(expected.Id == actual.Id, Message("ID", expected.Id, actual.Id));
+            Assert.True(expected.CommandType == actual.CommandType, Message("CommandType", expected.Id, actual.Id));
+            Assert.True(expected.Data == actual.Data, Message("Data", expected.Id, actual.Id));
         }
 
         [Theory]
         [ClassData(typeof(TestUnknownCommandClassData))]
-        public void Returns_unknown_command_without_data_given_out_of_command_enum_type_with_or_without_data(ICommandModel expected, string commandString)
+        public void FromString_should_return_unknown_command_without_data_given_out_of_command_enum_type_with_or_without_data(ICommandModel expected, string commandString)
         {
             var actual = CommandTranslator.FromString(commandString);
 
-            Assert.True(expected.Id == actual.Id, $"\nID:\nexpected: {expected.Id}\nactual: {actual.Id}\n");
-            Assert.True(expected.CommandType == actual.CommandType, $"\nCommandType:\nexpected: {expected.CommandType}\nactual: {actual.CommandType}\n");
-            Assert.True(expected.Data == actual.Data, $"\nData:\nexpected: {expected.Data}\nactual: {actual.Data}\n");
+            Assert.True(expected.Id == actual.Id, Message("ID", expected.Id, actual.Id));
+            Assert.True(expected.CommandType == actual.CommandType, Message("CommandType", expected.Id, actual.Id));
+            Assert.True(expected.Data == actual.Data, Message("Data", expected.Id, actual.Id));
         }
 
         [Fact]
-        public void Throws_exception_when_given_null_instead_of_string()
+        public void FromString_should_throw_exception_when_given_null_instead_of_string()
         {
             Assert.Throws<ArgumentNullException>(() => CommandTranslator.FromString(null));
+        }
+
+        [Theory]
+        [ClassData(typeof(TestCommandsClassData))]
+        public void FromCommand_should_return_proper_raw_string_given_proper_ICommandModel(ICommandModel data, string expected)
+        {
+            var actual = CommandTranslator.FromCommand(data);
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void FromCommand_should_throw_argument_null_exception_if_given_NULL_instead_of_proper_ICommandModel()
+        {
+            Assert.Throws<ArgumentNullException>(() => CommandTranslator.FromCommand(null));
         }
     }
 }

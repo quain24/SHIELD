@@ -42,14 +42,14 @@ namespace Shield.HardwareCom.CommandProcessing
 
             AssignWorpiece(rawData);
 
-            if (IsOfProperLength(rawData))
+            if (IsOfProperLength())
                 return CreateFromValidLengthRawData();
             return CreateFromInvalidRawData();
         }
 
         private void AssignWorpiece(string rawData) => _workpiece = rawData;
 
-        private bool IsOfProperLength(string raw) => raw.Length == _commandLength || raw.Length == _commandLengthWithData;
+        private bool IsOfProperLength() => _workpiece.Length == _commandLength || _workpiece.Length == _commandLengthWithData;
 
         private ICommandModel CreateFromValidLengthRawData()
         {
@@ -93,7 +93,6 @@ namespace Shield.HardwareCom.CommandProcessing
 
         private string ParseGoodDataPack() => _workpiece.Substring(_settings.CommandSize);
 
-
         // TODO refactor this method
         /// <summary>
         /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
@@ -102,6 +101,8 @@ namespace Shield.HardwareCom.CommandProcessing
         /// <returns>Raw formatted string that can be understood by connected machine</returns>
         public string FromCommand(ICommandModel givenCommand)
         {
+            if (givenCommand is null) throw new ArgumentNullException(nameof(givenCommand), "Cannot create raw command string from NULL.");
+
             int completeCommandSizeWithSep = _settings.CommandWithDataPackSize;
 
             if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))

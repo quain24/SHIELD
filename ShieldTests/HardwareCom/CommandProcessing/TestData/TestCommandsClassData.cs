@@ -6,7 +6,7 @@ using Xunit;
 
 namespace ShieldTests.HardwareCom.CommandProcessing.TestData
 {
-    public class TestCommandsClassData : TheoryData<ICommandModel, string>//IEnumerable<object[]>
+    public class TestCommandsClassData : TheoryData<ICommandModel, string>
     {
         private readonly DefaultConfigForCommandCreation _settings = new DefaultConfigForCommandCreation();
         private readonly CommandModelFactory _commandFactory = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
@@ -25,9 +25,9 @@ namespace ShieldTests.HardwareCom.CommandProcessing.TestData
         private void GenerateCommand(int commandEnumValue)
         {
             // Ignoring Error Command value - this class tests proper values
-            if((CommandType) commandEnumValue == CommandType.Error)
+            if ((CommandType)commandEnumValue == CommandType.Error)
                 return;
-            string data = "";
+            string data;
             string commandType = GetCommandTypeString(commandEnumValue);
             string id = commandType; // The same value for simplification
 
