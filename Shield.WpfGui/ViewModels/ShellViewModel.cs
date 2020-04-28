@@ -66,7 +66,7 @@ namespace Shield.WpfGui.ViewModels
             _pipeline.ConfirmationSent += (o, e) => SentMessages.Add(e);
             _pipeline.SendingFailed += (o, e) =>
             {
-                MessageBox.Show("sending failed");
+                MessageBox.Show($"sending failed - {e.Id} - {e.Type}");
             };
         }
 

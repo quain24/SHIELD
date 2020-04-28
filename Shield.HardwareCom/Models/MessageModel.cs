@@ -52,8 +52,7 @@ namespace Shield.HardwareCom.Models
         {
             _messageId = id.ToUpperInvariant();
 
-            if (Commands != null)
-                Commands.ForEach(command => command.Id = _messageId);
+            Commands?.ForEach(command => command.Id = _messageId);
             return _messageId;
         }
 

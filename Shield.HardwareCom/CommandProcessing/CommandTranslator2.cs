@@ -20,7 +20,6 @@ namespace Shield.HardwareCom.CommandProcessing
         private readonly CommandTranslatorSettings _settings;
         private readonly ICommandModelFactory _factory;
         private string _idFiller;
-        private string _workpiece = string.Empty;
 
         public CommandTranslator2(CommandTranslatorSettings settings, ICommandModelFactory factory)
         {
@@ -40,60 +39,63 @@ namespace Shield.HardwareCom.CommandProcessing
         {
             if (rawData is null) throw new ArgumentNullException(nameof(rawData), "Cannot create command from NULL.");
 
-            AssignWorpiece(rawData);
-
-            if (IsOfProperLength())
-                return CreateFromValidLengthRawData();
-            return CreateFromInvalidRawData();
+            if (IsOfProperLength(rawData))
+                return CreateFromValidLengthRawData(rawData);
+            return CreateFromInvalidRawData(rawData);
         }
 
-        private void AssignWorpiece(string rawData) => _workpiece = rawData;
+        private bool IsOfProperLength(string data) => data.Length == _commandLength || data.Length == _commandLengthWithData;
 
-        private bool IsOfProperLength() => _workpiece.Length == _commandLength || _workpiece.Length == _commandLengthWithData;
-
-        private ICommandModel CreateFromValidLengthRawData()
+        private ICommandModel CreateFromValidLengthRawData(string data)
         {
-            var type = GetCommandTypeValue();
-            var id = GetID(type);
-            var dataPack = GetDataPack(type);
+            var type = GetCommandTypeValue(data);
+            var id = GetID(type, data);
+            var dataPack = GetDataPack(type, data);
 
             return _factory.Create(type, id, Timestamp.TimestampNow, dataPack);
         }
 
-        private ICommandModel CreateFromInvalidRawData()
+        private ICommandModel CreateFromInvalidRawData(string data)
         {
-            return _factory.Create(CommandType.Error, _idFiller, Timestamp.TimestampNow, ParseErrorDataPack());
+            return _factory.Create(CommandType.Error, _idFiller, Timestamp.TimestampNow, ParseErrorDataPack(data));
         }
 
-        private CommandType GetCommandTypeValue()
+        private CommandType GetCommandTypeValue(string data)
         {
-            if (int.TryParse(_workpiece.Substring(1, _settings.CommandTypeLength), out int val))
-                return Enum.IsDefined(typeof(CommandType), val) ? (CommandType)val : CommandType.Unknown;
+            if (int.TryParse(data.Substring(1, _settings.CommandTypeLength), out int value))
+                return IsATypeOfCommand(value) ? (CommandType)value : CommandType.Unknown;
             return CommandType.Error;
         }
 
-        private string GetID(CommandType type) => type == CommandType.Error ? _idFiller : ParseId();
+        private bool IsATypeOfCommand(int type) => Enum.IsDefined(typeof(CommandType), type);
 
-        private string ParseId() => _workpiece.Substring(_settings.CommandTypeLength + 2, _settings.IdLength);
+        private bool IsKnownTypeOfCommand(ICommandModel command) => IsATypeOfCommand((int)command.CommandType);
 
-        private string GetDataPack(CommandType type)
+        private string GetID(CommandType type, string data) => type == CommandType.Error ? _idFiller : ParseId(data);
+
+        private string GetID(ICommandModel command) => command.Id;
+
+        private string ParseId(string data) => data.Substring(_settings.CommandTypeLength + 2, _settings.IdLength);
+
+        private string GetDataPack(CommandType type, string data)
         {
             if (type == CommandType.Error)
-                return ParseErrorDataPack();
+                return ParseErrorDataPack(data);
             else
-                return ParseGoodDataPack();
+                return ParseGoodDataPack(data);
         }
 
-        private string ParseErrorDataPack()
+        private string GetDataPack(ICommandModel command) => command.Data.PadLeft(_settings.DataPackLength, _settings.Filler);
+
+        private string ParseErrorDataPack(string data)
         {
-            return _workpiece.Length > _settings.DataPackLength
-                ? _workpiece.Substring(0, _settings.DataPackLength)
-                : _workpiece.PadLeft(_settings.DataPackLength, _settings.Filler);
+            return data.Length > _settings.DataPackLength
+                ? data.Substring(0, _settings.DataPackLength)
+                : data.PadLeft(_settings.DataPackLength, _settings.Filler);
         }
 
-        private string ParseGoodDataPack() => _workpiece.Substring(_settings.CommandSize);
+        private string ParseGoodDataPack(string data) => data.Substring(_settings.CommandSize);
 
-        // TODO refactor this method
         /// <summary>
         /// Translates a CommandModel into a raw formatted string if given a correct command or returns empty string for error
         /// </summary>
@@ -103,23 +105,22 @@ namespace Shield.HardwareCom.CommandProcessing
         {
             if (givenCommand is null) throw new ArgumentNullException(nameof(givenCommand), "Cannot create raw command string from NULL.");
 
-            int completeCommandSizeWithSep = _settings.CommandWithDataPackSize;
+            if (!IsKnownTypeOfCommand(givenCommand))
+                return string.Empty;
 
-            if (givenCommand is null || !Enum.IsDefined(typeof(CommandType), givenCommand.CommandType))
-                return null;
+            var command = new StringBuilder(_separator.ToString());
 
-            StringBuilder command = new StringBuilder(_separator.ToString());
+            command.Append(GetCommandType(givenCommand)).Append(_separator);
+            command.Append(GetID(givenCommand)).Append(_separator);
 
-            command.Append(((int)givenCommand.CommandType).ToString().ToUpperInvariant().PadLeft(_settings.CommandTypeLength, '0')).Append(_separator);
-            command.Append(givenCommand.Id).Append(_separator);
-
-            if (givenCommand.CommandType == CommandType.Data)
-            {
-                command.Append(givenCommand.Data);
-                command.Append(_filler, completeCommandSizeWithSep - command.Length);
-            }
+            if (IsCommandADataType(givenCommand))
+                command.Append(GetDataPack(givenCommand));
 
             return command.ToString();
         }
+
+        private string GetCommandType(ICommandModel command) => ((int)command.CommandType).ToString().ToUpperInvariant().PadLeft(_settings.CommandTypeLength, '0');
+
+        private bool IsCommandADataType(ICommandModel command) => command.CommandType == CommandType.Data;
     }
 }
