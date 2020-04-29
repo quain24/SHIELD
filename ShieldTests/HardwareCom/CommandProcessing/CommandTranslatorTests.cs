@@ -1,4 +1,5 @@
 ﻿using Shield.HardwareCom.CommandProcessing;
+using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
 using Shield.HardwareCom.Models;
 using ShieldTests.HardwareCom.CommandProcessing.TestData;
@@ -20,9 +21,9 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         private readonly ICommandModelFactory _factory =
             new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-        public CommandTranslatorTests() => CommandTranslator = new CommandTranslator2(_settings, _factory);
+        public CommandTranslatorTests() => CommandTranslator = new CommandTranslator(_settings, _factory);
 
-        private readonly CommandTranslator2 CommandTranslator;
+        private readonly CommandTranslator CommandTranslator;
 
         private string Message(string paramName, string expected, string actual)
         {
@@ -81,6 +82,19 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         public void FromCommand_should_throw_argument_null_exception_if_given_NULL_instead_of_proper_ICommandModel()
         {
             Assert.Throws<ArgumentNullException>(() => CommandTranslator.FromCommand(null));
+        }
+
+        [Fact]
+        public void FromCommand_should_return_rmpty_string_given_unknown_command_type()
+        {
+            ICommandModel command = _factory.Create(CommandType.Empty, "0".PadLeft(_settings.IdLength, '0'));
+
+            // Factory will not allow wrong command type be created, therefore:
+            command.CommandType = (CommandType)Enum.GetValues(typeof(CommandType)).Length + 1;
+
+           var actual = CommandTranslator.FromCommand(command);
+
+           Assert.True(string.IsNullOrEmpty(actual));
         }
     }
 }

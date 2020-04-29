@@ -472,7 +472,7 @@ namespace COM6TestSender
                 var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
                 var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize);
 
-                var comtrans = new CommandTranslator(commandTranslatorSettings, new Func<ICommandModel>(() => new CommandModel()));
+                var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
                 while (true)
                 {
@@ -550,7 +550,7 @@ namespace COM6TestSender
                 var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
                 var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize);
 
-                var comtrans = new CommandTranslator(commandTranslatorSettings, new Func<ICommandModel>(() => new CommandModel()));
+                var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
             restart:
                 choose = licz + 30;

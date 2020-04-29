@@ -1,5 +1,5 @@
-﻿using Shield.HardwareCom.Models;
-using Shield.HardwareCom.Helpers;
+﻿using Shield.HardwareCom.Helpers;
+using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -17,6 +17,50 @@ namespace Shield.HardwareCom
     /// </summary>
     public class MessagingPipeline : IMessagingPipeline, IDisposable
     {
+        private readonly IMessagingPipelineContext _context;
+        private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, IMessageModel> _failedSendMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
+
+        private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
+        private bool _disposed = false;
+
+        // TODO refactoring and ordering / regions?
+
+        public MessagingPipeline(IMessagingPipelineContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+
+            SetUpCollections();
+        }
+
+        #region IDispose implementation
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    if (IsOpen)
+                        Close().ConfigureAwait(false);
+                    _handleNewMessagesCTS?.Dispose();
+                    // Free other state (managed objects).
+                }
+                // Free your own state (unmanaged objects).
+                // Set large fields to null.
+                _disposed = true;
+            }
+        }
+
+        #endregion IDispose implementation
+
         #region Events
 
         /// <summary>
@@ -46,27 +90,10 @@ namespace Shield.HardwareCom
 
         #endregion Events
 
-        private readonly IMessagingPipelineContext _context;
-        private readonly ConcurrentDictionary<string, IMessageModel> _receivedMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
-        private readonly ConcurrentDictionary<string, IMessageModel> _sentMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
-        private readonly ConcurrentDictionary<string, IMessageModel> _failedSendMessages = new ConcurrentDictionary<string, IMessageModel>(StringComparer.OrdinalIgnoreCase);
-
-        private CancellationTokenSource _handleNewMessagesCTS = new CancellationTokenSource();
-        private bool _disposed = false;
-
         /// <summary>
         /// Returns state of the <see cref="IMessagingPipeline"/>
         /// </summary>
         public bool IsOpen => _context?.Messenger?.IsOpen ?? false;
-
-        // TODO refactoring and ordering / regions?
-
-        public MessagingPipeline(IMessagingPipelineContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-
-            SetUpCollections();
-        }
 
         private void SetUpCollections()
         {
@@ -163,7 +190,6 @@ namespace Shield.HardwareCom
                 return false;
 
             AssignIdIfNeeded(message);
-
             message.Timestamp = Timestamp.TimestampNow;
 
             if (await _context.Messenger.SendAsync(message).ConfigureAwait(false))
@@ -233,32 +259,5 @@ namespace Shield.HardwareCom
         protected virtual void OnSendingFailed(IMessageModel e) => SendingFailed?.Invoke(this, e);
 
         #endregion Event handlers implementation
-
-        #region IDispose implementation
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    if (IsOpen)
-                        Close();
-                    _handleNewMessagesCTS?.Dispose();
-                    // Free other state (managed objects).
-                }
-                // Free your own state (unmanaged objects).
-                // Set large fields to null.
-                _disposed = true;
-            }
-        }
-
-        #endregion IDispose implementation
     }
 }

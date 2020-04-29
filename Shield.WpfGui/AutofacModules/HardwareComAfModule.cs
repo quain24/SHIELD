@@ -100,15 +100,9 @@ namespace Shield.WpfGui.AutofacModules
                                                                  appSet.DataSize,
                                                                  appSet.HostIdSize);
 
-                    return new CommandTranslator(settings, c.Resolve<Func<ICommandModel>>());
+                    return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
                 })
                 .As<ICommandTranslator>();
-
-            //builder.RegisterType<CommandTranslator>()
-            //       .WithParameter(new ResolvedParameter(
-            //           (pi, _) => pi.Name == "settings",
-            //           (_, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>()))
-            //       .As<ICommandTranslator>();
 
             builder.Register(c =>
                     {

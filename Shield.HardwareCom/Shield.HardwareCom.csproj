@@ -45,7 +45,6 @@
     <Compile Include="Adapters\SerialPortAdapter.cs" />
     <Compile Include="CommandProcessing\CommandIngester.cs" />
     <Compile Include="CommandProcessing\CommandTranslator.cs" />
-    <Compile Include="CommandProcessing\CommandTranslator2.cs" />
     <Compile Include="CommandProcessing\CommandTranslatorSettings.cs" />
     <Compile Include="CommandProcessing\ICommandIngester.cs" />
     <Compile Include="CommandProcessing\ICommandTranslator.cs" />
