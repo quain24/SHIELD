@@ -28,7 +28,7 @@ namespace Shield.HardwareCom
         public MessagingPipeline(IMessagingPipelineContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _context.ConfirmationTimeoutChecker.TimeoutOccurred += OnConfirmationTimeout;
+            _context.ConfirmationTimeoutChecker.TimeoutOccurred += TimeoutOccurredHandler;
 
             AssignCollections();
         }
@@ -144,7 +144,7 @@ namespace Shield.HardwareCom
             {
                 try
                 {
-                    receivedMessage = GetNextReceivedMessage();
+                    receivedMessage = GetNextReceivedMessage(_handleNewMessagesCTS);
                 }
                 catch (OperationCanceledException)
                 {
@@ -165,8 +165,8 @@ namespace Shield.HardwareCom
             _handleNewMessagesCTS = new CancellationTokenSource();
         }
 
-        private IMessageModel GetNextReceivedMessage() =>
-            _context.Processor.GetProcessedMessages().Take(_handleNewMessagesCTS.Token);
+        private IMessageModel GetNextReceivedMessage(CancellationTokenSource cts) =>
+            _context.Processor.GetProcessedMessages().Take(cts.Token);
 
         private static bool IsConfirmation(IMessageModel message) => message?.Type == Enums.MessageType.Confirmation;
 
@@ -174,13 +174,13 @@ namespace Shield.HardwareCom
         {
             _context.ConfirmationTimeoutChecker.AddConfirmation(confirmation);
             _receivedMessages.TryAdd(confirmation.Id, confirmation);
-            OnConfirmationReceived(this, confirmation);
+            OnConfirmationReceived(confirmation);
         }
 
         private async Task HandleReceivedMessage(IMessageModel message)
         {
             _receivedMessages.TryAdd(message.Id, message);
-            OnMessageReceived(this, message);
+            OnMessageReceived(message);
             await SendConfirmationOfAsync(message).ConfigureAwait(false);
         }
 
@@ -215,11 +215,11 @@ namespace Shield.HardwareCom
                 if (!IsConfirmation(message))
                 {
                     AddToConfirmationTimeoutChecking(message);
-                    OnMessageSent(this, message);
+                    OnMessageSent(message);
                 }
                 else
                 {
-                    OnConfirmationSent(this, message);
+                    OnConfirmationSent(message);
                 }
                 return true;
             }
@@ -233,7 +233,7 @@ namespace Shield.HardwareCom
         {
             message.IsTransfered = false;
             PushToFailedSentMessages(message);
-            OnSendingFailed(this, message);
+            OnSendingFailed(message);
         }
 
         private void PushToFailedSentMessages(IMessageModel message)
@@ -270,17 +270,19 @@ namespace Shield.HardwareCom
 
         #region Event handlers implementation
 
-        protected virtual void OnMessageSent(object sender, IMessageModel e) => MessageSent?.Invoke(sender, e);
+        protected virtual void OnMessageSent(IMessageModel e) => MessageSent?.Invoke(this, e);
 
-        protected virtual void OnConfirmationSent(object sender, IMessageModel e) => ConfirmationSent?.Invoke(sender, e);
+        protected virtual void OnConfirmationSent(IMessageModel e) => ConfirmationSent?.Invoke(this, e);
 
-        protected virtual void OnMessageReceived(object sender, IMessageModel e) => MessageReceived?.Invoke(sender, e);
+        protected virtual void OnMessageReceived(IMessageModel e) => MessageReceived?.Invoke(this, e);
 
-        protected virtual void OnConfirmationReceived(object sender, IMessageModel e) => ConfirmationReceived?.Invoke(sender, e);
+        protected virtual void OnConfirmationReceived(IMessageModel e) => ConfirmationReceived?.Invoke(this, e);
 
-        protected virtual void OnSendingFailed(object sender, IMessageModel e) => SendingFailed?.Invoke(sender, e);
+        protected virtual void OnSendingFailed(IMessageModel e) => SendingFailed?.Invoke(this, e);
 
-        protected virtual void OnConfirmationTimeout(object sender, IMessageModel e) => ConfirmationTimeout?.Invoke(sender, e);
+        private void TimeoutOccurredHandler(object sender, IMessageModel e) => OnConfirmationTimeout(e);
+
+        protected virtual void OnConfirmationTimeout(IMessageModel e) => ConfirmationTimeout?.Invoke(this, e);
 
         #endregion Event handlers implementation
     }
