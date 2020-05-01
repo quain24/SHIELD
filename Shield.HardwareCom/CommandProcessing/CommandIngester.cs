@@ -205,7 +205,7 @@ namespace Shield.HardwareCom.CommandProcessing
         /// Gives a thread safe collection of completed and timeout messages for further processing.<br/>
         /// New messages are added as long as Ingester gets new CommandModels and can create new Messages.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Completely processed messages</returns>
         public BlockingCollection<IMessageModel> GetReceivedMessages() => _processedMessages;
 
         /// <summary>

@@ -68,6 +68,10 @@ namespace Shield.WpfGui.ViewModels
             {
                 MessageBox.Show($"sending failed - {e.Id} - {e.Type}");
             };
+            _pipeline.ConfirmationTimeout += (o, e) =>
+            {
+                MessageBox.Show($"Confirmation timeout - {e.Id} - {e.Type}");
+            };
         }
 
         public int DataPackLength()

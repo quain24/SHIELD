@@ -14,6 +14,7 @@ namespace Shield.HardwareCom
         event EventHandler<IMessageModel> MessageReceived;
         event EventHandler<IMessageModel> ConfirmationReceived;
         event EventHandler<IMessageModel> SendingFailed;
+        event EventHandler<IMessageModel> ConfirmationTimeout;
 
         Task Close();
         void Open();

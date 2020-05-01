@@ -19,10 +19,10 @@ namespace Shield.HardwareCom.MessageProcessing
         private readonly Dictionary<string, IMessageModel> _confirmations = new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly ITimeout _timeoutCheck;
-        private int _checkinterval = 0;
+        private readonly int _checkinterval = 0;
 
         private readonly object _getNextMessageLock = new object();
-        private object _processLock = new object();
+        private readonly object _processLock = new object();
         private bool _isProcessing = false;
         private bool _disposed = false;
 
@@ -30,6 +30,8 @@ namespace Shield.HardwareCom.MessageProcessing
         private readonly ReaderWriterLockSlim _currentlyProcessingIdLock = new ReaderWriterLockSlim();
 
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
+
+        public event EventHandler<IMessageModel> TimeoutOccured;
 
         public bool IsWorking => _isProcessing;
 
@@ -76,17 +78,19 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private void UnlockTimeoutChecking()
         {
-            lock(_processLock)
+            lock (_processLock)
                 _isProcessing = false;
         }
 
         private bool CheckNextUnconfirmedMessage()
         {
             IMessageModel message = GetNextUnconfirmedMessage();
+            if(message is null)
+                return false;
 
             using (_currentlyProcessingIdLock.Read())
             {
-                if (message is null || _currentlyProcessingId == message.Id)
+                if (_currentlyProcessingId == message.Id)
                 {
                     return false;
                 }
@@ -97,6 +101,7 @@ namespace Shield.HardwareCom.MessageProcessing
                     if (IsTimeoutExceeded(message))
                     {
                         HandleExceededTimeout(message);
+                        OnTimeoutOccured(message);
                         return true;
                     }
                     return false;
@@ -182,26 +187,35 @@ namespace Shield.HardwareCom.MessageProcessing
 
             IMessageModel message;
             lock (_getNextMessageLock)
-                message = _storage.FirstOrDefault((val) => val.Value.Id == confirmation.Id).Value;
+                message = GetMessageConfirmedBy(confirmation);
 
             using (_currentlyProcessingIdLock.Write())
                 _currentlyProcessingId = message is null ? string.Empty : message.Id;
 
             if (message is null)
             {
-                Debug.WriteLine($@"ConfirmationTimeoutChecker: confirmation {confirmation.Id} tried to confirm nonexistent message.");
+                Debug.WriteLine($"ConfirmationTimeoutChecker: confirmation {confirmation.Id} tried to confirm nonexistent message.");
                 confirmation.Errors |= Errors.ConfirmedNonexistent;
             }
             else
             {
-                message = IsTimeoutExceeded(message, confirmation) ? SetTimeoutError(message) : message;
                 message.IsConfirmed = true;
+                if(IsTimeoutExceeded(message, confirmation))
+                {
+                    SetTimeoutError(message);
+                    OnTimeoutOccured(message);
+                }
                 _processedMessages.Add(message);
             }
             _processedConfirmations.Add(confirmation);
 
             using (_currentlyProcessingIdLock.Write())
                 _currentlyProcessingId = string.Empty;
+        }
+
+        private IMessageModel GetMessageConfirmedBy(IMessageModel confirmation)
+        {
+            return _storage.FirstOrDefault((kvp) => kvp.Value.Id == confirmation.Id).Value;
         }
 
         public BlockingCollection<IMessageModel> ProcessedMessages() => _processedMessages;
@@ -255,6 +269,11 @@ namespace Shield.HardwareCom.MessageProcessing
                 default:
                     return 2000;
             }
+        }
+
+        protected virtual void OnTimeoutOccured(IMessageModel e)
+        {
+            TimeoutOccured?.Invoke(this, e);
         }
 
         #region IDispose implementation
