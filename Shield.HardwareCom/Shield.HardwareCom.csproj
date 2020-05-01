@@ -110,7 +110,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawDataProcessing\IIncomingDataPreparer.cs" />
     <Compile Include="RawDataProcessing\IncomingDataPreparer.cs" />
-    <Compile Include="RawDataProcessing\IncomingDataPreparerOld.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield\Shield.csproj">

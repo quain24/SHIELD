@@ -8,21 +8,10 @@ namespace Shield.HardwareCom.Models
     /// </summary>
     public class CommandModel : ICommandModel
     {
+        private string _hostId = string.Empty;
         private string _id = string.Empty;
 
-        public long TimeStamp { get; set; } = 0;
-
-        public string Id
-        {
-            get { return _id; }
-            set { _id = value?.ToUpperInvariant() ?? string.Empty; }
-        }
-
-        public string Data { get; set; } = string.Empty;
-
-        public CommandType CommandType { get; set; }
-
-        public string CommandTypeString => Enum.GetName(typeof(CommandType), CommandType);
+        #region IEquatable<ICommandModel> implementation
 
         public bool Equals(ICommandModel other)
         {
@@ -47,5 +36,27 @@ namespace Shield.HardwareCom.Models
             hash = unchecked(3 * (hash + hashData + hashId + hashCommandType));
             return hash;
         }
+
+        #endregion IEquatable<ICommandModel> implementation
+
+        public long TimeStamp { get; set; } = 0;
+
+        public string HostId
+        {
+            get => _hostId;
+            set => _hostId = value?.ToUpperInvariant();
+        }
+
+        public string Id
+        {
+            get => _id;
+            set => _id = value?.ToUpperInvariant() ?? string.Empty;
+        }
+
+        public string Data { get; set; } = string.Empty;
+
+        public CommandType CommandType { get; set; }
+
+        public string CommandTypeString => Enum.GetName(typeof(CommandType), CommandType);
     }
 }

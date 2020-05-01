@@ -8,35 +8,37 @@ namespace Shield.HardwareCom.RawDataProcessing
         private const int IndexNotFound = -1;
         private const int BufferStart = 0;
 
-        private List<string> _outputCollection = new List<string>();
-
+        private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
         private readonly int _commandTypeLength;
+        private readonly int _hostIdLength;
         private readonly int _idLength;
         private readonly int _dataPackLength;
         private readonly char _separator;
         private readonly Regex _commandPattern;
 
+        private List<string> _outputCollection = new List<string>();
         private int _patternIndex = IndexNotFound;
 
         private string _buffer = string.Empty;
         private string _cutoffsbuffer = string.Empty;
 
-        private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
-
         internal int CommandLengthWithData { get; }
 
         internal int CommandLength { get; }
 
-        public IncomingDataPreparer(int commandTypeLength, int idLength, int dataPackLength, Regex commandPattern, char separator)
+        public IncomingDataPreparer(int commandTypeLength, int idLength, int hostIdLength, int dataPackLength, Regex commandPattern, char separator)
         {
             _commandTypeLength = commandTypeLength;
             _idLength = idLength;
+            _hostIdLength = hostIdLength;
             _dataPackLength = dataPackLength;
             _commandPattern = commandPattern;
             _separator = separator;
 
             CommandLength = _commandTypeLength + _idLength + 3;
-            CommandLengthWithData = CommandLength + _dataPackLength; // no + 1, becouse there is no separator after data portion
+            CommandLengthWithData = CommandLength + _dataPackLength; // no + 1, because there is no separator after data portion
+
+            // TODO check everything here before modifying passed pattern that will include host id 
         }
 
         public List<string> DataSearch(string data)

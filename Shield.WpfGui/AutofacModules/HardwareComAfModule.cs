@@ -109,6 +109,7 @@ namespace Shield.WpfGui.AutofacModules
                         IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
                         return new IncomingDataPreparer(appSet.CommandTypeSize,
                                                       appSet.IdSize,
+                                                      appSet.HostIdSize,
                                                       appSet.DataSize,
                                                       new Regex($"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
                                                       appSet.Separator);
