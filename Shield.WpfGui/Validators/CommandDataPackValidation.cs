@@ -18,21 +18,21 @@ namespace Shield.WpfGui.Validators
         {
             validationErrors = new List<string>();
 
-            if (input is null || input.Length == 0)
+            if (string.IsNullOrEmpty(input))
                 return true;
             if (input.Contains(_filler))
             {
-                validationErrors.Add($@"There cannot be a 'filler' ({_filler}) symbol inside data pack.");
+                validationErrors.Add($"There cannot be a 'filler' ({_filler}) symbol inside data pack.");
             }
 
             if (input.Contains(_separator))
             {
-                validationErrors.Add($@"There cannot be a 'separator' ({_separator}) symbol inside data pack.");
+                validationErrors.Add($"There cannot be a 'separator' ({_separator}) symbol inside data pack.");
             }
 
             if (input.Contains(" "))
             {
-                validationErrors.Add($@"There cannot be a 'white space' symbol inside data pack.");
+                validationErrors.Add("There cannot be a 'white space' symbol inside data pack.");
             }
             return validationErrors.Count == 0;
         }

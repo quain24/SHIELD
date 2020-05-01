@@ -1,6 +1,5 @@
 ﻿using Caliburn.Micro;
-using Shield.Data;
-using Shield.Data.Models;
+using Shield.CommonInterfaces;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
@@ -67,7 +66,11 @@ namespace Shield.WpfGui.ViewModels
             _pipeline.ConfirmationSent += (o, e) => SentMessages.Add(e);
             _pipeline.SendingFailed += (o, e) =>
             {
-                MessageBox.Show("sending failed");
+                MessageBox.Show($"sending failed - {e.Id} - {e.Type}");
+            };
+            _pipeline.ConfirmationTimeout += (o, e) =>
+            {
+                MessageBox.Show($"Confirmation timeout - {e.Id} - {e.Type}");
             };
         }
 
@@ -337,7 +340,7 @@ namespace Shield.WpfGui.ViewModels
                     if (_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
                         return false;
 
-                    if (DataInput != null && DataInput.Length > 0 && !DataInput.Contains(DataPackFiller()) &&
+                    if (!string.IsNullOrEmpty(DataInput) && !DataInput.Contains(DataPackFiller()) &&
                         !DataInput.Contains(_settings.ForTypeOf<IApplicationSettingsModel>().Separator) &&
                         !DataInput.Contains(" "))
                     {
@@ -429,7 +432,7 @@ namespace Shield.WpfGui.ViewModels
 
         public bool CanRemoveCommand
         {
-            get => SelectedNewMessageCommand is null ? false : true;
+            get => !(SelectedNewMessageCommand is null);
         }
 
         public async Task SendMessage()
@@ -461,7 +464,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (NewMessageCommands.Count < 1 || _pipeline.IsOpen == false || _sending == true)
+                if (NewMessageCommands.Count < 1 || !_pipeline.IsOpen || _sending)
                     return false;
 
                 return true;
@@ -470,7 +473,7 @@ namespace Shield.WpfGui.ViewModels
 
         private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
         {
-            if (commands.Count() == 0 || commands is null)
+            if (!commands.Any() || commands is null)
                 return null;
 
             IMessageModel message = _messageFactory();
@@ -496,10 +499,7 @@ namespace Shield.WpfGui.ViewModels
             const string propertyKey = "DataInput";
             ICollection<string> validationErrors = null;
             /* Call service asynchronously */
-            bool isValid = await Task<bool>.Run(() =>
-            {
-                return _dataPackValidation.ValidateDataPack(data, out validationErrors);
-            })
+            bool isValid = await Task<bool>.Run(() => _dataPackValidation.ValidateDataPack(data, out validationErrors))
             .ConfigureAwait(false);
 
             if (!isValid)

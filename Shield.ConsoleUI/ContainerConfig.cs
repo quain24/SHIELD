@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Shield.Data;
+using Shield.
 
 namespace Shield.ConsoleUI
 {

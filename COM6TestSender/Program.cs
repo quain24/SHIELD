@@ -1,10 +1,10 @@
-﻿using Shield.Data;
-using Shield.Data.Models;
+﻿using Shield.CommonInterfaces;
+using Shield.Data;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
+using Shield.HardwareCom.Helpers;
 using Shield.HardwareCom.Models;
-using Shield.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
@@ -456,6 +456,7 @@ namespace COM6TestSender
                 apset.Filler = '.';
                 apset.IdSize = 4;
                 apset.Separator = '*';
+                apset.HostIdSize = 4;
                 var portset = new Shield.Data.Models.SerialPortSettingsModel();
                 portset.BaudRate = 921600;
                 portset.Encoding = 20127;
@@ -468,7 +469,10 @@ namespace COM6TestSender
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
                 var sett = new Settings(sm);
-                var comtrans = new CommandTranslator(sett.ForTypeOf<IApplicationSettingsModel>(), new Func<ICommandModel>(() => new CommandModel()));
+                var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
+                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize);
+
+                var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
                 while (true)
                 {
@@ -528,19 +532,25 @@ namespace COM6TestSender
                 apset.Filler = '.';
                 apset.IdSize = 4;
                 apset.Separator = '*';
-                var portset = new Shield.Data.Models.SerialPortSettingsModel();
-                portset.BaudRate = 921600;
-                portset.Encoding = 20127;
-                portset.PortNumber = 7;
-                portset.DataBits = 8;
-                portset.Parity = Parity.None;
-                portset.StopBits = StopBits.One;
-                portset.ReadTimeout = -1;
+                apset.HostIdSize = 4;
+                var portset = new Shield.Data.Models.SerialPortSettingsModel
+                {
+                    BaudRate = 921600,
+                    Encoding = 20127,
+                    PortNumber = 7,
+                    DataBits = 8,
+                    Parity = Parity.None,
+                    StopBits = StopBits.One,
+                    ReadTimeout = -1
+                };
 
+                var sett = new Settings(sm);
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
-                var sett = new Settings(sm);
-                var comtrans = new CommandTranslator(sett.ForTypeOf<IApplicationSettingsModel>(), new Func<ICommandModel>(() => new CommandModel()));
+                var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
+                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize);
+
+                var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
             restart:
                 choose = licz + 30;

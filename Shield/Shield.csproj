@@ -14,11 +14,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Shield</RootNamespace>
     <AssemblyName>Shield</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,9 +42,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac, Version=5.1.2.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.5.1.2\lib\net461\Autofac.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -68,98 +66,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonInterfaces\IApplicationSettingsModel.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDevice.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
+    <Compile Include="CommonInterfaces\ICommunicationDeviceSettingsContainer.cs" />
+    <Compile Include="CommonInterfaces\IMoqPortSettingsModel.cs" />
+    <Compile Include="CommonInterfaces\ISerialPortSettingsModel.cs" />
     <Compile Include="CommonInterfaces\ISetting.cs" />
-    <Compile Include="Data\DataAfModule.cs" />
-    <Compile Include="Data\ISettings.cs" />
-    <Compile Include="Data\Models\ApplicationSettingsModel.cs" />
-    <Compile Include="Data\Models\IApplicationSettingsModel.cs" />
-    <Compile Include="Data\Models\IMoqPortSettingsModel.cs" />
-    <Compile Include="Data\Models\ISerialPortSettingsContainer.cs" />
-    <Compile Include="Data\Models\ISerialPortSettingsModel.cs" />
-    <Compile Include="Data\Models\ISettingsModel.cs" />
-    <Compile Include="Data\Models\MoqPortSettingsModel.cs" />
-    <Compile Include="Data\Models\SerialPortSettingModel.cs" />
-    <Compile Include="Data\Models\CommunicationDeviceSettingsContainer.cs" />
-    <Compile Include="Data\Models\SettingsModel.cs" />
-    <Compile Include="DependencyDictionary.cs" />
-    <Compile Include="HardwareCom\Enums\CommandTypes.cs" />
+    <Compile Include="CommonInterfaces\ISettings.cs" />
     <Compile Include="Enums\DeviceType.cs" />
-    <Compile Include="HardwareCom\Enums\Message.cs" />
-    <Compile Include="HardwareCom\Enums\MessageAnalyzerType.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\CommandIngester.cs" />
-    <Compile Include="HardwareCom\Factories\IMessengingPipelineContextFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ITimeoutConcreteFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ITimeoutFactory.cs" />
-    <Compile Include="HardwareCom\Factories\NormalTimeoutFactory.cs" />
-    <Compile Include="HardwareCom\Factories\NullTimeoutFactory.cs" />
-    <Compile Include="HardwareCom\Factories\TimeoutFactory.cs" />
-    <Compile Include="HardwareCom\IMessagingPipeline.cs" />
-    <Compile Include="HardwareCom\IMessagingPipelineContext.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\CompletitionTimeoutChecker.cs" />
-    <Compile Include="HardwareCom\Factories\CommandIngesterFactory.cs" />
-    <Compile Include="HardwareCom\Factories\CompletitionTimeoutCheckerFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ConfirmationTimeoutCheckerFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ICommandIngesterFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ICompletitionTimeoutCheckerFactory.cs" />
-    <Compile Include="HardwareCom\Factories\IConfirmationTimeoutCheckerFactory.cs" />
-    <Compile Include="HardwareCom\Factories\IMessengingPipelineFactory.cs" />
-    <Compile Include="HardwareCom\Factories\MessengingPipelineContextFactory.cs" />
-    <Compile Include="HardwareCom\Factories\MessengingPipelineFactory.cs" />
-    <Compile Include="HardwareCom\HardwareComAfModule.cs" />
-    <Compile Include="HardwareCom\Adapters\MoqAdapter.cs" />
-    <Compile Include="HardwareCom\Adapters\SerialPortAdapter.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\CommandTranslator.cs" />
-    <Compile Include="HardwareCom\Factories\CommandModelFactory.cs" />
-    <Compile Include="HardwareCom\Factories\CommunicationDeviceFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ConfirmationFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ICommandModelFactory.cs" />
-    <Compile Include="HardwareCom\Factories\ICommunicationDeviceFactory.cs" />
-    <Compile Include="HardwareCom\Factories\IConfirmationFactory.cs" />
-    <Compile Include="HardwareCom\Factories\IMessengerFactory.cs" />
-    <Compile Include="HardwareCom\Factories\MessengerFactory.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\ICommandIngester.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\ICommandTranslator.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\ICompletitionTimeoutChecker.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\ITimeout.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\NullTimeout.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\NormalTimeout.cs" />
-    <Compile Include="HardwareCom\RawDataProcessing\IIncomingDataPreparer.cs" />
-    <Compile Include="HardwareCom\Factories\IMessageFactory.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\IIncomingMessageProcessor.cs" />
-    <Compile Include="HardwareCom\IMessenger.cs" />
-    <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparerOld.cs" />
-    <Compile Include="HardwareCom\MessagingPipelineContext.cs" />
-    <Compile Include="HardwareCom\MessagingPipeline.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\IncomingMessageProcessor.cs" />
-    <Compile Include="HardwareCom\Factories\MessageFactory.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\DecodingAnalyzer.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\Completeness.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\ICompleteness.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\IConfirmationTimeoutChecker.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\IMessageAnalyzer.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\PatternAnalyzer.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\ConfirmationTimeoutChecker.cs" />
-    <Compile Include="HardwareCom\MessageProcessing\TypeDetectorAnalyzer.cs" />
-    <Compile Include="HardwareCom\MessageProcessor.cs" />
-    <Compile Include="HardwareCom\Messenger.cs" />
-    <Compile Include="HardwareCom\Models\CommandModel.cs" />
-    <Compile Include="HardwareCom\Models\ICommandModel.cs" />
-    <Compile Include="HardwareCom\Models\IMessageCollection.cs" />
-    <Compile Include="HardwareCom\Models\IMessageModel.cs" />
-    <Compile Include="HardwareCom\Models\MessageModel.cs" />
-    <Compile Include="HardwareCom\Enums\TimeoutType.cs" />
-    <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparer.cs" />
-    <Compile Include="Helpers\IdGenerator.cs" />
-    <Compile Include="Helpers\IIdGenerator.cs" />
-    <Compile Include="Helpers\Timestamp.cs" />
-    <Compile Include="Data\Settings.cs" />
-    <Compile Include="ShieldAfModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

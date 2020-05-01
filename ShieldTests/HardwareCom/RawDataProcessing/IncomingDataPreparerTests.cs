@@ -150,24 +150,23 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
             Assert.Equal(expected, actual);
         }
 
-
         [Theory]
         [InlineData("***gsdfgg*",
                     "**0001*0001**000A*0001**0018*0001*adkkk",
                     "dkajsd*0002*0002*a___*0018*0003*0123456789*0003*AAAA****",
-                    "***gsdfgg**", "*0001*0001*", "*000A*0001*", "*0018*0001*adkkkdkajs", "d",  "*0002*0002*", "a___", "*0018*0003*0123456789", "*0003*AAAA*")]
+                    "***gsdfgg**", "*0001*0001*", "*000A*0001*", "*0018*0001*adkkkdkajs", "d", "*0002*0002*", "a___", "*0018*0003*0123456789", "*0003*AAAA*")]
         public void Returns_good_and_bad_commands_given_good_and_bad_commands_or_partials(params string[] expectedData)
         {
-            var split = new List<string>() { expectedData[0], expectedData[1], expectedData[2]};
+            var split = new List<string>() { expectedData[0], expectedData[1], expectedData[2] };
             List<string> actual = new List<string>();
-            foreach(var s in split)
+            foreach (var s in split)
                 actual.AddRange(TestPreparer.DataSearch(s));
 
             List<string> expected = new List<string>();
-            for(int i = 3 ; i < expectedData.Length ; i++)
+            for (int i = 3; i < expectedData.Length; i++)
                 expected.Add(expectedData[i]);
 
             Assert.Equal(expected, actual);
         }
-   }
+    }
 }

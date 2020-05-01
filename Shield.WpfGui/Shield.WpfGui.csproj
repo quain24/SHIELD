@@ -13,7 +13,7 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>Shield.WpfGui</RootNamespace>
     <AssemblyName>Shield.WpfGui</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -36,6 +36,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -103,12 +104,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AutofacModules\DataAfModule.cs" />
+    <Compile Include="AutofacModules\HardwareComAfModule.cs" />
+    <Compile Include="AutofacModules\ShieldAfModule.cs" />
+    <Compile Include="DependencyDictionary.cs" />
     <Compile Include="Validators\CommandDataPackValidation.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
     <Compile Include="Views\ShellView.xaml.cs">
       <DependentUpon>ShellView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WpfGuiAfModule.cs" />
+    <Compile Include="AutofacModules\WpfGuiAfModule.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -155,6 +160,14 @@
     <Folder Include="ViewModelsHelpers\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
+      <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
+      <Name>Shield.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
+      <Project>{2b51f18a-558a-4f92-83f1-92bd0395c875}</Project>
+      <Name>Shield.HardwareCom</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>

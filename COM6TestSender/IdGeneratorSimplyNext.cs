@@ -1,4 +1,4 @@
-﻿using Shield.Helpers;
+﻿using Shield.HardwareCom.Helpers;
 using System;
 using System.Collections.Generic;
 

@@ -12,11 +12,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ShieldTests</RootNamespace>
     <AssemblyName>ShieldTests</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -96,14 +97,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />
     <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />
+    <Compile Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.ConsoleUI\Shield.ConsoleUI.csproj">
-      <Project>{c353cb6c-05d8-474e-a0dc-27b6bc6a1855}</Project>
-      <Name>Shield.ConsoleUI</Name>
+    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
+      <Project>{2B51F18A-558A-4F92-83F1-92BD0395C875}</Project>
+      <Name>Shield.HardwareCom</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>

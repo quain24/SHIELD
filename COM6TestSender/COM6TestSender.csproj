@@ -8,10 +8,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>COM6TestSender</RootNamespace>
     <AssemblyName>COM6TestSender</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,6 +52,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
+      <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
+      <Name>Shield.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
+      <Project>{2b51f18a-558a-4f92-83f1-92bd0395c875}</Project>
+      <Name>Shield.HardwareCom</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>

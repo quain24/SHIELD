@@ -1,12 +1,12 @@
 ﻿using Autofac;
 using Caliburn.Micro;
-using Shield.Data;
 using Shield.HardwareCom;
 using Shield.WpfGui.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
+using Shield.WpfGui.AutofacModules;
 
 namespace Shield.WpfGui
 {
