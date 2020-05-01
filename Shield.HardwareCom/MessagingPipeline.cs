@@ -28,7 +28,7 @@ namespace Shield.HardwareCom
         public MessagingPipeline(IMessagingPipelineContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _context.ConfirmationTimeoutChecker.TimeoutOccured += OnConfirmationTimeout;
+            _context.ConfirmationTimeoutChecker.TimeoutOccurred += OnConfirmationTimeout;
 
             AssignCollections();
         }
@@ -87,6 +87,9 @@ namespace Shield.HardwareCom
         /// </summary>
         public event EventHandler<IMessageModel> SendingFailed;
 
+        /// <summary>
+        /// Confirmation Timeout has occurred - given <see cref="IMessageModel"/> was not confirmed by recipient in time
+        /// </summary>
         public event EventHandler<IMessageModel> ConfirmationTimeout;
 
         #endregion Events

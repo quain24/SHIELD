@@ -19,7 +19,7 @@ namespace Shield.HardwareCom.MessageProcessing
         private readonly Dictionary<string, IMessageModel> _confirmations = new Dictionary<string, IMessageModel>(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly ITimeout _timeoutCheck;
-        private readonly int _checkinterval = 0;
+        private readonly int _checkinterval;
 
         private readonly object _getNextMessageLock = new object();
         private readonly object _processLock = new object();
@@ -31,7 +31,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         private CancellationTokenSource _processingCTS = new CancellationTokenSource();
 
-        public event EventHandler<IMessageModel> TimeoutOccured;
+        public event EventHandler<IMessageModel> TimeoutOccurred;
 
         public bool IsWorking => _isProcessing;
 
@@ -273,7 +273,7 @@ namespace Shield.HardwareCom.MessageProcessing
 
         protected virtual void OnTimeoutOccured(IMessageModel e)
         {
-            TimeoutOccured?.Invoke(this, e);
+            TimeoutOccurred?.Invoke(this, e);
         }
 
         #region IDispose implementation
