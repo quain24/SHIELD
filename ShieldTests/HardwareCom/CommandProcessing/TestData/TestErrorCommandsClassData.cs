@@ -40,7 +40,7 @@ namespace ShieldTests.HardwareCom.CommandProcessing.TestData
         }
 
         private void AddToTestCase(string commandString) =>
-            Add(_commandFactory.Create(CommandType.Error, GetId(), long.Parse("0"), GetDataPack(commandString)), commandString);
+            Add(_commandFactory.Create(CommandType.Error, GetId(), long.Parse("0"), GetDataPack(commandString), GetId()), commandString);
 
         private string GetId() => _settings.Filler.ToString().PadLeft(_settings.IDLength, _settings.Filler);
 

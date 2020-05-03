@@ -7,6 +7,7 @@ namespace Shield.HardwareCom.Models
     public class MessageModel : IMessageModel
     {
         private string _messageId = string.Empty;
+        private string _messageHostId = string.Empty;
 
         #region IEnumerable implementation
 
@@ -25,6 +26,8 @@ namespace Shield.HardwareCom.Models
 
         public long Timestamp { get; set; }
         public string Id { get { return _messageId; } set { AssaignID(value); } }
+        public string HostId { get { return _messageHostId; } set { AssighHostID(value); } }
+
         public MessageType Type { get; set; } = MessageType.Unknown;
         public Direction Direction { get; set; } = Direction.Unknown;
         public Errors Errors { get; set; } = Errors.None;
@@ -54,6 +57,12 @@ namespace Shield.HardwareCom.Models
 
             Commands?.ForEach(command => command.Id = _messageId);
             return _messageId;
+        }
+
+        public void AssighHostID(string id)
+        {
+            _messageHostId = id.ToUpperInvariant();
+            Commands?.ForEach(command => command.HostId = _messageHostId);
         }
 
         public bool Add(ICommandModel command)

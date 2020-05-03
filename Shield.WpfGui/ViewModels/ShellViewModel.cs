@@ -20,6 +20,7 @@ namespace Shield.WpfGui.ViewModels
         private readonly ISettings _settings;
         private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
         private readonly ICommandModelFactory _commandFactory;
+        private readonly string _hostId;
         private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
         private readonly IMessagingPipeline _pipeline;
         private string _selectedCommand;
@@ -55,6 +56,7 @@ namespace Shield.WpfGui.ViewModels
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+            _hostId = _settings.ForTypeOf<IApplicationSettingsModel>().HostId;
             _settings.LoadFromFile();
             _settings.SaveToFile();
 
@@ -70,7 +72,7 @@ namespace Shield.WpfGui.ViewModels
             };
             _pipeline.ConfirmationTimeout += (o, e) =>
             {
-                MessageBox.Show($"Confirmation timeout - {e.Id} - {e.Type}");
+                MessageBox.Show($"Confirmation timeout - {e.Id} - {e.Type} - HOST: {e.HostId}");
             };
         }
 
@@ -482,6 +484,7 @@ namespace Shield.WpfGui.ViewModels
             {
                 message.Add(c);
             }
+            message.AssighHostID(_hostId);
 
             //message.Timestamp = Timestamp.TimestampNow;
             //message.AssaignID(_idGenerator.GetNewID());

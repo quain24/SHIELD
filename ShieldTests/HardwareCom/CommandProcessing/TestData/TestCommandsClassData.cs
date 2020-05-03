@@ -29,10 +29,11 @@ namespace ShieldTests.HardwareCom.CommandProcessing.TestData
                 return;
             string data;
             string commandType = GetCommandTypeString(commandEnumValue);
+            string hostId = _settings.HostId.ToUpperInvariant();
             string id = commandType; // The same value for simplification
 
-            var command = _commandFactory.Create((CommandType)commandEnumValue, id);
-            var commandString = _settings.Separator + commandType + _settings.Separator + id + _settings.Separator;
+            var command = _commandFactory.Create((CommandType)commandEnumValue, id, 0, "", hostId);
+            var commandString = _settings.Separator + hostId + _settings.Separator + commandType + _settings.Separator + id + _settings.Separator;
 
             if (commandEnumValue == (int)CommandType.Data)
             {

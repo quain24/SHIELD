@@ -8,5 +8,6 @@
         char Separator { get; set; }
         char Filler { get; set; }
         int HostIdSize { get; set; }
+        string HostId { get; set; }
     }
 }

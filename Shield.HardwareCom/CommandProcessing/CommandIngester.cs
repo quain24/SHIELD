@@ -160,18 +160,18 @@ namespace Shield.HardwareCom.CommandProcessing
         private IMessageModel GetMessageToWorkWithBasedOn(ICommandModel command)
         {
             lock (_processingLock)
-                return _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage, command.TimeStamp);
+                return _incompleteMessages.GetOrAdd(command.Id, CreateNewIncomingMessage, command);
         }
 
         private bool IsComplete(IMessageModel message) =>
             _completness.IsComplete(message);
 
-        private IMessageModel CreateNewIncomingMessage(string id, long timestamp)
+        private IMessageModel CreateNewIncomingMessage(string id, ICommandModel commandToBaseOn)
         {
             if (string.IsNullOrWhiteSpace(id))
                 throw new ArgumentException("Id cannot be empty", nameof(id));
 
-            IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id, timestampOverride: timestamp);
+            IMessageModel message = _msgFactory.CreateNew(direction: Enums.Direction.Incoming, id: id, timestampOverride: commandToBaseOn.TimeStamp, hostId: commandToBaseOn.HostId);
             _idGenerator.MarkAsUsedUp(id);
             return message;
         }

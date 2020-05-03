@@ -35,7 +35,7 @@ namespace Shield.HardwareCom.RawDataProcessing
             _commandPattern = commandPattern;
             _separator = separator;
 
-            CommandLength = _commandTypeLength + _idLength + 3;
+            CommandLength = _hostIdLength + _commandTypeLength + _idLength + 4;
             CommandLengthWithData = CommandLength + _dataPackLength; // no + 1, because there is no separator after data portion
 
             // TODO check everything here before modifying passed pattern that will include host id 
@@ -125,8 +125,8 @@ namespace Shield.HardwareCom.RawDataProcessing
 
         private string GetCommandString()
         {
-            if ((BufferStart + 1 + _commandTypeLength) <= _buffer.Length)
-                return _buffer.Substring(BufferStart + 1, _commandTypeLength);
+            if ((1 + _hostIdLength + 1 + _commandTypeLength) <= _buffer.Length)
+                return _buffer.Substring(1 + _hostIdLength + 1, _commandTypeLength);
             else
                 return string.Empty;
         }

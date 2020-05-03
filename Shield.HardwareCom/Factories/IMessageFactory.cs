@@ -9,6 +9,7 @@ namespace Shield.HardwareCom.Factories
             Direction direction = Direction.Unknown,
             MessageType type = MessageType.Unknown,
             string id = "",
+            string hostId = "",
             long timestampOverride = 0);
     }
 }

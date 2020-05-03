@@ -39,6 +39,7 @@ namespace Shield.WpfGui.AutofacModules
                    .Except<NormalTimeoutFactory>()
                    .Except<NullTimeoutFactory>()
                    .Except<TimeoutFactory>()
+                   .Except<ConfirmationFactory>(cf => cf.As<IConfirmationFactory>().WithParameter(new ResolvedParameter((pi, _) => pi.Name == "hostId", (_, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().HostId)))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
@@ -98,7 +99,8 @@ namespace Shield.WpfGui.AutofacModules
                                                                  appSet.CommandTypeSize,
                                                                  appSet.IdSize,
                                                                  appSet.DataSize,
-                                                                 appSet.HostIdSize);
+                                                                 appSet.HostIdSize,
+                                                                 appSet.HostId);
 
                     return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
                 })
@@ -111,7 +113,7 @@ namespace Shield.WpfGui.AutofacModules
                                                       appSet.IdSize,
                                                       appSet.HostIdSize,
                                                       appSet.DataSize,
-                                                      new Regex($"[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
+                                                      new Regex($"[{appSet.Separator}][a-zA-Z0-9]{{{appSet.HostIdSize}}}[{appSet.Separator}][0-9]{{{appSet.CommandTypeSize}}}[{appSet.Separator}][a-zA-Z0-9]{{{appSet.IdSize}}}[{appSet.Separator}]"),
                                                       appSet.Separator);
                     })
                    .As<IIncomingDataPreparer>();

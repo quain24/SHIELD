@@ -28,11 +28,12 @@ namespace ShieldTests.HardwareCom.CommandProcessing.TestData
         private void GenerateCommand(int commandEnumValue, bool addDataPack)
         {
             string data = "";
+            string hostId = _settings.HostId.ToUpperInvariant();
             string commandType = GetCommandTypeString(commandEnumValue);
             string id = commandType; // The same value for simplification
 
-            var command = _commandFactory.Create(CommandType.Unknown, id);
-            var commandString = _settings.Separator + commandType + _settings.Separator + id + _settings.Separator;
+            var command = _commandFactory.Create(CommandType.Unknown, id, 0, "", hostId);
+            var commandString = _settings.Separator + hostId + _settings.Separator + commandType + _settings.Separator + id + _settings.Separator;
 
             if (addDataPack)
             {

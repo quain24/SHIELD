@@ -15,6 +15,7 @@ namespace Shield.HardwareCom.CommandProcessing
         private readonly CommandTranslatorSettings _settings;
         private readonly ICommandModelFactory _factory;
         private string _idFiller;
+        private string _hostIdFiller;
 
         public CommandTranslator(CommandTranslatorSettings settings, ICommandModelFactory factory)
         {
@@ -22,7 +23,10 @@ namespace Shield.HardwareCom.CommandProcessing
             _factory = factory ?? throw new ArgumentNullException(nameof(factory));
 
             GenerateIDFiller();
+            GenerateHostIDFiller();
         }
+
+        private void GenerateHostIDFiller() => _hostIdFiller = _settings.Filler.ToString().PadLeft(_settings.HostIdLength, _settings.Filler);
 
         private string GenerateIDFiller() => _idFiller = _settings.Filler.ToString().PadLeft(_settings.IdLength, _settings.Filler);
 
@@ -39,21 +43,27 @@ namespace Shield.HardwareCom.CommandProcessing
 
         private ICommandModel CreateFromValidLengthRawData(string data)
         {
+            var hostId = GetHostId(data);
             var type = GetCommandTypeValue(data);
             var id = GetID(type, data);
             var dataPack = GetDataPack(type, data);
 
-            return _factory.Create(type, id, Timestamp.TimestampNow, dataPack);
+            return _factory.Create(type, id, Timestamp.TimestampNow, dataPack, hostId);
+        }
+
+        private string GetHostId(string data)
+        {
+            return data.Substring(1, _settings.HostIdLength);
         }
 
         private ICommandModel CreateFromInvalidRawData(string data)
         {
-            return _factory.Create(CommandType.Error, _idFiller, Timestamp.TimestampNow, ParseErrorDataPack(data));
+            return _factory.Create(CommandType.Error, _idFiller, Timestamp.TimestampNow, ParseErrorDataPack(data), _hostIdFiller);
         }
 
         private CommandType GetCommandTypeValue(string data)
         {
-            if (int.TryParse(data.Substring(1, _settings.CommandTypeLength), out int value))
+            if (int.TryParse(data.Substring(1 + _settings.HostIdLength + 1, _settings.CommandTypeLength), out int value))
                 return IsATypeOfCommand(value) ? (CommandType)value : CommandType.Unknown;
             return CommandType.Error;
         }
@@ -66,7 +76,7 @@ namespace Shield.HardwareCom.CommandProcessing
 
         private string GetID(ICommandModel command) => command.Id;
 
-        private string ParseId(string data) => data.Substring(_settings.CommandTypeLength + 2, _settings.IdLength);
+        private string ParseId(string data) => data.Substring(1 + _settings.HostIdLength + 1 + _settings.CommandTypeLength + 1, _settings.IdLength);
 
         private string GetDataPack(CommandType type, string data)
         {
@@ -101,6 +111,7 @@ namespace Shield.HardwareCom.CommandProcessing
 
             var command = new StringBuilder(_settings.Separator.ToString());
 
+            command.Append(GetHostId(givenCommand)).Append(_settings.Separator);
             command.Append(GetCommandType(givenCommand)).Append(_settings.Separator);
             command.Append(GetID(givenCommand)).Append(_settings.Separator);
 
@@ -108,6 +119,16 @@ namespace Shield.HardwareCom.CommandProcessing
                 command.Append(GetDataPack(givenCommand));
 
             return command.ToString();
+        }
+
+        private string GetHostId(ICommandModel command)
+        {
+            var id = command.HostId.ToUpperInvariant();
+            if (id.Length > _settings.HostIdLength)
+                id = id.Substring(0, _settings.HostIdLength);
+            else if (id.Length < _settings.HostIdLength)
+                id = id.PadLeft(_settings.HostIdLength, '0');
+            return id;
         }
 
         private string GetCommandType(ICommandModel command) => ((int)command.CommandType).ToString().ToUpperInvariant().PadLeft(_settings.CommandTypeLength, '0');

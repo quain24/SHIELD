@@ -8,11 +8,14 @@ namespace Shield.HardwareCom.Factories
     {
         private ICommandModelFactory _commandFactory;
         private IMessageFactory _messageFactory;
+        private readonly string _hostId;
 
-        public ConfirmationFactory(ICommandModelFactory commandFactory, IMessageFactory messageFactory)
+        public ConfirmationFactory(ICommandModelFactory commandFactory, IMessageFactory messageFactory, string hostId)
         {
+
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
             _messageFactory = messageFactory ?? throw new ArgumentNullException(nameof(messageFactory));
+            _hostId = hostId;
         }
 
         public IMessageModel GenerateConfirmationOf(IMessageModel message)
@@ -60,6 +63,7 @@ namespace Shield.HardwareCom.Factories
 
             // Assigns id also to all commands inside
             confirmation.AssaignID(message.Id);
+            confirmation.AssighHostID(_hostId);
 
             return confirmation;
         }

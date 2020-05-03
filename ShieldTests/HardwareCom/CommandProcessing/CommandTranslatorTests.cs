@@ -16,7 +16,7 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         private static readonly CommandTranslatorSettings _settings =
             new CommandTranslatorSettings(
                 _defaults.Separator, _defaults.Filler, _defaults.CommandLength,
-                _defaults.IDLength, _defaults.DataPackLength, _defaults.HostIDLength);
+                _defaults.IDLength, _defaults.DataPackLength, _defaults.HostIDLength, _defaults.HostId);
 
         private readonly ICommandModelFactory _factory =
             new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
@@ -36,6 +36,7 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         {
             var actual = CommandTranslator.FromString(commandStrings);
 
+            Assert.True(expected.HostId == actual.HostId, Message("Host ID", expected.HostId, actual.HostId));
             Assert.True(expected.Id == actual.Id, Message("ID", expected.Id, actual.Id));
             Assert.True(expected.CommandType == actual.CommandType, Message("CommandType", expected.Id, actual.Id));
             Assert.True(expected.Data == actual.Data, Message("Data", expected.Id, actual.Id));
@@ -47,6 +48,7 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         {
             var actual = CommandTranslator.FromString(commandString);
 
+            Assert.True(expected.HostId == actual.HostId, Message("Host ID", expected.HostId, actual.HostId));
             Assert.True(expected.Id == actual.Id, Message("ID", expected.Id, actual.Id));
             Assert.True(expected.CommandType == actual.CommandType, Message("CommandType", expected.Id, actual.Id));
             Assert.True(expected.Data == actual.Data, Message("Data", expected.Id, actual.Id));
@@ -58,6 +60,7 @@ namespace ShieldTests.HardwareCom.CommandProcessing
         {
             var actual = CommandTranslator.FromString(commandString);
 
+            Assert.True(expected.HostId == actual.HostId, Message("Host ID", expected.HostId, actual.HostId));
             Assert.True(expected.Id == actual.Id, Message("ID", expected.Id, actual.Id));
             Assert.True(expected.CommandType == actual.CommandType, Message("CommandType", expected.Id, actual.Id));
             Assert.True(expected.Data == actual.Data, Message("Data", expected.Id, actual.Id));

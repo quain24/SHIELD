@@ -352,7 +352,7 @@ namespace COM6TestSender
                 int num = 0;
                 int counter = 0;
 
-                string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+                string pattern = $@"[*][a-zA-Z0-9]{{4}}[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
 
                 Regex pat = new Regex(pattern);
 
@@ -436,7 +436,7 @@ namespace COM6TestSender
             }
             else if (Int32.Parse(a) == 12)
             {
-                string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+                string pattern = $@"[*][a-zA-Z0-9]{{4}}[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
                 int num = 0;
 
                 Regex pat = new Regex(pattern);
@@ -455,6 +455,7 @@ namespace COM6TestSender
                 apset.DataSize = 30;
                 apset.Filler = '.';
                 apset.IdSize = 4;
+                apset.HostId = "TEST";
                 apset.Separator = '*';
                 apset.HostIdSize = 4;
                 var portset = new Shield.Data.Models.SerialPortSettingsModel();
@@ -470,7 +471,7 @@ namespace COM6TestSender
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
                 var sett = new Settings(sm);
                 var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
-                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize);
+                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
 
                 var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
@@ -484,17 +485,17 @@ namespace COM6TestSender
                     datalicz++;
                     string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID());
-                    msg.Add(comFac.Create(CommandType.HandShake));
-                    msg.Add(comFac.Create(CommandType.Master));
-                    var datacom = comFac.Create(CommandType.Data); datacom.Data = data;
-                    var datacom2 = comFac.Create(CommandType.Data); datacom2.Data = data2;
-                    var datacom3 = comFac.Create(CommandType.Data); datacom3.Data = data3;
+                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, appSet.HostId, _idGenerator.GetNewID());
+                    msg.Add(comFac.Create(type: CommandType.HandShake, hostId: appSet.HostId));
+                    msg.Add(comFac.Create(type: CommandType.Master, hostId: appSet.HostId));
+                    var datacom = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom.Data = data;
+                    var datacom2 = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom2.Data = data2;
+                    var datacom3 = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom3.Data = data3;
                     msg.Add(datacom);
                     msg.Add(datacom2);
                     msg.Add(datacom3);
                     if (licz % 10 != 0)
-                        msg.Add(comFac.Create(CommandType.EndMessage));
+                        msg.Add(comFac.Create(type: CommandType.EndMessage, hostId: appSet.HostId));
 
                     foreach (var c in msg.Commands)
                     {
@@ -548,7 +549,7 @@ namespace COM6TestSender
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
                 sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
                 var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
-                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize);
+                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
 
                 var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
@@ -565,7 +566,7 @@ namespace COM6TestSender
                     datalicz++;
                     string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID());
+                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, appSet.HostId, _idGenerator.GetNewID());
                     msg.Add(comFac.Create(CommandType.HandShake));
                     msg.Add(comFac.Create(CommandType.Master));
                     var datacom = comFac.Create(CommandType.Data); datacom.Data = data;

@@ -12,8 +12,8 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
 
         public IncomingDataPreparerTests()
         {
-            TestPreparer = new IncomingDataPreparer(4, 4, 10,
-                                                     new Regex("[*][0-9]{4}[*][a-zA-Z0-9]{4}[*]"),
+            TestPreparer = new IncomingDataPreparer(4, 4, 4,10,
+                                                     new Regex("[*][a-zA-Z0-9]{4}[*][0-9]{4}[*][a-zA-Z0-9]{4}[*]"),
                                                      '*');
         }
 
@@ -29,10 +29,10 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
         }
 
         [Theory]
-        [InlineData("*0018*0001*0123456789")]
-        [InlineData("*0018*0001*0123456789", "*0018*0002*1231231231")]
-        [InlineData("*0018*0001*0123456789", "*0018*0002*1231231231", "*0018*0003*1231231231")]
-        [InlineData("*0001*0001*", "*0018*0002*1231231231")]
+        [InlineData("*UNIT*0018*0001*0123456789")]
+        [InlineData("*UNIT*0018*0001*0123456789", "*UNIT*0018*0002*1231231231")]
+        [InlineData("*UNIT*0018*0001*0123456789", "*UNIT*0018*0002*1231231231", "*UNIT*0018*0003*1231231231")]
+        [InlineData("*UNIT*0001*0001*", "*UNIT*0018*0002*1231231231")]
         public void DataSearh_will_return_list_of_commands_given_good_data(params string[] data)
         {
             var actual = new List<string>();
@@ -48,10 +48,10 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
         }
 
         [Theory]
-        [InlineData("*0018*0001*012345678901234567890123456789", "*0018*0001*0123456789", "01234567890123456789")]
-        [InlineData("*0018*0001*0123456789*0018*0002*012345678901234567890123456789", "*0018*0001*0123456789", "*0018*0002*0123456789", "01234567890123456789")]
-        [InlineData("123456789*0018*0001*0123456789*0018*0002*0123456789", "123456789", "*0018*0001*0123456789", "*0018*0002*0123456789")]
-        [InlineData("*0018*0001*0123456789123456789*0018*0002*0123456789", "*0018*0001*0123456789", "123456789", "*0018*0002*0123456789")]
+        [InlineData("*UNIT*0018*0001*012345678901234567890123456789", "*UNIT*0018*0001*0123456789", "01234567890123456789")]
+        [InlineData("*UNIT*0018*0001*0123456789*UNIT*0018*0002*012345678901234567890123456789", "*UNIT*0018*0001*0123456789", "*UNIT*0018*0002*0123456789", "01234567890123456789")]
+        [InlineData("123456789*UNIT*0018*0001*0123456789*UNIT*0018*0002*0123456789", "123456789", "*UNIT*0018*0001*0123456789", "*UNIT*0018*0002*0123456789")]
+        [InlineData("*UNIT*0018*0001*0123456789123456789*UNIT*0018*0002*0123456789", "*UNIT*0018*0001*0123456789", "123456789", "*UNIT*0018*0002*0123456789")]
         public void DataSearh_should_return_good_command_and_trash_given_good_data_and_bad_data_with_no_separator_in_bad_data(string data, params string[] expectedData)
         {
             var actual = TestPreparer.DataSearch(data);
@@ -63,8 +63,8 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
         }
 
         [Theory]
-        [InlineData("0000000000000")]
-        [InlineData("123123123123")]
+        [InlineData("00000000000000000000")]
+        [InlineData("12312312312312312123")]
         public void DataSearch_should_return_bad_data_if_given_bad_data_longer_than_command_length_with_no_separator(string data)
         {
             var actual = TestPreparer.DataSearch(data);
@@ -74,27 +74,27 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
         }
 
         [Theory]
-        [InlineData("*0018*0001*01234567",
-                    "*0018*0002*0123456789")]
-        [InlineData("*0018*0001*01234567",
-                    "*0018*0002*0123456789",
-                    "*0018*0001*01234567",
-                    "*0018*0002*0123456789")]
-        [InlineData("*0018*0001*01234567",
-                    "*0018*0001*01234567",
-                    "*0018*0001*01234567",
-                    "*0018*0002*0123456789",
-                    "*0018*0001*01234567",
-                    "*0018*0002*0123456789")]
-        [InlineData("*0018*0001*01234567",
-                    "*0018*0001*",
-                    "*0018*0001*01234567",
-                    "*0018*0002*0123456789",
-                    "*0018*0001*01234567",
+        [InlineData("*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0002*0123456789")]
+        [InlineData("*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0002*0123456789",
+                    "*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0002*0123456789")]
+        [InlineData("*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0002*0123456789",
+                    "*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0002*0123456789")]
+        [InlineData("*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0001*",
+                    "*UNIT*0018*0001*01234567",
+                    "*UNIT*0018*0002*0123456789",
+                    "*UNIT*0018*0001*01234567",
                     "*********",
-                    "*0003*0001*",
-                    "*0018*0002*0123456789",
-                    "*0001*0001*")]
+                    "*UNIT*0003*0001*",
+                    "*UNIT*0018*0002*0123456789",
+                    "*UNIT*0001*0001*")]
         public void DataSearch_returns_junk_and_data_given_too_short_data_command_and_normal_data_command_no_junk_at_end(params string[] expectedData)
         {
             var data = string.Concat(expectedData);
@@ -123,10 +123,10 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
         }
 
         [Theory]
-        [InlineData("*0018*0001*", "0123456789")]
-        [InlineData("*0018*0001*", "012345", "6789")]
-        [InlineData("*0018", "*0001*", "012345", "6789")]
-        [InlineData("*0001", "*", "00", "01*")]
+        [InlineData("*UNIT*0018*0001*", "0123456789")]
+        [InlineData("*UNIT*0018*0001*", "012345", "6789")]
+        [InlineData("*UNIT*0018", "*0001*", "012345", "6789")]
+        [InlineData("*UNIT*0001", "*", "00", "01*")]
         public void Will_compose_whole_command_given_two_or_more_proper_partials_in_order(params string[] expectedData)
         {
             var expected = string.Concat(expectedData);
@@ -141,7 +141,7 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
         [Theory]
         [InlineData("***aasdjhasfkk*skhf*sdkfhskhfkshf90489235h5*", "***aasdjhasfkk*skhf*sdkfhskhfkshf90489235h5")] // Last separator in buffer in case of future data
         [InlineData("sdofghjdfilghjsdfgh", "sdofghjdfilghjsdfgh")]
-        [InlineData("*00AB*0001*", "*00AB*0001")]    // Last separator in buffer in case of future data
+        [InlineData("*00AB*0001*00000", "*00AB*0001")]    // Last separator in buffer in case of future data
         public void Returns_junk_given_completly_bad_data(string data, params string[] expectedData)
         {
             var actual = TestPreparer.DataSearch(data);
@@ -152,9 +152,9 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
 
         [Theory]
         [InlineData("***gsdfgg*",
-                    "**0001*0001**000A*0001**0018*0001*adkkk",
-                    "dkajsd*0002*0002*a___*0018*0003*0123456789*0003*AAAA****",
-                    "***gsdfgg**", "*0001*0001*", "*000A*0001*", "*0018*0001*adkkkdkajs", "d", "*0002*0002*", "a___", "*0018*0003*0123456789", "*0003*AAAA*")]
+                    "**UNIT*0001*0001**000A*0001**UNIT*0018*0001*adkkk",
+                    "dkajsd*UNIT*0002*0002*a___*UNIT*0018*0003*0123456789*UNIT*0003*AAAA****",
+                    "***gsdfgg**", "*UNIT*0001*0001*", "*000A*0001*", "*UNIT*0018*0001*adkkkdkajs", "d", "*UNIT*0002*0002*", "a___", "*UNIT*0018*0003*0123456789", "*UNIT*0003*AAAA*")]
         public void Returns_good_and_bad_commands_given_good_and_bad_commands_or_partials(params string[] expectedData)
         {
             var split = new List<string>() { expectedData[0], expectedData[1], expectedData[2] };

@@ -16,6 +16,7 @@ namespace Shield.HardwareCom.Models
         bool IsTransfered { get; set; }
         MessageType Type { get; set; }
         int CommandCount { get; }
+        string HostId { get; set; }
 
         bool Add(ICommandModel command);
 
@@ -26,5 +27,6 @@ namespace Shield.HardwareCom.Models
         bool Remove(ICommandModel command);
 
         bool Replace(ICommandModel target, ICommandModel replacement);
+        void AssighHostID(string id);
     }
 }

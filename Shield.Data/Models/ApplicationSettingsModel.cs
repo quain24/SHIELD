@@ -74,6 +74,12 @@ namespace Shield.Data.Models
             set => _hostIdlength = value >= 4 ? value : 4;
         }
 
+        public string HostId
+        {
+            get => _hostId;
+            set => _hostId = value;
+        }
+
         /// <summary>
         /// Size of CommandType value portion of every message - minimum value of 4. Should always be the same for all devices
         /// </summary>
