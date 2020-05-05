@@ -485,7 +485,7 @@ namespace COM6TestSender
                     datalicz++;
                     string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, appSet.HostId, _idGenerator.GetNewID());
+                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID(), appSet.HostId);
                     msg.Add(comFac.Create(type: CommandType.HandShake, hostId: appSet.HostId));
                     msg.Add(comFac.Create(type: CommandType.Master, hostId: appSet.HostId));
                     var datacom = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom.Data = data;

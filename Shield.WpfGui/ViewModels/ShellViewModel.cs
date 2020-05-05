@@ -466,10 +466,7 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (NewMessageCommands.Count < 1 || !_pipeline.IsOpen || _sending)
-                    return false;
-
-                return true;
+                return NewMessageCommands.Count > 0 && _pipeline.IsOpen && !_sending;
             }
         }
 

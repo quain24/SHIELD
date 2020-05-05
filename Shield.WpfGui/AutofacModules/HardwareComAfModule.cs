@@ -39,7 +39,11 @@ namespace Shield.WpfGui.AutofacModules
                    .Except<NormalTimeoutFactory>()
                    .Except<NullTimeoutFactory>()
                    .Except<TimeoutFactory>()
-                   .Except<ConfirmationFactory>(cf => cf.As<IConfirmationFactory>().WithParameter(new ResolvedParameter((pi, _) => pi.Name == "hostId", (_, ctx) => ctx.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>().HostId)))
+                   .Except<ConfirmationFactory>(cf => cf.As<IConfirmationFactory>()
+                                                        .WithParameter(new ResolvedParameter(
+                                                            (pi, _) => pi.Name == "hostId",
+                                                            (_, ctx) => ctx.Resolve<ISettings>()
+                                                                           .ForTypeOf<IApplicationSettingsModel>().HostId)))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             #region Communication Device Factory and required devices
