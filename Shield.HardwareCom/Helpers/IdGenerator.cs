@@ -19,13 +19,13 @@ namespace Shield.HardwareCom.Helpers
         {
             _idLength = idLength > 0
                 ? idLength
-                : throw new ArgumentOutOfRangeException(nameof(idLength), "Cannot create IdGenerator with id length less than 0");
+                : throw new ArgumentOutOfRangeException(nameof(idLength), "Cannot create IdGenerator with id length 0 or less");
             _bufferSize = CalculateBufferSize(_idLength);
             _autoResetIfAllIdsUsedUp = autoResetIfAllIdsUsedUp;
         }
 
         /// <summary>
-        /// Generate alpha-numeric random <c>id</c> of given length. Static class.
+        /// Generate alpha-numeric random <c>id</c> of given length.
         /// </summary>
         /// <returns>A new ID string</returns>
         public string GetNewID()
@@ -64,7 +64,7 @@ namespace Shield.HardwareCom.Helpers
         {
             return new string(Enumerable
                 .Range(1, _idLength)
-                .Select(A => CHARS[_randomizer.Next(CHARS.Length)]).ToArray())
+                .Select(_ => CHARS[_randomizer.Next(CHARS.Length)]).ToArray())
                 .ToUpper(CultureInfo.InvariantCulture);
         }
 
