@@ -42,7 +42,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\ITimestamp.cs" />
     <Compile Include="Commands\RawToCommandTranslator.cs" />
+    <Compile Include="Commands\Timeout.cs" />
+    <Compile Include="Commands\Timestamp.cs" />
+    <Compile Include="Commands\TimestampGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawData\CommandPartValidators\AllAlphanumericAllowedValidator.cs" />
     <Compile Include="RawData\CommandPartValidators\AllwaysGoodValidator.cs" />

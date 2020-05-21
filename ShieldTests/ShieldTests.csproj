@@ -97,6 +97,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\TimestampTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
