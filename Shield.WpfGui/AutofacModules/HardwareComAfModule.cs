@@ -110,10 +110,11 @@ namespace Shield.WpfGui.AutofacModules
                 })
                 .As<ICommandTranslator>();
 
+            // TODO Testing here //IncomingDataPreparer
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
-                        return new IncomingDataPreparer(appSet.CommandTypeSize,
+                        return new RawDataPreparer(appSet.CommandTypeSize,
                                                       appSet.IdSize,
                                                       appSet.HostIdSize,
                                                       appSet.DataSize,
@@ -137,7 +138,7 @@ namespace Shield.WpfGui.AutofacModules
             builder.RegisterType<DecodingAnalyzer>()
                    .As<IMessageAnalyzer>()
                    .Keyed<IMessageAnalyzer>(MessageAnalyzerType.Decoding);
-
+            
             builder.RegisterType<IncomingMessageProcessor>()
                    .As<IIncomingMessageProcessor>();
 

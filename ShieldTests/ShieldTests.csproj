@@ -104,12 +104,18 @@
     <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
+    <Compile Include="Messaging\DataPartValidatorTests.cs" />
+    <Compile Include="Messaging\IDPartTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
       <Project>{2B51F18A-558A-4F92-83F1-92BD0395C875}</Project>
       <Name>Shield.HardwareCom</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shield.Messaging\Shield.Messaging.csproj">
+      <Project>{861f7a15-56db-4d7c-a8c0-d9df4cafe0c7}</Project>
+      <Name>Shield.Messaging</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>

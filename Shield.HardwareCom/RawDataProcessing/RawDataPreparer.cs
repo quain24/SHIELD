@@ -1,20 +1,23 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Shield.HardwareCom.RawDataProcessing
 {
-    public class IncomingDataPreparer : IIncomingDataPreparer
+    public class RawDataPreparer : IIncomingDataPreparer
     {
         private const int IndexNotFound = -1;
         private const int BufferStart = 0;
 
         private readonly int _dataCommandNumber = (int)Enums.CommandType.Data;
         private readonly int _commandTypeLength;
-        private readonly int _hostIdLength;
         private readonly int _idLength;
+        private readonly object _commandTypeIndex;
+        private readonly int _hostIdLength;
         private readonly int _dataPackLength;
-        private readonly char _separator;
-        private readonly Regex _commandPattern;
+
+        private char Separator { get; }
+        private Regex CommandPattern { get; }
 
         private List<string> _outputCollection = new List<string>();
         private int _patternIndex = IndexNotFound;
@@ -26,14 +29,44 @@ namespace Shield.HardwareCom.RawDataProcessing
 
         internal int CommandLength { get; }
 
-        public IncomingDataPreparer(int commandTypeLength, int idLength, int hostIdLength, int dataPackLength, Regex commandPattern, char separator)
+        private bool BufferTooShort { get => _buffer.Length < CommandLength; }
+
+        public RawDataPreparer(ICommandConfiguration configuration)
+        {
+            _commandTypeLength = configuration.CommandTypeLength;
+            _commandTypeIndex = configuration.CommandTypeIndex;
+            _hostIdLength = configuration.HostIDLength;
+            CommandPattern = configuration.CommandPattern;
+            Separator = configuration.Separator;
+            CommandLength = configuration.CommandLength;
+            CommandLengthWithData = configuration.CommandLengthWithDataPack;
+        }
+
+        //public RawDataPreparer(int commandTypeLength, int idLength, int hostIdLength, int dataPackLength, Regex commandPattern, char separator)
+        //{
+        //    _commandTypeLength = commandTypeLength;
+        //    _hostIdLength = hostIdLength;
+        //    CommandPattern = commandPattern;
+        //    Separator = separator;
+        //}
+
+        // find pattern
+        // trim to pattern
+        // Is it normal command or data?
+        // if normal, then extract and add to out
+        // if data, then check if data pack is good.
+        //  - not good - trash
+        //  - good - to out
+        //  - partial - to buffer
+
+        public RawDataPreparer(int commandTypeLength, int idLength, int hostIdLength, int dataPackLength, Regex commandPattern, char separator)
         {
             _commandTypeLength = commandTypeLength;
             _idLength = idLength;
             _hostIdLength = hostIdLength;
             _dataPackLength = dataPackLength;
-            _commandPattern = commandPattern;
-            _separator = separator;
+            CommandPattern = commandPattern;
+            Separator = separator;
 
             CommandLength = _hostIdLength + _commandTypeLength + _idLength + 4;
             CommandLengthWithData = CommandLength + _dataPackLength; // no + 1, because there is no separator after data portion
@@ -80,7 +113,7 @@ namespace Shield.HardwareCom.RawDataProcessing
 
         private int FindPatternIndexInBuffer()
         {
-            Match match = _commandPattern.Match(_buffer);
+            Match match = CommandPattern.Match(_buffer);
             return match.Success
                 ? match.Index
                 : IndexNotFound;
@@ -119,7 +152,7 @@ namespace Shield.HardwareCom.RawDataProcessing
             }
         }
 
-        private int FindLastSeparatorIndexInBuffer() => _buffer.LastIndexOf(_separator);
+        private int FindLastSeparatorIndexInBuffer() => _buffer.LastIndexOf(Separator);
 
         private string GetCommandString()
         {
@@ -143,8 +176,8 @@ namespace Shield.HardwareCom.RawDataProcessing
         private int SeparatorInDataPackIndex()
         {
             return IsDataPackLongEnough()
-                ? _buffer.IndexOf(_separator, CommandLength)
-                : _buffer.IndexOf(_separator, CommandLength, _buffer.Length - CommandLength);
+                ? _buffer.IndexOf(Separator, CommandLength)
+                : _buffer.IndexOf(Separator, CommandLength, _buffer.Length - CommandLength);
         }
 
         private void HandleInvalidDataPack(int separatorIndex)

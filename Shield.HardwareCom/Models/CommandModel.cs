@@ -6,14 +6,14 @@ namespace Shield.HardwareCom.Models
     /// <summary>
     /// Basic type for communication with a machine - single command encapsulates a single command type or a single data 'row'
     /// </summary>
-    public class CommandModel : ICommandModel
+    public class CommandModel : ICommandModel, IEquatable<CommandModel>
     {
         private string _hostId = string.Empty;
         private string _id = string.Empty;
 
         #region IEquatable<ICommandModel> implementation
 
-        public bool Equals(ICommandModel other)
+        public bool Equals(CommandModel other)
         {
             if (other is null)
                 return false;

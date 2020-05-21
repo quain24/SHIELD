@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Shield.Extensions
 {
@@ -13,6 +15,18 @@ namespace Shield.Extensions
                     sb.Append(c);
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Splits given <see cref="string"/> into <see cref="IEnumerable{String}">IEnumerable&lt;string&gt;</see> collection
+        /// using provided <see cref="char"/>.
+        /// </summary>
+        /// <param name="value"><see cref="string"/> to be splitted</param>
+        /// <param name="splitter"><see cref="char"/> with which given <see cref="string"/> will be splitted</param>
+        /// <returns><see cref="IEnumerable{String}">IEnumerable&lt;string&gt;</see> filled with splitted substrings or empty one if none could be extracted</returns>
+        public static IEnumerable<string> SplitBy(this string value, char splitter)
+        {
+            return value?.Split(new[] { splitter }, StringSplitOptions.None) ?? Array.Empty<string>();
         }
     }
 }

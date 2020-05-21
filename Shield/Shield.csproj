@@ -80,6 +80,7 @@
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegexEscapeChars.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />

@@ -91,7 +91,7 @@ namespace Shield.HardwareCom.Adapters
         {
             lock (_lock)
             {
-                if (_port != null && !_port.IsOpen && _wasSetupCorrectly)
+                if (!_port.IsOpen && _wasSetupCorrectly)
                 {
                     try
                     {
@@ -134,22 +134,21 @@ namespace Shield.HardwareCom.Adapters
         /// </summary>
         public async Task<string> ReceiveAsync(CancellationToken ct)
         {
-            if (_port.IsOpen)
+            if (!_port.IsOpen)
+                return string.Empty;
+
+            try
             {
-                try
-                {
-                    ct.ThrowIfCancellationRequested();
-                    int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
-                    string rawData = _encoding.GetString(_buffer, 0, bytesRead);
-                    OnDataReceived(rawData);
-                    return rawData;
-                }
-                catch (IOException ex)
-                {
-                    throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ex, ct);
-                }
+                ct.ThrowIfCancellationRequested();
+                int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
+                string rawData = _encoding.GetString(_buffer, 0, bytesRead);
+                OnDataReceived(rawData);
+                return rawData;
             }
-            return string.Empty;
+            catch (IOException ex)
+            {
+                throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ex, ct);
+            }
         }
 
         /// <summary>
@@ -237,12 +236,8 @@ namespace Shield.HardwareCom.Adapters
 
             if (disposing)
             {
-                if (_port != null)
-                {
-                    if (_port.IsOpen)
-                        Close(); // no need for dispose - closing is equal
-                                 //CloseAsync();
-                }
+                if (_port?.IsOpen ?? false)
+                    _port?.Close();
             }
             _buffer = null;
             _disposed = true;
