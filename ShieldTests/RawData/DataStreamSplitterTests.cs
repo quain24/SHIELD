@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ShieldTests.RawData;
 
 namespace Shield.Messaging.RawData.Tests
 {
@@ -51,6 +52,16 @@ namespace Shield.Messaging.RawData.Tests
             var expectedData = new List<string>() { data[3], data[4] };
 
             Assert.Equal(expectedData, actual);
+        }
+
+        [Theory]
+        [ClassData(typeof(DataStreamSplitterTestData))]
+        public void Given_splitted_raw_good_and_bad_data_should_return_raw_commands(List<string> data, List<string> expected)
+        {
+            var actual = new List<string>();
+            data.ForEach(d => actual.AddRange(Splitter.Split(d)));
+
+            Assert.Equal(actual, expected);
         }
     }
 }
