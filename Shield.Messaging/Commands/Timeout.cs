@@ -11,6 +11,6 @@ namespace Shield.Messaging.Commands
 
         public int Value { get; }
 
-        public bool IsExceeded(Timestamp timestamp) => TimestampFactory.Timestamp.Difference(timestamp) < Value;
+        public bool IsExceeded(Timestamp timestamp) => TimestampFactory.Timestamp.Difference(timestamp) > Value;
     }
 }

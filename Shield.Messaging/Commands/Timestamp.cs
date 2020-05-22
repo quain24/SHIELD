@@ -62,7 +62,5 @@ namespace Shield.Messaging.Commands
         public long ToLong() => _value;
 
         public override string ToString() => _value.ToString();
-
-        // TODO where to put IsExceededd method - here, in timestamp or in Timeout object. Or as separate static?
     }
 }

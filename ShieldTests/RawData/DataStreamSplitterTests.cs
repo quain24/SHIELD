@@ -39,8 +39,10 @@ namespace Shield.Messaging.RawData.Tests
             Assert.Equal(expectedData, actual);
         }
 
+        // TODO More test to be sure, need to fix those already written so the wont look like crap.
         [Theory]
         [InlineData("*12345***", "12345", "67890*", "12345", "1234567890")]
+        [InlineData("*12345**12*", "*12345", "67890*", "12345", "1234567890")]
         public void Given_three_separate_inputs_with_one_error_will_give_two_outputs(params string[] data)
         {
             List<string> actual = Splitter.Split(data[0]).ToList();

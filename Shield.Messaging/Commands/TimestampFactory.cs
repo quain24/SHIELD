@@ -27,13 +27,5 @@ namespace Shield.Messaging.Commands
         /// <param name="dateTime">Will be converted into (long) time stamp</param>
         /// <returns>Time stamp</returns>
         public static Timestamp GetTimestamp(DateTimeOffset dateTime) => new Timestamp(dateTime.Ticks);
-
-        /// <summary>
-        /// Calculates difference between two time stamps.
-        /// returns difference or '-1' if bad parameters were given
-        /// </summary>
-        /// <param name="from">From this time stamp</param>
-        /// <param name="to">To this time stamp</param>
-        /// <returns>Difference between time stamps</returns>
     }
 }
