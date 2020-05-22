@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Moq;
+using System.Diagnostics;
+using Shield.Commands;
 
 namespace Shield.Messaging.Commands.Tests
 {
@@ -15,17 +18,43 @@ namespace Shield.Messaging.Commands.Tests
         {
 
             var a = new Timestamp(5);
-            ITimestamp b = new Timestamp(5);
+            Timestamp b = new Timestamp(5);
             Assert.True(a.Equals(b));
         }
 
-        [Fact()]
-        public async Task IsExceededTest()
+        [Fact]
+        public void Timestamp_comparable_test_should_return_true_given_proper_assumtions()
         {
-            ITimestamp a = TimestampGenerator.Timestamp;
-            await Task.Delay(10);
-            ITimestamp timeout = new Timestamp(8);
-            Assert.True(a.IsExceeded(timeout));
+            var a = new Timestamp(20);
+            var b = new Timestamp(20);
+            var c = new Timestamp(10);
+            var lis = new List<Timestamp>() { a, b, c, c};
+            lis.Sort();
+            lis.ForEach(cc => Debug.WriteLine(cc.ToString()));
+
+
+
+            var list = new List<Timestamp>();
+
+            Debug.WriteLine(TimestampFactory.Timestamp.ToString());
+
+            for(int i = 0 ; i <= 10000 ; i++)
+            {
+                list.Add(TimestampFactory.Timestamp);
+            }
+
+            Debug.WriteLine(TimestampFactory.Timestamp.ToString());
+
+
+
+            
+
+            Assert.True(lis[2] == b );
+
+            Assert.True(a == b);
+            Assert.True(a > c);
+            Assert.True(c < b);
+
         }
     }
 }

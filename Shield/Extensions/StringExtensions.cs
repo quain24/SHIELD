@@ -26,7 +26,7 @@ namespace Shield.Extensions
         /// <returns><see cref="IEnumerable{String}">IEnumerable&lt;string&gt;</see> filled with splitted substrings or empty one if none could be extracted</returns>
         public static IEnumerable<string> SplitBy(this string value, char splitter)
         {
-            return value?.Split(new[] { splitter }, StringSplitOptions.None) ?? Array.Empty<string>();
+            return value?.Split(new[] { splitter }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         }
     }
 }

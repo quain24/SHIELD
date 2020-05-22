@@ -108,6 +108,7 @@
     <Compile Include="Messaging\DataPartValidatorTests.cs" />
     <Compile Include="Messaging\IDPartTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RawData\DataStreamSplitterTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">

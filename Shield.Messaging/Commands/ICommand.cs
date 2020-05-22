@@ -1,9 +1,4 @@
 ﻿using Shield.Messaging.RawData;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.Messaging.Commands
 {
@@ -11,8 +6,8 @@ namespace Shield.Messaging.Commands
     {
         IPart ID { get; }
         IPart HostID { get; }
-        IPart Type {  get; }
-        IPart Data {  get; }
-
+        IPart Type { get; }
+        IPart Data { get; }
+        Timestamp Timestamp { get; }
     }
 }

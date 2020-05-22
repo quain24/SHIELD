@@ -81,6 +81,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegexEscapeChars.cs" />
+    <Compile Include="ValueObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />

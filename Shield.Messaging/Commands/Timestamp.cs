@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Shield.Messaging.Commands
 {
-    public sealed class Timestamp : ITimestamp
+    public sealed class Timestamp : IEquatable<Timestamp>, IComparable<Timestamp>
     {
         private readonly long _value;
 
@@ -12,34 +13,56 @@ namespace Shield.Messaging.Commands
             _value = value;
         }
 
-        #region IEquatable<ITimestamp> implementation
+        #region IEquatable<Timestamp> implementation
 
-        public override bool Equals(object obj) => Equals(obj as ITimestamp);
-
-        public bool Equals(ITimestamp other)
+        public override bool Equals(object obj)
         {
-            return other is ITimestamp timestamp &&
-                   _value == timestamp.ToLong();
+            return Equals(obj as Timestamp);
         }
 
-        public override int GetHashCode() => -1939223833 + _value.GetHashCode();
-
-        #endregion IEquatable<ITimestamp> implementation
-
-        #region IComparable<ITimestamp> implementation
-
-        public int CompareTo(ITimestamp other)
+        public bool Equals(Timestamp other)
         {
-            if (_value < other.ToLong()) return 1;
-            else if (_value > other.ToLong()) return -1;
-            else return 0;
+            return other != null &&
+                   _value == other._value;
         }
 
-        #endregion IComparable<ITimestamp> implementation
+        public override int GetHashCode()
+        {
+            return -1939223833 + _value.GetHashCode();
+        }
+
+        public static bool operator ==(Timestamp left, Timestamp right)
+        {
+            return EqualityComparer<Timestamp>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(Timestamp left, Timestamp right)
+        {
+            return !(left == right);
+        }
+
+        #endregion IEquatable<Timestamp> implementation
+
+        #region IComparable<Timestamp> implementation
+
+        public int CompareTo(Timestamp other) => _value.CompareTo(other._value);
+
+        public static bool operator <(Timestamp left, Timestamp right) => left.CompareTo(right) == -1;
+
+        public static bool operator >(Timestamp left, Timestamp right) => left.CompareTo(right) == 1;
+
+        public static bool operator <=(Timestamp left, Timestamp right) => left < right || left == right;
+
+        public static bool operator >=(Timestamp left, Timestamp right) => left > right || left == right;
+
+        #endregion IComparable<Timestamp> implementation
+
+        public long Difference(Timestamp other) => _value - other._value;
 
         public long ToLong() => _value;
 
         public override string ToString() => _value.ToString();
+
         // TODO where to put IsExceededd method - here, in timestamp or in Timeout object. Or as separate static?
     }
 }
