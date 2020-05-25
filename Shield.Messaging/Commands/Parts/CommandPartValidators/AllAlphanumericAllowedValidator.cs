@@ -1,8 +1,7 @@
-﻿using Shield.CommandPartValidators.RawData;
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Shield.Messaging.RawData.CommandPartValidators
+namespace Shield.Messaging.Commands.Parts.CommandPartValidators
 {
     public class AllAlphanumericAllowedValidator : IPartValidator
     {

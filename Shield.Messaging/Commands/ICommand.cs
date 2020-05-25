@@ -1,4 +1,4 @@
-﻿using Shield.Messaging.RawData;
+﻿using Shield.Messaging.Commands.Parts;
 
 namespace Shield.Messaging.Commands
 {

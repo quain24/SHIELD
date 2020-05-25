@@ -97,6 +97,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Parts\IDPartBuilderTests.cs" />
+    <Compile Include="Commands\Parts\TypePartTests.cs" />
     <Compile Include="Commands\TimestampTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />

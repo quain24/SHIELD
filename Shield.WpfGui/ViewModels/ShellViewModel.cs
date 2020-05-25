@@ -1,4 +1,5 @@
-﻿using Caliburn.Micro;
+﻿using Autofac;
+using Caliburn.Micro;
 using Shield.CommonInterfaces;
 using Shield.HardwareCom;
 using Shield.HardwareCom.Enums;
@@ -34,7 +35,6 @@ namespace Shield.WpfGui.ViewModels
         private IMessageModel _selectedSentMessage;
 
         private Func<IMessageModel> _messageFactory;
-
         private IMessageModel _selectedReceivedMessage;
 
         private bool _receivingButtonActivated = false;

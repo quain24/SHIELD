@@ -19,9 +19,7 @@ namespace Shield.WpfGui.AutofacModules
                    .Where(t => t.Name.EndsWith("Factory") && t.Namespace == "Shield")
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
-            // Replacement for AutoFac builtIn IIndex for better separation
-            builder.RegisterGeneric(typeof(DependencyDictionary<,>))
-                   .As(typeof(IReadOnlyDictionary<,>));
+            
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

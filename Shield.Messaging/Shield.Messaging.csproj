@@ -42,26 +42,34 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\Clock.cs" />
+    <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\DefaultValidatorAssingnmentFactory.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\IReadOnlyPartValidatorCollection.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\IValidatorAssingnmentFactory.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\ReadOnlyPartValidatorCollection.cs" />
+    <Compile Include="Commands\Parts\NewPartFactory.cs" />
+    <Compile Include="Commands\Parts\PartFactoriesCollection.cs" />
+    <Compile Include="Commands\Parts\PartFactory.cs" />
     <Compile Include="Commands\RawToCommandTranslator.cs" />
     <Compile Include="Commands\Timeout.cs" />
     <Compile Include="Commands\Timestamp.cs" />
     <Compile Include="Commands\TimestampFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RawData\CommandPartValidators\AllAlphanumericAllowedValidator.cs" />
-    <Compile Include="RawData\CommandPartValidators\AllwaysGoodValidator.cs" />
-    <Compile Include="RawData\CommandPartValidators\DataPartValidator.cs" />
-    <Compile Include="RawData\DataPart.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\AllAlphanumericAllowedValidator.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\AllwaysGoodValidator.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\DataPartValidator.cs" />
+    <Compile Include="Commands\Parts\DataPart.cs" />
     <Compile Include="RawData\DataStreamSplitter.cs" />
-    <Compile Include="RawData\EmptyPart.cs" />
-    <Compile Include="RawData\HosIDPart.cs" />
+    <Compile Include="Commands\Parts\EmptyPart.cs" />
+    <Compile Include="Commands\Parts\HosIDPart.cs" />
     <Compile Include="RawData\IDataStreamSplitter.cs" />
-    <Compile Include="RawData\IDPart.cs" />
-    <Compile Include="RawData\CommandPartValidators\IPartValidator.cs" />
-    <Compile Include="RawData\IPart.cs" />
-    <Compile Include="RawData\Part.cs" />
+    <Compile Include="Commands\Parts\IDPart.cs" />
+    <Compile Include="Commands\Parts\CommandPartValidators\IPartValidator.cs" />
+    <Compile Include="Commands\Parts\IPart.cs" />
+    <Compile Include="Commands\Parts\Part.cs" />
     <Compile Include="RawData\RawCommandCollection.cs" />
-    <Compile Include="RawData\TypePart.cs" />
+    <Compile Include="Commands\Parts\TypePart.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">

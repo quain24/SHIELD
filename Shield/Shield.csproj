@@ -75,6 +75,7 @@
     <Compile Include="CommonInterfaces\ISetting.cs" />
     <Compile Include="CommonInterfaces\ISettings.cs" />
     <Compile Include="Enums\DeviceType.cs" />
+    <Compile Include="Enums\Command.cs" />
     <Compile Include="Enums\SettingsType.cs" />
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />

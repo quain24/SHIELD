@@ -14,10 +14,14 @@ namespace Shield
             return left is null || left.Equals(right);
         }
 
+        public static bool operator ==(ValueObject left, ValueObject right) => EqualOperator(left, right);
+
         protected static bool NotEqualOperator(ValueObject left, ValueObject right)
         {
             return !EqualOperator(left, right);
         }
+
+        public static bool operator !=(ValueObject left, ValueObject right) => NotEqualOperator(left, right);
 
         protected abstract IEnumerable<object> GetAtomicValues();
 
@@ -45,12 +49,12 @@ namespace Shield
             }
             return !thisValues.MoveNext() && !otherValues.MoveNext();
         }
+
         public override int GetHashCode()
         {
             return GetAtomicValues()
              .Select(x => (x?.GetHashCode()) ?? 0)
              .Aggregate((x, y) => x ^ y);
         }
-
     }
 }

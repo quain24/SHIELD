@@ -1,12 +1,11 @@
 ﻿using Autofac;
 using Caliburn.Micro;
-using Shield.HardwareCom;
+using Shield.WpfGui.AutofacModules;
 using Shield.WpfGui.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
-using Shield.WpfGui.AutofacModules;
 
 namespace Shield.WpfGui
 {
@@ -54,6 +53,7 @@ namespace Shield.WpfGui
             builder.RegisterModule<DataAfModule>();
             builder.RegisterModule<ShieldAfModule>();
             builder.RegisterModule<WpfGuiAfModule>();
+            builder.RegisterModule<MessagingAfModule>();
 
             _container = builder.Build();
         }

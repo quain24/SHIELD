@@ -10,9 +10,12 @@ namespace Shield.Messaging.Commands
 {
     public class RawToCommandTranslator
     {
-        // todo Ended here
-        // Raw command Collection can be splitted into from given stream by DataStreamSplitter, so now 
-        // we need to implement translation into commands
+        private readonly char _separator;
+
+        public RawToCommandTranslator(char separator)
+        {
+            _separator = separator;
+        }
         public ICommand TranslateFrom(string rawCommand)
         {
             return null;

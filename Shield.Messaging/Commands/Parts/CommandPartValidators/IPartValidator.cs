@@ -1,4 +1,4 @@
-﻿namespace Shield.CommandPartValidators.RawData
+﻿namespace Shield.Messaging.Commands.Parts.CommandPartValidators
 {
     public interface IPartValidator
     {

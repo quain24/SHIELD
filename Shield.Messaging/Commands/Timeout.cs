@@ -9,7 +9,7 @@ namespace Shield.Messaging.Commands
             Value = timeout > 0 ? timeout : throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout value has to be positive");
         }
 
-        public int Value { get; }
+        private int Value { get; }
 
         public bool IsExceeded(Timestamp timestamp) => TimestampFactory.Timestamp.Difference(timestamp) > Value;
     }

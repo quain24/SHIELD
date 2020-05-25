@@ -1,4 +1,4 @@
-﻿using Shield.Messaging.RawData.CommandPartValidators;
+﻿using Shield.Messaging.Commands.Parts.CommandPartValidators;
 using Xunit;
 
 namespace ShieldTests.Messaging

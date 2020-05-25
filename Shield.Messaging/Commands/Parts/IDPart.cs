@@ -1,6 +1,8 @@
-﻿using Shield.CommandPartValidators.RawData;
+﻿using Shield.Messaging.Commands.Parts;
+using Shield.Messaging.Commands.Parts.CommandPartValidators;
+using System;
 
-namespace Shield.Messaging.RawData
+namespace Shield.Commands.Parts
 {
     public sealed class IDPart : Part
     {

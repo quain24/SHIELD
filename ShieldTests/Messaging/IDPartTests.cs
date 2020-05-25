@@ -1,6 +1,6 @@
-﻿using Shield.CommandPartValidators.RawData;
-using Shield.Messaging.RawData;
-using Shield.Messaging.RawData.CommandPartValidators;
+﻿using Shield.Commands.Parts;
+using Shield.Messaging.Commands.Parts;
+using Shield.Messaging.Commands.Parts.CommandPartValidators;
 using Xunit;
 
 namespace ShieldTests.Messaging
@@ -12,7 +12,7 @@ namespace ShieldTests.Messaging
         [Fact]
         public void Is_valid_given_proper_ID()
         {
-            IPart idPart = new IDPart("AbCd", validator);
+            Part idPart = new IDPart("AbCd", validator);
 
             var actual = idPart.IsValid;
             Assert.True(actual);
@@ -21,8 +21,8 @@ namespace ShieldTests.Messaging
         [Fact]
         public void Two_same_valued_instances_will_be_equal()
         {
-            IPart idPartOne = new IDPart("AbCd", validator);
-            IPart idPartTwo = new IDPart("AbCd", validator);
+            Part idPartOne = new IDPart("AbCd", validator);
+            Part idPartTwo = new IDPart("AbCd", validator);
 
             Assert.True(idPartOne.Equals(idPartTwo));
         }

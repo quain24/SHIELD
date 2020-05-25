@@ -1,11 +1,8 @@
-﻿namespace Shield.Messaging.RawData
+﻿namespace Shield.Messaging.Commands.Parts
 {
     public interface IPart
     {
         string Data { get; }
         bool IsValid { get; }
-
-        bool Equals(object obj);
-        int GetHashCode();
     }
 }
