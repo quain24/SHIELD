@@ -108,17 +108,6 @@ namespace Shield.WpfGui.AutofacModules
                                                                  appSet.HostIdSize,
                                                                  appSet.HostId);
 
-                    //TODO testing code for NewPartFactory
-
-                    var dep1 = c.Resolve<IReadOnlyDictionary<string, Func<string, IPartValidator, IPart>>>();
-                    var dep2 = c.Resolve<IReadOnlyDictionary<string, IPartValidator>>();
-
-                    var t = dep1["IDPart"]("tes", dep2["AllwaysGoodValidator"]);
-                    //var y = dep1["IDPart"]("test", dep2["AllwaysGoodValidator"]);
-                    var v = t.IsValid;
-                    //var u = y.IsValid;
-                    //v = t.IsValid;
-
                     return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
                 })
                 .As<ICommandTranslator>();

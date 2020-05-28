@@ -1,31 +1,24 @@
-﻿using Shield.Commands.Parts;
-using Shield.Messaging.Commands.Parts.CommandPartValidators;
+﻿using System;
+using System.Collections.Generic;
 using static Shield.Command;
 
 namespace Shield.Messaging.Commands.Parts
 {
     public class PartFactory
     {
-        private readonly IReadOnlyPartValidatorCollection _validatorAssignment;
+        private readonly IReadOnlyDictionary<PartType, PartFactoryAutofacAdapter> _factories;
 
-        public PartFactory(IReadOnlyPartValidatorCollection validatorAssignment)
+        public PartFactory(IReadOnlyDictionary<PartType, PartFactoryAutofacAdapter> factories)
         {
-            _validatorAssignment = validatorAssignment;
+            _factories = factories ?? throw new ArgumentNullException(nameof(factories), "Cannot initialize PartFactory with a NULL");
         }
 
-        public IPart GetIDPart(string data) => new IDPart(data, GetValidatorFor(PartType.ID));
-
-        public IPart GetHostIDPart(string data) => new HosIDPart(data, GetValidatorFor(PartType.HostID));
-
-        public IPart GetTypePart(string data) => new TypePart(data, GetValidatorFor(PartType.Type));
-
-        public IPart GetDataPart(string data) => new DataPart(data, GetValidatorFor(PartType.Data));
-
-        public IPart GetEmptyPart() => new EmptyPart(GetValidatorFor(PartType.Empty));
-
-        private IPartValidator GetValidatorFor(PartType part)
+        public IPart GetPart(PartType type, string data)
         {
-            return _validatorAssignment.GetValidatorForOrDefault(part);
+            var factory = _factories.TryGetValue(type, out var result)
+                ? result
+                : throw new ArgumentOutOfRangeException(nameof(type), "There is no internal factory for requested type or requested type is outside of enum bounds.");
+            return factory.GetPart(data);
         }
     }
 }

@@ -43,13 +43,12 @@
   <ItemGroup>
     <Compile Include="Commands\Clock.cs" />
     <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\Parts\PartFactoryAutofacAdapter.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\Parts\CommandPartValidators\DefaultValidatorAssingnmentFactory.cs" />
     <Compile Include="Commands\Parts\CommandPartValidators\IReadOnlyPartValidatorCollection.cs" />
     <Compile Include="Commands\Parts\CommandPartValidators\IValidatorAssingnmentFactory.cs" />
     <Compile Include="Commands\Parts\CommandPartValidators\ReadOnlyPartValidatorCollection.cs" />
-    <Compile Include="Commands\Parts\NewPartFactory.cs" />
-    <Compile Include="Commands\Parts\PartFactoriesCollection.cs" />
     <Compile Include="Commands\Parts\PartFactory.cs" />
     <Compile Include="Commands\RawToCommandTranslator.cs" />
     <Compile Include="Commands\Timeout.cs" />
