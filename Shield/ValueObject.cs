@@ -42,7 +42,7 @@ namespace Shield
                     return false;
                 }
 
-                if (thisValues.Current != null && !thisValues.Current.Equals(otherValues.Current))
+                if (thisValues.Current?.Equals(otherValues.Current) == false)
                 {
                     return false;
                 }
