@@ -8,7 +8,7 @@ namespace Shield.Messaging.Commands
     /// </summary>
     public static class TimestampFactory
     {
-        private static readonly Clock _clock = new Clock();
+        private static readonly HighPrecisionClock _clock = new HighPrecisionClock();
 
         /// <summary>
         /// Returns <see cref="Commands.Timestamp"/> object created from current high precision UTC DateTime

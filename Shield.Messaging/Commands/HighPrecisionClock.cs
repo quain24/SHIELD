@@ -11,7 +11,7 @@ namespace Shield.Commands
     /// a manually tuned and compensated <c>DateTime</c> which takes advantage of the high resolution
     /// available in <see cref="Stopwatch"/>.
     /// </summary>
-    public sealed class Clock : IDisposable
+    public sealed class HighPrecisionClock : IDisposable
     {
         private readonly long _maxIdleTime = TimeSpan.FromSeconds(10).Ticks;
         private const long TicksMultiplier = 1000 * TimeSpan.TicksPerMillisecond;
@@ -26,9 +26,9 @@ namespace Shield.Commands
         private static extern void GetSystemTimePreciseAsFileTime(out long filetime);
 
         /// <summary>
-        /// Creates an instance of the <see cref="Clock"/>.
+        /// Creates an instance of the <see cref="HighPrecisionClock"/>.
         /// </summary>
-        public Clock()
+        public HighPrecisionClock()
         {
             try
             {
@@ -42,7 +42,7 @@ namespace Shield.Commands
         }
 
         /// <summary>
-        /// Gets the flag indicating whether the instance of <see cref="Clock"/> provides high resolution time.
+        /// Gets the flag indicating whether the instance of <see cref="HighPrecisionClock"/> provides high resolution time.
         /// <remarks>
         /// <para>
         /// This only returns <c>True</c> on <c>Windows 8</c>/<c>Windows Server 2012</c> and higher.
@@ -79,7 +79,7 @@ namespace Shield.Commands
         }
 
         /// <summary>
-        /// Releases all resources used by the instance of <see cref="Clock"/>.
+        /// Releases all resources used by the instance of <see cref="HighPrecisionClock"/>.
         /// </summary>
         public void Dispose()
         {

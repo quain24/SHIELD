@@ -41,7 +41,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\Clock.cs" />
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\Parts\PartFactoryAutofacAdapter.cs" />
     <Compile Include="Commands\ICommand.cs" />
@@ -50,6 +49,7 @@
     <Compile Include="Commands\Timeout.cs" />
     <Compile Include="Commands\Timestamp.cs" />
     <Compile Include="Commands\TimestampFactory.cs" />
+    <Compile Include="Commands\HighPrecisionClock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Commands\Parts\CommandPartValidators\AllAlphanumericAllowedValidator.cs" />
     <Compile Include="Commands\Parts\CommandPartValidators\AllwaysGoodValidator.cs" />
