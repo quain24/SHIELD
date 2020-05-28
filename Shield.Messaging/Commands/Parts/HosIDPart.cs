@@ -7,7 +7,7 @@ namespace Shield.Commands.Parts
     {
         public override string Data => base.Data.ToUpperInvariant();
 
-        public HosIDPart(string data, IPartValidator validator)
+        internal HosIDPart(string data, IPartValidator validator)
             : base(data, validator)
         {
         }

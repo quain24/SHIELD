@@ -5,7 +5,7 @@ namespace Shield.Commands.Parts
 {
     public sealed class DataPart : Part
     {
-        public DataPart(string data, IPartValidator validator)
+        internal DataPart(string data, IPartValidator validator)
             : base(data, validator)
         {
         }

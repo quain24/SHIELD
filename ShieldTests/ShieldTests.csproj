@@ -97,8 +97,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\Parts\IDPartBuilderTests.cs" />
-    <Compile Include="Commands\Parts\TypePartTests.cs" />
     <Compile Include="Commands\TimestampTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
@@ -108,7 +106,6 @@
     <Compile Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
     <Compile Include="Messaging\DataPartValidatorTests.cs" />
-    <Compile Include="Messaging\IDPartTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawData\DataStreamSplitterTestData.cs" />
     <Compile Include="RawData\DataStreamSplitterTests.cs" />
@@ -134,7 +131,9 @@
   <ItemGroup>
     <Analyzer Include="..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Commands\Parts\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
