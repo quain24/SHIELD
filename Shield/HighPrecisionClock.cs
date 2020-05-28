@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Shield.Commands
+namespace Shield
 {
     /// <summary>
     /// This class provides a high resolution clock by using the new API available in <c>Windows 8</c>/
