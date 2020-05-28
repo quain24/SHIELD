@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Shield.Messaging.Commands.Parts.CommandPartValidators
+namespace Shield.Messaging.Commands.Parts.PartValidators
 {
     public class AllAlphanumericAllowedValidator : IPartValidator
     {

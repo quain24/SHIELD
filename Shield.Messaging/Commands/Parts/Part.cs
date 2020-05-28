@@ -1,4 +1,4 @@
-﻿using Shield.Messaging.Commands.Parts.CommandPartValidators;
+﻿using Shield.Messaging.Commands.Parts.PartValidators;
 using System;
 using System.Collections.Generic;
 

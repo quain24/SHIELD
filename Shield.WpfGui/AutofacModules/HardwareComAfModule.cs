@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 using Shield.HardwareCom.Adapters;
 using System;
 using Shield.HardwareCom.Models;
-using Shield.Messaging.Commands.Parts.CommandPartValidators;
+using Shield.Messaging.Commands.Parts.PartValidators;
 using System.Collections.Generic;
 using Shield.Messaging.Commands.Parts;
 

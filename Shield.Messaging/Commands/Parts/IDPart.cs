@@ -1,5 +1,5 @@
 ﻿using Shield.Messaging.Commands.Parts;
-using Shield.Messaging.Commands.Parts.CommandPartValidators;
+using Shield.Messaging.Commands.Parts.PartValidators;
 using System;
 
 namespace Shield.Commands.Parts

@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Shield.Messaging.Commands.Parts.CommandPartValidators
+namespace Shield.Messaging.Commands.Parts.PartValidators
 {
     public class AllwaysGoodValidator : IPartValidator
     {

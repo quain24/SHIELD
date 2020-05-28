@@ -1,4 +1,4 @@
-﻿namespace Shield.Messaging.Commands.Parts.CommandPartValidators
+﻿namespace Shield.Messaging.Commands.Parts.PartValidators
 {
     public interface IPartValidator
     {
