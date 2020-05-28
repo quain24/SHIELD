@@ -57,7 +57,7 @@
     <Compile Include="Commands\Parts\DataPart.cs" />
     <Compile Include="RawData\DataStreamSplitter.cs" />
     <Compile Include="Commands\Parts\EmptyPart.cs" />
-    <Compile Include="Commands\Parts\HosIDPart.cs" />
+    <Compile Include="Commands\Parts\HostIDPart.cs" />
     <Compile Include="RawData\IDataStreamSplitter.cs" />
     <Compile Include="Commands\Parts\IDPart.cs" />
     <Compile Include="Commands\Parts\PartValidators\IPartValidator.cs" />
