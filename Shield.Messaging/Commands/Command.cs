@@ -1,21 +1,16 @@
 ﻿using Shield.Messaging.Commands.Parts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shield.Messaging.Commands
 {
     public class Command : ICommand
     {
-        public Command(IPart id, IPart hostID, IPart type, IPart data, Timestamp timestamp)
+        public Command(IPart id, IPart hostID, IPart type, IPart data)
         {
             ID = id;
             HostID = hostID;
             Type = type;
             Data = data;
-            Timestamp = timestamp;
+            Timestamp = TimestampFactory.Timestamp;
         }
 
         public IPart ID { get; }

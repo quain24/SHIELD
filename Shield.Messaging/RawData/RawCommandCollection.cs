@@ -15,8 +15,7 @@ namespace Shield.Messaging.RawData
 
         public int Count => _rawCommands.Count;
 
-        public RawCommandCollection GetCommandsOf(int length) =>
-            new RawCommandCollection(_rawCommands.Where(r => r.Length == length));
+        #region IEnumerable<string> implementation
 
         public IEnumerator<string> GetEnumerator()
         {
@@ -27,5 +26,10 @@ namespace Shield.Messaging.RawData
         {
             return GetEnumerator();
         }
+
+        #endregion IEnumerable<string> implementation
+
+        public RawCommandCollection GetCommandsOf(int length) =>
+            new RawCommandCollection(_rawCommands.Where(r => r.Length == length));
     }
 }

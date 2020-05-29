@@ -4,7 +4,7 @@ using System;
 namespace Shield.Messaging.Commands
 {
     /// <summary>
-    /// Generates <see cref="Commands.Timestamp"/> from current UTC time or from given <see cref="DateTimeOffset"/>
+    /// <see langword="static"/> class that creates a <see cref="Commands.Timestamp"/> from current UTC time or from given <see cref="DateTimeOffset"/>
     /// </summary>
     public static class TimestampFactory
     {

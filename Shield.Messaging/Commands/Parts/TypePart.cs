@@ -12,4 +12,4 @@ namespace Shield.Commands.Parts
         {
         }
     }
-} 
+}
