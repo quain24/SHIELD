@@ -4,20 +4,20 @@ using System.Linq;
 
 namespace Shield.Messaging.RawData
 {
-    public class RawCommandCollection : IEnumerable<string>
+    public class RawCommandCollection : IEnumerable<RawCommand>
     {
-        private readonly List<string> _rawCommands;
+        private readonly List<RawCommand> _rawCommands;
 
-        public RawCommandCollection(IEnumerable<string> rawCommands)
+        public RawCommandCollection(IEnumerable<RawCommand> rawCommands)
         {
-            _rawCommands = rawCommands?.ToList() ?? new List<string>();
+            _rawCommands = rawCommands?.ToList() ?? new List<RawCommand>();
         }
 
         public int Count => _rawCommands.Count;
 
         #region IEnumerable<string> implementation
 
-        public IEnumerator<string> GetEnumerator()
+        public IEnumerator<RawCommand> GetEnumerator()
         {
             return _rawCommands.GetEnumerator();
         }

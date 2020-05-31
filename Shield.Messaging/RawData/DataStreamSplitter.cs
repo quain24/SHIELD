@@ -1,4 +1,5 @@
 ﻿using Shield.Extensions;
+using Shield.Messaging.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +21,15 @@ namespace Shield.Messaging.RawData
             _allowedLengths = allowedLengths.ToHashSet();
         }
 
-        public IEnumerable<string> Split(string data)
+        public IEnumerable<RawCommand> Split(string data)
         {
             data = MergeBuffers(data);
             data = TrimToFirstSplitter(data);
             data = TrimAfterLastSplitter(data);
 
-            var content = data.SplitBy(_splitter);
+            var content = data
+                .SplitBy(_splitter)
+                .ToRawCommands();
 
             return new RawCommandCollection(RawDataOfAllowedLengthsFrom(content));
         }
@@ -68,7 +71,7 @@ namespace Shield.Messaging.RawData
             return string.Empty;
         }
 
-        private IEnumerable<string> RawDataOfAllowedLengthsFrom(IEnumerable<string> content) =>
+        private IEnumerable<RawCommand> RawDataOfAllowedLengthsFrom(IEnumerable<RawCommand> content) =>
             content.Where(command => _allowedLengths.Any(length => length == command.Length));
     }
 }

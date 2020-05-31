@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using static Shield.Command;
+using static Shield.Enums.Command;
 
 namespace Shield.Messaging.Commands.Parts
 {
-    public class PartFactory
+    public class PrecisePartFactory : IPartFactory
     {
         private readonly IReadOnlyDictionary<PartType, PartFactoryAutofacAdapter> _factories;
 
-        public PartFactory(IReadOnlyDictionary<PartType, PartFactoryAutofacAdapter> factories)
+        public PrecisePartFactory(IReadOnlyDictionary<PartType, PartFactoryAutofacAdapter> factories)
         {
             _factories = factories ?? throw new ArgumentNullException(nameof(factories), "Cannot initialize PartFactory with a NULL");
         }

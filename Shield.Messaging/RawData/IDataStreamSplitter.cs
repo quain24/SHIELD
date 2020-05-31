@@ -4,6 +4,6 @@ namespace Shield.Messaging.RawData
 {
     public interface IDataStreamSplitter
     {
-        IEnumerable<string> Split(string data);
+        IEnumerable<RawCommand> Split(string data);
     }
 }

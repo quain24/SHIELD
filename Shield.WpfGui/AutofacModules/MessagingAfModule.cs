@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
-using static Shield.Command;
+using static Shield.Enums.Command;
 
 namespace Shield.WpfGui.AutofacModules
 {
@@ -42,7 +42,7 @@ namespace Shield.WpfGui.AutofacModules
                                new ResolvedParameter((pi, ctx) =>pi.Name == "validator", (pi, ctx) => ctx.ResolveNamed<IPartValidator>("AllwaysGoodValidator")) })
                 .Keyed<PartFactoryAutofacAdapter>(PartType.Type);
 
-            builder.RegisterType<PartFactory>()
+            builder.RegisterType<PrecisePartFactory>()
                 .WithParameter(new ResolvedParameter((pi, ctx) => pi.Name == "factories", (pi, ctx) => ctx.Resolve<IReadOnlyDictionary<PartType, PartFactoryAutofacAdapter>>()))
                 .AsSelf();
 

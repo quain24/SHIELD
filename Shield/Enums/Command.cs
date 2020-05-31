@@ -1,4 +1,4 @@
-﻿namespace Shield
+﻿namespace Shield.Enums
 {
     public static class Command
     {

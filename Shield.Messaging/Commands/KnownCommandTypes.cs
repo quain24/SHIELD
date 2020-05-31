@@ -25,11 +25,11 @@ namespace Shield.Messaging.Commands
 
         #endregion IEnumerable<string> implementation
 
-        public bool Contains(string type) => _types.Contains(type);
+        public bool Contains(string type) => _types.Contains(type, StringComparer.OrdinalIgnoreCase);
 
         private HashSet<string> Sanitize(HashSet<string> source)
         {
-            HashSet<string> sanitizedTypes = new HashSet<string>();
+            var sanitizedTypes = new HashSet<string>();
             foreach (var entry in source)
             {
                 var trimmedEntry = entry.Trim();
