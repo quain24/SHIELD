@@ -73,6 +73,9 @@ namespace Shield.Messaging.Commands.Tests
             }
             Debug.WriteLine(clock.UtcNow);
 
+            var teste = Factory.TranslateFrom(new RawData.RawCommand("912313131312312312"));
+
+
             var knownCommandTypes = new KnownCommandTypes(new List<string>() { "aa", "bb", " c"});
             foreach(var entry in knownCommandTypes)
                 Debug.WriteLine(entry);

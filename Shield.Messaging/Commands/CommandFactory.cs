@@ -4,6 +4,7 @@ using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Shield.Enums.Command;
 
 namespace Shield.Messaging.Commands
 {
@@ -13,12 +14,12 @@ namespace Shield.Messaging.Commands
         private readonly IPartFactory _factory;
         private readonly CommandFactoryAutoFacAdapter _commandFactory;
 
-        private readonly List<Enums.Command.PartType> _requiredParts = new List<Enums.Command.PartType>()
+        private readonly List<PartType> _requiredParts = new List<PartType>()
         {
-            Enums.Command.PartType.HostID,
-            Enums.Command.PartType.ID,
-            Enums.Command.PartType.Type,
-            Enums.Command.PartType.Data
+           PartType.ID,
+           PartType.HostID,
+           PartType.Type,
+           PartType.Data
         };
 
         public CommandFactory(char separator, IPartFactory factory, CommandFactoryAutoFacAdapter commandFactory)
@@ -35,16 +36,16 @@ namespace Shield.Messaging.Commands
             var partsEnumerator = _requiredParts.GetEnumerator();
             var dataEnumerator = splittedData.GetEnumerator();
 
-            var parts = new List<IPart>();
+            var parts = new Dictionary<PartType, IPart>();
 
             while (partsEnumerator.MoveNext())
             {
-                parts.Add(dataEnumerator.MoveNext()
+                parts.Add(partsEnumerator.Current, dataEnumerator.MoveNext()
                     ? _factory.GetPart(partsEnumerator.Current, dataEnumerator.Current)
-                    : _factory.GetPart(Enums.Command.PartType.Empty, string.Empty));
+                    : _factory.GetPart(PartType.Empty, string.Empty));
             }
 
-            return _commandFactory.GetCommand(parts[0], parts[1], parts[2], parts[3]);
+            return _commandFactory.GetCommand(parts[PartType.ID], parts[PartType.HostID], parts[PartType.Type], parts[PartType.Data]);
         }
     }
 }
