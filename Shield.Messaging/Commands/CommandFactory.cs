@@ -32,8 +32,6 @@ namespace Shield.Messaging.Commands
         {
             var splittedData = rawCommand?.ToString().SplitBy(_separator).ToList() ?? throw new ArgumentNullException(nameof(rawCommand));
 
-            // TODO think about moving splitting into raw command itself on construction - this would require a rawcommand factory with knowledge of separator char
-
             var partsEnumerator = _requiredParts.GetEnumerator();
             var dataEnumerator = splittedData.GetEnumerator();
 

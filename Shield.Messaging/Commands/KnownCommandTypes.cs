@@ -1,43 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Shield.Messaging.Commands
 {
-    public class KnownCommandTypes : IEnumerable<string>
+    public class KnownCommandTypes : DefaultCommandTypes
     {
-        private readonly HashSet<string> _types;
-
-        public KnownCommandTypes(IEnumerable<string> types)
+        public KnownCommandTypes(IEnumerable<string> types) : base(types)
         {
-            _types = Sanitize(types?.ToHashSet()
-                ?? throw new ArgumentNullException(nameof(types), $"Cannot create {nameof(KnownCommandTypes)} instance from NULL"));
-        }
-
-        public int Count { get => _types.Count; }
-
-        #region IEnumerable<string> implementation
-
-        public IEnumerator<string> GetEnumerator() => ((IEnumerable<string>)_types).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_types).GetEnumerator();
-
-        #endregion IEnumerable<string> implementation
-
-        public bool Contains(string type) => _types.Contains(type, StringComparer.OrdinalIgnoreCase);
-
-        private HashSet<string> Sanitize(HashSet<string> source)
-        {
-            var sanitizedTypes = new HashSet<string>();
-            foreach (var entry in source)
-            {
-                var trimmedEntry = entry.Trim();
-                if (!string.IsNullOrWhiteSpace(trimmedEntry))
-                    sanitizedTypes.Add(trimmedEntry);
-            }
-
-            return sanitizedTypes;
         }
     }
 }

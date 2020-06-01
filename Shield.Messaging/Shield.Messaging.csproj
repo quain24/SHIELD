@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandFactoryAutoFacAdapter.cs" />
+    <Compile Include="Commands\DefaultCommandTypes.cs" />
     <Compile Include="Commands\KnownCommandTypes.cs" />
     <Compile Include="Commands\Parts\IPartFactory.cs" />
     <Compile Include="Commands\Parts\PartFactoryAutofacAdapter.cs" />

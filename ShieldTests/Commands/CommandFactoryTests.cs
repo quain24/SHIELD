@@ -73,6 +73,10 @@ namespace Shield.Messaging.Commands.Tests
             }
             Debug.WriteLine(clock.UtcNow);
 
+            var knownCommandTypes = new KnownCommandTypes(new List<string>() { "aa", "bb", " c"});
+            foreach(var entry in knownCommandTypes)
+                Debug.WriteLine(entry);
+
             var expected = new Command(idfac.GetPart("0123"), hostidfac.GetPart("abcd"), typefac.GetPart("Hello"), dataidfac.GetPart("1234567890"));
             Assert.True(command.ID.Data == expected.ID.Data);
         }
