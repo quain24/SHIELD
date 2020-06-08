@@ -4,13 +4,17 @@ namespace Shield.Messaging.Commands
 {
     public class Timeout
     {
-        public Timeout(int timeout)
+        public Timeout(int timeoutInSeconds)
         {
-            Value = timeout > 0 ? timeout : throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout value has to be positive");
+            Value = timeoutInSeconds > 0
+                ? TimeSpan.FromSeconds(timeoutInSeconds).Ticks
+                : throw new ArgumentOutOfRangeException(nameof(timeoutInSeconds), "Timeout value has to be positive");
         }
 
-        private int Value { get; }
+        private long Value { get; }
 
         public bool IsExceeded(Timestamp timestamp) => TimestampFactory.Timestamp.Difference(timestamp) > Value;
+
+        public override string ToString() => Value.ToString();
     }
 }

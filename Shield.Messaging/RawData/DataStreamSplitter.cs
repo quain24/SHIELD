@@ -12,6 +12,8 @@ namespace Shield.Messaging.RawData
         private readonly HashSet<int> _allowedLengths;
         private string _buffer = string.Empty;
 
+        // TODO Work with this - remove allowed lengths - it will just split raw data stream, commands can have different lengths now
+
         public DataStreamSplitter(char splitter, params int[] allowedLengths)
         {
             if (allowedLengths.IsNullOrEmpty() || allowedLengths.Any(val => val <= 0))

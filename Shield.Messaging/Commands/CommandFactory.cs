@@ -13,12 +13,12 @@ namespace Shield.Messaging.Commands
         private readonly char _separator;
         private readonly IPartFactory _factory;
         private readonly CommandFactoryAutoFacAdapter _commandFactory;
-
         private readonly List<PartType> _requiredParts = new List<PartType>()
         {
            PartType.ID,
            PartType.HostID,
-           PartType.Type,
+           PartType.Target,
+           PartType.Order,
            PartType.Data
         };
 
@@ -45,7 +45,11 @@ namespace Shield.Messaging.Commands
                     : _factory.GetPart(PartType.Empty, string.Empty));
             }
 
-            return _commandFactory.GetCommand(parts[PartType.ID], parts[PartType.HostID], parts[PartType.Type], parts[PartType.Data]);
+            return _commandFactory.GetCommand(parts[PartType.ID],
+                                              parts[PartType.HostID],
+                                              parts[PartType.Target],
+                                              parts[PartType.Order],
+                                              parts[PartType.Data]);
         }
     }
 }

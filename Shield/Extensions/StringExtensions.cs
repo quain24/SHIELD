@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Shield.Extensions
@@ -28,5 +29,12 @@ namespace Shield.Extensions
         {
             return value?.Split(new[] { splitter }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         }
+
+        /// <summary>
+        /// Checks if given <paramref name="data"/> is a alphanumerical string
+        /// </summary>
+        /// <param name="data">String to be checked</param>
+        /// <returns>True if checked string is alphanumerical</returns>
+        public static bool IsAlphanumeric(this string data) => !data.Any(c => !char.IsLetterOrDigit(c) || c >= 128); // Char equal or higher than 128 is out of ASCII spec
     }
 }

@@ -18,6 +18,7 @@ using Shield.HardwareCom.Models;
 using Shield.Messaging.Commands.Parts.PartValidators;
 using System.Collections.Generic;
 using Shield.Messaging.Commands.Parts;
+using static Shield.Enums.Command;
 
 namespace Shield.WpfGui.AutofacModules
 {
@@ -107,6 +108,10 @@ namespace Shield.WpfGui.AutofacModules
                                                                  appSet.DataSize,
                                                                  appSet.HostIdSize,
                                                                  appSet.HostId);
+
+                    var a = c.ResolveNamed<IPartValidator>("DataPartValidator");
+                    var b = a.Validate("0123456789");
+                    var cc = a.Validate("0123#56789");
 
                     return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
                 })

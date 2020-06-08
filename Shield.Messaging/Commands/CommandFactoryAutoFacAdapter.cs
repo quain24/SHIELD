@@ -9,16 +9,16 @@ namespace Shield.Messaging.Commands
 {
     public class CommandFactoryAutoFacAdapter
     {
-        private readonly Func<IPart, IPart, IPart, IPart, ICommand> _commandFactory;
+        private readonly Func<IPart, IPart, IPart, IPart, IPart, ICommand> _commandFactory;
 
-        public CommandFactoryAutoFacAdapter(Func<IPart, IPart, IPart, IPart, ICommand> commandFactory)
+        public CommandFactoryAutoFacAdapter(Func<IPart, IPart, IPart, IPart, IPart, ICommand> commandFactory)
         {
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
         }
 
-        public ICommand GetCommand(IPart hostID, IPart ID, IPart type, IPart data)
+        public ICommand GetCommand(IPart hostID, IPart ID, IPart target, IPart order, IPart data)
         {
-            return _commandFactory(hostID, ID, type, data);
+            return _commandFactory(hostID, ID, target, order, data);
         }
     }
 }

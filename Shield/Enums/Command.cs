@@ -10,6 +10,8 @@
             Empty,
             ID,
             HostID,
+            Target,
+            Order,
             Type,
             Data
         }
