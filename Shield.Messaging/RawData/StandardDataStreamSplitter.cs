@@ -1,26 +1,18 @@
 ﻿using Shield.Extensions;
 using Shield.Messaging.Extensions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Shield.Messaging.RawData
 {
-    public class DataStreamSplitter : IDataStreamSplitter
+    public class StandardDataStreamSplitter : IDataStreamSplitter
     {
         private readonly char _splitter;
-        private readonly HashSet<int> _allowedLengths;
         private string _buffer = string.Empty;
 
-        // TODO Work with this - remove allowed lengths - it will just split raw data stream, commands can have different lengths now
-
-        public DataStreamSplitter(char splitter, params int[] allowedLengths)
+        public StandardDataStreamSplitter(char splitter)
         {
-            if (allowedLengths.IsNullOrEmpty() || allowedLengths.Any(val => val <= 0))
-                throw new ArgumentException($"{nameof(allowedLengths)} must contain only positive values and cannot be empty or null.");
-
             _splitter = splitter;
-            _allowedLengths = allowedLengths.ToHashSet();
         }
 
         public IEnumerable<RawCommand> Split(string data)
@@ -29,11 +21,10 @@ namespace Shield.Messaging.RawData
             data = TrimToFirstSplitter(data);
             data = TrimAfterLastSplitter(data);
 
-            var content = data
-                .SplitBy(_splitter)
-                .ToRawCommands();
+            var content = data.SplitBy(_splitter)
+                              .ToRawCommands();
 
-            return new RawCommandCollection(RawDataOfAllowedLengthsFrom(content));
+            return new RawCommandCollection(FilterSplittedData(content));
         }
 
         private string MergeBuffers(string data)
@@ -73,7 +64,6 @@ namespace Shield.Messaging.RawData
             return string.Empty;
         }
 
-        private IEnumerable<RawCommand> RawDataOfAllowedLengthsFrom(IEnumerable<RawCommand> content) =>
-            content.Where(command => _allowedLengths.Any(length => length == command.Length));
+        protected virtual IEnumerable<RawCommand> FilterSplittedData(IEnumerable<RawCommand> commands) => commands;
     }
 }

@@ -107,8 +107,7 @@ namespace ShieldTests.Commands
             Debug.WriteLine(clock.UtcNow + "  " + clock.UtcNow.Ticks);
             Debug.WriteLine(clock.UtcNow + "  " + clock.UtcNow.Ticks);
         }
-        // todo This is first step to move from messages to commands - cut one step from equation.
-        // validation needs overhaul, every part. 
+        // TODO validation needs overhaul, every part. 
         // Bad data pack to only be marked if target order requires data pack
         // Think how to DI all of this
 

@@ -109,10 +109,6 @@ namespace Shield.WpfGui.AutofacModules
                                                                  appSet.HostIdSize,
                                                                  appSet.HostId);
 
-                    var a = c.ResolveNamed<IPartValidator>("DataPartValidator");
-                    var b = a.Validate("0123456789");
-                    var cc = a.Validate("0123#56789");
-
                     return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
                 })
                 .As<ICommandTranslator>();

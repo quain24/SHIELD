@@ -58,6 +58,8 @@
     <Compile Include="Commands\Parts\PartValidators\CompositValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\PartValidatorBuilder.cs" />
     <Compile Include="Commands\States\ErrorState.cs" />
+    <Compile Include="Devices\ICommunicationDeviceAsync.cs" />
+    <Compile Include="Devices\ICommunicationDevice.cs" />
     <Compile Include="Modules\IModuleInfo.cs" />
     <Compile Include="Commands\Parts\PrecisePartFactory.cs" />
     <Compile Include="Commands\Parts\TargetPart.cs" />
@@ -72,7 +74,8 @@
     <Compile Include="Commands\Parts\PartValidators\OnlyAlphanumericAllowedValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\AllwaysGoodValidatorSingleton.cs" />
     <Compile Include="Commands\Parts\DataPart.cs" />
-    <Compile Include="RawData\DataStreamSplitter.cs" />
+    <Compile Include="RawData\StandardDataStreamSplitter.cs" />
+    <Compile Include="RawData\AllowedLengthsDataStreamSplitter.cs" />
     <Compile Include="Commands\Parts\EmptyPart.cs" />
     <Compile Include="Commands\Parts\HostIDPart.cs" />
     <Compile Include="RawData\IDataStreamSplitter.cs" />

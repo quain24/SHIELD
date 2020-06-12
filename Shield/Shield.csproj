@@ -71,7 +71,6 @@
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettings.cs" />
     <Compile Include="CommonInterfaces\ICommunicationDeviceSettingsContainer.cs" />
     <Compile Include="CommonInterfaces\IMoqPortSettingsModel.cs" />
-    <Compile Include="CommonInterfaces\ISerialPortSettingsModel.cs" />
     <Compile Include="CommonInterfaces\ISetting.cs" />
     <Compile Include="CommonInterfaces\ISettings.cs" />
     <Compile Include="Enums\DeviceType.cs" />
