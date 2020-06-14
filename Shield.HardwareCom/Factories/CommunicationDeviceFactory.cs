@@ -1,5 +1,6 @@
 ﻿using Shield.CommonInterfaces;
 using Shield.Enums;
+using Shield.Persistance.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -27,7 +28,7 @@ namespace Shield.HardwareCom.Factories
             ICommunicationDevice device;
             switch (settings)
             {
-                case var _ when settings is ISerialPortSettingsModel:
+                case var _ when settings is SerialPortSettingsModel:
                     device = _deviceFactory[DeviceType.Serial];
                     break;
 
@@ -51,7 +52,7 @@ namespace Shield.HardwareCom.Factories
 
             switch (deviceSettings)
             {
-                case ISerialPortSettingsModel _:
+                case SerialPortSettingsModel _:
                     device = _deviceFactory[DeviceType.Serial];
                     break;
 

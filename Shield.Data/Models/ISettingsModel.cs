@@ -2,7 +2,7 @@
 using Shield.Enums;
 using System.Collections.Generic;
 
-namespace Shield.Data.Models
+namespace Shield.Persistance.Models
 {
     public interface ISettingsModel
     {

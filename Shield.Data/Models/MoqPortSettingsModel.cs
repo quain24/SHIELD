@@ -2,7 +2,7 @@
 using Shield.Enums;
 using System.Runtime.Serialization;
 
-namespace Shield.Data.Models
+namespace Shield.Persistance.Models
 {
     [DataContract(Name = "MoqPortSettings")]
     public class MoqPortSettingsModel : IMoqPortSettingsModel

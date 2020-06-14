@@ -1,5 +1,5 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Data;
+using Shield.Persistance;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
@@ -449,8 +449,8 @@ namespace COM6TestSender
                 var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
                 var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-                var sm = new Shield.Data.Models.SettingsModel();
-                var apset = new Shield.Data.Models.ApplicationSettingsModel();
+                var sm = new Shield.Persistance.Models.SettingsModel();
+                var apset = new Shield.Persistance.Models.ApplicationSettingsModel();
                 apset.CommandTypeSize = 4;
                 apset.DataSize = 30;
                 apset.Filler = '.';
@@ -458,7 +458,7 @@ namespace COM6TestSender
                 apset.HostId = "TEST";
                 apset.Separator = '*';
                 apset.HostIdSize = 4;
-                var portset = new Shield.Data.Models.SerialPortSettingsModel();
+                var portset = new Shield.Persistance.Models.SerialPortSettingsModel();
                 portset.BaudRate = 921600;
                 portset.Encoding = 20127;
                 portset.PortNumber = 7;
@@ -468,7 +468,7 @@ namespace COM6TestSender
                 portset.ReadTimeout = -1;
 
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
-                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
+                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, (ISetting)portset);
                 var sett = new Settings(sm);
                 var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
                 var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
@@ -526,15 +526,15 @@ namespace COM6TestSender
                 var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
                 var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-                var sm = new Shield.Data.Models.SettingsModel();
-                var apset = new Shield.Data.Models.ApplicationSettingsModel();
+                var sm = new Shield.Persistance.Models.SettingsModel();
+                var apset = new Shield.Persistance.Models.ApplicationSettingsModel();
                 apset.CommandTypeSize = 4;
                 apset.DataSize = 30;
                 apset.Filler = '.';
                 apset.IdSize = 4;
                 apset.Separator = '*';
                 apset.HostIdSize = 4;
-                var portset = new Shield.Data.Models.SerialPortSettingsModel
+                var portset = new Shield.Persistance.Models.SerialPortSettingsModel
                 {
                     BaudRate = 921600,
                     Encoding = 20127,
@@ -547,7 +547,7 @@ namespace COM6TestSender
 
                 var sett = new Settings(sm);
                 sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
-                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
+                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, (ISetting)portset);
                 var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
                 var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
 

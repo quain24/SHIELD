@@ -3,10 +3,11 @@ using Shield.Enums;
 using System.IO.Ports;
 using System.Runtime.Serialization;
 
-namespace Shield.Data.Models
+namespace Shield.Persistance.Models
 {
     [DataContract(Name = "SerialPortSettings")]
-    public class SerialPortSettingsModel : ISerialPortSettingsModel
+    public class SerialPortSettingsModel  /*ISerialPortSettingsModel*/
+        // TODO Apply repository pattern for things like settings etc. Each thing should have separate repository - settings, saved commands etc
     {
         public SerialPortSettingsModel()
         {

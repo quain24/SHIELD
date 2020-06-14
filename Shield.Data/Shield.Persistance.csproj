@@ -7,8 +7,8 @@
     <ProjectGuid>{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shield.Data</RootNamespace>
-    <AssemblyName>Shield.Data</AssemblyName>
+    <RootNamespace>Shield.Persistance</RootNamespace>
+    <AssemblyName>Shield.Persistance</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

@@ -161,9 +161,9 @@
     <Folder Include="ViewModelsHelpers\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
+    <ProjectReference Include="..\Shield.Data\Shield.Persistance.csproj">
       <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
-      <Name>Shield.Data</Name>
+      <Name>Shield.Persistance</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
       <Project>{2b51f18a-558a-4f92-83f1-92bd0395c875}</Project>

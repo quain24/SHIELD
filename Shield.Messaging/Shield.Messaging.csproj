@@ -36,7 +36,6 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -87,9 +86,9 @@
     <Compile Include="RawData\RawCommandCollection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
+    <ProjectReference Include="..\Shield.Data\Shield.Persistance.csproj">
       <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
-      <Name>Shield.Data</Name>
+      <Name>Shield.Persistance</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>

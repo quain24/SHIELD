@@ -41,10 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ICommunicationDeviceSettings.cs" />
-    <Compile Include="ISerialPortSettingsModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerialPortAdapter.cs" />
+    <Compile Include="SerialPortSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.Messaging\Shield.Messaging.csproj">

@@ -1,5 +1,5 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Data.Models;
+using Shield.Persistance.Models;
 using Shield.Enums;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 
-namespace Shield.Data
+namespace Shield.Persistance
 {
     public class Settings : ISettings
     {

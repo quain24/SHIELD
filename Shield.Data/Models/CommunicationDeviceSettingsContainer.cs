@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 
-namespace Shield.Data.Models
+namespace Shield.Persistance.Models
 {
     [DataContract(Name = "CommunicationDeviceSettingsContainer")]
     public class CommunicationDeviceSettingsContainer : ICommunicationDeviceSettingsContainer

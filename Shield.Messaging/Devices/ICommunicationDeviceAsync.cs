@@ -8,5 +8,7 @@ namespace Shield.Messaging.Devices
         Task<bool> SendAsync(string data, CancellationToken ct = default);
 
         Task<string> ReceiveAsync(CancellationToken ct = default);
+
+        Task CloseAsync();
     }
 }

@@ -21,6 +21,8 @@
             Default,
             IDPart,
             HostIDPart,
+            TargetPart,
+            OrderPart,
             TypePart,
             DataPart
         }

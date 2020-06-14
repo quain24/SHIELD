@@ -52,9 +52,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
+    <ProjectReference Include="..\Shield.Data\Shield.Persistance.csproj">
       <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
-      <Name>Shield.Data</Name>
+      <Name>Shield.Persistance</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
       <Project>{2b51f18a-558a-4f92-83f1-92bd0395c875}</Project>
@@ -64,6 +64,9 @@
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

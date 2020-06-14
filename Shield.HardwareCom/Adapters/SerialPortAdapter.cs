@@ -1,4 +1,5 @@
 ﻿using Shield.CommonInterfaces;
+using Shield.Persistance.Models;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -39,7 +40,7 @@ namespace Shield.HardwareCom.Adapters
         {
         }
 
-        public SerialPortAdapter(ISerialPortSettingsModel settings) : this() => Setup(settings);
+        public SerialPortAdapter(ICommunicationDeviceSettings settings) : this() => Setup(settings);
 
         /// <summary>
         /// Sets up all of the necessary parameters for this instance of the device
@@ -53,21 +54,21 @@ namespace Shield.HardwareCom.Adapters
             if (!WasSetupCorrectly(settings))
                 return _wasSetupCorrectly = false;
 
-            SetUpDeviceOptions((ISerialPortSettingsModel)settings);
+            SetUpDeviceOptions((SerialPortSettingsModel)settings);
             return _wasSetupCorrectly = true;
         }
 
         private bool WasSetupCorrectly(ICommunicationDeviceSettings settings)
         {
-            if (_port is null || settings is null || !(settings is ISerialPortSettingsModel))
+            if (_port is null || settings is null || !(settings is SerialPortSettingsModel))
                 return false;
-            return PortNumberExists(((ISerialPortSettingsModel)settings).PortNumber);
+            return PortNumberExists(((SerialPortSettingsModel)settings).PortNumber);
         }
 
         private bool PortNumberExists(int portNumber) =>
             SerialPort.GetPortNames().Contains($"COM{portNumber}");
 
-        private void SetUpDeviceOptions(ISerialPortSettingsModel settings)
+        private void SetUpDeviceOptions(SerialPortSettingsModel settings)
         {
             if (settings is null) throw new ArgumentNullException(nameof(settings));
 

@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using Shield.CommonInterfaces;
-using Shield.Data;
-using Shield.Data.Models;
+using Shield.Persistance;
+using Shield.Persistance.Models;
 using System.Linq;
 using System.Reflection;
 
@@ -15,12 +15,12 @@ namespace Shield.WpfGui.AutofacModules
 
             // Models registration (general)
             builder.RegisterAssemblyTypes(dataAssembly)
-                   .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Model", System.StringComparison.Ordinal))
+                   .Where(t => t.IsInNamespace("Shield.Persistance") && t.Name.EndsWith("Model", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             // Factories registration (single interface per factory) both normal and autofac's factories
             builder.RegisterAssemblyTypes(dataAssembly)
-                   .Where(t => t.IsInNamespace("Shield.Data") && t.Name.EndsWith("Factory", System.StringComparison.Ordinal))
+                   .Where(t => t.IsInNamespace("Shield.Persistance") && t.Name.EndsWith("Factory", System.StringComparison.Ordinal))
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
 
             builder.RegisterType<Settings>().As<ISettings>().SingleInstance();

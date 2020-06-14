@@ -7,7 +7,7 @@ namespace Shield.Messaging.Commands
 {
     public abstract class DefaultCommandTypes : IEnumerable<string>
     {
-        protected readonly HashSet<string> _commands = new HashSet<string>()
+        private readonly HashSet<string> _commands = new HashSet<string>()
         {
             "Data",
             "Master",
@@ -42,16 +42,15 @@ namespace Shield.Messaging.Commands
 
         #endregion IEnumerable<string> implementation
 
-        public virtual bool Contains(string type) => _commands.Contains(type, StringComparer.OrdinalIgnoreCase);
+        public bool Contains(string type) => _commands.Contains(type, StringComparer.OrdinalIgnoreCase);
 
         protected virtual HashSet<string> Sanitize(HashSet<string> source)
         {
             var sanitizedTypes = new HashSet<string>();
             foreach (var entry in source)
             {
-                var trimmedEntry = entry.Trim();
-                if (!string.IsNullOrWhiteSpace(trimmedEntry))
-                    sanitizedTypes.Add(trimmedEntry);
+                if (!string.IsNullOrWhiteSpace(entry))
+                    sanitizedTypes.Add(entry.Trim());
             }
 
             return sanitizedTypes;

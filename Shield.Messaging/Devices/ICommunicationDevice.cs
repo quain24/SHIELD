@@ -10,9 +10,7 @@ namespace Shield.Messaging.Devices
 
         void Open();
 
-        void Close();
-
-        Task CloseAsync();
+        void Close();        
 
         void DiscardInBuffer();
 

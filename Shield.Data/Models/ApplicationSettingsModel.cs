@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using Shield.CommonInterfaces;
 
-namespace Shield.Data.Models
+namespace Shield.Persistance.Models
 {
     /// <summary>
     /// Holds serializable applications configuration data - all of application specific options are held here:

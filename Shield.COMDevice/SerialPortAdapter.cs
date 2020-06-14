@@ -1,4 +1,5 @@
-﻿using Shield.Messaging.Devices;
+﻿using Shield.CommonInterfaces;
+using Shield.Messaging.Devices;
 using System;
 using System.IO;
 using System.IO.Ports;
@@ -9,33 +10,24 @@ using System.Threading.Tasks;
 
 namespace Shield.COMDevice
 {
+    /// <summary>
+    /// Wraps SerialPort for future use with interfaces
+    /// </summary>
     public class SerialPortAdapter : ICommunicationDeviceAsync
     {
-        /// <summary>
-        /// Wraps SerialPort for future use with interfaces
-        /// Works on commandMNodel's, sends and receives them with translation from and into them
-        /// </summary>
-
-        private const int ByteBufferSize = 4092;    // Optimal size of single data portion received buffer
-        private byte[] _buffer = new byte[ByteBufferSize];
-
         private readonly SerialPort _port = new SerialPort();
         private Encoding _encoding;
+        private const int ByteBufferSize = 4092;    // Optimal size of max single data portion received buffer
+        private byte[] _buffer = new byte[ByteBufferSize];
 
         private readonly object _lock = new object();
         private bool _disposed;
-        private bool _wasSetupCorrectly;
 
         public event EventHandler<string> DataReceived;
 
-        public bool IsOpen => _port != null && _port.IsOpen;
+        public SerialPortAdapter(ICommunicationDeviceSettings settings) => Setup(settings);
 
-        public SerialPortAdapter()
-        {
-        }
-
-        public SerialPortAdapter(ISerialPortSettingsModel settings) : this() => Setup(settings);
-
+        public bool IsOpen => _port?.IsOpen == true;
         public int ConfirmationTimeout { get; private set; }
         public int CompletitionTimeout { get; private set; }
         public string Name { get; private set; }
@@ -45,31 +37,19 @@ namespace Shield.COMDevice
         /// </summary>
         /// <param name="settings">Configuration from AppSettings for this type of device</param>
         /// <returns>True if successful</returns>
-        public bool Setup(ICommunicationDeviceSettings settings)
+        public void Setup(ICommunicationDeviceSettings settings)
         {
-            if (settings is null) throw new ArgumentNullException(nameof(settings));
+            if (!(settings is SerialPortSettings set))
+                throw new ArgumentNullException(nameof(settings));
 
-            if (!WasSetupCorrectly(settings))
-                return _wasSetupCorrectly = false;
-
-            SetUpDeviceOptions((ISerialPortSettingsModel)settings);
-            return _wasSetupCorrectly = true;
-        }
-
-        private bool WasSetupCorrectly(ICommunicationDeviceSettings settings)
-        {
-            if (_port is null || settings is null || !(settings is ISerialPortSettingsModel))
-                return false;
-            return PortNumberExists(((ISerialPortSettingsModel)settings).PortNumber);
+            SetUpDeviceOptions(set);
         }
 
         private bool PortNumberExists(int portNumber) =>
             SerialPort.GetPortNames().Contains($"COM{portNumber}");
 
-        private void SetUpDeviceOptions(ISerialPortSettingsModel settings)
+        private void SetUpDeviceOptions(SerialPortSettings settings)
         {
-            if (settings is null) throw new ArgumentNullException(nameof(settings));
-
             _port.PortName = $"COM{settings.PortNumber}";
             _port.BaudRate = settings.BaudRate;
             _port.DataBits = settings.DataBits;
@@ -90,7 +70,7 @@ namespace Shield.COMDevice
         {
             lock (_lock)
             {
-                if (!_port.IsOpen && _wasSetupCorrectly)
+                if (!_port.IsOpen)
                 {
                     try
                     {
@@ -122,7 +102,20 @@ namespace Shield.COMDevice
 
         public string Receive()
         {
-            throw new NotImplementedException();
+            if (!_port.IsOpen)
+                return string.Empty;
+
+            try
+            {
+                int bytesRead = _port.Read(_buffer, 0, _buffer.Length);
+                string rawData = _encoding.GetString(_buffer, 0, bytesRead);
+                OnDataReceived(rawData);
+                return rawData;
+            }
+            catch (IOException)
+            {
+                return string.Empty; // Receiving failed - port closed or disconnected
+            }
         }
 
         /// <summary>
@@ -141,7 +134,7 @@ namespace Shield.COMDevice
                 OnDataReceived(rawData);
                 return rawData;
             }
-            catch (IOException ex)
+            catch (Exception ex) when (ex is IOException || ex is OperationCanceledException)
             {
                 // Only known way to handle sudden port failure AND cancellation - known SerialPort implementation hiccup.
                 throw new OperationCanceledException("System IO exception in BaseStream.ReadAsync - handled, expected, re-thrown. Either task was canceled or port has been closed", ex, ct);
@@ -149,18 +142,19 @@ namespace Shield.COMDevice
         }
 
         /// <summary>
-        /// Sends a raw command string taken from input CommandModel to the receiving device.
+        /// Sends a raw data string.
         /// </summary>
-        /// <param name="command">Single command to transfer</param>
-        /// <returns>True if sending is successful</returns>
-        public bool Send(string command)
+        /// <param name="data">Single data string to transfer</param>
+        /// <returns>True if sending was successful</returns>
+        public bool Send(string data)
         {
-            if (!IsOpen || string.IsNullOrWhiteSpace(command))
+            if (!CanSend(data))
                 return false;
 
+            byte[] buffer = _encoding.GetBytes(data);
             try
             {
-                _port.Write(command);
+                _port.Write(buffer, 0, buffer.Length);
                 return true;
             }
             catch
@@ -170,29 +164,29 @@ namespace Shield.COMDevice
         }
 
         /// <summary>
-        /// Sends a raw command string taken from input CommandModel to the receiving device.
+        /// Sends a raw data string asynchronously.
         /// </summary>
-        /// <param name="command">Single command to transfer</param>
-        /// <returns>Task<bool> if sends or fails</returns>
-        public async Task<bool> SendAsync(string command, CancellationToken ct)
+        /// <param name="data">Single data string to transfer</param>
+        /// <returns>True if sending was successful</returns>
+        public async Task<bool> SendAsync(string data, CancellationToken ct)
         {
-            if (!IsOpen || string.IsNullOrEmpty(command))
-            {
+            if (!CanSend(data))
                 return false;
-            }
 
-            byte[] buffer = _encoding.GetBytes(command);
+            byte[] buffer = _encoding.GetBytes(data);
             try
             {
                 ct.ThrowIfCancellationRequested();
                 await _port.BaseStream.WriteAsync(buffer, 0, buffer.Length, ct).ConfigureAwait(false);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }
         }
+
+        private bool CanSend(string data) => !IsOpen || string.IsNullOrEmpty(data);
 
         /// <summary>
         /// Clears data in 'received' buffer
@@ -205,6 +199,8 @@ namespace Shield.COMDevice
         }
 
         protected virtual void OnDataReceived(string rawData) => DataReceived?.Invoke(this, rawData);
+
+        #region IDisposable implementation
 
         public void Dispose()
         {
@@ -222,8 +218,9 @@ namespace Shield.COMDevice
                 if (_port?.IsOpen ?? false)
                     _port.Close();
             }
-            _buffer = null;
             _disposed = true;
         }
+
+        #endregion IDisposable implementation
     }
 }
