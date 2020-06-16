@@ -71,16 +71,7 @@ namespace Shield.COMDevice
             lock (_lock)
             {
                 if (!_port.IsOpen)
-                {
-                    try
-                    {
-                        _port.Open();
-                    }
-                    catch
-                    {
-                        throw;
-                    }
-                }
+                    _port.Open();
             }
         }
 

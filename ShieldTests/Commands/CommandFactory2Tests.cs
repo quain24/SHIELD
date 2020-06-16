@@ -3,7 +3,6 @@ using Shield.Commands.Parts;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
-using Shield.Messaging.Modules;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
