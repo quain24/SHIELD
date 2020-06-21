@@ -101,6 +101,7 @@
     <Compile Include="Commands\CommandFactoryTests.cs" />
     <Compile Include="Commands\Parts\PartValidators\ForbiddenCharsPartValidatorTests.cs" />
     <Compile Include="Commands\TimestampTests.cs" />
+    <Compile Include="Devices\DeviceHandlerContextTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
@@ -112,6 +113,10 @@
     <Compile Include="RawData\DataStreamSplitterTestData.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shield.COMDevice\Shield.COMDevice.csproj">
+      <Project>{D2B6F644-CE5F-4980-9FF2-C1FFD46F95E5}</Project>
+      <Name>Shield.COMDevice</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
       <Project>{2B51F18A-558A-4F92-83F1-92BD0395C875}</Project>
       <Name>Shield.HardwareCom</Name>

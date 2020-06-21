@@ -40,38 +40,23 @@ namespace COM6TestSender
             Random rand = new Random();
             if (Int32.Parse(a) == 1)
             {
-                Task.Run(() =>
-                {
-                    i++;
-                    while (true)
+                i++;
+                while (true)
+                {   //Command(IPart id, IPart hostID, IPart target, IPart order, IPart data)
+                    int commandType;
+                    do
                     {
-                        //try
-                        //{
-                        int commandType;
-                        do
-                        {
-                            commandType = rand.Next(1, 16);
-                        }
-                        while (commandType == 12);
-
-                        //Thread.Sleep(10);
-                        //serial.Write($@"*0015*ABCD*123456789101112131415161718192");
-                        //serial.Write($@"*{15.ToString().PadLeft(4, '0')}*" + rand.Next(1000, 9999) + '*' + "A1B2C3D4E5F6G7H8I9J10K11L12M13");
-                        string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + _idGenerator.GetNewID() + '*' + i.ToString().PadLeft(30, '.');
-
-                        serial.Write(aa);
-                        Console.WriteLine(aa);
-                        Console.WriteLine(serial.ReadExisting());
-                        //}
-                        //catch
-                        //{
-                        // Console.WriteLine("Nie wysłało");
-                        //}
-                        i++;
-
-                        //Thread.Sleep(1);
+                        commandType = rand.Next(1, 16);
                     }
-                });
+                    while (commandType == 12);
+
+                    string aa = $@"#{16.ToString().PadLeft(4, '0')}*" + _idGenerator.GetNewID() + '*' + "target" + '*' + "order" + '*' + i.ToString().PadLeft(30, '.');
+
+                    serial.Write(aa);
+                    Console.WriteLine(aa);
+                    Console.WriteLine(serial.ReadExisting());
+                    i++;
+                }
             }
             else if (Int32.Parse(a) == 2)
             {

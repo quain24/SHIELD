@@ -9,5 +9,10 @@ namespace Shield.Commands.Parts
             : base(data, validator)
         {
         }
+
+        public override string ToString()
+        {
+            return Data;
+        }
     }
 }
