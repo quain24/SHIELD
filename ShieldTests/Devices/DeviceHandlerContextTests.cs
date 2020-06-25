@@ -93,16 +93,17 @@ namespace Shield.Messaging.Devices.Tests
         {
             int i = 0;
             DHC.Open();
-            DHC.StartListeningAsync();
+            //DHC.StartListeningAsync();
+            //await DHC.StopListeningAsync();
             while (i < 1000)
             {
                 i++;
                 await Task.Delay(1).ConfigureAwait(false);
                 if(i % 100 == 0)
                 {
-                    DHC.Close();
-                    DHC.Open();
-                    DHC.StartListeningAsync();
+                    //DHC.Close();
+                    //DHC.Open();
+                   // DHC.StartListeningAsync();
                 }
                 //Console.WriteLine(DHC.list.Count);
                 

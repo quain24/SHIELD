@@ -99,21 +99,20 @@ namespace Shield.WpfGui.AutofacModules
 
             // Working classes
             builder.Register(c =>
-                {
-                    IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
-                    var settings = new CommandTranslatorSettings(appSet.Separator,
-                                                                 appSet.Filler,
-                                                                 appSet.CommandTypeSize,
-                                                                 appSet.IdSize,
-                                                                 appSet.DataSize,
-                                                                 appSet.HostIdSize,
-                                                                 appSet.HostId);
+                    {
+                        IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();
+                        var settings = new CommandTranslatorSettings(appSet.Separator,
+                                                                     appSet.Filler,
+                                                                     appSet.CommandTypeSize,
+                                                                     appSet.IdSize,
+                                                                     appSet.DataSize,
+                                                                     appSet.HostIdSize,
+                                                                     appSet.HostId);
 
-                    return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
-                })
-                .As<ICommandTranslator>();
+                        return new CommandTranslator(settings, c.Resolve<ICommandModelFactory>());
+                    })
+                    .As<ICommandTranslator>();
 
-            // TODO Testing here //IncomingDataPreparer
             builder.Register(c =>
                     {
                         IApplicationSettingsModel appSet = c.Resolve<ISettings>().ForTypeOf<IApplicationSettingsModel>();

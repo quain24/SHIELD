@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace Shield.Messaging.Devices
 {
@@ -7,16 +6,19 @@ namespace Shield.Messaging.Devices
     {
         bool IsOpen { get; }
         string Name { get; }
+        bool IsConnected { get; }
+        bool IsReady { get; }
 
         void Open();
 
-        void Close();        
+        void Close();
 
         void DiscardInBuffer();
 
         bool Send(string data);
 
         string Receive();
+        bool IsPortExisting();
 
         event EventHandler<string> DataReceived;
     }

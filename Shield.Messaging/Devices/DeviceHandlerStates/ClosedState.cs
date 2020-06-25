@@ -3,6 +3,7 @@ using Shield.Messaging.RawData;
 using System;
 using System.Collections;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Shield.Messaging.Devices.DeviceHandlerStates
@@ -32,8 +33,20 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
 
         public void Open()
         {
-            _device.Open();
-            _context.SetState(new OpenState(_device, _streamSplitter, _commandFactory, _buffer));
+            try
+            {
+                if (_device.IsConnected)
+                {
+                    _device.Open();
+                    _context.SetState(new OpenState(_device, _streamSplitter, _commandFactory, _buffer));
+                }
+            }
+            catch (IOException ex)
+            {
+                Debug.WriteLine("Could not open device");
+                Debug.WriteLine(ex.Message);
+                throw;
+            }
         }
 
         public void Close()

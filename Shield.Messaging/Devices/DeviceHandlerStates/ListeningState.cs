@@ -19,7 +19,8 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
 
         public event EventHandler<ICommand> CommandReceived;
 
-        public ListeningState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandFactory commandFactory, IDictionary buffer)
+        public ListeningState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
+            CommandFactory commandFactory, IDictionary buffer)
         {
             _device = device;
             _streamSplitter = streamSplitter;
@@ -36,7 +37,7 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
         {
             try
             {
-                while (!_cts.IsCancellationRequested)
+                while (!_cts.IsCancellationRequested && _device.IsReady)
                 {
                     string data = await _device.ReceiveAsync(_cts.Token).ConfigureAwait(false);
 
@@ -49,9 +50,10 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
                     }
                 }
             }
-            catch (Exception ex) when (WasListeningCancelled(ex))
+            catch (OperationCanceledException) when (_device.IsReady)
             {
-                Debug.WriteLine("Properly canceled.");
+                Debug.WriteLine("Properly canceled");
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandFactory, _buffer));
             }
             catch
             {
@@ -59,8 +61,6 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
                 throw;
             }
         }
-
-        private bool WasListeningCancelled(Exception e) => e is TaskCanceledException || e is OperationCanceledException;
 
         public void Open() => Debug.WriteLine("DeviceHandler is already open.");
 
@@ -84,7 +84,8 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
             return Task.CompletedTask;
         }
 
-        public async Task<bool> SendAsync(RawCommand command) => await _device.SendAsync(command.ToString()).ConfigureAwait(false);
+        public async Task<bool> SendAsync(RawCommand command) =>
+            await _device.SendAsync(command.ToString()).ConfigureAwait(false);
 
         private void OnCommandReceived(object sender, ICommand e) => CommandReceived?.Invoke(sender, e);
     }
