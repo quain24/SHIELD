@@ -35,11 +35,10 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
         {
             try
             {
-                if (_device.IsConnected)
-                {
-                    _device.Open();
-                    _context.SetState(new OpenState(_device, _streamSplitter, _commandFactory, _buffer));
-                }
+                if (!_device.IsConnected)
+                    return;
+                _device.Open();
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandFactory, _buffer));
             }
             catch (IOException ex)
             {

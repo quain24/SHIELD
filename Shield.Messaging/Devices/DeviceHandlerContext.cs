@@ -3,40 +3,39 @@ using Shield.Messaging.Devices.DeviceHandlerStates;
 using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Shield.Messaging.Devices
 {
     public class DeviceHandlerContext
     {
-        private readonly ICommunicationDeviceAsync _device;
-        private readonly IDataStreamSplitter _streamSplitter;
-        private readonly CommandFactory _commandFactory;
-
         private IDeviceHandlerState _currentState;
         private readonly SortedDictionary<Timestamp, ICommand> _buffer = new SortedDictionary<Timestamp, ICommand>();
 
-        public EventHandler<ICommand> CommandReceived;
-
         public DeviceHandlerContext(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandFactory commandFactory)
         {
-            _device = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
-            _streamSplitter = streamSplitter ?? throw new ArgumentNullException(nameof(streamSplitter));
-            _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-            SetState(new ClosedState(_device, _streamSplitter, _commandFactory, _buffer));
+            _ = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
+            _ = streamSplitter ?? throw new ArgumentNullException(nameof(streamSplitter));
+            _ = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+            SetState(new ClosedState(device, streamSplitter, commandFactory, _buffer));
         }
 
-        public void SetState(IDeviceHandlerState state)
-        {
-            if (_currentState == state)
-                return;
+        public EventHandler<ICommand> CommandReceived;
 
-            if(_currentState != null)
+        internal void SetState(IDeviceHandlerState newState)
+        {
+            if (_currentState == newState)
+                return;
+            SwapState(newState).EnterState(this);
+        }
+
+        private IDeviceHandlerState SwapState(IDeviceHandlerState newState)
+        {
+            if (_currentState != null)
                 _currentState.CommandReceived -= CommandReceived;
-            _currentState = state ?? throw new ArgumentNullException(nameof(state));
+            _currentState = newState ?? throw new ArgumentNullException(nameof(newState));
             _currentState.CommandReceived += CommandReceived;
-            _currentState.EnterState(this);
+            return _currentState;
         }
 
         public void Open() => _currentState.Open();
@@ -49,7 +48,6 @@ namespace Shield.Messaging.Devices
 
         public async Task<bool> SendAsync(RawCommand command) => await _currentState.SendAsync(command).ConfigureAwait(false);
 
-        // TODO cancellation, tokens, states, events, acces to bufer etc
-        // Implement state pattern in full
+        // TODO cancellation, tokens, states, events, access to buffer etc
     }
 }

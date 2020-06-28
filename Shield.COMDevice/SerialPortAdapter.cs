@@ -219,7 +219,7 @@ namespace Shield.COMDevice
             }
         }
 
-        private bool CanSend(string data) => !IsConnected || !IsOpen || string.IsNullOrEmpty(data);
+        private bool CanSend(string data) => !IsReady || string.IsNullOrEmpty(data);
 
         /// <summary>
         /// Clears data in 'received' buffer

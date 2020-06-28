@@ -17,8 +17,6 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
         private readonly IDictionary _buffer;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        public event EventHandler<ICommand> CommandReceived;
-
         public ListeningState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
             CommandFactory commandFactory, IDictionary buffer)
         {
@@ -27,6 +25,8 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
             _commandFactory = commandFactory;
             _buffer = buffer;
         }
+
+        public event EventHandler<ICommand> CommandReceived;
 
         public void EnterState(DeviceHandlerContext context)
         {

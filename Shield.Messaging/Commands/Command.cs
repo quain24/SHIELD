@@ -37,11 +37,11 @@ namespace Shield.Messaging.Commands
         private void SetUpStateToValidationMap() =>
             _errorStateCheckMap = new List<Action>()
             {
-                new Action(() => { if (!ID.IsValid) ErrorState = ErrorState.BadID(); }),
-                new Action(() => { if (!HostID.IsValid) ErrorState = ErrorState.BadHostID(); }),
-                new Action(() => { if (!Target.IsValid) ErrorState = ErrorState.BadTarget(); }),
-                new Action(() => { if (!Order.IsValid) ErrorState = ErrorState.BadOrder(); }),
-                new Action(() => { if (!Data.IsValid) ErrorState = ErrorState.BadDataPack(); })
+                () => { if (!ID.IsValid) ErrorState = ErrorState.BadID(); },
+                () => { if (!HostID.IsValid) ErrorState = ErrorState.BadHostID(); },
+                () => { if (!Target.IsValid) ErrorState = ErrorState.BadTarget(); },
+                () => { if (!Order.IsValid) ErrorState = ErrorState.BadOrder(); },
+                () => { if (!Data.IsValid) ErrorState = ErrorState.BadDataPack(); }
             };
 
         private bool Validate()

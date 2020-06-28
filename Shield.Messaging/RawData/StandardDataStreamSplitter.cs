@@ -42,9 +42,7 @@ namespace Shield.Messaging.RawData
             int splIndex = data.IndexOf(_splitter);
             if (splIndex == -1)
                 return string.Empty;
-            if (splIndex == 0)
-                return data;
-            return data.Substring(splIndex);
+            return splIndex == 0 ? data : data.Substring(splIndex);
         }
 
         private string TrimAfterLastSplitter(string data)
