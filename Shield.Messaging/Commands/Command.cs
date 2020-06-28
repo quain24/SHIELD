@@ -32,7 +32,7 @@ namespace Shield.Messaging.Commands
         public IPart Order { get; }
         public IPart Data { get; }
         public Timestamp Timestamp { get; }
-        public ErrorState ErrorState { get; private set; }
+        public ErrorState ErrorState { get; internal set; }
 
         private void SetUpStateToValidationMap() =>
             _errorStateCheckMap = new List<Action>()

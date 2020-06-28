@@ -77,6 +77,7 @@
     <Compile Include="Commands\Parts\PartValidators\OnlyAlphanumericAllowedValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\AllwaysGoodValidatorSingleton.cs" />
     <Compile Include="Commands\Parts\DataPart.cs" />
+    <Compile Include="RawData\CommandToRawCommandTranslator.cs" />
     <Compile Include="RawData\StandardDataStreamSplitter.cs" />
     <Compile Include="RawData\AllowedLengthsDataStreamSplitter.cs" />
     <Compile Include="Commands\Parts\EmptyPart.cs" />

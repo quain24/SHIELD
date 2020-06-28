@@ -27,6 +27,11 @@ namespace Shield.Messaging.Commands.Parts
             return _isValid = _validator.Validate(Data);
         }
 
+        public override string ToString()
+        {
+            return Data;
+        }
+
         protected override IEnumerable<object> GetAtomicValues()
         {
             yield return Data;

@@ -12,5 +12,10 @@ namespace Shield.Messaging.Extensions
                 collection.Add(new RawCommand(entry));
             return collection;
         }
+
+        public static RawCommand ToRawCommand(this string data)
+        {
+            return  new RawCommand(data);
+        }
     }
 }
