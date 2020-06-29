@@ -1,10 +1,10 @@
-﻿using Shield.CommonInterfaces;
-using Shield.Enums;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using Shield.CommonInterfaces;
+using Shield.Enums;
 
-namespace Shield.Persistance.Models
+namespace Shield.Persistence.Models
 {
     [DataContract(Name = "CommunicationDeviceSettingsContainer")]
     public class CommunicationDeviceSettingsContainer : ICommunicationDeviceSettingsContainer

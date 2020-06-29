@@ -1,5 +1,4 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Persistance;
 using Shield.HardwareCom.CommandProcessing;
 using Shield.HardwareCom.Enums;
 using Shield.HardwareCom.Factories;
@@ -11,6 +10,8 @@ using System.IO.Ports;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Shield.Persistence;
+using Shield.Persistence.Models;
 
 namespace COM6TestSender
 {
@@ -50,7 +51,7 @@ namespace COM6TestSender
                     }
                     while (commandType == 12);
 
-                    string aa = $@"#{16.ToString().PadLeft(4, '0')}*" + _idGenerator.GetNewID() + '*' + "target" + '*' + "order" + '*' + i.ToString().PadLeft(30, '.');
+                    string aa = "#" + _idGenerator.GetNewID() + $"*{16.ToString().PadLeft(4, '0')}*" + "target" + '*' + "order" + '*' + i.ToString().PadLeft(30, '.');
 
                     serial.Write(aa);
                     Console.WriteLine(aa);
@@ -434,8 +435,8 @@ namespace COM6TestSender
                 var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
                 var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-                var sm = new Shield.Persistance.Models.SettingsModel();
-                var apset = new Shield.Persistance.Models.ApplicationSettingsModel();
+                var sm = new SettingsModel();
+                var apset = new Shield.Persistence.Models.ApplicationSettingsModel();
                 apset.CommandTypeSize = 4;
                 apset.DataSize = 30;
                 apset.Filler = '.';
@@ -443,7 +444,7 @@ namespace COM6TestSender
                 apset.HostId = "TEST";
                 apset.Separator = '*';
                 apset.HostIdSize = 4;
-                var portset = new Shield.Persistance.Models.SerialPortSettingsModel();
+                var portset = new SerialPortSettingsModel();
                 portset.BaudRate = 921600;
                 portset.Encoding = 20127;
                 portset.PortNumber = 7;
@@ -511,15 +512,15 @@ namespace COM6TestSender
                 var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
                 var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-                var sm = new Shield.Persistance.Models.SettingsModel();
-                var apset = new Shield.Persistance.Models.ApplicationSettingsModel();
+                var sm = new SettingsModel();
+                var apset = new ApplicationSettingsModel();
                 apset.CommandTypeSize = 4;
                 apset.DataSize = 30;
                 apset.Filler = '.';
                 apset.IdSize = 4;
                 apset.Separator = '*';
                 apset.HostIdSize = 4;
-                var portset = new Shield.Persistance.Models.SerialPortSettingsModel
+                var portset = new SerialPortSettingsModel
                 {
                     BaudRate = 921600,
                     Encoding = 20127,

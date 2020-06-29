@@ -1,8 +1,8 @@
 ﻿using Shield.CommonInterfaces;
 using Shield.Enums;
-using Shield.Persistance.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Shield.Persistence.Models;
 
 namespace Shield.HardwareCom.Factories
 {

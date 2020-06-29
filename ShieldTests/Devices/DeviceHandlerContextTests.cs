@@ -1,24 +1,19 @@
-﻿using Xunit;
-using Shield.Messaging.Devices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.IO.Ports;
 using System.Threading.Tasks;
-using Shield.HardwareCom.Adapters;
+using Shield;
 using Shield.COMDevice;
 using Shield.CommonInterfaces;
-using System.IO.Ports;
-using ShieldTests.RawData;
-using Shield.Messaging.RawData;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
-using Shield.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
-using static Shield.Enums.Command;
+using Shield.Messaging.Devices;
+using Shield.Messaging.RawData;
+using Xunit;
 using Xunit.Abstractions;
+using static Shield.Enums.Command;
 
-namespace Shield.Messaging.Devices.Tests
+namespace ShieldTests.Devices
 {
     public class DeviceHandlerContextTests
     {
@@ -93,7 +88,7 @@ namespace Shield.Messaging.Devices.Tests
         {
             int i = 0;
             DHC.Open();
-            //DHC.StartListeningAsync();
+            DHC.StartListeningAsync();
             //await DHC.StopListeningAsync();
             while (i < 1000)
             {

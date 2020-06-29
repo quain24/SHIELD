@@ -1,5 +1,4 @@
-﻿using Shield.Commands.Parts;
-using Shield.Messaging.Commands;
+﻿using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Extensions;
 using System;

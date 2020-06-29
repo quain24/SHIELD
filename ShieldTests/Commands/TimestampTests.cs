@@ -1,15 +1,9 @@
-﻿using Xunit;
-using Shield.Messaging.Commands;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Moq;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using Shield.Commands;
+using Shield.Messaging.Commands;
+using Xunit;
 
-namespace Shield.Messaging.Commands.Tests
+namespace ShieldTests.Commands
 {
     public class TimestampTests
     {

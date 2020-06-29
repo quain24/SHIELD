@@ -1,5 +1,4 @@
-﻿using Shield.Commands;
-using System;
+﻿using System;
 
 namespace Shield.Messaging.Commands
 {

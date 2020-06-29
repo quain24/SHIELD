@@ -1,8 +1,8 @@
-﻿using Shield.CommonInterfaces;
+﻿using System.Runtime.Serialization;
+using Shield.CommonInterfaces;
 using Shield.Enums;
-using System.Runtime.Serialization;
 
-namespace Shield.Persistance.Models
+namespace Shield.Persistence.Models
 {
     [DataContract(Name = "MoqPortSettings")]
     public class MoqPortSettingsModel : IMoqPortSettingsModel

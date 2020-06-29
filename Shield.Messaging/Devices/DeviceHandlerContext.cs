@@ -17,6 +17,7 @@ namespace Shield.Messaging.Devices
             _ = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
             _ = streamSplitter ?? throw new ArgumentNullException(nameof(streamSplitter));
             _ = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+            Name = device.Name;
             SetState(new ClosedState(device, streamSplitter, commandFactory, _buffer));
         }
 
@@ -28,6 +29,8 @@ namespace Shield.Messaging.Devices
                 return;
             SwapState(newState).EnterState(this);
         }
+
+        public string Name { get; }
 
         private IDeviceHandlerState SwapState(IDeviceHandlerState newState)
         {

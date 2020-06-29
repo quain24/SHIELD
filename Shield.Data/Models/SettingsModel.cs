@@ -1,9 +1,9 @@
-﻿using Shield.CommonInterfaces;
-using Shield.Enums;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
+using Shield.CommonInterfaces;
+using Shield.Enums;
 
-namespace Shield.Persistance.Models
+namespace Shield.Persistence.Models
 {
     [DataContract(Name = "ApplicationSettings")]
     public class SettingsModel : ISettingsModel

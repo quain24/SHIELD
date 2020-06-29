@@ -1,17 +1,10 @@
-﻿using Xunit;
-using Shield.Messaging.Commands;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using Shield;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
-using System.Net.Http.Headers;
-using Shield.Commands.Parts;
-using System.Diagnostics;
 
-namespace Shield.Messaging.Commands.Tests
+namespace ShieldTests.Commands
 {
     public class CommandFactoryTests
     {
@@ -50,13 +43,13 @@ namespace Shield.Messaging.Commands.Tests
 
 
 
-            var partFactory = new PrecisePartFactory(new Dictionary<Enums.Command.PartType, PartFactoryAutofacAdapter>()
+            var partFactory = new PrecisePartFactory(new Dictionary<Shield.Enums.Command.PartType, PartFactoryAutofacAdapter>()
             {
-                [Enums.Command.PartType.ID] = a1,
-                [Enums.Command.PartType.HostID] = a2,
-                [Enums.Command.PartType.Type] = a3,
-                [Enums.Command.PartType.Data] = a4,
-                [Enums.Command.PartType.Empty] = a5
+                [Shield.Enums.Command.PartType.ID] = a1,
+                [Shield.Enums.Command.PartType.HostID] = a2,
+                [Shield.Enums.Command.PartType.Type] = a3,
+                [Shield.Enums.Command.PartType.Data] = a4,
+                [Shield.Enums.Command.PartType.Empty] = a5
             });
         }
     }

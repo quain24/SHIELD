@@ -1,13 +1,8 @@
-﻿using Xunit;
+﻿using System.Diagnostics;
 using Shield.Messaging.Commands.Parts.PartValidators;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Diagnostics;
+using Xunit;
 
-namespace Shield.Messaging.Commands.Parts.PartValidators.Tests
+namespace ShieldTests.Commands.Parts.PartValidators
 {
     public class ForbiddenCharsPartValidatorTests
     {

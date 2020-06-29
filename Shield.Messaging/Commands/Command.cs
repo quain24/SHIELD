@@ -47,6 +47,7 @@ namespace Shield.Messaging.Commands
         private bool Validate()
         {
             _errorStateCheckMap.ForEach(a => a.Invoke());
+            // Unchecked after validation = Valid
             if (ErrorState == ErrorState.Unchecked())
                 ErrorState = ErrorState.Valid();
 

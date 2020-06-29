@@ -1,7 +1,6 @@
-﻿using Shield.Messaging.Commands.Parts;
-using Shield.Messaging.Commands.Parts.PartValidators;
+﻿using Shield.Messaging.Commands.Parts.PartValidators;
 
-namespace Shield.Commands.Parts
+namespace Shield.Messaging.Commands.Parts
 {
     public sealed class HostIDPart : Part
     {

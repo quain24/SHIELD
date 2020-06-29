@@ -116,9 +116,9 @@
     <Compile Include="RawDataProcessing\RawDataPreparer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Persistance.csproj">
+    <ProjectReference Include="..\Shield.Data\Shield.Persistence.csproj">
       <Project>{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}</Project>
-      <Name>Shield.Persistance</Name>
+      <Name>Shield.Persistence</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>

@@ -1,9 +1,8 @@
-﻿using Shield.CommonInterfaces;
-using Shield.Enums;
-using System.IO.Ports;
+﻿using System.IO.Ports;
 using System.Runtime.Serialization;
+using Shield.Enums;
 
-namespace Shield.Persistance.Models
+namespace Shield.Persistence.Models
 {
     [DataContract(Name = "SerialPortSettings")]
     public class SerialPortSettingsModel  /*ISerialPortSettingsModel*/

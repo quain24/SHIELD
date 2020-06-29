@@ -1,6 +1,5 @@
 ﻿using Autofac;
 using Autofac.Core;
-using Shield.Commands.Parts;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;

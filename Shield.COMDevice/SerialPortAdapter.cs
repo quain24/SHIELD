@@ -16,10 +16,10 @@ namespace Shield.COMDevice
     public class SerialPortAdapter : ICommunicationDeviceAsync
     {
         private static readonly int ByteBufferSize = 4092;    // Optimal size of max single data portion received buffer
-        private byte[] _buffer = new byte[ByteBufferSize];
         private static readonly int DelayValue = 1000;
         private static readonly int IntervalValue = 1000;
         private readonly SerialPort _port = new SerialPort();
+        private byte[] _buffer = new byte[ByteBufferSize];
         private Encoding _encoding;
         private Timer _connectionMonitor;
 

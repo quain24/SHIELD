@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "COM6TestSender", "COM6TestS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shield.HardwareCom", "Shield.HardwareCom\Shield.HardwareCom.csproj", "{2B51F18A-558A-4F92-83F1-92BD0395C875}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shield.Persistance", "Shield.Data\Shield.Persistance.csproj", "{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shield.Persistence", "Shield.Data\Shield.Persistence.csproj", "{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shield.Messaging", "Shield.Messaging\Shield.Messaging.csproj", "{861F7A15-56DB-4D7C-A8C0-D9DF4CAFE0C7}"
 EndProject
