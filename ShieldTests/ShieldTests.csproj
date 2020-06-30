@@ -102,12 +102,11 @@
     <Compile Include="Commands\Parts\PartValidators\ForbiddenCharsPartValidatorTests.cs" />
     <Compile Include="Commands\TimestampTests.cs" />
     <Compile Include="Devices\DeviceHandlerContextTests.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\CommandTranslatorTests.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />
-    <Compile Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />
-    <Compile Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
+    <None Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
+    <None Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />
+    <None Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />
+    <None Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RawData\DataStreamSplitterTestData.cs" />
@@ -116,10 +115,6 @@
     <ProjectReference Include="..\Shield.COMDevice\Shield.COMDevice.csproj">
       <Project>{D2B6F644-CE5F-4980-9FF2-C1FFD46F95E5}</Project>
       <Name>Shield.COMDevice</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
-      <Project>{2B51F18A-558A-4F92-83F1-92BD0395C875}</Project>
-      <Name>Shield.HardwareCom</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield.Messaging\Shield.Messaging.csproj">
       <Project>{861f7a15-56db-4d7c-a8c0-d9df4cafe0c7}</Project>

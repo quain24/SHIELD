@@ -1,4 +1,4 @@
-﻿using Shield.HardwareCom.Helpers;
+﻿using Shield.Messaging.Commands;
 using System;
 using Xunit;
 
