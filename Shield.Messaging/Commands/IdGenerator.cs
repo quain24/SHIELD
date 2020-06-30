@@ -1,10 +1,10 @@
-﻿using Shield.Extensions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Shield.Extensions;
 
-namespace Shield.HardwareCom.Helpers
+namespace Shield.Messaging.Commands
 {
     public class IdGenerator : IIdGenerator
     {

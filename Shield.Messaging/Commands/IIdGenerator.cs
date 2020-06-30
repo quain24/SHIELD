@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Shield.HardwareCom.Helpers
+namespace Shield.Messaging.Commands
 {
     public interface IIdGenerator
     {

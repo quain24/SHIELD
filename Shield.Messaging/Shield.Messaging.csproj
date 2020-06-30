@@ -48,6 +48,8 @@
     <Compile Include="Commands\CommandFactoryAutoFacAdapter.cs" />
     <Compile Include="Commands\DefaultCommandTypes.cs" />
     <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\IdGenerator.cs" />
+    <Compile Include="Commands\IIdGenerator.cs" />
     <Compile Include="Commands\KnownCommandTypes.cs" />
     <Compile Include="Commands\Parts\IPartFactory.cs" />
     <Compile Include="Commands\Parts\OrderPart.cs" />
