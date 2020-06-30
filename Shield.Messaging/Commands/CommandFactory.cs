@@ -45,6 +45,9 @@ namespace Shield.Messaging.Commands
                     : _factory.GetPart(PartType.Empty, string.Empty));
             }
 
+            partsEnumerator.Dispose();
+            dataEnumerator.Dispose();
+
             return _commandFactory.GetCommand(parts[PartType.ID],
                                               parts[PartType.HostID],
                                               parts[PartType.Target],

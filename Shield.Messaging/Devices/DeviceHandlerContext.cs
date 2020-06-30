@@ -23,14 +23,14 @@ namespace Shield.Messaging.Devices
 
         public EventHandler<ICommand> CommandReceived;
 
+        public string Name { get; }
+
         internal void SetState(IDeviceHandlerState newState)
         {
             if (_currentState == newState)
                 return;
             SwapState(newState).EnterState(this);
         }
-
-        public string Name { get; }
 
         private IDeviceHandlerState SwapState(IDeviceHandlerState newState)
         {
@@ -45,11 +45,11 @@ namespace Shield.Messaging.Devices
 
         public void Close() => _currentState.Close();
 
-        public async Task StartListeningAsync() => await _currentState.StartListeningAsync().ConfigureAwait(false);
+        public Task StartListeningAsync() => _currentState.StartListeningAsync();
 
-        public async Task StopListeningAsync() => await _currentState.StopListeningAsync().ConfigureAwait(false);
+        public Task StopListeningAsync() => _currentState.StopListeningAsync();
 
-        public async Task<bool> SendAsync(RawCommand command) => await _currentState.SendAsync(command).ConfigureAwait(false);
+        public Task<bool> SendAsync(RawCommand command) => _currentState.SendAsync(command);
 
         // TODO cancellation, tokens, states, events, access to buffer etc
     }
