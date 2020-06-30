@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Shield.COMDevice
+namespace Shield.Exceptions
 {
     [Serializable]
     public class DeviceDisconnectedException : Exception
