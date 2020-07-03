@@ -1,12 +1,12 @@
-﻿using Shield.Messaging.Commands;
-using Shield.Messaging.RawData;
-using System;
+﻿using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Shield.Messaging.Commands;
+using Shield.Messaging.RawData;
 
-namespace Shield.Messaging.Devices.DeviceHandlerStates
+namespace Shield.Messaging.DeviceHandler.States
 {
     public sealed class OpenState : IDeviceHandlerState
     {

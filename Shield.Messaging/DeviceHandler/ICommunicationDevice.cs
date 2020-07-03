@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shield.Messaging.Devices
+namespace Shield.Messaging.DeviceHandler
 {
     public interface ICommunicationDevice : IDisposable
     {

@@ -1,8 +1,8 @@
-﻿using Shield.Messaging.Commands;
+﻿using System;
+using Shield.Messaging.Commands;
 using Shield.Messaging.RawData;
-using System;
 
-namespace Shield.Messaging.Devices
+namespace Shield.Messaging.DeviceHandler
 {
     public class CommandTranslator
     {

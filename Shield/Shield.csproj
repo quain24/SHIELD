@@ -81,6 +81,7 @@
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="GlobalConfig\HostSettings.cs" />
     <Compile Include="HighPrecisionClock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegexEscapeChars.cs" />

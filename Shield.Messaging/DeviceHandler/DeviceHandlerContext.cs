@@ -1,11 +1,11 @@
-﻿using Shield.Messaging.Commands;
-using Shield.Messaging.Devices.DeviceHandlerStates;
-using Shield.Messaging.RawData;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Shield.Messaging.Commands;
+using Shield.Messaging.DeviceHandler.States;
+using Shield.Messaging.RawData;
 
-namespace Shield.Messaging.Devices
+namespace Shield.Messaging.DeviceHandler
 {
     public class DeviceHandlerContext
     {

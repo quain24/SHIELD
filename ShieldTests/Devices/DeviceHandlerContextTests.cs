@@ -7,7 +7,7 @@ using Shield.CommonInterfaces;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
-using Shield.Messaging.Devices;
+using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.RawData;
 using Xunit;
 using Xunit.Abstractions;
@@ -70,9 +70,9 @@ namespace ShieldTests.Devices
                 [PartType.Empty] = a6
             });
 
-            var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data) => new Command(id, hostid, target, order, data));
+            var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data, Timestamp) => new Command(id, hostid, target, order, data, TimestampFactory.Timestamp));
 
-            var Factory = new CommandFactory('*', partFactory, comfacadap);
+            var Factory = new CommandFactory('*', partFactory, comfacadap, new IdGenerator(4));
             var Translator = new CommandTranslator(Factory, new RawCommandFactory('#', '*'));
 
             ICommunicationDeviceAsync com = new Shield.COMDevice.SerialPortAdapter(settings);

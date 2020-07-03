@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Shield.Messaging.Commands;
 using Shield.Messaging.RawData;
 
-namespace Shield.Messaging.Devices.DeviceHandlerStates
+namespace Shield.Messaging.DeviceHandler.States
 {
     public class ListeningState : IDeviceHandlerState
     {

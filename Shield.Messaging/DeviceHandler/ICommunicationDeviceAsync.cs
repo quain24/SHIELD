@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Shield.Messaging.Devices
+namespace Shield.Messaging.DeviceHandler
 {
     public interface ICommunicationDeviceAsync : ICommunicationDevice
     {

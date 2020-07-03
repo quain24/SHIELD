@@ -10,7 +10,7 @@ namespace Shield.Messaging.Commands
         private Func<bool> _executeValidation;
         private List<Action> _errorStateCheckMap;
 
-        public Command(IPart id, IPart hostID, IPart target, IPart order, IPart data)
+        public Command(IPart id, IPart hostID, IPart target, IPart order, IPart data, Timestamp timestamp)
         {
             _executeValidation = Validate;
             ID = id;
@@ -18,7 +18,7 @@ namespace Shield.Messaging.Commands
             Target = target;
             Order = order;
             Data = data;
-            Timestamp = TimestampFactory.Timestamp;
+            Timestamp = timestamp;
             ErrorState = ErrorState.Unchecked();
 
             SetUpStateToValidationMap();
@@ -48,7 +48,7 @@ namespace Shield.Messaging.Commands
         private bool Validate()
         {
             _errorStateCheckMap.ForEach(a => a.Invoke());
-            // Unchecked after validation = Valid
+            // Still unchecked after validation = Valid
             if (ErrorState == ErrorState.Unchecked())
                 ErrorState = ErrorState.Valid();
 

@@ -53,9 +53,9 @@ namespace ShieldTests.Commands
                 [PartType.Empty] = a6
             });
 
-            var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data) => new Command(id, hostid, target, order, data));
+            var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data, Timestamp ) => new Command(id, hostid, target, order, data, TimestampFactory.Timestamp));
 
-            Factory = new CommandFactory('*', partFactory, comfacadap);
+            Factory = new CommandFactory('*', partFactory, comfacadap, new IdGenerator(4));
         }
 
         public CommandFactory Factory;

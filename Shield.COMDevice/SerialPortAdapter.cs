@@ -1,5 +1,4 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Messaging.Devices;
 using System;
 using System.IO;
 using System.IO.Ports;
@@ -8,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Shield.Exceptions;
+using Shield.Messaging.DeviceHandler;
 
 namespace Shield.COMDevice
 {

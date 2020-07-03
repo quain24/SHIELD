@@ -1,8 +1,8 @@
-﻿using Shield.Messaging.Commands;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Shield.Messaging.Commands;
 
-namespace Shield.Messaging.Devices.DeviceHandlerStates
+namespace Shield.Messaging.DeviceHandler.States
 {
     public interface IDeviceHandlerState
     {
