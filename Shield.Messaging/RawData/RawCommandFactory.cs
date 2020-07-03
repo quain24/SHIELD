@@ -6,12 +6,12 @@ using System.Text;
 
 namespace Shield.Messaging.RawData
 {
-    public class CommandToRawCommandTranslator
+    public class RawCommandFactory
     {
         private readonly char _splitter;
         private readonly char _separator;
 
-        public CommandToRawCommandTranslator(char splitter, char separator)
+        public RawCommandFactory(char splitter, char separator)
         {
             ValidateInParameters(splitter, separator);
             _splitter = splitter;
@@ -21,9 +21,9 @@ namespace Shield.Messaging.RawData
         private void ValidateInParameters(char splitter, char separator)
         {
             var text = "cannot be empty, same as other parameter or whitespace";
-            if (splitter is default(Char) || splitter == ' ' || separator == splitter)
+            if (splitter is default(char) || splitter == ' ' || separator == splitter)
                 throw new ArgumentOutOfRangeException(nameof(splitter), $"{nameof(splitter)} {text}");
-            if (separator is default(Char) || separator == ' ')
+            if (separator is default(char) || separator == ' ')
                 throw new ArgumentOutOfRangeException(nameof(separator), $"{nameof(separator)} {text}");
         }
 

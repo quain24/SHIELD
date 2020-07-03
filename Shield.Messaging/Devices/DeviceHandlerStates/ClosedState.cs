@@ -10,21 +10,22 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
 {
     public sealed class ClosedState : IDeviceHandlerState
     {
-        private DeviceHandlerContext _context;
+        private readonly IDictionary _buffer;
+        private readonly CommandTranslator _commandTranslator;
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
-        private readonly CommandFactory _commandFactory;
-        private readonly IDictionary _buffer;
+        private DeviceHandlerContext _context;
 
-        public event EventHandler<ICommand> CommandReceived;
-
-        public ClosedState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandFactory commandFactory, IDictionary buffer)
+        public ClosedState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
+            CommandTranslator commandTranslator, IDictionary buffer)
         {
             _device = device;
             _streamSplitter = streamSplitter;
-            _commandFactory = commandFactory;
+            _commandTranslator = commandTranslator;
             _buffer = buffer;
         }
+
+        public event EventHandler<ICommand> CommandReceived;
 
         public void EnterState(DeviceHandlerContext context)
         {
@@ -38,7 +39,7 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
                 if (!_device.IsConnected)
                     return;
                 _device.Open();
-                _context.SetState(new OpenState(_device, _streamSplitter, _commandFactory, _buffer));
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _buffer));
             }
             catch (IOException ex)
             {
@@ -65,10 +66,10 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
             return Task.CompletedTask;
         }
 
-        public async Task<bool> SendAsync(RawCommand command)
+        public Task<bool> SendAsync(ICommand command)
         {
             Debug.WriteLine("Cannot send because DeviceHandler is closed");
-            return await Task.FromResult(false).ConfigureAwait(false);
+            return Task.FromResult(false);
         }
     }
 }

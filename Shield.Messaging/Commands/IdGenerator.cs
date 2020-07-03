@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Shield.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Shield.Extensions;
 
 namespace Shield.Messaging.Commands
 {
@@ -24,9 +24,19 @@ namespace Shield.Messaging.Commands
         {
             _idLength = idLength > 0
                 ? idLength
-                : throw new ArgumentOutOfRangeException(nameof(idLength), "Cannot create IdGenerator with id length 0 or less");
+                : throw new ArgumentOutOfRangeException(nameof(idLength), "Cannot create IdGenerator with id length of 0 or less");
             _bufferSize = CalculateBufferSize(_idLength);
             _autoResetIfAllIdsUsedUp = autoResetIfAllIdsUsedUp;
+        }
+
+        private ulong CalculateBufferSize(int idLength)
+        {
+            var count = (ulong)CHARS.Length;
+
+            for (ulong x = 1; x <= (ulong)idLength - 1; x++)
+                count *= ((ulong)CHARS.Length - x) / x;
+
+            return count / (ulong)idLength;
         }
 
         /// <summary>
@@ -102,15 +112,5 @@ namespace Shield.Messaging.Commands
         /// <returns><see cref="IEnumerable{string}"/> of used up ID's</returns>
         public IEnumerable<string> GetUsedUpIds() =>
             new HashSet<string>(_usedIDs);
-
-        private ulong CalculateBufferSize(int idLength)
-        {
-            var count = (ulong)CHARS.Length;
-
-            for (ulong x = 1; x <= (ulong)idLength - 1; x++)
-                count *= ((ulong)CHARS.Length - x) / x;
-
-            return count / (ulong)idLength;
-        }
     }
 }

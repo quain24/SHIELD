@@ -13,15 +13,15 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
         private DeviceHandlerContext _context;
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
-        private readonly CommandFactory _commandFactory;
+        private readonly CommandTranslator _commandTranslator;
         private readonly IDictionary _buffer;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        public OpenState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandFactory commandFactory, IDictionary buffer)
+        public OpenState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator, IDictionary buffer)
         {
             _device = device;
             _streamSplitter = streamSplitter;
-            _commandFactory = commandFactory;
+            _commandTranslator =  commandTranslator;
             _buffer = buffer;
         }
 
@@ -41,12 +41,12 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
         {
             _cts.Cancel();
             _device.Close();
-            _context.SetState(new ClosedState(_device, _streamSplitter, _commandFactory, _buffer));
+            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator, _buffer));
         }
 
         public Task StartListeningAsync()
         {
-            var state = new ListeningState(_device, _streamSplitter, _commandFactory, _buffer);
+            var state = new ListeningState(_device, _streamSplitter, _commandTranslator, _buffer);
             _context.SetState(state);
             return state.Listening();
         }
@@ -57,9 +57,9 @@ namespace Shield.Messaging.Devices.DeviceHandlerStates
             return Task.CompletedTask;
         }
 
-        public async Task<bool> SendAsync(RawCommand command)
+        public Task<bool> SendAsync(ICommand command)
         {
-            return await _device.SendAsync(command.ToString(), _cts.Token).ConfigureAwait(false);
+            return  _device.SendAsync(_commandTranslator.TranslateFrom(command).ToString(), _cts.Token);
         }
     }
 }

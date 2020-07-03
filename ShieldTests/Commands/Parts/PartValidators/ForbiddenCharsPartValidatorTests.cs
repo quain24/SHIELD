@@ -23,11 +23,5 @@ namespace ShieldTests.Commands.Parts.PartValidators
             var bt = Validator.Validate(b);
             Debug.WriteLine("");
         }
-
-        [Fact()]
-        public void ValidateTest()
-        {
-            Assert.True(false, "This test needs an implementation");
-        }
     }
 }

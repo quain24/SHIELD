@@ -31,7 +31,10 @@ namespace Shield.Messaging.Commands
 
         public ICommand TranslateFrom(RawCommand rawCommand)
         {
-            var splittedData = rawCommand?.ToString().SplitBy(_separator).ToList() ?? throw new ArgumentNullException(nameof(rawCommand));
+            var splittedData = rawCommand?
+                                        .ToString()
+                                        .SplitBy(_separator)
+                                        .ToList() ?? throw new ArgumentNullException(nameof(rawCommand));
 
             var partsEnumerator = _requiredParts.GetEnumerator();
             var dataEnumerator = splittedData.GetEnumerator();

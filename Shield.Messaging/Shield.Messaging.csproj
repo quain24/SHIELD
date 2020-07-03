@@ -50,7 +50,6 @@
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\IdGenerator.cs" />
     <Compile Include="Commands\IIdGenerator.cs" />
-    <Compile Include="Commands\KnownCommandTypes.cs" />
     <Compile Include="Commands\Parts\IPartFactory.cs" />
     <Compile Include="Commands\Parts\OrderPart.cs" />
     <Compile Include="Commands\Parts\PartFactoryAutofacAdapter.cs" />
@@ -62,6 +61,7 @@
     <Compile Include="Commands\Parts\PartValidators\CompositValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\PartValidatorBuilder.cs" />
     <Compile Include="Commands\States\ErrorState.cs" />
+    <Compile Include="Devices\CommandTranslator.cs" />
     <Compile Include="Devices\DeviceHandlerContext.cs" />
     <Compile Include="Devices\DeviceHandlerStates\ClosedState.cs" />
     <Compile Include="Devices\DeviceHandlerStates\IDeviceHandlerState.cs" />
@@ -79,7 +79,7 @@
     <Compile Include="Commands\Parts\PartValidators\OnlyAlphanumericAllowedValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\AllwaysGoodValidatorSingleton.cs" />
     <Compile Include="Commands\Parts\DataPart.cs" />
-    <Compile Include="RawData\CommandToRawCommandTranslator.cs" />
+    <Compile Include="RawData\RawCommandFactory.cs" />
     <Compile Include="RawData\StandardDataStreamSplitter.cs" />
     <Compile Include="RawData\AllowedLengthsDataStreamSplitter.cs" />
     <Compile Include="Commands\Parts\EmptyPart.cs" />

@@ -35,6 +35,7 @@ namespace Shield.Messaging.Commands
         public ErrorState ErrorState { get; internal set; }
 
         private void SetUpStateToValidationMap() =>
+            // ReSharper disable once ComplexConditionExpression
             _errorStateCheckMap = new List<Action>()
             {
                 () => { if (!ID.IsValid) ErrorState = ErrorState.BadID(); },

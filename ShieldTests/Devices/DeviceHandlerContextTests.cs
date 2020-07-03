@@ -73,11 +73,12 @@ namespace ShieldTests.Devices
             var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data) => new Command(id, hostid, target, order, data));
 
             var Factory = new CommandFactory('*', partFactory, comfacadap);
+            var Translator = new CommandTranslator(Factory, new RawCommandFactory('#', '*'));
 
             ICommunicationDeviceAsync com = new Shield.COMDevice.SerialPortAdapter(settings);
 
 
-            DHC = new DeviceHandlerContext(com, dataSplitter, Factory);
+            DHC = new DeviceHandlerContext(com, dataSplitter, Translator);
 
         }
 

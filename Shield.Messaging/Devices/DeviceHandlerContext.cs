@@ -12,13 +12,13 @@ namespace Shield.Messaging.Devices
         private IDeviceHandlerState _currentState;
         private readonly SortedDictionary<Timestamp, ICommand> _buffer = new SortedDictionary<Timestamp, ICommand>();
 
-        public DeviceHandlerContext(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandFactory commandFactory)
+        public DeviceHandlerContext(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator)
         {
+            _ = commandTranslator ?? throw new ArgumentNullException(nameof(commandTranslator));
             _ = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
             _ = streamSplitter ?? throw new ArgumentNullException(nameof(streamSplitter));
-            _ = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
             Name = device.Name;
-            SetState(new ClosedState(device, streamSplitter, commandFactory, _buffer));
+            SetState(new ClosedState(device, streamSplitter, commandTranslator, _buffer));
         }
 
         public EventHandler<ICommand> CommandReceived;
@@ -49,7 +49,7 @@ namespace Shield.Messaging.Devices
 
         public Task StopListeningAsync() => _currentState.StopListeningAsync();
 
-        public Task<bool> SendAsync(RawCommand command) => _currentState.SendAsync(command);
+        public Task<bool> SendAsync(ICommand command) => _currentState.SendAsync(command);
 
         // TODO cancellation, tokens, states, events, access to buffer etc
     }
