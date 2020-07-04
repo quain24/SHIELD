@@ -50,7 +50,7 @@ namespace COM6TestSender
                     string aa = "#" + _idGenerator.GetNewID() + $"*{16.ToString().PadLeft(4, '0')}*" + "target" + '*' + "order" + '*' + i.ToString().PadLeft(30, '.');
 
                     serial.Write(aa);
-                    Console.WriteLine(aa);
+                    if(i%100 == 0) Console.WriteLine(aa);
                     Console.WriteLine(serial.ReadExisting());
                     i++;
                 }

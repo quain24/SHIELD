@@ -38,7 +38,7 @@ namespace Shield.Messaging.RawData
                 .Append(RawPartWithSeparator(command.Order));
 
             if (!(command.Data is EmptyPart))
-                rawData.Append(command.Data);
+                rawData.Append(RawPartWithSeparator(command.Data));
             return rawData.Append(_splitter)
                 .ToString()
                 .ToRawCommand();

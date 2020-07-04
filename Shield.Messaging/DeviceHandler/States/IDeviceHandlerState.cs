@@ -6,8 +6,6 @@ namespace Shield.Messaging.DeviceHandler.States
 {
     public interface IDeviceHandlerState
     {
-        event EventHandler<ICommand> CommandReceived;
-
         void EnterState(DeviceHandlerContext context);
 
         void Open();

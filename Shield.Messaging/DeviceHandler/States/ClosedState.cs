@@ -1,32 +1,29 @@
-﻿using System;
-using System.Collections;
+﻿using Shield.Messaging.Commands;
+using Shield.Messaging.RawData;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Shield.Messaging.Commands;
-using Shield.Messaging.RawData;
 
 namespace Shield.Messaging.DeviceHandler.States
 {
     public sealed class ClosedState : IDeviceHandlerState
     {
-        private readonly IDictionary _buffer;
         private readonly CommandTranslator _commandTranslator;
+        private readonly Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
         private DeviceHandlerContext _context;
 
         public ClosedState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
-            CommandTranslator commandTranslator, IDictionary buffer)
+            CommandTranslator commandTranslator, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
         {
             _device = device;
             _streamSplitter = streamSplitter;
             _commandTranslator = commandTranslator;
-            _buffer = buffer;
+            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
-
-        public event EventHandler<ICommand> CommandReceived;
-
+        
         public void EnterState(DeviceHandlerContext context)
         {
             _context = context;
@@ -39,7 +36,7 @@ namespace Shield.Messaging.DeviceHandler.States
                 if (!_device.IsConnected)
                     return;
                 _device.Open();
-                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _buffer));
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
             }
             catch (IOException ex)
             {

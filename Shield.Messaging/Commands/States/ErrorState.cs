@@ -59,5 +59,10 @@ namespace Shield.Messaging.Commands.States
         public ErrorState TargetUnknown() => new ErrorState(Invalidate | StateRepresentation.TargetUnknown);
 
         public ErrorState OrderDoesNotExist() => new ErrorState(Invalidate | StateRepresentation.OrderDoesNotExist);
+
+        public override string ToString()
+        {
+            return Representation.ToString();
+        }
     }
 }

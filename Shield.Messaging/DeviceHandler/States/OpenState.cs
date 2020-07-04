@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections;
+﻿using Shield.Messaging.Commands;
+using Shield.Messaging.RawData;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Shield.Messaging.Commands;
-using Shield.Messaging.RawData;
 
 namespace Shield.Messaging.DeviceHandler.States
 {
@@ -14,18 +13,16 @@ namespace Shield.Messaging.DeviceHandler.States
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
         private readonly CommandTranslator _commandTranslator;
-        private readonly IDictionary _buffer;
+        private readonly Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        public OpenState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator, IDictionary buffer)
+        public OpenState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
         {
             _device = device;
             _streamSplitter = streamSplitter;
-            _commandTranslator =  commandTranslator;
-            _buffer = buffer;
+            _commandTranslator = commandTranslator;
+            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
-
-        public event EventHandler<ICommand> CommandReceived;
 
         public void EnterState(DeviceHandlerContext context)
         {
@@ -41,12 +38,12 @@ namespace Shield.Messaging.DeviceHandler.States
         {
             _cts.Cancel();
             _device.Close();
-            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator, _buffer));
+            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
         }
 
         public Task StartListeningAsync()
         {
-            var state = new ListeningState(_device, _streamSplitter, _commandTranslator, _buffer);
+            var state = new ListeningState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync);
             _context.SetState(state);
             return state.Listening();
         }
@@ -59,7 +56,7 @@ namespace Shield.Messaging.DeviceHandler.States
 
         public Task<bool> SendAsync(ICommand command)
         {
-            return  _device.SendAsync(_commandTranslator.TranslateFrom(command).ToString(), _cts.Token);
+            return _device.SendAsync(_commandTranslator.TranslateFrom(command).ToString(), _cts.Token);
         }
     }
 }

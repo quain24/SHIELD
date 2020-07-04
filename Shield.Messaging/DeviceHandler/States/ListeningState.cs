@@ -1,32 +1,29 @@
-﻿using System;
-using System.Collections;
+﻿using Shield.Messaging.Commands;
+using Shield.Messaging.RawData;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Shield.Messaging.Commands;
-using Shield.Messaging.RawData;
 
 namespace Shield.Messaging.DeviceHandler.States
 {
     public class ListeningState : IDeviceHandlerState
     {
-        private readonly IDictionary _buffer;
         private readonly CommandTranslator _commandTranslator;
+        private readonly Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
         private DeviceHandlerContext _context;
 
         public ListeningState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
-            CommandTranslator commandTranslator, IDictionary buffer)
+            CommandTranslator commandTranslator, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
         {
             _device = device;
             _streamSplitter = streamSplitter;
             _commandTranslator = commandTranslator;
-            _buffer = buffer;
+            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
-
-        public event EventHandler<ICommand> CommandReceived;
 
         public void EnterState(DeviceHandlerContext context)
         {
@@ -42,7 +39,7 @@ namespace Shield.Messaging.DeviceHandler.States
         {
             _cts.Cancel();
             _device.Close();
-            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator, _buffer));
+            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
         }
 
         public Task StartListeningAsync()
@@ -54,7 +51,7 @@ namespace Shield.Messaging.DeviceHandler.States
         public Task StopListeningAsync()
         {
             _cts.Cancel();
-            _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _buffer));
+            _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
             return Task.CompletedTask;
         }
 
@@ -74,8 +71,7 @@ namespace Shield.Messaging.DeviceHandler.States
                     foreach (var entry in _streamSplitter.Split(data))
                     {
                         var command = _commandTranslator.TranslateFrom(entry);
-                        _buffer.Add(command.Timestamp, command);
-                        OnCommandReceived(this, command);
+                        await _handleReceivedCommandCallbackAsync(command).ConfigureAwait(false);
                         _cts.Token.ThrowIfCancellationRequested();
                     }
                 }
@@ -83,18 +79,13 @@ namespace Shield.Messaging.DeviceHandler.States
             catch (OperationCanceledException) when (_device.IsReady)
             {
                 Debug.WriteLine("Properly canceled");
-                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _buffer));
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
             }
             catch
             {
                 Close();
                 throw;
             }
-        }
-
-        private void OnCommandReceived(object sender, ICommand e)
-        {
-            CommandReceived?.Invoke(sender, e);
         }
     }
 }
