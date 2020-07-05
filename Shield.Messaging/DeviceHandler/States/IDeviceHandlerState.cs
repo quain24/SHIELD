@@ -6,7 +6,7 @@ namespace Shield.Messaging.DeviceHandler.States
 {
     public interface IDeviceHandlerState
     {
-        void EnterState(DeviceHandlerContext context);
+        void EnterState(DeviceHandlerContext context, Func<ICommand, Task> handleReceivedCommandCallbackAsync);
 
         void Open();
 

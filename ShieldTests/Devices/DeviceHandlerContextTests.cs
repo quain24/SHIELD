@@ -47,13 +47,14 @@ namespace ShieldTests.Devices
 
             var v1 = new OnlyAlphanumericAllowedValidator();
             var v2 = AllwaysGoodValidatorSingleton.Instance;
+            var v3 = AllwaysBadValidatorSingleton.Instance;
 
 
-            var a1 = idfac = new PartFactoryAutofacAdapter((data, validator) => new IDPart(data, validator), v1);
-            var a2 = hostidfac = new PartFactoryAutofacAdapter((data, validator) => new HostIDPart(data, validator), v1);
-            var a3 = targetfac = new PartFactoryAutofacAdapter((data, validator) => new TargetPart(data, validator), v1);
-            var a4 = orderfac = new PartFactoryAutofacAdapter((data, validator) => new OrderPart(data, validator), v1);
-            var a5 = datafac = new PartFactoryAutofacAdapter((data, validator) => new DataPart(data, validator), v1);
+            var a1 = idfac = new PartFactoryAutofacAdapter((data, validator) => new IDPart(data, validator), v3);
+            var a2 = hostidfac = new PartFactoryAutofacAdapter((data, validator) => new HostIDPart(data, validator), v3);
+            var a3 = targetfac = new PartFactoryAutofacAdapter((data, validator) => new TargetPart(data, validator), v3);
+            var a4 = orderfac = new PartFactoryAutofacAdapter((data, validator) => new OrderPart(data, validator), v3);
+            var a5 = datafac = new PartFactoryAutofacAdapter((data, validator) => new DataPart(data, validator), v3);
             var a6 = emptyfac = new PartFactoryAutofacAdapter((data, validator) => new EmptyPart(validator), v2);
 
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.GlobalConfig;
+﻿using Shield.GlobalConfig;
 using Shield.Messaging.Commands.Parts;
+using System;
 
 namespace Shield.Messaging.Commands
 {
@@ -21,9 +17,17 @@ namespace Shield.Messaging.Commands
 
         public ICommand GetConfirmationFor(ICommand command)
         {
-                return _commandFactory.Create(command.HostID,
-                    _partFactory.GetPart(Enums.Command.PartType.Order, ConfirmationTarget.ConfirmationTargetString),
-                    _partFactory.GetPart(Enums.Command.PartType.Data, command.ErrorState.ToString()));
+            _ = command ?? throw new ArgumentNullException(nameof(command),
+                "Passed in NULL instead of a ICommand instance");
+            return _commandFactory.Create(command.HostID,
+                _partFactory.GetPart(Enums.Command.PartType.Order, ConfirmationTarget.ConfirmationTargetString),
+                GenerateConfirmationDataPart(command));
+        }
+
+        private IPart GenerateConfirmationDataPart(ICommand command)
+        {
+            var data = command.ID.ToString() + " " + command.ErrorState;
+            return _partFactory.GetPart(Enums.Command.PartType.Data, data);
         }
     }
 }

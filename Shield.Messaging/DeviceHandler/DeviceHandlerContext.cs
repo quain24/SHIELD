@@ -22,7 +22,7 @@ namespace Shield.Messaging.DeviceHandler
             _ = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
             _ = streamSplitter ?? throw new ArgumentNullException(nameof(streamSplitter));
             Name = device.Name;
-            SetState(new ClosedState(device, streamSplitter, commandTranslator, HandleReceivedCommandAsync));
+            SetState(new ClosedState(device, streamSplitter, commandTranslator));
         }
 
         public EventHandler<ICommand> CommandReceived;
@@ -35,7 +35,7 @@ namespace Shield.Messaging.DeviceHandler
             if (_currentState == newState)
                 return;
             _currentState = newState ?? throw new ArgumentNullException(nameof(newState), "New state cannot be NULL.");
-            _currentState.EnterState(this);
+            _currentState.EnterState(this, HandleReceivedCommandAsync);
         }
 
         public void Open() => _currentState.Open();

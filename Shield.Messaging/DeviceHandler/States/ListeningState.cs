@@ -9,25 +9,25 @@ namespace Shield.Messaging.DeviceHandler.States
 {
     public class ListeningState : IDeviceHandlerState
     {
+        private DeviceHandlerContext _context;
+        private Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly CommandTranslator _commandTranslator;
-        private readonly Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
-        private DeviceHandlerContext _context;
 
         public ListeningState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
-            CommandTranslator commandTranslator, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
+            CommandTranslator commandTranslator)
         {
             _device = device;
             _streamSplitter = streamSplitter;
             _commandTranslator = commandTranslator;
-            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
 
-        public void EnterState(DeviceHandlerContext context)
+        public void EnterState(DeviceHandlerContext context, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
         {
             _context = context;
+            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
 
         public void Open()
@@ -39,7 +39,7 @@ namespace Shield.Messaging.DeviceHandler.States
         {
             _cts.Cancel();
             _device.Close();
-            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
+            _context.SetState(new ClosedState(_device, _streamSplitter, _commandTranslator));
         }
 
         public Task StartListeningAsync()
@@ -51,7 +51,7 @@ namespace Shield.Messaging.DeviceHandler.States
         public Task StopListeningAsync()
         {
             _cts.Cancel();
-            _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
+            _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator));
             return Task.CompletedTask;
         }
 
@@ -79,7 +79,7 @@ namespace Shield.Messaging.DeviceHandler.States
             catch (OperationCanceledException) when (_device.IsReady)
             {
                 Debug.WriteLine("Properly canceled");
-                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator));
             }
             catch
             {

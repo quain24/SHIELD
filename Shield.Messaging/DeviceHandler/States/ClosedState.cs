@@ -9,24 +9,24 @@ namespace Shield.Messaging.DeviceHandler.States
 {
     public sealed class ClosedState : IDeviceHandlerState
     {
+        private DeviceHandlerContext _context;
+        private Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly CommandTranslator _commandTranslator;
-        private readonly Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
-        private DeviceHandlerContext _context;
 
         public ClosedState(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter,
-            CommandTranslator commandTranslator, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
+            CommandTranslator commandTranslator)
         {
             _device = device;
             _streamSplitter = streamSplitter;
             _commandTranslator = commandTranslator;
-            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
         
-        public void EnterState(DeviceHandlerContext context)
+        public void EnterState(DeviceHandlerContext context, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
         {
             _context = context;
+            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
         }
 
         public void Open()
@@ -36,7 +36,7 @@ namespace Shield.Messaging.DeviceHandler.States
                 if (!_device.IsConnected)
                     return;
                 _device.Open();
-                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator, _handleReceivedCommandCallbackAsync));
+                _context.SetState(new OpenState(_device, _streamSplitter, _commandTranslator));
             }
             catch (IOException ex)
             {
