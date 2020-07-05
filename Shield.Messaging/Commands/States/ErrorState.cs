@@ -19,6 +19,13 @@ namespace Shield.Messaging.Commands.States
             BadTargetPart = 1 << 7
         }
 
+        public static ErrorState Custom(string attributes)
+        {
+            if (Enum.TryParse(attributes, out StateRepresentation translatedRepresentation))
+                return new ErrorState(translatedRepresentation);
+            throw new ArgumentOutOfRangeException(nameof(attributes), $"Passed attributes cannot be parsed into {nameof(ErrorState)}");
+        }
+
         public static ErrorState Unchecked() => new ErrorState(StateRepresentation.Unchecked);
 
         private ErrorState(StateRepresentation representation) => Representation = representation;

@@ -25,8 +25,9 @@ namespace Shield.Messaging.DeviceHandler
             SetState(new ClosedState(device, streamSplitter, commandTranslator));
         }
 
-        public EventHandler<ICommand> CommandReceived;
-        public EventHandler<ICommand> ConfirmationReceived;
+        public event EventHandler<ICommand> CommandReceived;
+        public event EventHandler<ICommand> ConfirmationReceived;
+        public event EventHandler<ICommand> IncomingProtocolErrorOccured;
 
         public string Name { get; }
 
@@ -50,26 +51,34 @@ namespace Shield.Messaging.DeviceHandler
 
         private async Task HandleReceivedCommandAsync(ICommand command)
         {
-            if (command.IsConfirmation())
+            if (!command.IsValid)
+            {
+                await SendAsync(_confirmationFactory.GetConfirmationFor(command)).ConfigureAwait(false);
+                OnIncomingProtocolErrorOccured(command);
+            }
+            else if (command.IsConfirmation())
             {
                 _confirmationBuffer.Add(command.Timestamp, command);
-                OnConfirmationReceived(this, command);
+                OnConfirmationReceived(command);
             }
             else
             {
                 Validate(command);
                 await SendAsync(_confirmationFactory.GetConfirmationFor(command)).ConfigureAwait(false);
                 _commandBuffer.Add(command.Timestamp, command);
-                OnCommandReceived(this, command);
+                OnCommandReceived(command);
             }
         }
 
         private bool Validate(ICommand command) => command.IsValid;
 
-        public virtual void OnCommandReceived(object sender, ICommand command) =>
-            CommandReceived?.Invoke(sender, command);
+        protected virtual void OnCommandReceived(ICommand command) =>
+            CommandReceived?.Invoke(this, command);
 
-        public virtual void OnConfirmationReceived(object sender, ICommand command) =>
-            ConfirmationReceived?.Invoke(sender, command);
+        protected virtual void OnConfirmationReceived(ICommand command) =>
+            ConfirmationReceived?.Invoke(this, command);
+
+        protected virtual void OnIncomingProtocolErrorOccured(ICommand command) =>
+            IncomingProtocolErrorOccured?.Invoke(this, command);
     }
 }
