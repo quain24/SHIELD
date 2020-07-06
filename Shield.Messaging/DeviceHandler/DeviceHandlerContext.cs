@@ -63,14 +63,11 @@ namespace Shield.Messaging.DeviceHandler
             }
             else
             {
-                Validate(command);
                 await SendAsync(_confirmationFactory.GetConfirmationFor(command)).ConfigureAwait(false);
                 _commandBuffer.Add(command.Timestamp, command);
                 OnCommandReceived(command);
             }
         }
-
-        private bool Validate(ICommand command) => command.IsValid;
 
         protected virtual void OnCommandReceived(ICommand command) =>
             CommandReceived?.Invoke(this, command);
