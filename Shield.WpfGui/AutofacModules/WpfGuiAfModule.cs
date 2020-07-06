@@ -1,5 +1,8 @@
 ﻿using Autofac;
+using Autofac.Core;
 using Caliburn.Micro;
+using Shield.WpfGui.ViewModels;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -24,6 +27,10 @@ namespace Shield.WpfGui.AutofacModules
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
                 .Where(t => t.IsInNamespace("Shield.WpfGui.Models") && t.Name.EndsWith("Model"))
                 .AsSelf();
+
+            // Replacement for AutoFac builtIn IIndex for better separation
+            builder.RegisterGeneric(typeof(DependencyDictionary<,>))
+                   .As(typeof(IReadOnlyDictionary<,>));
 
             base.Load(builder);
         }

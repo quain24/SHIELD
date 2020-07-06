@@ -1,15 +1,15 @@
-﻿using Shield.CommonInterfaces;
-using Shield.Data.Models;
-using Shield.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
+using Shield.CommonInterfaces;
+using Shield.Enums;
+using Shield.Persistence.Models;
 
-namespace Shield.Data
+namespace Shield.Persistence
 {
     public class Settings : ISettings
     {

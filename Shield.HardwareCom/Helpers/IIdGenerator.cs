@@ -9,9 +9,7 @@ namespace Shield.HardwareCom.Helpers
         string GetNewID();
 
         IEnumerable<string> GetUsedUpIds();
-
-        void MarkAsUsedUp(string id);
-
-        void MarkAsUsedUp(string[] ids);
+        
+        void MarkAsUsedUp(params string[] ids);
     }
 }

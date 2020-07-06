@@ -106,6 +106,7 @@
     </ApplicationDefinition>
     <Compile Include="AutofacModules\DataAfModule.cs" />
     <Compile Include="AutofacModules\HardwareComAfModule.cs" />
+    <Compile Include="AutofacModules\MessagingAfModule.cs" />
     <Compile Include="AutofacModules\ShieldAfModule.cs" />
     <Compile Include="DependencyDictionary.cs" />
     <Compile Include="Validators\CommandDataPackValidation.cs" />
@@ -160,13 +161,13 @@
     <Folder Include="ViewModelsHelpers\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shield.Data\Shield.Data.csproj">
-      <Project>{0065bd17-51c3-497b-a20a-56e8edc3c2a2}</Project>
-      <Name>Shield.Data</Name>
+    <ProjectReference Include="..\Shield.Data\Shield.Persistence.csproj">
+      <Project>{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}</Project>
+      <Name>Shield.Persistence</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Shield.HardwareCom\Shield.HardwareCom.csproj">
-      <Project>{2b51f18a-558a-4f92-83f1-92bd0395c875}</Project>
-      <Name>Shield.HardwareCom</Name>
+    <ProjectReference Include="..\Shield.Messaging\Shield.Messaging.csproj">
+      <Project>{861f7a15-56db-4d7c-a8c0-d9df4cafe0c7}</Project>
+      <Name>Shield.Messaging</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>

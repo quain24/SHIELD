@@ -103,15 +103,23 @@
     <Compile Include="MessagingPipelineContext.cs" />
     <Compile Include="Messenger.cs" />
     <Compile Include="Models\CommandModel.cs" />
+    <Compile Include="Models\Command.cs" />
+    <Compile Include="Models\ICommand.cs" />
     <Compile Include="Models\ICommandModel.cs" />
     <Compile Include="Models\IMessageCollection.cs" />
     <Compile Include="Models\IMessageModel.cs" />
     <Compile Include="Models\MessageModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RawDataProcessing\ICommandConfiguration.cs" />
     <Compile Include="RawDataProcessing\IIncomingDataPreparer.cs" />
     <Compile Include="RawDataProcessing\IncomingDataPreparer.cs" />
+    <Compile Include="RawDataProcessing\RawDataPreparer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shield.Data\Shield.Persistence.csproj">
+      <Project>{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}</Project>
+      <Name>Shield.Persistence</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shield\Shield.csproj">
       <Project>{c0e7868d-054c-4d7e-8011-5213f1de6b2b}</Project>
       <Name>Shield</Name>

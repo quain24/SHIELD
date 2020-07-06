@@ -2,7 +2,7 @@
 
 namespace Shield.HardwareCom.Models
 {
-    public interface ICommandModel : System.IEquatable<ICommandModel>
+    public interface ICommandModel
     {
         long TimeStamp { get; set; }
         string HostId { get; set; }

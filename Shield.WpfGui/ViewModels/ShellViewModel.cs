@@ -1,9 +1,6 @@
-﻿using Caliburn.Micro;
+﻿using Autofac;
+using Caliburn.Micro;
 using Shield.CommonInterfaces;
-using Shield.HardwareCom;
-using Shield.HardwareCom.Enums;
-using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.Models;
 using Shield.WpfGui.Validators;
 using System;
 using System.Collections;
@@ -18,24 +15,23 @@ namespace Shield.WpfGui.ViewModels
     public class ShellViewModel : Conductor<object>, INotifyDataErrorInfo
     {
         private readonly ISettings _settings;
-        private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
-        private readonly ICommandModelFactory _commandFactory;
+        //private readonly ICommunicationDeviceFactory _communicationDeviceFactory;
+        //private readonly ICommandModelFactory _commandFactory;
         private readonly string _hostId;
-        private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
-        private readonly IMessagingPipeline _pipeline;
+        //private readonly IMessengingPipelineFactory _incomingMessagePipelineFactory;
+        //private readonly IMessagingPipeline _pipeline;
         private string _selectedCommand;
         private string _dataInput;
 
-        private BindableCollection<string> _possibleCommands = new BindableCollection<string>(Enum.GetNames(typeof(CommandType)));
-        private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
-        private BindableCollection<ICommandModel> _newMessageCommands = new BindableCollection<ICommandModel>();
-        private BindableCollection<IMessageModel> _sentMessages = new BindableCollection<IMessageModel>();
-        private ICommandModel _selectedNewMessageCommand;
-        private IMessageModel _selectedSentMessage;
+        //private BindableCollection<string> _possibleCommands = new BindableCollection<string>(Enum.GetNames(typeof(CommandType)));
+        //private BindableCollection<IMessageModel> _receivedMessages = new BindableCollection<IMessageModel>();
+        //private BindableCollection<ICommandModel> _newMessageCommands = new BindableCollection<ICommandModel>();
+        //private BindableCollection<IMessageModel> _sentMessages = new BindableCollection<IMessageModel>();
+        //private ICommandModel _selectedNewMessageCommand;
+        //private IMessageModel _selectedSentMessage;
 
-        private Func<IMessageModel> _messageFactory;
-
-        private IMessageModel _selectedReceivedMessage;
+        //private Func<IMessageModel> _messageFactory;
+        //private IMessageModel _selectedReceivedMessage;
 
         private bool _receivingButtonActivated = false;
         private bool _sending = false;
@@ -48,32 +44,34 @@ namespace Shield.WpfGui.ViewModels
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public ShellViewModel(IMessengingPipelineFactory incomingMessagePipelineFactory, ISettings settings,
-                              ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory, Func<IMessageModel> messageFactoryAF)
+        public ShellViewModel(ISettings settings
+        //                      IMessengingPipelineFactory incomingMessagePipelineFactory
+        //                      ICommunicationDeviceFactory deviceFactory, ICommandModelFactory commandFactory, Func<IMessageModel> messageFactoryAF
+        )
         {
-            _messageFactory = messageFactoryAF;
-            _incomingMessagePipelineFactory = incomingMessagePipelineFactory ?? throw new ArgumentNullException(nameof(incomingMessagePipelineFactory));
+            //_messageFactory = messageFactoryAF;
+            //_incomingMessagePipelineFactory = incomingMessagePipelineFactory ?? throw new ArgumentNullException(nameof(incomingMessagePipelineFactory));
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
-            _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
+            //_communicationDeviceFactory = deviceFactory ?? throw new ArgumentNullException(nameof(deviceFactory));
+            //_commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
             _hostId = _settings.ForTypeOf<IApplicationSettingsModel>().HostId;
             _settings.LoadFromFile();
             _settings.SaveToFile();
 
-            _pipeline = _incomingMessagePipelineFactory.GetPipelineFor(_communicationDeviceFactory.CreateDevice("COM4"));
+            //_pipeline = _incomingMessagePipelineFactory.GetPipelineFor(_communicationDeviceFactory.CreateDevice("COM4"));
 
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
 
-            _pipeline.MessageReceived += AddIncomingMessageToDisplay;
-            _pipeline.ConfirmationSent += (o, e) => SentMessages.Add(e);
-            _pipeline.SendingFailed += (o, e) =>
-            {
-                MessageBox.Show($"sending failed - {e.Id} - {e.Type}");
-            };
-            _pipeline.ConfirmationTimeout += (o, e) =>
-            {
-                MessageBox.Show($"Confirmation timeout - {e.Id} - {e.Type} - HOST: {e.HostId}");
-            };
+            //_pipeline.MessageReceived += AddIncomingMessageToDisplay;
+            //_pipeline.ConfirmationSent += (o, e) => SentMessages.Add(e);
+            //_pipeline.SendingFailed += (o, e) =>
+            //{
+            //    MessageBox.Show($"sending failed - {e.Id} - {e.Type}");
+            //};
+            //_pipeline.ConfirmationTimeout += (o, e) =>
+            //{
+            //    MessageBox.Show($"Confirmation timeout - {e.Id} - {e.Type} - HOST: {e.HostId}");
+            //};
         }
 
         public int DataPackLength()
@@ -107,61 +105,61 @@ namespace Shield.WpfGui.ViewModels
             return packs;
         }
 
-        public void AddIncomingMessageToDisplay(object sender, IMessageModel e)
-        {
-            ReceivedMessages.Add(e);
-        }
+        //public void AddIncomingMessageToDisplay(object sender, IMessageModel e)
+        //{
+        //    ReceivedMessages.Add(e);
+        //}
 
-        public void AddIncomingMessageErrorToDisplay(object sender, IMessageModel e)
-        {
-            ReceivedMessages.Add(e);
-        }
+        //public void AddIncomingMessageErrorToDisplay(object sender, IMessageModel e)
+        //{
+        //    ReceivedMessages.Add(e);
+        //}
 
-        public BindableCollection<IMessageModel> ReceivedMessages
-        {
-            get => _receivedMessages;
-            set => _receivedMessages = value;
-        }
+        //public BindableCollection<IMessageModel> ReceivedMessages
+        //{
+        //    get => _receivedMessages;
+        //    set => _receivedMessages = value;
+        //}
 
-        public IMessageModel SelectedReceivedMessage
-        {
-            get => _selectedReceivedMessage;
-            set
-            {
-                _selectedReceivedMessage = value;
-                NotifyOfPropertyChange(() => SelectedReceivedMessage);
-                NotifyOfPropertyChange(() => SingleMessageCommands);
-            }
-        }
+        //public IMessageModel SelectedReceivedMessage
+        //{
+        //    get => _selectedReceivedMessage;
+        //    set
+        //    {
+        //        _selectedReceivedMessage = value;
+        //        NotifyOfPropertyChange(() => SelectedReceivedMessage);
+        //        NotifyOfPropertyChange(() => SingleMessageCommands);
+        //    }
+        //}
 
-        public BindableCollection<ICommandModel> SingleMessageCommands
-        {
-            get
-            {
-                return GetSingleMessageCommands();
-            }
-        }
+        //public BindableCollection<ICommandModel> SingleMessageCommands
+        //{
+        //    get
+        //    {
+        //        return GetSingleMessageCommands();
+        //    }
+        //}
 
-        public BindableCollection<ICommandModel> GetSingleMessageCommands()
-        {
-            var output = new BindableCollection<ICommandModel>();
+        //public BindableCollection<ICommandModel> GetSingleMessageCommands()
+        //{
+        //    //var output = new BindableCollection<ICommandModel>();
 
-            if (_selectedReceivedMessage is null)
-                return output;
+        //    //if (_selectedReceivedMessage is null)
+        //    //    return output;
 
-            foreach (var c in SelectedReceivedMessage)
-            {
-                output.Add(c);
-            }
+        //    foreach (var c in SelectedReceivedMessage)
+        //    {
+        //        output.Add(c);
+        //    }
 
-            return output;
-        }
+        //    return output;
+        //}
 
         public bool CanOpenDevice
         {
             get
             {
-                if (_pipeline.IsOpen) return false;
+                /*if (_pipeline.IsOpen) return false*/;
                 return true;
             }
         }
@@ -170,8 +168,8 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_pipeline is null) return false;
-                if (_pipeline.IsOpen) return true;
+                //if (_pipeline is null) return false;
+                //if (_pipeline.IsOpen) return true;
                 if (_openingError)
                 {
                     _openingError = false;
@@ -186,14 +184,14 @@ namespace Shield.WpfGui.ViewModels
             try
             {
                 //_messanger.Open();
-                _pipeline.Open();
+                //_pipeline.Open();
                 NotifyOfPropertyChange(() => CanOpenDevice);
                 NotifyOfPropertyChange(() => CanCloseDevice);
                 NotifyOfPropertyChange(() => CanStartReceiving);
                 NotifyOfPropertyChange(() => CanStopReceiving);
-                NotifyOfPropertyChange(() => ButtonAIsChecked);
+                //NotifyOfPropertyChange(() => ButtonAIsChecked);
                 NotifyOfPropertyChange(() => CanStartReceiving);
-                NotifyOfPropertyChange(() => CanSendMessage);
+                //NotifyOfPropertyChange(() => CanSendMessage);
             }
             catch (Exception ex)
             {
@@ -209,25 +207,25 @@ namespace Shield.WpfGui.ViewModels
         public async Task CloseDevice()
         {
             //_messanger.Close();
-            await _pipeline.Close();
+            //await _pipeline.Close();
             NotifyOfPropertyChange(() => CanCloseDevice);
             NotifyOfPropertyChange(() => CanOpenDevice);
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
-            NotifyOfPropertyChange(() => ButtonAIsChecked);
-            NotifyOfPropertyChange(() => CanSendMessage);
+            //NotifyOfPropertyChange(() => ButtonAIsChecked);
+            //NotifyOfPropertyChange(() => CanSendMessage);
         }
 
         public bool CanStartReceiving
         {
             get
             {
-                if (_receivingButtonActivated == false && _pipeline.IsOpen) return true;
+                //if (_receivingButtonActivated == false && _pipeline.IsOpen) return true;
                 return false;
             }
         }
 
-        public bool ButtonAIsChecked => _pipeline.IsOpen ? true : _receivingButtonActivated = false;
+        //public bool ButtonAIsChecked => _pipeline.IsOpen ? true : _receivingButtonActivated = false;
 
         public void StartReceiving()
         {
@@ -249,24 +247,24 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_receivingButtonActivated && _pipeline.IsOpen) return true;
+                //if (_receivingButtonActivated && _pipeline.IsOpen) return true;
                 return false;
             }
         }
 
         public void StopReceiving()
         {
-            _pipeline.Close();
+            //_pipeline.Close();
             _receivingButtonActivated = false;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
         }
 
-        public BindableCollection<string> CommandTypes
-        {
-            set => _possibleCommands = value;
-            get => _possibleCommands;
-        }
+        //public BindableCollection<string> CommandTypes
+        //{
+        //    set => _possibleCommands = value;
+        //    get => _possibleCommands;
+        //}
 
         public string SelectedCommand
         {
@@ -284,16 +282,16 @@ namespace Shield.WpfGui.ViewModels
         {
             get
             {
-                if (_selectedCommand == GetNameFromEnumValue(CommandType.Data))
-                    return true;
+                //if (_selectedCommand == GetNameFromEnumValue(CommandType.Data))
+                    //return true;
                 return false;
             }
         }
 
-        private string GetNameFromEnumValue(CommandType value)
-        {
-            return Enum.GetName(value.GetType(), value);
-        }
+        //private string GetNameFromEnumValue(CommandType value)
+        //{
+        //    return Enum.GetName(value.GetType(), value);
+        //}
 
         public string DataInput
         {
@@ -309,47 +307,47 @@ namespace Shield.WpfGui.ViewModels
 
         public void AddCommand()
         {
-            if (SelectedCommand is null)
-                return;
+            //if (SelectedCommand is null)
+            //    return;
 
-            var commands = new List<ICommandModel>();
+            //var commands = new List<ICommandModel>();
 
-            if (SelectedCommand == GetNameFromEnumValue(CommandType.Data))
-            {
-                List<string> packs = DataPackGenerator(DataInput);
+            //if (SelectedCommand == GetNameFromEnumValue(CommandType.Data))
+            //{
+            //    List<string> packs = DataPackGenerator(DataInput);
 
-                packs.ForEach(pack =>
-                {
-                    ICommandModel command = _commandFactory.Create(CommandType.Data);
-                    command.Data = pack;
-                    commands.Add(command);
-                });
+            //    packs.ForEach(pack =>
+            //    {
+            //        ICommandModel command = _commandFactory.Create(CommandType.Data);
+            //        command.Data = pack;
+            //        commands.Add(command);
+            //    });
 
-                NewMessageCommands.AddRange(commands);
-            }
-            else
-                NewMessageCommands.Add(_commandFactory.Create((CommandType)Enum.Parse(typeof(CommandType), SelectedCommand)));
-            NotifyOfPropertyChange(() => CanSendMessage);
-            NotifyOfPropertyChange(() => NewMessageCommands);
+            //    NewMessageCommands.AddRange(commands);
+            //}
+            //else
+            //    NewMessageCommands.Add(_commandFactory.Create((CommandType)Enum.Parse(typeof(CommandType), SelectedCommand)));
+            //NotifyOfPropertyChange(() => CanSendMessage);
+            //NotifyOfPropertyChange(() => NewMessageCommands);
         }
 
         public bool CanAddCommand
         {
             get
             {
-                if (SelectedCommand == GetNameFromEnumValue(CommandType.Data))
-                {
-                    if (_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
-                        return false;
+                //if (SelectedCommand == GetNameFromEnumValue(CommandType.Data))
+                //{
+                //    if (_validationErrors.ContainsKey("DataInput") && _validationErrors["DataInput"].Count > 0)
+                //        return false;
 
-                    if (!string.IsNullOrEmpty(DataInput) && !DataInput.Contains(DataPackFiller()) &&
-                        !DataInput.Contains(_settings.ForTypeOf<IApplicationSettingsModel>().Separator) &&
-                        !DataInput.Contains(" "))
-                    {
-                        return true;
-                    }
-                    return false;
-                }
+                //    if (!string.IsNullOrEmpty(DataInput) && !DataInput.Contains(DataPackFiller()) &&
+                //        !DataInput.Contains(_settings.ForTypeOf<IApplicationSettingsModel>().Separator) &&
+                //        !DataInput.Contains(" "))
+                //    {
+                //        return true;
+                //    }
+                //    return false;
+                //}
                 return true;
             }
         }
@@ -364,130 +362,130 @@ namespace Shield.WpfGui.ViewModels
             return false;
         }
 
-        public BindableCollection<ICommandModel> NewMessageCommands
-        {
-            get => _newMessageCommands;
-            set
-            {
-                _newMessageCommands = value;
-                NotifyOfPropertyChange(() => CanRemoveCommand);
-                NotifyOfPropertyChange(() => NewMessageCommands);
-            }
-        }
+        //public BindableCollection<ICommandModel> NewMessageCommands
+        //{
+        //    get => _newMessageCommands;
+        //    set
+        //    {
+        //        _newMessageCommands = value;
+        //        NotifyOfPropertyChange(() => CanRemoveCommand);
+        //        NotifyOfPropertyChange(() => NewMessageCommands);
+        //    }
+        //}
 
-        public BindableCollection<IMessageModel> SentMessages
-        {
-            get => _sentMessages;
-            set
-            {
-                _sentMessages = value;
-                // hack!
-                _sending = false;
-            }
-        }
+        //public BindableCollection<IMessageModel> SentMessages
+        //{
+        //    get => _sentMessages;
+        //    set
+        //    {
+        //        _sentMessages = value;
+        //        // hack!
+        //        _sending = false;
+        //    }
+        //}
 
-        public ICommandModel SelectedNewMessageCommand
-        {
-            get => _selectedNewMessageCommand;
+        //public ICommandModel SelectedNewMessageCommand
+        //{
+        //    get => _selectedNewMessageCommand;
 
-            set
-            {
-                _selectedNewMessageCommand = value;
-                NotifyOfPropertyChange(() => SelectedNewMessageCommand);
-                NotifyOfPropertyChange(() => CanRemoveCommand);
-            }
-        }
+        //    set
+        //    {
+        //        _selectedNewMessageCommand = value;
+        //        NotifyOfPropertyChange(() => SelectedNewMessageCommand);
+        //        NotifyOfPropertyChange(() => CanRemoveCommand);
+        //    }
+        //}
 
-        public IMessageModel SelectedSentMessage
-        {
-            get => _selectedSentMessage;
+        //public IMessageModel SelectedSentMessage
+        //{
+        //    get => _selectedSentMessage;
 
-            set
-            {
-                _selectedSentMessage = value;
-                NotifyOfPropertyChange(() => SelectedSentMessage);
-                NotifyOfPropertyChange(() => SingleSelectedSentMessage);
-            }
-        }
+        //    set
+        //    {
+        //        _selectedSentMessage = value;
+        //        NotifyOfPropertyChange(() => SelectedSentMessage);
+        //        NotifyOfPropertyChange(() => SingleSelectedSentMessage);
+        //    }
+        //}
 
-        public BindableCollection<ICommandModel> SingleSelectedSentMessage
-        {
-            get
-            {
-                var output = new BindableCollection<ICommandModel>();
+        //public BindableCollection<ICommandModel> SingleSelectedSentMessage
+        //{
+        //    get
+        //    {
+        //        var output = new BindableCollection<ICommandModel>();
 
-                if (SelectedSentMessage is null)
-                    return output;
+        //        if (SelectedSentMessage is null)
+        //            return output;
 
-                foreach (var c in SelectedSentMessage)
-                    output.Add(c);
+        //        foreach (var c in SelectedSentMessage)
+        //            output.Add(c);
 
-                return output;
-            }
-        }
+        //        return output;
+        //    }
+        //}
 
-        public void RemoveCommand()
-        {
-            NewMessageCommands.Remove(SelectedNewMessageCommand);
-            NotifyOfPropertyChange(() => CanSendMessage);
-        }
+        //public void RemoveCommand()
+        //{
+        //    NewMessageCommands.Remove(SelectedNewMessageCommand);
+        //    NotifyOfPropertyChange(() => CanSendMessage);
+        //}
 
-        public bool CanRemoveCommand
-        {
-            get => !(SelectedNewMessageCommand is null);
-        }
+        //public bool CanRemoveCommand
+        //{
+        //    get => !(SelectedNewMessageCommand is null);
+        //}
 
-        public async Task SendMessage()
-        {
-            var message = GenerateMessage(NewMessageCommands);
-            if (message is null)
-                return;
+        //public async Task SendMessage()
+        //{
+        //    var message = GenerateMessage(NewMessageCommands);
+        //    if (message is null)
+        //        return;
 
-            // hack!
-            _sending = true;
-            NotifyOfPropertyChange(() => CanSendMessage);
+        //    // hack!
+        //    _sending = true;
+        //    NotifyOfPropertyChange(() => CanSendMessage);
 
-            bool sent = await _pipeline.SendAsync(message).ConfigureAwait(false);
+        //    bool sent = await _pipeline.SendAsync(message).ConfigureAwait(false);
 
-            // hack
-            _sending = false;
-            if (sent)
-            {
-                SentMessages.Add(message);
+        //    // hack
+        //    _sending = false;
+        //    if (sent)
+        //    {
+        //        SentMessages.Add(message);
 
-                NewMessageCommands.Clear();
-                NotifyOfPropertyChange(() => NewMessageCommands);
-                NotifyOfPropertyChange(() => SentMessages);
-                NotifyOfPropertyChange(() => CanSendMessage);
-            }
-        }
+        //        NewMessageCommands.Clear();
+        //        NotifyOfPropertyChange(() => NewMessageCommands);
+        //        NotifyOfPropertyChange(() => SentMessages);
+        //        NotifyOfPropertyChange(() => CanSendMessage);
+        //    }
+        //}
 
-        public bool CanSendMessage
-        {
-            get
-            {
-                return NewMessageCommands.Count > 0 && _pipeline.IsOpen && !_sending;
-            }
-        }
+        //public bool CanSendMessage
+        //{
+        //    get
+        //    {
+        //        return NewMessageCommands.Count > 0 && _pipeline.IsOpen && !_sending;
+        //    }
+        //}
 
-        private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
-        {
-            if (!commands.Any() || commands is null)
-                return null;
+        //private IMessageModel GenerateMessage(IEnumerable<ICommandModel> commands)
+        //{
+        //    if (!commands.Any() || commands is null)
+        //        return null;
 
-            IMessageModel message = _messageFactory();
+        //    //IMessageModel message = _messageFactory();
 
-            foreach (var c in commands)
-            {
-                message.Add(c);
-            }
-            message.AssighHostID(_hostId);
+        //    //foreach (var c in commands)
+        //    //{
+        //    //    message.Add(c);
+        //    //}
+        //    //message.AssighHostID(_hostId);
 
-            //message.Timestamp = Timestamp.TimestampNow;
-            //message.AssaignID(_idGenerator.GetNewID());
+        //    ////message.Timestamp = Timestamp.TimestampNow;
+        //    ////message.AssaignID(_idGenerator.GetNewID());
 
-            return message;
-        }
+        //    //return message;
+        //}
 
         public bool HasErrors
         {

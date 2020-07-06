@@ -10,11 +10,16 @@ namespace Shield.HardwareCom.Helpers
     {
         private const string CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private readonly Random _randomizer = new Random(Guid.NewGuid().GetHashCode());
-        private HashSet<string> _usedIDs = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly HashSet<string> _usedIDs = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
         private readonly ulong _bufferSize = 0;
         private readonly int _idLength = 0;
         private readonly bool _autoResetIfAllIdsUsedUp;
 
+        /// <summary>
+        /// Unique non-repeating alphanumeric random ID generator.
+        /// </summary>
+        /// <param name="idLength">Length of generated ID's</param>
+        /// <param name="autoResetIfAllIdsUsedUp">enables automatic generator reset in case when all ID's were used up</param>
         public IdGenerator(int idLength, bool autoResetIfAllIdsUsedUp = true)
         {
             _idLength = idLength > 0
@@ -58,7 +63,7 @@ namespace Shield.HardwareCom.Helpers
         /// Clears used up ID's buffer, so they can be reused
         /// </summary>
         public void FlushUsedUpIdsBuffer() =>
-            _usedIDs = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            _usedIDs.Clear();
 
         private string GenerateId()
         {
@@ -75,27 +80,21 @@ namespace Shield.HardwareCom.Helpers
         /// so it wont be generated later by <c>IdGenerator.GetID</c> method.
         /// </summary>
         /// <param name="ids">Used up ID</param>
-        public void MarkAsUsedUp(string[] ids)
+        public void MarkAsUsedUp(params string[] ids)
         {
             if (ids.IsNullOrEmpty()) return;
 
-            foreach (string id in ids)
+            foreach (var entry in ids)
             {
-                if (IsUsedOrEmpty(id))
+                if (IsUsedOrEmpty(entry))
                     throw new ArgumentOutOfRangeException(nameof(ids), "One of collection values is empty or already used, so it cannot be added");
-                else
-                    _usedIDs.Add(id.ToUpperInvariant());
+
+                _usedIDs.Add(entry.ToUpperInvariant());
             }
         }
 
-        public void MarkAsUsedUp(string id)
-        {
-            if (IsUsedOrEmpty(id)) throw new ArgumentOutOfRangeException(nameof(id), "Cannot add empty or used up value to used up Id's collection");
-            _usedIDs.Add(id.ToUpperInvariant());
-        }
-
         private bool IsUsedOrEmpty(string id) =>
-            String.IsNullOrWhiteSpace(id) || _usedIDs.Contains(id);
+            string.IsNullOrWhiteSpace(id) || _usedIDs.Contains(id);
 
         /// <summary>
         /// Get used up ID's from this instance
@@ -106,10 +105,10 @@ namespace Shield.HardwareCom.Helpers
 
         private ulong CalculateBufferSize(int idLength)
         {
-            ulong count = (ulong)CHARS.Length;
+            var count = (ulong)CHARS.Length;
 
             for (ulong x = 1; x <= (ulong)idLength - 1; x++)
-                count = count * ((ulong)CHARS.Length - x) / x;
+                count *= ((ulong)CHARS.Length - x) / x;
 
             return count / (ulong)idLength;
         }

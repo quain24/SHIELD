@@ -1,10 +1,9 @@
-﻿using Shield.HardwareCom.Enums;
-using Shield.HardwareCom.MessageProcessing;
-using Shield.HardwareCom.Models;
-using System;
+﻿using System;
 using System.Linq;
+using Shield.HardwareCom.Enums;
+using Shield.HardwareCom.Models;
 
-namespace Shield.HardwareCom
+namespace Shield.HardwareCom.MessageProcessing
 {
     public class DecodingAnalyzer : IMessageAnalyzer
     {

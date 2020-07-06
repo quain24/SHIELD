@@ -1,16 +1,13 @@
 ﻿using Shield.CommonInterfaces;
-using Shield.Data;
-using Shield.HardwareCom.CommandProcessing;
-using Shield.HardwareCom.Enums;
-using Shield.HardwareCom.Factories;
-using Shield.HardwareCom.Helpers;
-using Shield.HardwareCom.Models;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Shield.Messaging.Commands;
+using Shield.Persistence;
+using Shield.Persistence.Models;
 
 namespace COM6TestSender
 {
@@ -40,38 +37,23 @@ namespace COM6TestSender
             Random rand = new Random();
             if (Int32.Parse(a) == 1)
             {
-                Task.Run(() =>
-                {
-                    i++;
-                    while (true)
+                i++;
+                while (true)
+                {   //Command(IPart id, IPart hostID, IPart target, IPart order, IPart data)
+                    int commandType;
+                    do
                     {
-                        //try
-                        //{
-                        int commandType;
-                        do
-                        {
-                            commandType = rand.Next(1, 16);
-                        }
-                        while (commandType == 12);
-
-                        //Thread.Sleep(10);
-                        //serial.Write($@"*0015*ABCD*123456789101112131415161718192");
-                        //serial.Write($@"*{15.ToString().PadLeft(4, '0')}*" + rand.Next(1000, 9999) + '*' + "A1B2C3D4E5F6G7H8I9J10K11L12M13");
-                        string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + _idGenerator.GetNewID() + '*' + i.ToString().PadLeft(30, '.');
-
-                        serial.Write(aa);
-                        Console.WriteLine(aa);
-                        Console.WriteLine(serial.ReadExisting());
-                        //}
-                        //catch
-                        //{
-                        // Console.WriteLine("Nie wysłało");
-                        //}
-                        i++;
-
-                        //Thread.Sleep(1);
+                        commandType = rand.Next(1, 16);
                     }
-                });
+                    while (commandType == 12);
+
+                    string aa = "#" + _idGenerator.GetNewID() + $"*{16.ToString().PadLeft(4, '0')}*" + "target" + '*' + "order" + '*' + i.ToString().PadLeft(30, '.');
+
+                    serial.Write(aa);
+                    if(i%100 == 0) Console.WriteLine(aa);
+                    Console.WriteLine(serial.ReadExisting());
+                    i++;
+                }
             }
             else if (Int32.Parse(a) == 2)
             {
@@ -434,178 +416,178 @@ namespace COM6TestSender
                     }
                 }
             }
-            else if (Int32.Parse(a) == 12)
-            {
-                string pattern = $@"[*][a-zA-Z0-9]{{4}}[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
-                int num = 0;
+        //    else if (Int32.Parse(a) == 12)
+        //    {
+        //        string pattern = $@"[*][a-zA-Z0-9]{{4}}[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+        //        int num = 0;
 
-                Regex pat = new Regex(pattern);
+        //        Regex pat = new Regex(pattern);
 
-                string id = _idGenerator.GetNewID();
-                int choose = 0;
-                int licz = 0;
-                bool fl = false;
+        //        string id = _idGenerator.GetNewID();
+        //        int choose = 0;
+        //        int licz = 0;
+        //        bool fl = false;
 
-                var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
-                var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
+        //        var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
+        //        var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-                var sm = new Shield.Data.Models.SettingsModel();
-                var apset = new Shield.Data.Models.ApplicationSettingsModel();
-                apset.CommandTypeSize = 4;
-                apset.DataSize = 30;
-                apset.Filler = '.';
-                apset.IdSize = 4;
-                apset.HostId = "TEST";
-                apset.Separator = '*';
-                apset.HostIdSize = 4;
-                var portset = new Shield.Data.Models.SerialPortSettingsModel();
-                portset.BaudRate = 921600;
-                portset.Encoding = 20127;
-                portset.PortNumber = 7;
-                portset.DataBits = 8;
-                portset.Parity = Parity.None;
-                portset.StopBits = StopBits.One;
-                portset.ReadTimeout = -1;
+        //        var sm = new SettingsModel();
+        //        var apset = new Shield.Persistence.Models.ApplicationSettingsModel();
+        //        apset.CommandTypeSize = 4;
+        //        apset.DataSize = 30;
+        //        apset.Filler = '.';
+        //        apset.IdSize = 4;
+        //        apset.HostId = "TEST";
+        //        apset.Separator = '*';
+        //        apset.HostIdSize = 4;
+        //        var portset = new SerialPortSettingsModel();
+        //        portset.BaudRate = 921600;
+        //        portset.Encoding = 20127;
+        //        portset.PortNumber = 7;
+        //        portset.DataBits = 8;
+        //        portset.Parity = Parity.None;
+        //        portset.StopBits = StopBits.One;
+        //        portset.ReadTimeout = -1;
 
-                sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
-                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
-                var sett = new Settings(sm);
-                var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
-                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
+        //        sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
+        //        sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, (ISetting)portset);
+        //        var sett = new Settings(sm);
+        //        var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
+        //        var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
 
-                var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
+        //        var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
-                while (true)
-                {
-                    licz++;
-                    int datalicz = licz;
-                    string data = datalicz.ToString().PadLeft(30, '.');
-                    datalicz++;
-                    string data2 = datalicz.ToString().PadLeft(30, '.');
-                    datalicz++;
-                    string data3 = datalicz.ToString().PadLeft(30, '.');
+        //        while (true)
+        //        {
+        //            licz++;
+        //            int datalicz = licz;
+        //            string data = datalicz.ToString().PadLeft(30, '.');
+        //            datalicz++;
+        //            string data2 = datalicz.ToString().PadLeft(30, '.');
+        //            datalicz++;
+        //            string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID(), appSet.HostId);
-                    msg.Add(comFac.Create(type: CommandType.HandShake, hostId: appSet.HostId));
-                    msg.Add(comFac.Create(type: CommandType.Master, hostId: appSet.HostId));
-                    var datacom = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom.Data = data;
-                    var datacom2 = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom2.Data = data2;
-                    var datacom3 = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom3.Data = data3;
-                    msg.Add(datacom);
-                    msg.Add(datacom2);
-                    msg.Add(datacom3);
-                    if (licz % 10 != 0)
-                        msg.Add(comFac.Create(type: CommandType.EndMessage, hostId: appSet.HostId));
+        //            IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, _idGenerator.GetNewID(), appSet.HostId);
+        //            msg.Add(comFac.Create(type: CommandType.HandShake, hostId: appSet.HostId));
+        //            msg.Add(comFac.Create(type: CommandType.Master, hostId: appSet.HostId));
+        //            var datacom = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom.Data = data;
+        //            var datacom2 = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom2.Data = data2;
+        //            var datacom3 = comFac.Create(type: CommandType.Data, hostId: appSet.HostId); datacom3.Data = data3;
+        //            msg.Add(datacom);
+        //            msg.Add(datacom2);
+        //            msg.Add(datacom3);
+        //            if (licz % 10 != 0)
+        //                msg.Add(comFac.Create(type: CommandType.EndMessage, hostId: appSet.HostId));
 
-                    foreach (var c in msg.Commands)
-                    {
-                        var aaaa = comtrans.FromCommand(c);
-                        serial.Write(aaaa);
-                    }
+        //            foreach (var c in msg.Commands)
+        //            {
+        //                var aaaa = comtrans.FromCommand(c);
+        //                serial.Write(aaaa);
+        //            }
 
-                    Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
-                    //if(licz % 100 == 0)
-                    //{
-                    //    Console.WriteLine(serial.ReadExisting());
-                    //    await Task.Delay(1000);
-                    //}
-                }
-            }
-            else if (Int32.Parse(a) == 13)
-            {
-                string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
-                int num = 0;
+        //            Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
+        //            //if(licz % 100 == 0)
+        //            //{
+        //            //    Console.WriteLine(serial.ReadExisting());
+        //            //    await Task.Delay(1000);
+        //            //}
+        //        }
+        //    }
+        //    else if (Int32.Parse(a) == 13)
+        //    {
+        //        string pattern = $@"[*][0-9]{{4}}[*][a-zA-Z0-9]{{4}}[*]";
+        //        int num = 0;
 
-                Regex pat = new Regex(pattern);
+        //        Regex pat = new Regex(pattern);
 
-                string id = _idGenerator.GetNewID();
-                int choose = 0;
-                int licz = 0;
-                bool fl = false;
+        //        string id = _idGenerator.GetNewID();
+        //        int choose = 0;
+        //        int licz = 0;
+        //        bool fl = false;
 
-                var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
-                var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
+        //        var msgFac = new MessageFactory(new Func<IMessageModel>(() => new MessageModel()));
+        //        var comFac = new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel()));
 
-                var sm = new Shield.Data.Models.SettingsModel();
-                var apset = new Shield.Data.Models.ApplicationSettingsModel();
-                apset.CommandTypeSize = 4;
-                apset.DataSize = 30;
-                apset.Filler = '.';
-                apset.IdSize = 4;
-                apset.Separator = '*';
-                apset.HostIdSize = 4;
-                var portset = new Shield.Data.Models.SerialPortSettingsModel
-                {
-                    BaudRate = 921600,
-                    Encoding = 20127,
-                    PortNumber = 7,
-                    DataBits = 8,
-                    Parity = Parity.None,
-                    StopBits = StopBits.One,
-                    ReadTimeout = -1
-                };
+        //        var sm = new SettingsModel();
+        //        var apset = new ApplicationSettingsModel();
+        //        apset.CommandTypeSize = 4;
+        //        apset.DataSize = 30;
+        //        apset.Filler = '.';
+        //        apset.IdSize = 4;
+        //        apset.Separator = '*';
+        //        apset.HostIdSize = 4;
+        //        var portset = new SerialPortSettingsModel
+        //        {
+        //            BaudRate = 921600,
+        //            Encoding = 20127,
+        //            PortNumber = 7,
+        //            DataBits = 8,
+        //            Parity = Parity.None,
+        //            StopBits = StopBits.One,
+        //            ReadTimeout = -1
+        //        };
 
-                var sett = new Settings(sm);
-                sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
-                sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, portset);
-                var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
-                var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
+        //        var sett = new Settings(sm);
+        //        sm.Settings.Add(Shield.Enums.SettingsType.Application, apset);
+        //        sm.Settings.Add(Shield.Enums.SettingsType.SerialDevice, (ISetting)portset);
+        //        var appSet = sett.ForTypeOf<IApplicationSettingsModel>();
+        //        var commandTranslatorSettings = new CommandTranslatorSettings(appSet.Separator, appSet.Filler, appSet.CommandTypeSize, appSet.IdSize, appSet.DataSize, appSet.HostIdSize, apset.HostId);
 
-                var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
+        //        var comtrans = new CommandTranslator(commandTranslatorSettings, new CommandModelFactory(new Func<ICommandModel>(() => new CommandModel())));
 
-            restart:
-                choose = licz + 30;
+        //    restart:
+        //        choose = licz + 30;
 
-                while (licz <= choose)
-                {
-                    licz++;
-                    int datalicz = licz;
-                    string data = datalicz.ToString().PadLeft(30, '.');
-                    datalicz++;
-                    string data2 = datalicz.ToString().PadLeft(30, '.');
-                    datalicz++;
-                    string data3 = datalicz.ToString().PadLeft(30, '.');
+        //        while (licz <= choose)
+        //        {
+        //            licz++;
+        //            int datalicz = licz;
+        //            string data = datalicz.ToString().PadLeft(30, '.');
+        //            datalicz++;
+        //            string data2 = datalicz.ToString().PadLeft(30, '.');
+        //            datalicz++;
+        //            string data3 = datalicz.ToString().PadLeft(30, '.');
 
-                    IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, appSet.HostId, _idGenerator.GetNewID());
-                    msg.Add(comFac.Create(CommandType.HandShake));
-                    msg.Add(comFac.Create(CommandType.Master));
-                    var datacom = comFac.Create(CommandType.Data); datacom.Data = data;
-                    var datacom2 = comFac.Create(CommandType.Data); datacom2.Data = data2;
-                    var datacom3 = comFac.Create(CommandType.Data); datacom3.Data = data3;
-                    msg.Add(datacom);
-                    msg.Add(datacom2);
-                    msg.Add(datacom3);
-                    if (licz % 10 != 0)
-                        msg.Add(comFac.Create(CommandType.EndMessage));
+        //            IMessageModel msg = msgFac.CreateNew(Direction.Outgoing, MessageType.Master, appSet.HostId, _idGenerator.GetNewID());
+        //            msg.Add(comFac.Create(CommandType.HandShake));
+        //            msg.Add(comFac.Create(CommandType.Master));
+        //            var datacom = comFac.Create(CommandType.Data); datacom.Data = data;
+        //            var datacom2 = comFac.Create(CommandType.Data); datacom2.Data = data2;
+        //            var datacom3 = comFac.Create(CommandType.Data); datacom3.Data = data3;
+        //            msg.Add(datacom);
+        //            msg.Add(datacom2);
+        //            msg.Add(datacom3);
+        //            if (licz % 10 != 0)
+        //                msg.Add(comFac.Create(CommandType.EndMessage));
 
-                    foreach (var c in msg.Commands)
-                    {
-                        var aaaa = comtrans.FromCommand(c);
-                        serial.Write(aaaa);
-                    }
+        //            foreach (var c in msg.Commands)
+        //            {
+        //                var aaaa = comtrans.FromCommand(c);
+        //                serial.Write(aaaa);
+        //            }
 
-                    Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
-                }
-                Console.WriteLine("Repeat for another 30 - press enter");
-                Console.ReadLine();
-                goto restart;
-            }
+        //            Console.WriteLine($@"{msg.Id} was sent - {msg.CommandCount} commands. Nm: {licz}");
+        //        }
+        //        Console.WriteLine("Repeat for another 30 - press enter");
+        //        Console.ReadLine();
+        //        goto restart;
+        //    }
 
-            // zle na emulatorze
-            else
-            {
-                while (true)
-                {
-                    string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + _idGenerator.GetNewID() + '*' + i.ToString().PadLeft(30, '.');
+        //    // zle na emulatorze
+        //    else
+        //    {
+        //        while (true)
+        //        {
+        //            string aa = $@"*{16.ToString().PadLeft(4, '0')}*" + _idGenerator.GetNewID() + '*' + i.ToString().PadLeft(30, '.');
 
-                    serial.Write(aa);
-                    Console.WriteLine(aa);
+        //            serial.Write(aa);
+        //            Console.WriteLine(aa);
 
-                    Console.WriteLine("...");
-                    Console.ReadLine();
-                    i++;
-                }
-            }
+        //            Console.WriteLine("...");
+        //            Console.ReadLine();
+        //            i++;
+        //        }
+        //    }
 
             Console.ReadLine();
         }

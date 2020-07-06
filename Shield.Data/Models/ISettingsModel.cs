@@ -1,8 +1,8 @@
-﻿using Shield.CommonInterfaces;
+﻿using System.Collections.Generic;
+using Shield.CommonInterfaces;
 using Shield.Enums;
-using System.Collections.Generic;
 
-namespace Shield.Data.Models
+namespace Shield.Persistence.Models
 {
     public interface ISettingsModel
     {

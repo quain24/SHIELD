@@ -7,8 +7,8 @@
     <ProjectGuid>{0065BD17-51C3-497B-A20A-56E8EDC3C2A2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shield.Data</RootNamespace>
-    <AssemblyName>Shield.Data</AssemblyName>
+    <RootNamespace>Shield.Persistence</RootNamespace>
+    <AssemblyName>Shield.Persistence</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -50,6 +50,7 @@
     <Compile Include="Models\SettingsModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="SettingsRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield\Shield.csproj">

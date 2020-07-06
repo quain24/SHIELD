@@ -37,8 +37,6 @@ namespace Shield.HardwareCom.RawDataProcessing
 
             CommandLength = _hostIdLength + _commandTypeLength + _idLength + 4;
             CommandLengthWithData = CommandLength + _dataPackLength; // no + 1, because there is no separator after data portion
-
-            // TODO check everything here before modifying passed pattern that will include host id 
         }
 
         public List<string> DataSearch(string data)
