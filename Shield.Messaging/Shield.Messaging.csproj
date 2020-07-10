@@ -77,10 +77,18 @@
     <Compile Include="Commands\TimestampFactory.cs" />
     <Compile Include="Extensions\ICommandExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="MasterUnit\MasterUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Commands\Parts\PartValidators\OnlyAlphanumericAllowedValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\AllwaysGoodValidatorSingleton.cs" />
     <Compile Include="Commands\Parts\DataPart.cs" />
+    <Compile Include="Protocol\Confirmation.cs" />
+    <Compile Include="Protocol\ConfirmationCommandTranslator.cs" />
+    <Compile Include="Protocol\Order.cs" />
+    <Compile Include="Protocol\OrderCommandTranslator.cs" />
+    <Compile Include="Protocol\ProtocolHandler.cs" />
+    <Compile Include="Protocol\Reply.cs" />
+    <Compile Include="Protocol\ReplyCommandTranslator.cs" />
     <Compile Include="RawData\RawCommandFactory.cs" />
     <Compile Include="RawData\StandardDataStreamSplitter.cs" />
     <Compile Include="RawData\AllowedLengthsDataStreamSplitter.cs" />
@@ -93,6 +101,7 @@
     <Compile Include="Commands\Parts\Part.cs" />
     <Compile Include="RawData\RawCommand.cs" />
     <Compile Include="RawData\RawCommandCollection.cs" />
+    <Compile Include="SlaveUnits\ISlaveUnit.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.Data\Shield.Persistence.csproj">

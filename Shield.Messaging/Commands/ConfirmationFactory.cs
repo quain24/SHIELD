@@ -19,15 +19,15 @@ namespace Shield.Messaging.Commands
         {
             _ = command ?? throw new ArgumentNullException(nameof(command),
                 "Passed in NULL instead of a ICommand instance");
-            return _commandFactory.Create(command.HostID,
-                _partFactory.GetPart(Enums.Command.PartType.Order, ConfirmationTarget.ConfirmationTargetString),
+            return _commandFactory.Create(
+                _partFactory.GetPart(Enums.Command.PartType.Target, DefaultTargets.ConfirmationTarget),
+                _partFactory.GetPart(Enums.Command.PartType.Order, command.ID.ToString()),
                 GenerateConfirmationDataPart(command));
         }
 
         private IPart GenerateConfirmationDataPart(ICommand command)
         {
-            var data = command.ID.ToString() + " " + command.ErrorState;
-            return _partFactory.GetPart(Enums.Command.PartType.Data, data);
+            return _partFactory.GetPart(Enums.Command.PartType.Data, command.ErrorState.ToString());
         }
     }
 }

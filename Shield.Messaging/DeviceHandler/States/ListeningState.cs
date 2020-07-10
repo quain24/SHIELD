@@ -10,7 +10,7 @@ namespace Shield.Messaging.DeviceHandler.States
     public class ListeningState : IDeviceHandlerState
     {
         private DeviceHandlerContext _context;
-        private Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
+        private Action<ICommand> _handleReceivedCommandCallback;
         private readonly CommandTranslator _commandTranslator;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly ICommunicationDeviceAsync _device;
@@ -24,10 +24,10 @@ namespace Shield.Messaging.DeviceHandler.States
             _commandTranslator = commandTranslator;
         }
 
-        public void EnterState(DeviceHandlerContext context, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
+        public void EnterState(DeviceHandlerContext context, Action<ICommand> handleReceivedCommandCallback)
         {
             _context = context;
-            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
+            _handleReceivedCommandCallback = handleReceivedCommandCallback;
         }
 
         public void Open()
@@ -71,7 +71,7 @@ namespace Shield.Messaging.DeviceHandler.States
                     foreach (var entry in _streamSplitter.Split(data))
                     {
                         var command = _commandTranslator.TranslateFrom(entry);
-                        await _handleReceivedCommandCallbackAsync(command).ConfigureAwait(false);
+                        _handleReceivedCommandCallback(command);
                         _cts.Token.ThrowIfCancellationRequested();
                     }
                 }

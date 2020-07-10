@@ -23,7 +23,7 @@ namespace Shield.Messaging.Commands.States
         {
             if (Enum.TryParse(attributes, out StateRepresentation translatedRepresentation))
                 return new ErrorState(translatedRepresentation);
-            throw new ArgumentOutOfRangeException(nameof(attributes), $"Passed attributes cannot be parsed into {nameof(ErrorState)}");
+            throw new ArgumentOutOfRangeException(nameof(attributes), $"Passed attributes ({attributes}) cannot be parsed into {nameof(ErrorState)} object.");
         }
 
         public static ErrorState Unchecked() => new ErrorState(StateRepresentation.Unchecked);

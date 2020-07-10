@@ -81,7 +81,7 @@
     <Compile Include="Extensions\ArrayExtensions.cs" />
     <Compile Include="Extensions\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="GlobalConfig\ConfirmationTarget.cs" />
+    <Compile Include="GlobalConfig\DefaultTargets.cs" />
     <Compile Include="GlobalConfig\HostSettings.cs" />
     <Compile Include="HighPrecisionClock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

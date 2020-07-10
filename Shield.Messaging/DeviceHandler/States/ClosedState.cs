@@ -10,7 +10,7 @@ namespace Shield.Messaging.DeviceHandler.States
     public sealed class ClosedState : IDeviceHandlerState
     {
         private DeviceHandlerContext _context;
-        private Func<ICommand, Task> _handleReceivedCommandCallbackAsync;
+        private Action<ICommand> _handleReceivedCommandCallback;
         private readonly CommandTranslator _commandTranslator;
         private readonly ICommunicationDeviceAsync _device;
         private readonly IDataStreamSplitter _streamSplitter;
@@ -23,10 +23,10 @@ namespace Shield.Messaging.DeviceHandler.States
             _commandTranslator = commandTranslator;
         }
         
-        public void EnterState(DeviceHandlerContext context, Func<ICommand, Task> handleReceivedCommandCallbackAsync)
+        public void EnterState(DeviceHandlerContext context, Action<ICommand> handleReceivedCommandCallback)
         {
             _context = context;
-            _handleReceivedCommandCallbackAsync = handleReceivedCommandCallbackAsync;
+            _handleReceivedCommandCallback = handleReceivedCommandCallback;
         }
 
         public void Open()

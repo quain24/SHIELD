@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Shield.GlobalConfig
 {
-    public static class ConfirmationTarget
+    public static class DefaultTargets
     {
-        public static string ConfirmationTargetString => "Confirmation";
+        public static string ConfirmationTarget => "Confirmation";
+        public static string ReplyTarget => "Reply";
     }
 }

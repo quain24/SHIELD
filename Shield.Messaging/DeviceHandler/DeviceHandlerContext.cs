@@ -1,42 +1,43 @@
 ﻿using Shield.Messaging.Commands;
 using Shield.Messaging.DeviceHandler.States;
-using Shield.Messaging.Extensions;
 using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Shield.Messaging.Protocol;
 
 namespace Shield.Messaging.DeviceHandler
 {
     public class DeviceHandlerContext
     {
-        private readonly ConfirmationFactory _confirmationFactory;
         private IDeviceHandlerState _currentState;
         private readonly SortedDictionary<Timestamp, ICommand> _commandBuffer = new SortedDictionary<Timestamp, ICommand>();
-        private readonly SortedDictionary<Timestamp, ICommand> _confirmationBuffer = new SortedDictionary<Timestamp, ICommand>();
+        private readonly ICommunicationDeviceAsync _device;
 
-        public DeviceHandlerContext(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator, ConfirmationFactory confirmationFactory)
+        public DeviceHandlerContext(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator)
         {
-            _confirmationFactory = confirmationFactory;
+            _device = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
             _ = commandTranslator ?? throw new ArgumentNullException(nameof(commandTranslator));
-            _ = device ?? throw new ArgumentNullException(nameof(device), "Passed device cannot be NULL");
             _ = streamSplitter ?? throw new ArgumentNullException(nameof(streamSplitter));
             Name = device.Name;
             SetState(new ClosedState(device, streamSplitter, commandTranslator));
         }
 
         public event EventHandler<ICommand> CommandReceived;
-        public event EventHandler<ICommand> ConfirmationReceived;
-        public event EventHandler<ICommand> IncomingProtocolErrorOccured;
+        public event EventHandler<ICommand> CommandSent;
+        public event EventHandler<ICommand> CommandSendingFailed;
 
         public string Name { get; }
+        public bool IsReady => _device.IsReady;
+        public bool IsOpen => _device.IsOpen;
+        public bool IsConnected => _device.IsConnected;
 
         internal void SetState(IDeviceHandlerState newState)
         {
             if (_currentState == newState)
                 return;
             _currentState = newState ?? throw new ArgumentNullException(nameof(newState), "New state cannot be NULL.");
-            _currentState.EnterState(this, HandleReceivedCommandAsync);
+            _currentState.EnterState(this, HandleReceivedCommand);
         }
 
         public void Open() => _currentState.Open();
@@ -47,35 +48,30 @@ namespace Shield.Messaging.DeviceHandler
 
         public Task StopListeningAsync() => _currentState.StopListeningAsync();
 
-        public Task<bool> SendAsync(ICommand command) => _currentState.SendAsync(command);
-
-        private async Task HandleReceivedCommandAsync(ICommand command)
+        public async Task<bool> SendAsync(ICommand command)
         {
-            if (!command.IsValid)
+            if (await _currentState.SendAsync(command).ConfigureAwait(false))
             {
-                await SendAsync(_confirmationFactory.GetConfirmationFor(command)).ConfigureAwait(false);
-                OnIncomingProtocolErrorOccured(command);
+                OnCommandSent(command);
+                return true;
             }
-            else if (command.IsConfirmation())
-            {
-                _confirmationBuffer.Add(command.Timestamp, command);
-                OnConfirmationReceived(command);
-            }
-            else
-            {
-                await SendAsync(_confirmationFactory.GetConfirmationFor(command)).ConfigureAwait(false);
-                _commandBuffer.Add(command.Timestamp, command);
-                OnCommandReceived(command);
-            }
+            OnCommandSendingFailed(command);
+            return false;
+        }
+
+        private void HandleReceivedCommand(ICommand command)
+        {
+            _commandBuffer.Add(command.Timestamp, command);
+            OnCommandReceived(command);
         }
 
         protected virtual void OnCommandReceived(ICommand command) =>
             CommandReceived?.Invoke(this, command);
 
-        protected virtual void OnConfirmationReceived(ICommand command) =>
-            ConfirmationReceived?.Invoke(this, command);
+        protected virtual void OnCommandSent(ICommand command) =>
+            CommandSent?.Invoke(this, command);
 
-        protected virtual void OnIncomingProtocolErrorOccured(ICommand command) =>
-            IncomingProtocolErrorOccured?.Invoke(this, command);
+        protected virtual void OnCommandSendingFailed(ICommand command) =>
+            CommandSendingFailed?.Invoke(this, command);
     }
 }
