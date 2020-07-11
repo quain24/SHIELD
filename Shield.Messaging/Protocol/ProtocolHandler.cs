@@ -1,53 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.Messaging.Commands;
+﻿using Shield.Messaging.Commands;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Shield.Messaging.Protocol
 {
     public class ProtocolHandler
     {
         private readonly DeviceHandlerContext _deviceHandler;
-        private readonly OrderCommandTranslator _orderCommandTranslator;
         private readonly ConfirmationFactory _confirmationFactory;
-        private readonly ConfirmationCommandTranslator _confirmationCommandTranslator;
-        private readonly ReplyCommandTranslator _replyCommandTranslator;
+        private readonly CommandTranslator _commandTranslator;
 
-        public ProtocolHandler(DeviceHandlerContext deviceHandler,
-            OrderCommandTranslator orderCommandTranslator,
-            ConfirmationFactory confirmationFactory,
-            ConfirmationCommandTranslator confirmationCommandTranslator,
-            ReplyCommandTranslator replyCommandTranslator)
+        public ProtocolHandler(DeviceHandlerContext deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator)
         {
             _deviceHandler = deviceHandler;
-            _orderCommandTranslator = orderCommandTranslator;
             _confirmationFactory = confirmationFactory;
-            _confirmationCommandTranslator = confirmationCommandTranslator;
-            _replyCommandTranslator = replyCommandTranslator;
+            _commandTranslator = commandTranslator;
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
-        private event EventHandler<ICommand> CommandReceived; 
+        private event EventHandler<ICommand> CommandReceived;
 
         public Task<bool> SendAsync(Order order)
         {
-            return _deviceHandler.SendAsync(_orderCommandTranslator.Translate(order));
+            return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order));
         }
 
-        public async Task<bool> AwaitConfirmationOfAsync(Order order)
+        public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)
         {
-
         }
 
         public async Task<Order> AwaitReplyToAsync(Order order)
         {
-
         }
 
         private async void OnCommandReceived(object sender, ICommand command)
@@ -60,19 +46,17 @@ namespace Shield.Messaging.Protocol
 
             if (command.IsConfirmation())
             {
-                _confirmationCommandTranslator.Translate(_confirmationFactory.GetConfirmationFor(command));
+                _commandTranslator.TranslateToConfirmation(command);
             }
 
             if (command.IsReply())
             {
-                _replyCommandTranslator.Translate(command);
+                _commandTranslator.TranslateToReply(command);
             }
-
             else
             {
-                _orderCommandTranslator.Translate(command);
+                _commandTranslator.TranslateToOrder(command);
             }
-
         }
     }
 }

@@ -24,7 +24,8 @@ namespace Shield.Messaging.Protocol
 
         public ICommand Translate(Order order)
         {
-            return _commandFactory.Create(_partFactory.GetPart(Enums.Command.PartType.Target, order.Target),
+            return _commandFactory.Create(
+                _partFactory.GetPart(Command.PartType.Target, order.Target),
                 _partFactory.GetPart(Command.PartType.Order, order.ExactOrder),
                 string.IsNullOrWhiteSpace(order.Data)
                     ? null
