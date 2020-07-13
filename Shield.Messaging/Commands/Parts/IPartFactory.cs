@@ -1,5 +1,4 @@
-﻿
-namespace Shield.Messaging.Commands.Parts
+﻿namespace Shield.Messaging.Commands.Parts
 {
     public interface IPartFactory
     {

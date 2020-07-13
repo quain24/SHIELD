@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Shield.Messaging.Commands;
+﻿using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
 using Command = Shield.Enums.Command;
 using ICommand = Shield.Messaging.Commands.ICommand;

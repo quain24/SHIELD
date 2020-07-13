@@ -80,7 +80,7 @@ namespace ShieldTests.Devices
             ICommunicationDeviceAsync com = new Shield.COMDevice.SerialPortAdapter(settings);
 
 
-            DHC = new DeviceHandlerContext(com, dataSplitter, Translator, ConfirmationFactory);
+            DHC = new DeviceHandlerContext(com, dataSplitter, Translator);
 
         }
 

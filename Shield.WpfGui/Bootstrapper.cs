@@ -49,7 +49,6 @@ namespace Shield.WpfGui
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterModule<HardwareComAfModule>();
             builder.RegisterModule<DataAfModule>();
             builder.RegisterModule<ShieldAfModule>();
             builder.RegisterModule<WpfGuiAfModule>();

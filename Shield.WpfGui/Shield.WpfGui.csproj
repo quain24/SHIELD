@@ -105,7 +105,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AutofacModules\DataAfModule.cs" />
-    <Compile Include="AutofacModules\HardwareComAfModule.cs" />
     <Compile Include="AutofacModules\MessagingAfModule.cs" />
     <Compile Include="AutofacModules\ShieldAfModule.cs" />
     <Compile Include="DependencyDictionary.cs" />

@@ -30,10 +30,12 @@ namespace Shield.Messaging.Protocol
 
         public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)
         {
+            return null; // tmp
         }
 
         public async Task<Order> AwaitReplyToAsync(Order order)
         {
+            return null; // tmp
         }
 
         private async void OnCommandReceived(object sender, ICommand command)

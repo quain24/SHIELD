@@ -26,6 +26,7 @@ namespace Shield.Messaging.MasterUnit
 
         public async Task<IDictionary<string, ISlaveUnit>> ReportAttachedSlaveUnits()
         {
+            return null; // tmp
         }
 
         private async Task UpdateSlaveUnitDictionary(Order order)

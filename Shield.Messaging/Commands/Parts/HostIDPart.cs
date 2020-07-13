@@ -6,8 +6,7 @@ namespace Shield.Messaging.Commands.Parts
     {
         public override string Data => base.Data.ToUpperInvariant();
 
-        internal HostIDPart(string data, IPartValidator validator)
-            : base(data, validator)
+        internal HostIDPart(string data, IPartValidator validator) : base(data, validator)
         {
         }
     }
