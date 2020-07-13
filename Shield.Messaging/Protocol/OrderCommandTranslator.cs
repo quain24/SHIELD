@@ -26,9 +26,9 @@ namespace Shield.Messaging.Protocol
                     : _partFactory.GetPart(Command.PartType.Data, order.Data));
         }
 
-        public Order Translate(ICommand command)
+        public Order Translate(ICommand orderCommand)
         {
-            return new Order(command.Order.ToString(), command.Target.ToString(), command.Data.ToString());
+            return new Order(orderCommand.Order.ToString(), orderCommand.Target.ToString(), orderCommand.Data.ToString());
         }
     }
 }

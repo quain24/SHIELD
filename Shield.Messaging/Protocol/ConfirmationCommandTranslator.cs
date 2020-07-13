@@ -25,9 +25,9 @@ namespace Shield.Messaging.Protocol
                 _partFactory.GetPart(Command.PartType.Data, confirmation.ContainedErrors.ToString()));
         }
 
-        public Confirmation Translate(ICommand command)
+        public Confirmation Translate(ICommand confirmationCommand)
         {
-            return new Confirmation(command.Order.ToString(), ExtractErrors(command));
+            return new Confirmation(confirmationCommand.Order.ToString(), ExtractErrors(confirmationCommand));
         }
 
         private ErrorState ExtractErrors(ICommand command)
