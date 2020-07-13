@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Shield.CommonInterfaces;
+using Shield.Persistence.Models;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
-using Shield.CommonInterfaces;
-using Shield.Persistence.Models;
 
 namespace Shield.Persistence
 {
@@ -19,7 +19,6 @@ namespace Shield.Persistence
 
         private void LoadData()
         { //todo work till it looks like something usable - simplify, replace single file with many maybe?
-
             try
             {
                 var fs = new FileStream(SETTINGS_LOCATION + @"\" + FILE_NAME, FileMode.Open, FileAccess.Read);
@@ -64,9 +63,9 @@ namespace Shield.Persistence
         private static IEnumerable<Type> KnownSettingTypes()
         {
             var listOfTypes = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
-                from assemblyType in domainAssembly.GetTypes()
-                where typeof(ISetting).IsAssignableFrom(assemblyType)
-                select assemblyType).ToList();
+                               from assemblyType in domainAssembly.GetTypes()
+                               where typeof(ISetting).IsAssignableFrom(assemblyType)
+                               select assemblyType).ToList();
 
             var output = listOfTypes
                 .Where(a => !a.IsInterface)
@@ -77,7 +76,6 @@ namespace Shield.Persistence
 
         //public ISettings GetSettingsFor(SettingsType settingsType)
         //{
-
         //}
     }
 }

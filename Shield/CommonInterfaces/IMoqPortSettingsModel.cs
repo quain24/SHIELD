@@ -1,6 +1,4 @@
-﻿using Shield.CommonInterfaces;
-
-namespace Shield.CommonInterfaces
+﻿namespace Shield.CommonInterfaces
 {
     public interface IMoqPortSettingsModel : ICommunicationDeviceSettings
     {

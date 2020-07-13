@@ -33,7 +33,7 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
         {
             _validators[ValidatorType.ForbidChars] =
                 _validators.TryGetValue(ValidatorType.ForbidChars, out var alreadyForbiddenChars)
-                ? new CompositValidator(alreadyForbiddenChars, new ForbiddenCharsValidator(forbiddenCharacters))as IPartValidator
+                ? new CompositValidator(alreadyForbiddenChars, new ForbiddenCharsValidator(forbiddenCharacters)) as IPartValidator
                 : new ForbiddenCharsValidator(forbiddenCharacters);
 
             return this;

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shield.Messaging.DeviceHandler;
+﻿using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Protocol;
 using Shield.Messaging.SlaveUnits;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Shield.Messaging.MasterUnit
 {
@@ -22,6 +19,7 @@ namespace Shield.Messaging.MasterUnit
         }
 
         public void Open() => _devicehandler.Open();
+
         public void Close() => _devicehandler.Close();
 
         public async Task<IDictionary<string, ISlaveUnit>> ReportAttachedSlaveUnits()
@@ -31,9 +29,6 @@ namespace Shield.Messaging.MasterUnit
 
         private async Task UpdateSlaveUnitDictionary(Order order)
         {
-
         }
-
-
     }
 }

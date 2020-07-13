@@ -9,7 +9,7 @@ namespace Shield.Messaging.Commands
         string GetNewID();
 
         IEnumerable<string> GetUsedUpIds();
-        
+
         void MarkAsUsedUp(params string[] ids);
     }
 }

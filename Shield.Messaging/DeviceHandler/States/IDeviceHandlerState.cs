@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Shield.Messaging.Commands;
+using System;
 using System.Threading.Tasks;
-using Shield.Messaging.Commands;
 
 namespace Shield.Messaging.DeviceHandler.States
 {

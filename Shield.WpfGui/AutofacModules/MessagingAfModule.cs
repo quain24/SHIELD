@@ -24,12 +24,11 @@ namespace Shield.WpfGui.AutofacModules
                 .Named<IPartValidator>("AllwaysGoodValidator")
                 .SingleInstance();
 
-
             builder.RegisterType<PartValidatorBuilder>()
                 .As<IPartValidatorBuilder>();
 
             // TODO every part validator should be registered like that - so it can be used when creating part factories
-            builder.Register(c => 
+            builder.Register(c =>
             {
                 return c.Resolve<IPartValidatorBuilder>()
                         .MinimumLength(10)
@@ -39,8 +38,6 @@ namespace Shield.WpfGui.AutofacModules
                         .Build();
             })
             .Named<IPartValidator>("DataPartValidator");
-                
-
 
             // TODO this registration works - factory class should use auto keyed collection of those generic factories.
             builder.RegisterType<PartFactoryAutofacAdapter>()

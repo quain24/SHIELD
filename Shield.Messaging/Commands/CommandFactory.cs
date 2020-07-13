@@ -1,10 +1,10 @@
 ﻿using Shield.Extensions;
+using Shield.GlobalConfig;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Shield.GlobalConfig;
 using static Shield.Enums.Command;
 
 namespace Shield.Messaging.Commands
@@ -30,7 +30,7 @@ namespace Shield.Messaging.Commands
             _separator = separator;
             _factory = factory;
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-            _idGenerator = idGenerator ?? throw  new ArgumentNullException(nameof(idGenerator));
+            _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
         }
 
         public ICommand Create(IPart targetPart, IPart orderPart, IPart dataPart = null)

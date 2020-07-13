@@ -18,6 +18,7 @@ namespace Shield.Messaging.DeviceHandler
         bool Send(string data);
 
         string Receive();
+
         bool IsPortExisting();
 
         event EventHandler<string> DataReceived;

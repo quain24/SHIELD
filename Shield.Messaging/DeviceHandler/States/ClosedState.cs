@@ -22,7 +22,7 @@ namespace Shield.Messaging.DeviceHandler.States
             _streamSplitter = streamSplitter;
             _commandTranslator = commandTranslator;
         }
-        
+
         public void EnterState(DeviceHandlerContext context, Action<ICommand> handleReceivedCommandCallback)
         {
             _context = context;

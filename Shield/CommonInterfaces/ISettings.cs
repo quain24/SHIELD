@@ -1,5 +1,4 @@
-﻿using Shield.CommonInterfaces;
-using Shield.Enums;
+﻿using Shield.Enums;
 using System.Collections.Generic;
 
 namespace Shield.CommonInterfaces

@@ -19,8 +19,8 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
         private void DetermineValidationMethod(char[] forbiddenCharacters)
         {
             _executeValidation = forbiddenCharacters.IsNullOrEmpty()
-                ? new Func<string, bool> ((_) => true)
-                : new Func<string, bool> ((data) => data.IndexOfAny(forbiddenCharacters) == IndexNotFound);
+                ? new Func<string, bool>((_) => true)
+                : new Func<string, bool>((data) => data.IndexOfAny(forbiddenCharacters) == IndexNotFound);
         }
 
         public bool Validate(string data) => _executeValidation(data);

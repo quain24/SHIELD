@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using Shield.CommonInterfaces;
+﻿using Shield.CommonInterfaces;
 using Shield.Enums;
+using System.Collections.Generic;
 
 namespace Shield.Persistence.Models
 {

@@ -12,7 +12,7 @@ namespace ShieldTests.HardwareCom.RawDataProcessing
 
         public IncomingDataPreparerTests()
         {
-            TestPreparer = new IncomingDataPreparer(4, 4, 4,10,
+            TestPreparer = new IncomingDataPreparer(4, 4, 4, 10,
                                                      new Regex("[*][a-zA-Z0-9]{4}[*][0-9]{4}[*][a-zA-Z0-9]{4}[*]"),
                                                      '*');
         }

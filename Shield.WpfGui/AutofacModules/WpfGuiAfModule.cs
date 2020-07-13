@@ -1,7 +1,5 @@
 ﻿using Autofac;
-using Autofac.Core;
 using Caliburn.Micro;
-using Shield.WpfGui.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;

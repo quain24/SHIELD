@@ -1,6 +1,6 @@
-﻿using System;
-using Shield.Messaging.Commands;
+﻿using Shield.Messaging.Commands;
 using Shield.Messaging.RawData;
+using System;
 
 namespace Shield.Messaging.DeviceHandler
 {

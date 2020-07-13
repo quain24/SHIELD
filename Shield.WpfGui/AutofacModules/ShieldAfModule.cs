@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -18,8 +17,6 @@ namespace Shield.WpfGui.AutofacModules
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))
                    .Where(t => t.Name.EndsWith("Factory") && t.Namespace == "Shield")
                    .As(t => t.GetInterfaces().SingleOrDefault(i => i.Name == "I" + t.Name));
-
-            
 
             // tymczasowo do wszystkiego innego
             builder.RegisterAssemblyTypes(Assembly.Load(nameof(Shield)))

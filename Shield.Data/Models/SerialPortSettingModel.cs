@@ -1,13 +1,13 @@
-﻿using System.IO.Ports;
+﻿using Shield.Enums;
+using System.IO.Ports;
 using System.Runtime.Serialization;
-using Shield.Enums;
 
 namespace Shield.Persistence.Models
 {
     [DataContract(Name = "SerialPortSettings")]
     public class SerialPortSettingsModel  /*ISerialPortSettingsModel*/
-        // TODO Apply repository pattern for things like settings etc. Each thing should have separate repository - settings, saved commands etc
-        // TODO Add separation between data from repository and working objects - for example settings for serial port should have separate dto(?)
+    // TODO Apply repository pattern for things like settings etc. Each thing should have separate repository - settings, saved commands etc
+    // TODO Add separation between data from repository and working objects - for example settings for serial port should have separate dto(?)
     {
         public SerialPortSettingsModel()
         {

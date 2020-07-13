@@ -4,7 +4,6 @@ using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Shield.Messaging.Protocol;
 
 namespace Shield.Messaging.DeviceHandler
 {
@@ -24,7 +23,9 @@ namespace Shield.Messaging.DeviceHandler
         }
 
         public event EventHandler<ICommand> CommandReceived;
+
         public event EventHandler<ICommand> CommandSent;
+
         public event EventHandler<ICommand> CommandSendingFailed;
 
         public string Name { get; }

@@ -1,5 +1,4 @@
-﻿using Autofac;
-using Caliburn.Micro;
+﻿using Caliburn.Micro;
 using Shield.CommonInterfaces;
 using Shield.WpfGui.Validators;
 using System;
@@ -8,7 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace Shield.WpfGui.ViewModels
 {
@@ -36,7 +34,6 @@ namespace Shield.WpfGui.ViewModels
             _hostId = _settings.ForTypeOf<IApplicationSettingsModel>().HostId;
             _settings.LoadFromFile();
             _settings.SaveToFile();
-
 
             _dataPackValidation = new CommandDataPackValidation(_settings.ForTypeOf<IApplicationSettingsModel>().Separator, DataPackFiller());
         }
@@ -72,13 +69,12 @@ namespace Shield.WpfGui.ViewModels
             return packs;
         }
 
-        
-
         public bool CanOpenDevice
         {
             get
             {
-                /*if (_pipeline.IsOpen) return false*/;
+                /*if (_pipeline.IsOpen) return false*/
+                ;
                 return true;
             }
         }
@@ -137,7 +133,6 @@ namespace Shield.WpfGui.ViewModels
 
         public void StartReceiving()
         {
-
             _receivingButtonActivated = true;
             NotifyOfPropertyChange(() => CanStartReceiving);
             NotifyOfPropertyChange(() => CanStopReceiving);
@@ -179,7 +174,6 @@ namespace Shield.WpfGui.ViewModels
             }
         }
 
-
         public string DataInput
         {
             get => _dataInput;
@@ -213,8 +207,6 @@ namespace Shield.WpfGui.ViewModels
             }
             return false;
         }
-
-       
 
         public bool HasErrors
         {

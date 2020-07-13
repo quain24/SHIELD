@@ -1,9 +1,9 @@
 ﻿using Autofac;
 using Shield.CommonInterfaces;
-using System.Linq;
-using System.Reflection;
 using Shield.Persistence;
 using Shield.Persistence.Models;
+using System.Linq;
+using System.Reflection;
 
 namespace Shield.WpfGui.AutofacModules
 {

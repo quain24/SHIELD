@@ -1,5 +1,4 @@
 ﻿using Shield.Extensions;
-using System.Linq;
 
 namespace Shield.Messaging.Commands.Parts.PartValidators
 {

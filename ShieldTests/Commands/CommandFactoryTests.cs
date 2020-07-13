@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using Shield;
+﻿using Shield;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ShieldTests.Commands
 {
@@ -16,7 +16,6 @@ namespace ShieldTests.Commands
 
         private readonly HighPrecisionClock clock = new HighPrecisionClock();
 
-
         public CommandFactoryTests()
         {
             //CommandFactory(char separator, IPartFactory factory, CommandFactoryAutoFacAdapter commandFactory)
@@ -26,7 +25,7 @@ namespace ShieldTests.Commands
             Debug.WriteLine(clock.UtcNow + " " + clock.UtcNow.Ticks);
             bool ttt;
             bool tttt;
-            for (int i = 0 ; i < 50000 ; i++)
+            for (int i = 0; i < 50000; i++)
             {
                 ttt = v1.Validate("abc123ABC ");
                 tttt = v1.Validate("abc%");
@@ -38,10 +37,6 @@ namespace ShieldTests.Commands
             var a3 = typefac = new PartFactoryAutofacAdapter((data, validator) => new IDPart(data, validator), v1);
             var a4 = dataidfac = new PartFactoryAutofacAdapter((data, validator) => new DataPart(data, validator), v1);
             var a5 = emptyfac = new PartFactoryAutofacAdapter((data, validator) => new EmptyPart(validator), v2);
-
-            
-
-
 
             var partFactory = new PrecisePartFactory(new Dictionary<Shield.Enums.Command.PartType, PartFactoryAutofacAdapter>()
             {

@@ -1,6 +1,6 @@
-﻿using System.Runtime.Serialization;
-using Shield.CommonInterfaces;
+﻿using Shield.CommonInterfaces;
 using Shield.Enums;
+using System.Runtime.Serialization;
 
 namespace Shield.Persistence.Models
 {

@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using Shield.Messaging.Commands.Parts.PartValidators;
+﻿using Shield.Messaging.Commands.Parts.PartValidators;
+using System.Diagnostics;
 using Xunit;
 
 namespace ShieldTests.Commands.Parts.PartValidators
@@ -8,10 +8,10 @@ namespace ShieldTests.Commands.Parts.PartValidators
     {
         public ForbiddenCharsPartValidatorTests()
         {
-            Validator = new ForbiddenCharsValidator(new char[]{'*'});
+            Validator = new ForbiddenCharsValidator(new char[] { '*' });
         }
 
-        ForbiddenCharsValidator Validator;
+        private ForbiddenCharsValidator Validator;
 
         [Fact()]
         public void ForbiddenCharsPartValidatorTest()

@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Shield.CommonInterfaces;
+using Shield.Enums;
+using Shield.Persistence.Models;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
-using Shield.CommonInterfaces;
-using Shield.Enums;
-using Shield.Persistence.Models;
 
 namespace Shield.Persistence
 {

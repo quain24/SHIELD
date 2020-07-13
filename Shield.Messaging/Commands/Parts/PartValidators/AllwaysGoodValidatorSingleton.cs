@@ -14,4 +14,4 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
 
         public bool Validate(string data) => true;
     }
-} 
+}
