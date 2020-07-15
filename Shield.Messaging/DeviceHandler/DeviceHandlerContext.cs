@@ -4,6 +4,7 @@ using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Shield.Timestamps;
 
 namespace Shield.Messaging.DeviceHandler
 {

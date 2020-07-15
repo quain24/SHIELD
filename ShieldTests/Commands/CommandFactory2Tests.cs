@@ -4,6 +4,7 @@ using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Shield.Timestamps;
 using Xunit;
 using static Shield.Enums.Command;
 

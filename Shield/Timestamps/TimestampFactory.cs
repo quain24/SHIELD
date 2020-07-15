@@ -1,23 +1,23 @@
 ﻿using System;
 
-namespace Shield.Messaging.Commands
+namespace Shield.Timestamps
 {
     /// <summary>
-    /// <see langword="static"/> class that creates a <see cref="Commands.Timestamp"/> from current UTC time or from given <see cref="DateTimeOffset"/>
+    /// <see langword="static"/> class that creates a <see cref="Timestamps.Timestamp"/> from current UTC time or from given <see cref="DateTimeOffset"/>
     /// </summary>
     public static class TimestampFactory
     {
         private static readonly HighPrecisionClock _clock = new HighPrecisionClock();
 
         /// <summary>
-        /// Returns <see cref="Commands.Timestamp"/> object created from current high precision UTC DateTime
+        /// Returns <see cref="Timestamps.Timestamp"/> object created from current high precision UTC DateTime
         /// </summary>
         public static Timestamp Timestamp => GetTimestamp();
 
         /// <summary>
-        /// Creates new <see cref="Commands.Timestamp"/> instance from current high precision UTC DateTime
+        /// Creates new <see cref="Timestamps.Timestamp"/> instance from current high precision UTC DateTime
         /// </summary>
-        /// <returns>New <see cref="Commands.Timestamp"/> instance</returns>
+        /// <returns>New <see cref="Timestamps.Timestamp"/> instance</returns>
         public static Timestamp GetTimestamp() => new Timestamp(_clock.UtcNow.Ticks);
 
         /// <summary>

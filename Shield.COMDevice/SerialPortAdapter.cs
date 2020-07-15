@@ -30,7 +30,7 @@ namespace Shield.COMDevice
         public SerialPortAdapter(ICommunicationDeviceSettings settings)
         {
             Setup(settings);
-            SetupPhysicallConnectionMonitoring();
+            SetupPhysicalConnectionMonitoring();
         }
 
         public event EventHandler<string> DataReceived;
@@ -75,10 +75,10 @@ namespace Shield.COMDevice
             Name = settings.Name;
         }
 
-        private void SetupPhysicallConnectionMonitoring() =>
-            _connectionMonitor = new Timer(CheckPhysicallConnection, null, Timeout.Infinite, Timeout.Infinite);
+        private void SetupPhysicalConnectionMonitoring() =>
+            _connectionMonitor = new Timer(CheckPhysicalConnection, null, Timeout.Infinite, Timeout.Infinite);
 
-        private void CheckPhysicallConnection(object state)
+        private void CheckPhysicalConnection(object state)
         {
             if (IsConnected)
                 return;
@@ -86,7 +86,7 @@ namespace Shield.COMDevice
             throw new DeviceDisconnectedException($"Internal monitor detected that {_port.PortName} has been physically disconnected!");
         }
 
-        private void StartPhysicallConnectionMonitoring() =>
+        private void StartPhysicalConnectionMonitoring() =>
             _connectionMonitor.Change(DelayValue, IntervalValue);
 
         private void StopPhysicallConnectionMonitoring() =>
@@ -102,7 +102,7 @@ namespace Shield.COMDevice
                         return;
 
                     _port.Open();
-                    StartPhysicallConnectionMonitoring();
+                    StartPhysicalConnectionMonitoring();
                 }
                 catch (IOException ex) when (!IsConnected)
                 {

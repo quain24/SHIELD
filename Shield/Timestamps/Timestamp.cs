@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Shield.Messaging.Commands
+namespace Shield.Timestamps
 {
     public sealed class Timestamp : IEquatable<Timestamp>, IComparable<Timestamp>
     {

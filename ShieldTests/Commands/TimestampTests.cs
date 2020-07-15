@@ -1,6 +1,7 @@
 ﻿using Shield.Messaging.Commands;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Shield.Timestamps;
 using Xunit;
 
 namespace ShieldTests.Commands

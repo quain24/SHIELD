@@ -26,7 +26,7 @@ namespace Shield.Messaging.Protocol
 
         public Reply Translate(ICommand replyCommand)
         {
-            return new Reply(replyCommand.Order.ToString(), replyCommand.Data.ToString().Trim());
+            return new Reply(replyCommand.Order.ToString(), replyCommand.Timestamp, replyCommand.Data.ToString().Trim());
         }
     }
 }

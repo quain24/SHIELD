@@ -9,6 +9,7 @@ using Shield.Messaging.RawData;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading.Tasks;
+using Shield.Timestamps;
 using Xunit;
 using Xunit.Abstractions;
 using static Shield.Enums.Command;

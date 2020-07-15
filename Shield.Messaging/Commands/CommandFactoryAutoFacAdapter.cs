@@ -1,5 +1,6 @@
 ﻿using Shield.Messaging.Commands.Parts;
 using System;
+using Shield.Timestamps;
 
 namespace Shield.Messaging.Commands
 {

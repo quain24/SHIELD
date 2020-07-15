@@ -2,6 +2,7 @@
 using Shield.Messaging.Commands.States;
 using System;
 using System.Collections.Generic;
+using Shield.Timestamps;
 
 namespace Shield.Messaging.Commands
 {

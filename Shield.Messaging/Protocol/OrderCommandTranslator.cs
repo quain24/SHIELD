@@ -28,7 +28,7 @@ namespace Shield.Messaging.Protocol
 
         public Order Translate(ICommand orderCommand)
         {
-            return new Order(orderCommand.Order.ToString(), orderCommand.Target.ToString(), orderCommand.Data.ToString());
+            return new Order(orderCommand.Order.ToString(), orderCommand.Target.ToString(), orderCommand.ID.ToString(), orderCommand.Timestamp, orderCommand.Data.ToString());
         }
     }
 }

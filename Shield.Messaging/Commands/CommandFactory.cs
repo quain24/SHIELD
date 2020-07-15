@@ -5,6 +5,7 @@ using Shield.Messaging.RawData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Shield.Timestamps;
 using static Shield.Enums.Command;
 
 namespace Shield.Messaging.Commands

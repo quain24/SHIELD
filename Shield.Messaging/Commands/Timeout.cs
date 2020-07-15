@@ -1,4 +1,5 @@
 ﻿using System;
+using Shield.Timestamps;
 
 namespace Shield.Messaging.Commands
 {
@@ -6,20 +7,20 @@ namespace Shield.Messaging.Commands
     {
         public Timeout(int timeoutInSeconds)
         {
-            Value = timeoutInSeconds > 0
+            ValueInTicks = timeoutInSeconds > 0
                 ? TimeSpan.FromSeconds(timeoutInSeconds).Ticks
                 : throw new ArgumentOutOfRangeException(nameof(timeoutInSeconds), "Timeout value has to be positive");
             ValueInSeconds = timeoutInSeconds;
         }
 
-        public int InMilliseconds => (int)TimeSpan.FromTicks(Value).TotalSeconds * 1000;
+        public int InMilliseconds => (int)TimeSpan.FromTicks(ValueInTicks).TotalSeconds * 1000;
 
-        private long Value { get; }
+        private long ValueInTicks { get; }
         private int ValueInSeconds { get; }
 
-        public bool IsExceeded(Timestamp timestamp) => TimestampFactory.Timestamp.Difference(timestamp) > Value;
+        public bool IsExceeded(Timestamp timestamp) => TimestampFactory.Timestamp.Difference(timestamp) > ValueInTicks;
 
-        public override string ToString() => Value.ToString();
+        public override string ToString() => ValueInTicks.ToString();
 
         public static implicit operator int(Timeout timeout) => timeout.ValueInSeconds;
     }

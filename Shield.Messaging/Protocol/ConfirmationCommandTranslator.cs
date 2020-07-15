@@ -27,7 +27,7 @@ namespace Shield.Messaging.Protocol
 
         public Confirmation Translate(ICommand confirmationCommand)
         {
-            return new Confirmation(confirmationCommand.Order.ToString(), ExtractErrors(confirmationCommand));
+            return new Confirmation(confirmationCommand.Order.ToString(), ExtractErrors(confirmationCommand), confirmationCommand.Timestamp);
         }
 
         private ErrorState ExtractErrors(ICommand command)
