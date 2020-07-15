@@ -9,7 +9,7 @@ Każdy z podłączonych hubów nadzoruje dowolną liczbę konkretnych celów / w
 #### Główne zalety:
 - Otwarty, czytelny i łatwo konfigurowalny protokół wymiany danych
 - Dowolny zestaw reguł detekcji błędów
-- Dowolna jednocześnie aktywna liczba hostów
+- Dowolna jednocześnie aktywna liczba hubów
 - Łatwa rozszerzalność obsługiwanych peryferiów
 - Komunikacja w czasie rzeczywistym z niskimi wymogami sprzętowymi dostosowana pod huby typu embedded system.
 
