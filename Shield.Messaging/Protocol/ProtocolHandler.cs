@@ -12,12 +12,14 @@ namespace Shield.Messaging.Protocol
         private readonly DeviceHandlerContext _deviceHandler;
         private readonly ConfirmationFactory _confirmationFactory;
         private readonly CommandTranslator _commandTranslator;
+        private readonly ResponseAwaiter _responseAwaiter;
 
-        public ProtocolHandler(DeviceHandlerContext deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator)
+        public ProtocolHandler(DeviceHandlerContext deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator, ResponseAwaiter responseAwaiter)
         {
             _deviceHandler = deviceHandler;
             _confirmationFactory = confirmationFactory;
             _commandTranslator = commandTranslator;
+            _responseAwaiter = responseAwaiter;
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
@@ -30,12 +32,16 @@ namespace Shield.Messaging.Protocol
 
         public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)
         {
-            return null; // tmp
+            var awaiter = _responseAwaiter.TryAwaitResponseAsync(order);
+            var isConfirmed = await awaiter.AwaitResponseAsync().ConfigureAwait(false);
+            if (isConfirmed)
+                return _responseAwaiter.GetResponse(order);
+            return null;
         }
 
-        public async Task<Order> AwaitReplyToAsync(Order order)
+        public async Task<Reply> AwaitReplyToAsync(Order order)
         {
-            return null; // tmp
+            return null; // tmp - maybe replace with task<bool> TryAwaitReply(Order order, out Reply reply)
         }
 
         private async void OnCommandReceived(object sender, ICommand command)

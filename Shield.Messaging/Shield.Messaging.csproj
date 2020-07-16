@@ -80,10 +80,12 @@
     <Compile Include="Commands\Parts\PartValidators\OnlyAlphanumericAllowedValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\AllwaysGoodValidatorSingleton.cs" />
     <Compile Include="Commands\Parts\DataPart.cs" />
+    <Compile Include="Protocol\AlreadyKnownChildAwaiter.cs" />
     <Compile Include="Protocol\ChildAwaiter.cs" />
     <Compile Include="Protocol\CommandTranslator.cs" />
     <Compile Include="Protocol\Confirmation.cs" />
     <Compile Include="Protocol\ConfirmationCommandTranslator.cs" />
+    <Compile Include="Protocol\IChildAwaiter.cs" />
     <Compile Include="Protocol\Order.cs" />
     <Compile Include="Protocol\OrderCommandTranslator.cs" />
     <Compile Include="Protocol\ProtocolHandler.cs" />

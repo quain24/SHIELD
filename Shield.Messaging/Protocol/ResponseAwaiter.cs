@@ -1,5 +1,6 @@
 ﻿using Shield.Timestamps;
 using System;
+using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Shield.Messaging.Protocol
         private readonly ConcurrentDictionary<Timestamp, Order> _buffer = new ConcurrentDictionary<Timestamp, Order>();
         private readonly ConcurrentDictionary<string, Confirmation> _confBuffer = new ConcurrentDictionary<string, Confirmation>();
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _ctsBuffer = new ConcurrentDictionary<string, CancellationTokenSource>();
+        private readonly ConcurrentDictionary<string, ChildAwaiter> _awaiterBuffer = new ConcurrentDictionary<string, ChildAwaiter>();
 
         public ResponseAwaiter(Timeout timeout)
         {
@@ -31,28 +33,34 @@ namespace Shield.Messaging.Protocol
 
         private void StopTimer() => _timer.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
 
-        public Task<bool> AwaitResponseAsync(Order order)
+        public IChildAwaiter TryAwaitResponseAsync(Order order)
         {
             if (_confBuffer.TryRemove(order.ID, out _))
-                return Task.FromResult(true);
+                return new AlreadyKnownChildAwaiter(true);
 
             if (_timeout.IsExceeded(order.Timestamp))
-                return Task.FromResult(false);
+                return new AlreadyKnownChildAwaiter(false);
 
-            var cts = new CancellationTokenSource();
-            if (_ctsBuffer.TryAdd(order.ID, cts))
-                return new ChildAwaiter(_timeout, cts).RespondedInTime();
+            var awaiter = new ChildAwaiter(_timeout);
+            if(_awaiterBuffer.TryAdd(order.ID, awaiter))
+                return new ChildAwaiter(_timeout);
 
             throw new Exception($"Could not create new ChildAwaiter for \"{order.ID}\" - Cancellation token for that id is already used in buffer");
         }
 
         public void AddResponse(Confirmation confirmation)
         {
-            if (_ctsBuffer.TryRemove(confirmation.Confirms, out CancellationTokenSource cts))
+            _confBuffer.TryAdd(confirmation.Confirms, confirmation);
+            if (_awaiterBuffer.TryRemove(confirmation.Confirms, out ChildAwaiter awaiter))
             {
-                cts.Cancel();
-                cts.Dispose();
+                awaiter.Interrupt();
             }
+        }
+
+        public Confirmation GetResponse(Order order)
+        {
+            _confBuffer.TryRemove(order.ID, out var confirmation);
+            return confirmation;
         }
 
         private void AddToMonitoring(Order order)
