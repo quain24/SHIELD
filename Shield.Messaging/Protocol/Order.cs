@@ -15,6 +15,7 @@ namespace Shield.Messaging.Protocol
             _order = order;
             _target = target;
             _data = data;
+            _timestamp = timestamp;
         }
 
         public Order(string order, string target, string id, Timestamp timestamp, string data = "") : this(order, target, timestamp, data)

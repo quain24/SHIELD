@@ -21,19 +21,19 @@ namespace Shield.Messaging.Protocol
         public ResponseAwaiter(Timeout timeout)
         {
             _timeout = timeout;
-            _timer = InitializeTimer();
+            // _timer = InitializeTimer();
         }
 
-        private Timer InitializeTimer()
-        {
-            return new Timer(_, null, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
-        }
+        //private Timer InitializeTimer()
+        //{
+        //    return new Timer(_, null, System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+        //}
 
-        private void StartTimer() => _timer.Change(0, _timeout.InMilliseconds);
+        //private void StartTimer() => _timer.Change(0, _timeout.InMilliseconds);
 
-        private void StopTimer() => _timer.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
+        //private void StopTimer() => _timer.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
 
-        public IChildAwaiter TryAwaitResponseAsync(Order order)
+        public IChildAwaiter AwaitResponse(Order order)
         {
             if (_confBuffer.TryRemove(order.ID, out _))
                 return new AlreadyKnownChildAwaiter(true);
