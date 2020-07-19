@@ -1,16 +1,16 @@
-﻿using System;
-using Shield.Timestamps;
+﻿using Shield.Timestamps;
+using System;
 
 namespace Shield.Messaging.Commands
 {
-    public class Timeout
+    public sealed class Timeout
     {
-        public Timeout(int timeoutInSeconds)
+        public Timeout(int inMilliseconds)
         {
-            ValueInTicks = timeoutInSeconds > 0
-                ? TimeSpan.FromSeconds(timeoutInSeconds).Ticks
-                : throw new ArgumentOutOfRangeException(nameof(timeoutInSeconds), "Timeout value has to be positive");
-            ValueInSeconds = timeoutInSeconds;
+            ValueInTicks = inMilliseconds > 0
+                ? TimeSpan.FromMilliseconds(inMilliseconds).Ticks
+                : throw new ArgumentOutOfRangeException(nameof(inMilliseconds), "Timeout value has to be positive");
+            ValueInSeconds = inMilliseconds * 1000;
         }
 
         public int InMilliseconds => (int)TimeSpan.FromTicks(ValueInTicks).TotalSeconds * 1000;

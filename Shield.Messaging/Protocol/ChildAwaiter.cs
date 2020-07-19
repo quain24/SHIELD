@@ -16,7 +16,7 @@ namespace Shield.Messaging.Protocol
             _timeout = timeout;
         }
 
-        public async Task<bool> AwaitResponseAsync()
+        public async Task<bool> RespondedInTime()
         {
             try
             {

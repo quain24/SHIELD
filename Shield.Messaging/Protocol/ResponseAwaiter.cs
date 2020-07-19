@@ -2,6 +2,7 @@
 using System;
 using System.CodeDom;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Timeout = Shield.Messaging.Commands.Timeout;
@@ -14,7 +15,7 @@ namespace Shield.Messaging.Protocol
         private readonly Timer _timer;
 
         private readonly ConcurrentDictionary<Timestamp, Order> _buffer = new ConcurrentDictionary<Timestamp, Order>();
-        private readonly ConcurrentDictionary<string, Confirmation> _confBuffer = new ConcurrentDictionary<string, Confirmation>();
+        private readonly ConcurrentDictionary<string, IResponseMessage> _responseBuffer = new ConcurrentDictionary<string, IResponseMessage>();
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _ctsBuffer = new ConcurrentDictionary<string, CancellationTokenSource>();
         private readonly ConcurrentDictionary<string, ChildAwaiter> _awaiterBuffer = new ConcurrentDictionary<string, ChildAwaiter>();
 
@@ -33,10 +34,12 @@ namespace Shield.Messaging.Protocol
 
         //private void StopTimer() => _timer.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
 
-        public IChildAwaiter AwaitResponse(Order order)
+        public IChildAwaiter GetAwaiter(Order order)
         {
-            if (_confBuffer.TryRemove(order.ID, out _))
-                return new AlreadyKnownChildAwaiter(true);
+            if (_responseBuffer.TryRemove(order.ID, out var _))
+                return _timeout.IsExceeded(order.Timestamp)
+                    ? new AlreadyKnownChildAwaiter(false)
+                    : new AlreadyKnownChildAwaiter(true);
 
             if (_timeout.IsExceeded(order.Timestamp))
                 return new AlreadyKnownChildAwaiter(false);
@@ -48,19 +51,19 @@ namespace Shield.Messaging.Protocol
             throw new Exception($"Could not create new ChildAwaiter for \"{order.ID}\" - Cancellation token for that id is already used in buffer");
         }
 
-        public void AddResponse(Confirmation confirmation)
+        public void AddResponse(IResponseMessage response)
         {
-            _confBuffer.TryAdd(confirmation.Confirms, confirmation);
-            if (_awaiterBuffer.TryRemove(confirmation.Confirms, out ChildAwaiter awaiter))
+            _responseBuffer.TryAdd(response.Target, response);
+            if (_awaiterBuffer.TryRemove(response.Target, out ChildAwaiter awaiter))
             {
                 awaiter.Interrupt();
             }
         }
 
-        public Confirmation GetResponse(Order order)
+        public IResponseMessage GetResponse(Order order)
         {
-            _confBuffer.TryRemove(order.ID, out var confirmation);
-            return confirmation;
+            _responseBuffer.TryRemove(order.ID, out var response);
+            return response;
         }
 
         private void AddToMonitoring(Order order)

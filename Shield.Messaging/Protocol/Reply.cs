@@ -2,7 +2,7 @@
 
 namespace Shield.Messaging.Protocol
 {
-    public class Reply
+    public class Reply : IResponseMessage
     {
         private readonly string _replyTo;
         private readonly Timestamp _timestamp;
@@ -14,6 +14,8 @@ namespace Shield.Messaging.Protocol
             _timestamp = timestamp;
             _data = data;
         }
+
+        public string Target => _replyTo;
 
         public string ReplysTo => _replyTo;
         public string Data => _data;

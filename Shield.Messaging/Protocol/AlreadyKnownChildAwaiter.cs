@@ -14,7 +14,7 @@ namespace Shield.Messaging.Protocol
         {
             _alreadyKnown = alreadyKnown;
         }
-        public Task<bool> AwaitResponseAsync()
+        public Task<bool> RespondedInTime()
         {
             return Task.FromResult(_alreadyKnown);
         }

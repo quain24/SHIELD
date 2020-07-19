@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace Shield.Timestamps
 {
@@ -57,10 +59,16 @@ namespace Shield.Timestamps
 
         #endregion IComparable<Timestamp> implementation
 
-        public long Difference(Timestamp other) => _value - other._value;
+        public long Difference(Timestamp other)
+        {
+            var output = _value - other._value;
+            return output >= 0
+                ? output
+                : output * -1;
+        }
 
         public long ToLong() => _value;
 
-        public override string ToString() => _value.ToString();
+        public override string ToString() => _value.ToString(CultureInfo.InvariantCulture);
     }
 }

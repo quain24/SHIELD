@@ -86,6 +86,7 @@
     <Compile Include="Protocol\Confirmation.cs" />
     <Compile Include="Protocol\ConfirmationCommandTranslator.cs" />
     <Compile Include="Protocol\IChildAwaiter.cs" />
+    <Compile Include="Protocol\IResponseMessage.cs" />
     <Compile Include="Protocol\Order.cs" />
     <Compile Include="Protocol\OrderCommandTranslator.cs" />
     <Compile Include="Protocol\ProtocolHandler.cs" />

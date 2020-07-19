@@ -58,7 +58,7 @@ namespace ShieldTests.Commands
             var command2 = Factory.TranslateFrom(new Shield.Messaging.RawData.RawCommand("01231*abcdd*mod1*order1*0123456789"));
             var list = new List<ICommand>();
 
-            var timeout = new Timeout(1);
+            var timeout = new Timeout(1000);
 
             var t1 = TimestampFactory.Timestamp;
             Debug.WriteLine(clock.UtcNow + "  " + clock.UtcNow.Ticks);

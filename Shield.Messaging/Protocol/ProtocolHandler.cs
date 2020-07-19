@@ -32,11 +32,20 @@ namespace Shield.Messaging.Protocol
 
         public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)
         {
-            var awaiter = _responseAwaiter.AwaitResponse(order);
-            var isConfirmed = await awaiter.AwaitResponseAsync().ConfigureAwait(false);
-            if (isConfirmed)
-                return _responseAwaiter.GetResponse(order);
+            var awaiter = _responseAwaiter.GetAwaiter(order);
+            var isConfirmed = await awaiter.RespondedInTime().ConfigureAwait(false);
+            if (isConfirmed && IsResponseConfirmation(order, out var confirmation))
+                return confirmation;
             return null;
+        }
+
+        private bool IsResponseConfirmation(Order ofOrder, out Confirmation confirmation)
+        {
+            confirmation = _responseAwaiter.GetResponse(ofOrder) is Confirmation conf
+                ? conf
+                : null;
+
+            return confirmation is null;
         }
 
         public async Task<Reply> AwaitReplyToAsync(Order order)

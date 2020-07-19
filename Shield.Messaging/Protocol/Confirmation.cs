@@ -3,7 +3,7 @@ using Shield.Timestamps;
 
 namespace Shield.Messaging.Protocol
 {
-    public class Confirmation
+    public class Confirmation : IResponseMessage
     {
         private readonly string _confirmingId;
         private readonly ErrorState _errors;
@@ -15,6 +15,8 @@ namespace Shield.Messaging.Protocol
             _errors = errors;
             _timestamp = timestamp;
         }
+
+        public string Target => _confirmingId;
 
         public bool IsValid => _errors == ErrorState.Unchecked().Valid();
 
