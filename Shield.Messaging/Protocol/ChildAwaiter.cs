@@ -16,7 +16,7 @@ namespace Shield.Messaging.Protocol
             _ct = ct;
         }
 
-        public async Task<bool> RespondedInTime()
+        public async Task<bool> HasRespondedInTimeAsync()
         {
             try
             {

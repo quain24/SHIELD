@@ -7,10 +7,13 @@ namespace Shield.Messaging.Protocol
 {
     public class ResponseAwaiter
     {
+        private readonly ConcurrentDictionary<string, IResponseMessage> _responseBuffer =
+            new ConcurrentDictionary<string, IResponseMessage>();
+
         private readonly Timeout _timeout;
 
-        private readonly ConcurrentDictionary<string, IResponseMessage> _responseBuffer = new ConcurrentDictionary<string, IResponseMessage>();
-        private readonly ConcurrentDictionary<string, CancellationTokenSource> _tokenBuffer = new ConcurrentDictionary<string, CancellationTokenSource>();
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> _tokenBuffer =
+            new ConcurrentDictionary<string, CancellationTokenSource>();
 
         public ResponseAwaiter(Timeout timeout)
         {
@@ -19,14 +22,21 @@ namespace Shield.Messaging.Protocol
 
         public IChildAwaiter GetAwaiterFor(Order order)
         {
-            if (_responseBuffer.TryGetValue(order.ID, out _))
-                return _timeout.IsExceeded(order.Timestamp)
-                    ? new AlreadyKnownChildAwaiter(false)
-                    : new AlreadyKnownChildAwaiter(true);
+            if (ReplyExists(order))
+                return new AlreadyKnownChildAwaiter(!IsTimeoutExceeded(order));
 
-            if (_timeout.IsExceeded(order.Timestamp))
+            if (IsTimeoutExceeded(order))
                 return new AlreadyKnownChildAwaiter(false);
 
+            return CreateNormalAwaiterWithBufferedToken(order);
+        }
+
+        private bool ReplyExists(Order order) => _responseBuffer.TryGetValue(order.ID, out _);
+
+        private bool IsTimeoutExceeded(Order order) => _timeout.IsExceeded(order.Timestamp);
+
+        private ChildAwaiter CreateNormalAwaiterWithBufferedToken(Order order)
+        {
             var cancellationTokenSource = new CancellationTokenSource();
             if (_tokenBuffer.TryAdd(order.ID, cancellationTokenSource))
                 return new ChildAwaiter(_timeout, cancellationTokenSource.Token);
@@ -36,12 +46,22 @@ namespace Shield.Messaging.Protocol
 
         public void AddResponse(IResponseMessage response)
         {
-            _responseBuffer.TryAdd(response.Target, response);
-            if (_tokenBuffer.TryRemove(response.Target, out CancellationTokenSource cts))
+            TryBufferResponse(response);
+            TryInformCorrespondingChildAwaiter(response);
+        }
+
+        private bool TryBufferResponse(IResponseMessage response) => _responseBuffer.TryAdd(response.Target, response);
+
+        private bool TryInformCorrespondingChildAwaiter(IResponseMessage response)
+        {
+            if (_tokenBuffer.TryRemove(response.Target, out var cts))
             {
-                cts.Cancel();
-                cts.Dispose();
+                cts?.Cancel();
+                cts?.Dispose();
+                return true;
             }
+
+            return false;
         }
 
         public IResponseMessage GetResponse(Order order)

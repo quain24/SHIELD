@@ -63,7 +63,7 @@ namespace ShieldTests.Commands
             var t1 = TimestampFactory.Timestamp;
             Debug.WriteLine(clock.UtcNow + "  " + clock.UtcNow.Ticks);
             bool val;
-            for (int i = 0; i < 5000000; i++)
+            for (int i = 0; i < 5000; i++)
             {
                 command = Factory.TranslateFrom(new Shield.Messaging.RawData.RawCommand("01231*abcdd*mod1*order1*0123456789"));
                 val = command.IsValid;

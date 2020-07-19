@@ -4,6 +4,6 @@ namespace Shield.Messaging.Protocol
 {
     public interface IChildAwaiter
     {
-        Task<bool> RespondedInTime();
+        Task<bool> HasRespondedInTimeAsync();
     }
 }

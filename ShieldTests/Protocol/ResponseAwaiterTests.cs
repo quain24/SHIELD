@@ -56,7 +56,7 @@ namespace ShieldTests.Protocol
 
             ResponseAwaiter.AddResponse(StandardConfirmation);
             var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
-            var result = await awaiter.RespondedInTime();
+            var result = await awaiter.HasRespondedInTimeAsync();
 
             Assert.IsType<AlreadyKnownChildAwaiter>(awaiter);
             Assert.True(result);
@@ -70,7 +70,7 @@ namespace ShieldTests.Protocol
 
             ResponseAwaiter.AddResponse(StandardConfirmation);
             var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
-            var result = await awaiter.RespondedInTime();
+            var result = await awaiter.HasRespondedInTimeAsync();
 
             Assert.IsType<AlreadyKnownChildAwaiter>(awaiter);
             Assert.False(result);
@@ -89,7 +89,7 @@ namespace ShieldTests.Protocol
             #pragma warning restore 4014
 
             var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
-            var result = await awaiter.RespondedInTime().ConfigureAwait(false);
+            var result = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
 
             Assert.IsType<ChildAwaiter>(awaiter);
             Assert.True(result);
@@ -102,13 +102,13 @@ namespace ShieldTests.Protocol
             #pragma warning disable 4014
             Task.Run(async () =>
             {
-                await Task.Delay(_timeoutInMilliseconds + 1).ConfigureAwait(false);
+                await Task.Delay(_timeoutInMilliseconds + 15).ConfigureAwait(false);
                 ResponseAwaiter.AddResponse(StandardConfirmation);
             }).ConfigureAwait(false);
             #pragma warning restore 4014
 
             var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
-            var result = await awaiter.RespondedInTime().ConfigureAwait(false);
+            var result = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
 
             Assert.IsType<ChildAwaiter>(awaiter);
             Assert.False(result);
@@ -127,7 +127,7 @@ namespace ShieldTests.Protocol
             #pragma warning restore 4014
 
             var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
-            var result = await awaiter.RespondedInTime().ConfigureAwait(false);
+            var result = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
             IResponseMessage response = null;
             if (result)
                 response = ResponseAwaiter.GetResponse(testOrder);
