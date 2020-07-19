@@ -1,4 +1,5 @@
-﻿using Shield.Messaging.Commands;
+﻿using System.Diagnostics;
+using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.Protocol;
 using Shield.Timestamps;
@@ -21,6 +22,9 @@ namespace ShieldTests.Protocol
         }
 
         private ResponseAwaiter ResponseAwaiter { get; set; }
+        private Order StandardOrder => new Order("test", "target", "idid", TimestampFactory.Timestamp);
+        private Confirmation StandardConfirmation => new Confirmation("idid", ErrorState.Unchecked().Valid(), TimestampFactory.Timestamp);
+        private IResponseMessage StdConfirmationAsIResponse => StandardConfirmation;
 
         private void Setup()
         {
@@ -31,8 +35,7 @@ namespace ShieldTests.Protocol
         [Fact()]
         public void Returns_child_awaiter_when_await_response_called_for_not_already_responded_order()
         {
-            var testOrder = new Order("a", "b,", "c", TimestampFactory.Timestamp);
-            var output = ResponseAwaiter.GetAwaiter(testOrder);
+            var output = ResponseAwaiter.GetAwaiterFor(StandardOrder);
 
             Assert.IsType<ChildAwaiter>(output);
         }
@@ -40,22 +43,19 @@ namespace ShieldTests.Protocol
         [Fact()]
         public void Returns_AlreadyKnownAwaiter_when_used_to_await_for_already_provided_confirmation()
         {
-            var confirmation = new Confirmation("idid", ErrorState.Unchecked().Valid(), TimestampFactory.GetTimestamp());
-            var testOrder = new Order("test", "target", "idid", TimestampFactory.Timestamp);
-            ResponseAwaiter.AddResponse(confirmation);
-            var output = ResponseAwaiter.GetAwaiter(testOrder);
+            ResponseAwaiter.AddResponse(StandardConfirmation);
+            var output = ResponseAwaiter.GetAwaiterFor(StandardOrder);
             Assert.IsType<AlreadyKnownChildAwaiter>(output);
         }
 
         [Fact()]
         public async Task Returns_AlreadyKnownChildAwaiter_true_if_await_for_already_provided_confirmation()
         {
-            var testOrder = new Order("test", "target", "idid", TimestampFactory.Timestamp);
+            var testOrder = StandardOrder;
             await Task.Delay(_timeout.InMilliseconds / 2);
-            var confirmation = new Confirmation("idid", ErrorState.Unchecked().Valid(), TimestampFactory.GetTimestamp());
 
-            ResponseAwaiter.AddResponse(confirmation);
-            var awaiter = ResponseAwaiter.GetAwaiter(testOrder);
+            ResponseAwaiter.AddResponse(StandardConfirmation);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.RespondedInTime();
 
             Assert.IsType<AlreadyKnownChildAwaiter>(awaiter);
@@ -65,12 +65,11 @@ namespace ShieldTests.Protocol
         [Fact()]
         public async Task Returns_AlreadyKnownChildAwaiter_false_if_awaiting_already_timeouted_order()
         {
-            var testOrder = new Order("test", "target", "idid", TimestampFactory.Timestamp);
+            var testOrder = StandardOrder;
             await Task.Delay(_timeout.InMilliseconds + 1).ConfigureAwait(false);
-            var confirmation = new Confirmation("idid", ErrorState.Unchecked().Valid(), TimestampFactory.Timestamp);
 
-            ResponseAwaiter.AddResponse(confirmation);
-            var awaiter = ResponseAwaiter.GetAwaiter(testOrder);
+            ResponseAwaiter.AddResponse(StandardConfirmation);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.RespondedInTime();
 
             Assert.IsType<AlreadyKnownChildAwaiter>(awaiter);
@@ -78,8 +77,63 @@ namespace ShieldTests.Protocol
         }
 
         [Fact()]
-        public void GetResponseTest()
+        public async Task Returns_ChildAwaiter_true_when_response_came_in_time()
         {
+            var testOrder = StandardOrder;
+            #pragma warning disable 4014
+            Task.Run(async () =>
+            {
+                await Task.Delay(_timeoutInMilliseconds / 2).ConfigureAwait(false);
+                ResponseAwaiter.AddResponse(StandardConfirmation);
+            }).ConfigureAwait(false);
+            #pragma warning restore 4014
+
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
+            var result = await awaiter.RespondedInTime().ConfigureAwait(false);
+
+            Assert.IsType<ChildAwaiter>(awaiter);
+            Assert.True(result);
+        }
+
+        [Fact()]
+        public async Task Returns_ChildAwaiter_false_when_response_came_after_allowed_timeout()
+        {
+            var testOrder = StandardOrder;
+            #pragma warning disable 4014
+            Task.Run(async () =>
+            {
+                await Task.Delay(_timeoutInMilliseconds + 1).ConfigureAwait(false);
+                ResponseAwaiter.AddResponse(StandardConfirmation);
+            }).ConfigureAwait(false);
+            #pragma warning restore 4014
+
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
+            var result = await awaiter.RespondedInTime().ConfigureAwait(false);
+
+            Assert.IsType<ChildAwaiter>(awaiter);
+            Assert.False(result);
+        }
+
+        [Fact()]
+        public async Task Gets_proper_response_when_response_came_in_time()
+        {
+            var testOrder = StandardOrder;
+            #pragma warning disable 4014
+            Task.Run(async () =>
+            {
+                await Task.Delay(_timeoutInMilliseconds / 2).ConfigureAwait(false);
+                ResponseAwaiter.AddResponse(StandardConfirmation);
+            }).ConfigureAwait(false);
+            #pragma warning restore 4014
+
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
+            var result = await awaiter.RespondedInTime().ConfigureAwait(false);
+            IResponseMessage response = null;
+            if (result)
+                response = ResponseAwaiter.GetResponse(testOrder);
+            Assert.NotNull(response);
+            Assert.IsAssignableFrom<Confirmation>(response);
+            Assert.Equal(response.Target, testOrder.ID);
         }
     }
 }

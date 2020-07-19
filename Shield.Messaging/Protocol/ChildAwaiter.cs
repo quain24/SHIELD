@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Timeout = Shield.Messaging.Commands.Timeout;
@@ -9,35 +8,25 @@ namespace Shield.Messaging.Protocol
     public class ChildAwaiter : IChildAwaiter
     {
         private readonly Timeout _timeout;
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly CancellationToken _ct;
 
-        public ChildAwaiter(Timeout timeout)
+        public ChildAwaiter(Timeout timeout, CancellationToken ct)
         {
             _timeout = timeout;
+            _ct = ct;
         }
 
         public async Task<bool> RespondedInTime()
         {
             try
             {
-                await Task.Delay(_timeout.InMilliseconds, _cts.Token).ConfigureAwait(false);
-                Debug.Write("Timeout reached.");
+                await Task.Delay(_timeout.InMilliseconds, _ct).ConfigureAwait(false);
                 return false;
             }
             catch (OperationCanceledException)
             {
-                Debug.Write("Response in good time");
                 return true;
             }
-            finally
-            {
-                _cts.Dispose();
-            }
-        }
-
-        public void Interrupt()
-        {
-            _cts?.Cancel();
         }
     }
 }
