@@ -39,11 +39,11 @@ namespace Shield.Messaging.Commands
             // ReSharper disable once ComplexConditionExpression
             _errorStateCheckMap = new List<Action>()
             {
-                () => { if (!ID.IsValid) ErrorState = ErrorState.BadID(); },
-                () => { if (!HostID.IsValid) ErrorState = ErrorState.BadHostID(); },
-                () => { if (!Target.IsValid) ErrorState = ErrorState.BadTarget(); },
-                () => { if (!Order.IsValid) ErrorState = ErrorState.BadOrder(); },
-                () => { if (!Data.IsValid) ErrorState = ErrorState.BadDataPack(); }
+                () => { if (!ID?.IsValid ?? true) ErrorState = ErrorState.BadID(); },
+                () => { if (!HostID?.IsValid ?? true) ErrorState = ErrorState.BadHostID(); },
+                () => { if (!Target?.IsValid ?? true) ErrorState = ErrorState.BadTarget(); },
+                () => { if (!Order?.IsValid ?? true) ErrorState = ErrorState.BadOrder(); },
+                () => { if (!Data?.IsValid ?? true) ErrorState = ErrorState.BadDataPack(); }
             };
 
         private bool Validate()

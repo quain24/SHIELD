@@ -32,25 +32,43 @@ namespace Shield.Messaging.Protocol
 
         public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)
         {
-            var awaiter = _responseAwaiter.GetAwaiterFor(order);
-            var isConfirmed = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
-            if (isConfirmed && IsResponseConfirmation(order, out var confirmation))
-                return confirmation;
-            return null;
+            var isConfirmed = await WasRespondedToInTimeAsync(order).ConfigureAwait(false);
+
+            return isConfirmed && IsResponseConfirmation(order, out var confirmation)
+                ? confirmation
+                : null;
         }
 
-        private bool IsResponseConfirmation(Order ofOrder, out Confirmation confirmation)
+        public async Task<Reply> AwaitReplyToAsync(Order order)
         {
-            confirmation = _responseAwaiter.GetResponse(ofOrder) is Confirmation conf
+            var isConfirmed = await WasRespondedToInTimeAsync(order).ConfigureAwait(false);
+
+            return isConfirmed && IsResponseReply(order, out var reply)
+                ? reply
+                : null;
+        }
+
+        private Task<bool> WasRespondedToInTimeAsync(Order order)
+        {
+            return _responseAwaiter.GetAwaiterFor(order).HasRespondedInTimeAsync();
+        }
+
+        private bool IsResponseConfirmation(Order order, out Confirmation confirmation)
+        {
+            confirmation = _responseAwaiter.GetResponse(order) is Confirmation conf
                 ? conf
                 : null;
 
             return confirmation is null;
         }
 
-        public async Task<Reply> AwaitReplyToAsync(Order order)
+        private bool IsResponseReply(Order order, out Reply reply)
         {
-            return null; // tmp - maybe replace with task<bool> TryAwaitReply(Order order, out Reply reply)
+            reply = _responseAwaiter.GetResponse(order) is Reply rep
+                ? rep
+                : null;
+
+            return reply is null;
         }
 
         private async void OnCommandReceived(object sender, ICommand command)
