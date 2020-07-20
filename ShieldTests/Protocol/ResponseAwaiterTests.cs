@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.Protocol;
@@ -102,7 +103,7 @@ namespace ShieldTests.Protocol
             #pragma warning disable 4014
             Task.Run(async () =>
             {
-                await Task.Delay(_timeoutInMilliseconds + 15).ConfigureAwait(false);
+                await Task.Delay(_timeoutInMilliseconds + 50).ConfigureAwait(false);
                 ResponseAwaiter.AddResponse(StandardConfirmation);
             }).ConfigureAwait(false);
             #pragma warning restore 4014
@@ -134,6 +135,18 @@ namespace ShieldTests.Protocol
             Assert.NotNull(response);
             Assert.IsAssignableFrom<Confirmation>(response);
             Assert.Equal(response.Target, testOrder.ID);
+        }
+
+        [Fact()]
+        public async Task Will_throw_exception_when_given_same_id_order_to_await_for()
+        {
+            var testOrder = StandardOrder;
+
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
+            var exception = Record.Exception(() => ResponseAwaiter.GetAwaiterFor(testOrder));
+
+            _output.WriteLine($"Given message: {exception?.Message}");
+            Assert.IsType<Exception>(exception);
         }
     }
 }

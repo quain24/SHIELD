@@ -81,28 +81,6 @@ namespace ShieldTests.Devices
 
         public DeviceHandlerContext DHC;
 
-        [Fact()]
-        public async Task ListenAsyncTest()
-        {
-            int i = 0;
-            DHC.Open();
-            DHC.StartListeningAsync();
-            //await DHC.StopListeningAsync();
-            while (i < 1000)
-            {
-                i++;
-                await Task.Delay(1).ConfigureAwait(false);
-                if (i % 100 == 0)
-                {
-                    //DHC.Close();
-                    //DHC.Open();
-                    // DHC.StartListeningAsync();
-                }
-                //Console.WriteLine(DHC.list.Count);
-            }
-            DHC.StopListeningAsync();
-            //DHC.Close();
-            Assert.True(1 == 1);
-        }
+        
     }
 }
