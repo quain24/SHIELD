@@ -1,7 +1,6 @@
 ﻿using Shield.Messaging.Commands;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
-using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -23,11 +22,19 @@ namespace Shield.Messaging.Protocol
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
-        private event EventHandler<ICommand> CommandReceived;
-
         public Task<bool> SendAsync(Order order)
         {
             return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order));
+        }
+
+        public Task<bool> SendAsync(Confirmation confirmation)
+        {
+            return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
+        }
+
+        public Task<bool> SendAsync(Reply reply)
+        {
+            return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply));
         }
 
         public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)

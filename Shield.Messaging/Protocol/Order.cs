@@ -18,12 +18,12 @@ namespace Shield.Messaging.Protocol
             _timestamp = timestamp;
         }
 
-        public Order(string order, string target, string id, Timestamp timestamp, string data = "") : this(order, target, timestamp, data)
+        internal Order(string order, string target, string id, Timestamp timestamp, string data = "") : this(order, target, timestamp, data)
         {
             _id = id;
         }
 
-        public string ID => _id;
+        internal string ID => _id;
         public string Target => _target;
         public string ExactOrder => _order;
         public Timestamp Timestamp => _timestamp;
