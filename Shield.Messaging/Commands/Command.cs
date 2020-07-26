@@ -1,8 +1,9 @@
 ﻿using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.States;
-using System;
-using System.Collections.Generic;
 using Shield.Timestamps;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Shield.Messaging.Commands
 {
@@ -10,6 +11,7 @@ namespace Shield.Messaging.Commands
     {
         private Func<bool> _executeValidation;
         private List<Action> _errorStateCheckMap;
+        private IPart[] _enumerableParts;
 
         public Command(IPart id, IPart hostID, IPart target, IPart order, IPart data, Timestamp timestamp)
         {
@@ -23,6 +25,7 @@ namespace Shield.Messaging.Commands
             ErrorState = ErrorState.Unchecked();
 
             SetUpStateToValidationMap();
+            SetupPartCollection(ID, HostID, Target, Order, Data);
         }
 
         public bool IsValid => _executeValidation();
@@ -35,6 +38,14 @@ namespace Shield.Messaging.Commands
         public Timestamp Timestamp { get; }
         public ErrorState ErrorState { get; internal set; }
 
+        #region IEnumerable<IPart> implementation
+
+        public IEnumerator<IPart> GetEnumerator() => (IEnumerator<IPart>) _enumerableParts.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        #endregion IEnumerable<IPart> implementation
+
         private void SetUpStateToValidationMap() =>
             // ReSharper disable once ComplexConditionExpression
             _errorStateCheckMap = new List<Action>()
@@ -45,6 +56,13 @@ namespace Shield.Messaging.Commands
                 () => { if (!Order?.IsValid ?? true) ErrorState = ErrorState.BadOrder(); },
                 () => { if (!Data?.IsValid ?? true) ErrorState = ErrorState.BadDataPack(); }
             };
+
+        private void SetupPartCollection(params IPart[] parts)
+        {
+            _enumerableParts = new IPart[parts.Length];
+            for (int i = 0; i < parts.Length; i++)
+                _enumerableParts[i] = parts[i];
+        }
 
         private bool Validate()
         {

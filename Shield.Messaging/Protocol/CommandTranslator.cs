@@ -7,12 +7,17 @@ namespace Shield.Messaging.Protocol
         private readonly OrderCommandTranslator _orderCommandTranslator;
         private readonly ReplyCommandTranslator _replyCommandTranslator;
         private readonly ConfirmationCommandTranslator _confirmationCommandTranslator;
+        private readonly ErrorCommandTranslator _errorCommandTranslator;
 
-        public CommandTranslator(OrderCommandTranslator orderCommandTranslator, ReplyCommandTranslator replyCommandTranslator, ConfirmationCommandTranslator confirmationCommandTranslator)
+        public CommandTranslator(OrderCommandTranslator orderCommandTranslator,
+            ReplyCommandTranslator replyCommandTranslator,
+            ConfirmationCommandTranslator confirmationCommandTranslator,
+            ErrorCommandTranslator errorCommandTranslator)
         {
             _orderCommandTranslator = orderCommandTranslator;
             _replyCommandTranslator = replyCommandTranslator;
             _confirmationCommandTranslator = confirmationCommandTranslator;
+            _errorCommandTranslator = errorCommandTranslator;
         }
 
         public Order TranslateToOrder(ICommand orderCommand) =>
@@ -32,5 +37,8 @@ namespace Shield.Messaging.Protocol
 
         public ICommand TranslateToCommand(Confirmation confirmation) =>
             _confirmationCommandTranslator.Translate(confirmation);
+
+        public ErrorMessage TranslateToErrorMessage(ICommand command) =>
+            _errorCommandTranslator.Translate(command);
     }
 }

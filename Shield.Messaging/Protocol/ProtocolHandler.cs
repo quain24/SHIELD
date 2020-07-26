@@ -1,6 +1,7 @@
 ﻿using Shield.Messaging.Commands;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -9,14 +10,15 @@ namespace Shield.Messaging.Protocol
     public class ProtocolHandler
     {
         private readonly DeviceHandlerContext _deviceHandler;
-        private readonly ConfirmationFactory _confirmationFactory;
         private readonly CommandTranslator _commandTranslator;
         private readonly ResponseAwaiter _responseAwaiter;
 
-        public ProtocolHandler(DeviceHandlerContext deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator, ResponseAwaiter responseAwaiter)
+        public event EventHandler<Order> OrderReceived;
+        public event EventHandler<ErrorMessage> CommunicationErrorOccured;
+
+        public ProtocolHandler(DeviceHandlerContext deviceHandler, CommandTranslator commandTranslator, ResponseAwaiter responseAwaiter)
         {
             _deviceHandler = deviceHandler;
-            _confirmationFactory = confirmationFactory;
             _commandTranslator = commandTranslator;
             _responseAwaiter = responseAwaiter;
             _deviceHandler.CommandReceived += OnCommandReceived;
@@ -78,11 +80,11 @@ namespace Shield.Messaging.Protocol
             return reply is null;
         }
 
-        private async void OnCommandReceived(object sender, ICommand command)
+        private void OnCommandReceived(object sender, ICommand command)
         {
-            if (!command.IsValid) // protocol failure - respond immediately
+            if (!command.IsValid) // protocol failure
             {
-                await _deviceHandler.SendAsync(_confirmationFactory.GetConfirmationFor(command)).ConfigureAwait(false);
+                OnCommunicationErrorOccured(_commandTranslator.TranslateToErrorMessage(command));
                 Debug.Write($"command {command.ID} contained protocol errors ({command.ErrorState})");
             }
 
@@ -92,7 +94,13 @@ namespace Shield.Messaging.Protocol
             if (command.IsReply())
                 _responseAwaiter.AddResponse(_commandTranslator.TranslateToReply(command));
             else
-                _commandTranslator.TranslateToOrder(command);
+                OnOrderReceived(_commandTranslator.TranslateToOrder(command));
         }
+
+        protected virtual void OnOrderReceived(Order order) =>
+            OrderReceived?.Invoke(this, order);
+
+        protected virtual void OnCommunicationErrorOccured(ErrorMessage errorMessage) =>
+            CommunicationErrorOccured?.Invoke(this, errorMessage);
     }
 }

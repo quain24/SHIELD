@@ -4,5 +4,6 @@
     {
         public static string ConfirmationTarget => "Confirmation";
         public static string ReplyTarget => "Reply";
+        public static string TransmissionError => "TRE";
     }
 }
