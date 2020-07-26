@@ -1,4 +1,5 @@
-﻿using Shield.Timestamps;
+﻿using System;
+using Shield.Timestamps;
 
 namespace Shield.Messaging.Protocol
 {
@@ -10,9 +11,9 @@ namespace Shield.Messaging.Protocol
 
         public Reply(string replyTo, Timestamp timestamp, string data = "")
         {
-            _replyTo = replyTo;
-            _timestamp = timestamp;
-            _data = data;
+            _replyTo = replyTo ?? throw new ArgumentNullException(nameof(replyTo), $"{nameof(Reply)} has to have a target (something to reply to).");
+            _timestamp = timestamp ?? throw new ArgumentNullException(nameof(timestamp), "Missing Timestamp.");
+            _data = data ?? string.Empty;
         }
 
         public string Target => _replyTo;

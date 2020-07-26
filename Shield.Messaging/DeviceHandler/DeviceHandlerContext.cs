@@ -1,10 +1,10 @@
 ﻿using Shield.Messaging.Commands;
 using Shield.Messaging.DeviceHandler.States;
 using Shield.Messaging.RawData;
+using Shield.Timestamps;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Shield.Timestamps;
 
 namespace Shield.Messaging.DeviceHandler
 {
@@ -42,6 +42,12 @@ namespace Shield.Messaging.DeviceHandler
             _currentState.EnterState(this, HandleReceivedCommand);
         }
 
+        private void HandleReceivedCommand(ICommand command)
+        {
+            _commandBuffer.Add(command.Timestamp, command);
+            OnCommandReceived(command);
+        }
+
         public void Open() => _currentState.Open();
 
         public void Close() => _currentState.Close();
@@ -59,12 +65,6 @@ namespace Shield.Messaging.DeviceHandler
             }
             OnCommandSendingFailed(command);
             return false;
-        }
-
-        private void HandleReceivedCommand(ICommand command)
-        {
-            _commandBuffer.Add(command.Timestamp, command);
-            OnCommandReceived(command);
         }
 
         protected virtual void OnCommandReceived(ICommand command) =>

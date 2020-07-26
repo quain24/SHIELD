@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
@@ -138,7 +139,7 @@ namespace ShieldTests.Protocol
         }
 
         [Fact()]
-        public async Task Will_throw_exception_when_given_same_id_order_to_await_for()
+        public void Will_throw_exception_when_given_same_id_order_to_await_for()
         {
             var testOrder = StandardOrder;
 
@@ -148,5 +149,7 @@ namespace ShieldTests.Protocol
             _output.WriteLine($"Given message: {exception?.Message}");
             Assert.IsType<Exception>(exception);
         }
+
+
     }
 }

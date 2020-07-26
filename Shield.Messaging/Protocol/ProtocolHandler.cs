@@ -87,18 +87,12 @@ namespace Shield.Messaging.Protocol
             }
 
             if (command.IsConfirmation())
-            {
-                _commandTranslator.TranslateToConfirmation(command);
-            }
+                _responseAwaiter.AddResponse(_commandTranslator.TranslateToConfirmation(command));
 
             if (command.IsReply())
-            {
-                _commandTranslator.TranslateToReply(command);
-            }
+                _responseAwaiter.AddResponse(_commandTranslator.TranslateToReply(command));
             else
-            {
                 _commandTranslator.TranslateToOrder(command);
-            }
         }
     }
 }

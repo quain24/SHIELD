@@ -1,4 +1,5 @@
-﻿using Shield.Messaging.Commands.States;
+﻿using System;
+using Shield.Messaging.Commands.States;
 using Shield.Timestamps;
 
 namespace Shield.Messaging.Protocol
@@ -11,8 +12,8 @@ namespace Shield.Messaging.Protocol
 
         public Confirmation(string confirmingID, ErrorState errors, Timestamp timestamp)
         {
-            _confirmingId = confirmingID;
-            _errors = errors;
+            _confirmingId = confirmingID ?? throw new ArgumentNullException(nameof(confirmingID), "Cannot confirm a NULL id - target unknown.");
+            _errors = errors ?? throw new ArgumentNullException(nameof(errors), "Error state has to be passed - either valid or not.");
             _timestamp = timestamp;
         }
 

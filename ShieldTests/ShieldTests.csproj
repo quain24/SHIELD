@@ -110,6 +110,7 @@
     <Compile Include="Helpers\IdGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol\ResponseAwaiterTests.cs" />
+    <Compile Include="RawData\Class1.cs" />
     <Compile Include="RawData\DataStreamSplitterTestData.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -14,10 +14,11 @@ namespace Shield.Messaging.Protocol
         {
             _order = order;
             _target = target;
-            _data = data;
+            _data = data ?? string.Empty;
             _timestamp = timestamp;
         }
 
+        // Constructor for incoming orders - can set ID
         internal Order(string order, string target, string id, Timestamp timestamp, string data = "") : this(order, target, timestamp, data)
         {
             _id = id;
