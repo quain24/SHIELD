@@ -5,13 +5,6 @@ namespace Shield.Messaging.Protocol
 {
     public class ErrorCommandTranslator
     {
-        private readonly char _separator;
-
-        public ErrorCommandTranslator(char separator)
-        {
-            _separator = separator;
-        }
-
         public ErrorMessage Translate(ICommand command)
         {
             var data = new string[command.Count()];
@@ -19,11 +12,11 @@ namespace Shield.Messaging.Protocol
 
             foreach (var part in command)
             {
-                data[counter] = part.ToString();
+                data[counter] = part.GetType() + " | " + part.ToString();
                 counter++;
             }
 
-            return new ErrorMessage(command.ErrorState, command.Timestamp, data); // -1 removes last separator
+            return new ErrorMessage(command.ErrorState, command.Timestamp, data);
         }
     }
 }
