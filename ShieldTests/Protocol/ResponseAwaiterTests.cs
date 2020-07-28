@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Shield.Messaging.Commands;
+﻿using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.Protocol;
 using Shield.Timestamps;
+using System;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -37,7 +35,7 @@ namespace ShieldTests.Protocol
         [Fact()]
         public void Returns_child_awaiter_when_await_response_called_for_not_already_responded_order()
         {
-            var output = ResponseAwaiter.GetConfirmationAwaiter(StandardOrder);
+            var output = ResponseAwaiter.GetAwaiterFor(StandardOrder);
 
             Assert.IsType<ChildAwaiter>(output);
         }
@@ -45,8 +43,8 @@ namespace ShieldTests.Protocol
         [Fact()]
         public void Returns_AlreadyKnownAwaiter_when_used_to_await_for_already_provided_confirmation()
         {
-            ResponseAwaiter.AddConfirmation(StandardConfirmation);
-            var output = ResponseAwaiter.GetConfirmationAwaiter(StandardOrder);
+            ResponseAwaiter.AddResponse(StandardConfirmation);
+            var output = ResponseAwaiter.GetAwaiterFor(StandardOrder);
             Assert.IsType<AlreadyKnownChildAwaiter>(output);
         }
 
@@ -56,8 +54,8 @@ namespace ShieldTests.Protocol
             var testOrder = StandardOrder;
             await Task.Delay(_timeout.InMilliseconds / 2);
 
-            ResponseAwaiter.AddConfirmation(StandardConfirmation);
-            var awaiter = ResponseAwaiter.GetConfirmationAwaiter(testOrder);
+            ResponseAwaiter.AddResponse(StandardConfirmation);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.HasRespondedInTimeAsync();
 
             Assert.IsType<AlreadyKnownChildAwaiter>(awaiter);
@@ -70,8 +68,8 @@ namespace ShieldTests.Protocol
             var testOrder = StandardOrder;
             await Task.Delay(_timeout.InMilliseconds + 1).ConfigureAwait(false);
 
-            ResponseAwaiter.AddConfirmation(StandardConfirmation);
-            var awaiter = ResponseAwaiter.GetConfirmationAwaiter(testOrder);
+            ResponseAwaiter.AddResponse(StandardConfirmation);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.HasRespondedInTimeAsync();
 
             Assert.IsType<AlreadyKnownChildAwaiter>(awaiter);
@@ -82,15 +80,15 @@ namespace ShieldTests.Protocol
         public async Task Returns_ChildAwaiter_true_when_response_came_in_time()
         {
             var testOrder = StandardOrder;
-            #pragma warning disable 4014
+#pragma warning disable 4014
             Task.Run(async () =>
             {
                 await Task.Delay(_timeoutInMilliseconds / 2).ConfigureAwait(false);
-                ResponseAwaiter.AddConfirmation(StandardConfirmation);
+                ResponseAwaiter.AddResponse(StandardConfirmation);
             }).ConfigureAwait(false);
-            #pragma warning restore 4014
+#pragma warning restore 4014
 
-            var awaiter = ResponseAwaiter.GetConfirmationAwaiter(testOrder);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
 
             Assert.IsType<ChildAwaiter>(awaiter);
@@ -101,15 +99,15 @@ namespace ShieldTests.Protocol
         public async Task Returns_ChildAwaiter_false_when_response_came_after_allowed_timeout()
         {
             var testOrder = StandardOrder;
-            #pragma warning disable 4014
+#pragma warning disable 4014
             Task.Run(async () =>
             {
                 await Task.Delay(_timeoutInMilliseconds + 50).ConfigureAwait(false);
-                ResponseAwaiter.AddConfirmation(StandardConfirmation);
+                ResponseAwaiter.AddResponse(StandardConfirmation);
             }).ConfigureAwait(false);
-            #pragma warning restore 4014
+#pragma warning restore 4014
 
-            var awaiter = ResponseAwaiter.GetConfirmationAwaiter(testOrder);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
 
             Assert.IsType<ChildAwaiter>(awaiter);
@@ -120,19 +118,19 @@ namespace ShieldTests.Protocol
         public async Task Gets_proper_response_when_response_came_in_time()
         {
             var testOrder = StandardOrder;
-            #pragma warning disable 4014
+#pragma warning disable 4014
             Task.Run(async () =>
             {
                 await Task.Delay(_timeoutInMilliseconds / 2).ConfigureAwait(false);
-                ResponseAwaiter.AddConfirmation(StandardConfirmation);
+                ResponseAwaiter.AddResponse(StandardConfirmation);
             }).ConfigureAwait(false);
-            #pragma warning restore 4014
+#pragma warning restore 4014
 
-            var awaiter = ResponseAwaiter.GetConfirmationAwaiter(testOrder);
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
             var result = await awaiter.HasRespondedInTimeAsync().ConfigureAwait(false);
             IResponseMessage response = null;
             if (result)
-                response = ResponseAwaiter.GetConfirmationOf(testOrder);
+                response = ResponseAwaiter.GetResponse(testOrder);
             Assert.NotNull(response);
             Assert.IsAssignableFrom<Confirmation>(response);
             Assert.Equal(response.Target, testOrder.ID);
@@ -143,13 +141,11 @@ namespace ShieldTests.Protocol
         {
             var testOrder = StandardOrder;
 
-            var awaiter = ResponseAwaiter.GetConfirmationAwaiter(testOrder);
-            var exception = Record.Exception(() => ResponseAwaiter.GetConfirmationAwaiter(testOrder));
+            var awaiter = ResponseAwaiter.GetAwaiterFor(testOrder);
+            var exception = Record.Exception(() => ResponseAwaiter.GetAwaiterFor(testOrder));
 
             _output.WriteLine($"Given message: {exception?.Message}");
             Assert.IsType<Exception>(exception);
         }
-
-
     }
 }

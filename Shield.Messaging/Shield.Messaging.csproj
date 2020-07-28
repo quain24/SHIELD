@@ -87,14 +87,17 @@
     <Compile Include="Protocol\ConfirmationCommandTranslator.cs" />
     <Compile Include="Protocol\ErrorCommandTranslator.cs" />
     <Compile Include="Protocol\ErrorMessage.cs" />
+    <Compile Include="Protocol\IAwaitingDispatch.cs" />
     <Compile Include="Protocol\IChildAwaiter.cs" />
     <Compile Include="Protocol\IResponseMessage.cs" />
+    <Compile Include="Protocol\IRetrievingDispatch.cs" />
     <Compile Include="Protocol\Order.cs" />
     <Compile Include="Protocol\OrderCommandTranslator.cs" />
     <Compile Include="Protocol\ProtocolHandler.cs" />
     <Compile Include="Protocol\Reply.cs" />
     <Compile Include="Protocol\ReplyCommandTranslator.cs" />
     <Compile Include="Protocol\ResponseAwaiter.cs" />
+    <Compile Include="Protocol\ResponseAwaiterDispatch.cs" />
     <Compile Include="RawData\RawCommandFactory.cs" />
     <Compile Include="RawData\StandardDataStreamSplitter.cs" />
     <Compile Include="RawData\AllowedLengthsDataStreamSplitter.cs" />

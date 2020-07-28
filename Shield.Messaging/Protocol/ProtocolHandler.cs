@@ -2,6 +2,7 @@
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -11,17 +12,16 @@ namespace Shield.Messaging.Protocol
     {
         private readonly DeviceHandlerContext _deviceHandler;
         private readonly CommandTranslator _commandTranslator;
-        private readonly ResponseAwaiter _responseAwaiter;
+        private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
         public event EventHandler<Order> OrderReceived;
-
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccured;
 
-        public ProtocolHandler(DeviceHandlerContext deviceHandler, CommandTranslator commandTranslator, ResponseAwaiter responseAwaiter)
+        public ProtocolHandler(DeviceHandlerContext deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
             _commandTranslator = commandTranslator;
-            _responseAwaiter = responseAwaiter;
+            _awaiterDispatch = awaiterDispatch;
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
@@ -40,48 +40,10 @@ namespace Shield.Messaging.Protocol
             return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply));
         }
 
-        public async Task<Confirmation> AwaitConfirmationOfAsync(Order order)
-        {
-            var isConfirmed = await WasConfirmedInTimeAsync(order).ConfigureAwait(false);
+        public IAwaitingDispatch WasOrder() => _awaiterDispatch;
 
-            return isConfirmed && IsResponseConfirmation(order, out var confirmation)
-                ? confirmation
-                : null;
-        }
-
-        public async Task<Reply> AwaitReplyToAsync(Order order)
-        {
-            var isConfirmed = await WasRepliedToInTimeAsync(order).ConfigureAwait(false);
-
-            return isConfirmed && IsResponseReply(order, out var reply)
-                ? reply
-                : null;
-        }
-
-        private Task<bool> WasConfirmedInTimeAsync(Order order) =>
-            _responseAwaiter.GetConfirmationAwaiter(order).HasRespondedInTimeAsync();
-
-        private Task<bool> WasRepliedToInTimeAsync(Order order) =>
-            _responseAwaiter.GetReplyAwaiter(order).HasRespondedInTimeAsync();
-
-        private bool IsResponseConfirmation(Order order, out Confirmation confirmation)
-        {
-            confirmation = _responseAwaiter.GetConfirmationOf(order) is Confirmation conf
-                ? conf
-                : null;
-
-            return confirmation is null;
-        }
-
-        private bool IsResponseReply(Order order, out Reply reply)
-        {
-            reply = _responseAwaiter.GetReplyFor(order) is Reply rep
-                ? rep
-                : null;
-
-            return reply is null;
-        }
-
+        public IRetrievingDispatch Retrieve() => _awaiterDispatch;
+        
         private void OnCommandReceived(object sender, ICommand command)
         {
             if (!command.IsValid) // protocol failure
@@ -91,10 +53,10 @@ namespace Shield.Messaging.Protocol
             }
 
             if (command.IsConfirmation())
-                _responseAwaiter.AddConfirmation(_commandTranslator.TranslateToConfirmation(command));
+                _awaiterDispatch.AddResponse(_commandTranslator.TranslateToConfirmation(command));
 
             if (command.IsReply())
-                _responseAwaiter.AddReply(_commandTranslator.TranslateToReply(command));
+                _awaiterDispatch.AddResponse(_commandTranslator.TranslateToReply(command));
             else
                 OnOrderReceived(_commandTranslator.TranslateToOrder(command));
         }
@@ -105,4 +67,5 @@ namespace Shield.Messaging.Protocol
         protected virtual void OnCommunicationErrorOccured(ErrorMessage errorMessage) =>
             IncomingCommunicationErrorOccured?.Invoke(this, errorMessage);
     }
+
 }
