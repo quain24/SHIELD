@@ -13,13 +13,12 @@ namespace Shield.Messaging.Protocol
         {
             _responseAwaiters = CheckResponseAwaiterMap(responseAwaiters)
                 ? responseAwaiters
-                : throw new ArgumentNullException(nameof(responseAwaiters), $"{nameof(responseAwaiters)} cannot be null and there has to be one awaiter per response type");
+                : throw new ArgumentOutOfRangeException(nameof(responseAwaiters), $"{nameof(responseAwaiters)} cannot be null and there has to be one awaiter per response type");
         }
 
         private bool CheckResponseAwaiterMap(IDictionary<ResponseType, ResponseAwaiter> awaiters)
         {
             if (awaiters is null) return false;
-
             return ((ResponseType[])Enum.GetValues(typeof(ResponseType))).All(type => awaiters.ContainsKey(type) && !(awaiters[type] is null));
         }
 
@@ -33,10 +32,10 @@ namespace Shield.Messaging.Protocol
             return _responseAwaiters[ResponseType.Reply].GetAwaiterFor(order).HasRespondedInTimeAsync();
         }
 
-        public Confirmation RetrieveConfirmationOf(Order order) =>
+        public Confirmation ConfirmationOf(Order order) =>
             _responseAwaiters[ResponseType.Confirmation].GetResponse(order) as Confirmation;
 
-        public Reply RetrieveReplyTo(Order order) =>
+        public Reply ReplyTo(Order order) =>
             _responseAwaiters[ResponseType.Reply].GetResponse(order) as Reply;
 
         public void AddResponse(IResponseMessage message)
@@ -53,13 +52,16 @@ namespace Shield.Messaging.Protocol
 
                 case null:
                     throw new ArgumentNullException(nameof(message), $"Passed {nameof(IResponseMessage)} was null");
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(message), $"Passed {nameof(message)} type ({typeof(IResponseMessage)}) is unknown to this {nameof(ResponseAwaiterDispatch)} instance and cannot be handled.");
             }
         }
     }
-}
 
-public enum ResponseType
-{
-    Confirmation,
-    Reply
+    public enum ResponseType
+    {
+        Confirmation,
+        Reply
+    }
 }

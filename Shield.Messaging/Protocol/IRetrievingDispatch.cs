@@ -2,7 +2,7 @@
 {
     public interface IRetrievingDispatch
     {
-        Confirmation RetrieveConfirmationOf(Order order);
-        Reply RetrieveReplyTo(Order order);
+        Confirmation ConfirmationOf(Order order);
+        Reply ReplyTo(Order order);
     }
 }

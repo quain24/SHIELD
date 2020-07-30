@@ -52,6 +52,7 @@
     <Reference Include="Moq, Version=4.14.0.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.14.5\lib\net45\Moq.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Collections.NonGeneric, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.NonGeneric.4.3.0\lib\net46\System.Collections.NonGeneric.dll</HintPath>
@@ -109,6 +110,9 @@
     <None Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protocol\ProtocolTestObjects.cs" />
+    <Compile Include="Protocol\ResponseAwaiterDispatchTestObjects.cs" />
+    <Compile Include="Protocol\ResponseAwaiterDispatchTests.cs" />
     <Compile Include="Protocol\ResponseAwaiterTests.cs" />
     <Compile Include="RawData\Class1.cs" />
     <Compile Include="RawData\DataStreamSplitterTestData.cs" />

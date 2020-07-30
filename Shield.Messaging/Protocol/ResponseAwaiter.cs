@@ -22,7 +22,7 @@ namespace Shield.Messaging.Protocol
             _timeout = timeout;
         }
 
-        public IChildAwaiter GetAwaiterFor(Order order)
+        internal IChildAwaiter GetAwaiterFor(Order order)
         {
             if (ReplyExists(order))
                 return new AlreadyKnownChildAwaiter(!IsTimeoutExceeded(order));
@@ -46,7 +46,7 @@ namespace Shield.Messaging.Protocol
             throw new Exception($"Could not create new ChildAwaiter of type for \"{order.ID}\" - Cancellation token for that ID in this instance is already used in buffer");
         }
 
-        public void AddResponse(IResponseMessage response)
+        internal void AddResponse(IResponseMessage response)
         {
             TryBufferResponse(response);
             TryInformCorrespondingChildAwaiter(response);
@@ -66,7 +66,7 @@ namespace Shield.Messaging.Protocol
             return false;
         }
 
-        public IResponseMessage GetResponse(Order order)
+        internal IResponseMessage GetResponse(Order order)
         {
             _responseBuffer.TryRemove(order.ID, out var response);
             return response;
