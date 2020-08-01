@@ -4,9 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Shield.Messaging.Commands;
+using ShieldTests.Extensions;
 using ShieldTests.Protocol;
 using Xunit.Abstractions;
 
@@ -42,7 +44,7 @@ namespace Shield.Messaging.Protocol.Tests
         {
             var exception = Record.Exception(() => new ResponseAwaiterDispatch(null));
             
-            _output.WriteLine($"Given message: {exception?.Message ?? "Tried to get message but exception was null."}");
+            _output.AddMessageFrom(exception);
             
             Assert.IsType<ArgumentOutOfRangeException>(exception);
 
@@ -54,38 +56,89 @@ namespace Shield.Messaging.Protocol.Tests
             var exception = Record.Exception(() =>
                 new ResponseAwaiterDispatch(ResponseAwaiterDispatchTestObjects.GetIAwatersDictionaryWithoutReply()));
 
-            _output.WriteLine($"Given message: {exception?.Message ?? "Tried to get message but exception was null."}");
+            _output.AddMessageFrom(exception);
 
             Assert.IsType<ArgumentOutOfRangeException>(exception);
 
         }
 
         [Fact()]
-        public async Task Gives_bool_when_asked_about_reply_to_order()
+        public async Task Returns_true_when_order_was_replied_to_in_time()
+        {
+            var result = Dispatch.RepliedToInTimeAsync(NormalOrder).ConfigureAwait(false);
+            Dispatch.AddResponse(NormalReply);
+
+            Assert.True(await result);
+        }
+
+        [Fact()]
+        public async Task Returns_true_when_order_was_confirmed_in_time()
+        {
+            var result = Dispatch.ConfirmedInTimeAsync(NormalOrder).ConfigureAwait(false);
+            Dispatch.AddResponse(NormalConfirmation);
+
+            Assert.True(await result);
+        }
+
+        [Fact()]
+        public async Task Should_return_false_if_not_given_reply_to_order_in_time()
         {
             var result = await Dispatch.RepliedToInTimeAsync(NormalOrder).ConfigureAwait(false);
 
-            Assert.IsType<bool>(result);
+            Assert.False(result);
         }
 
         [Fact()]
-        public async Task Gives_bool_when_asked_about_confirmation_to_order()
+        public async Task Should_return_false_if_not_given_confirmation_to_order_in_time()
         {
             var result = await Dispatch.ConfirmedInTimeAsync(NormalOrder).ConfigureAwait(false);
 
-            Assert.IsType<bool>(result);
+            Assert.False(result);
         }
 
         [Fact()]
-        public void ReplyToTest()
+        public void Should_return_proper_reply_when_asked()
         {
+            Dispatch.RepliedToInTimeAsync(NormalOrder);
+            Dispatch.AddResponse(NormalReply);
 
+            var result = Dispatch.ReplyTo(NormalOrder);
+
+            Assert.IsType<Reply>(result);
+            Assert.Equal(NormalOrder.ID, result.ReplysTo);
         }
 
         [Fact()]
-        public void AddResponseTest()
+        public void Should_return_proper_confirmation_when_asked()
         {
+            Dispatch.ConfirmedInTimeAsync(NormalOrder);
+            Dispatch.AddResponse(NormalConfirmation);
 
+            var result = Dispatch.ConfirmationOf(NormalOrder);
+
+            Assert.IsType<Confirmation>(result);
+            Assert.Equal(NormalOrder.ID, result.Confirms);
+        }
+
+        [Fact()]
+        public void Should_throw_when_given_null_as_response()
+        {
+            var exception = Record.Exception(() =>
+                Dispatch.AddResponse(null));
+            _output.AddMessageFrom(exception);
+
+            Assert.IsType<ArgumentNullException>(exception);
+        }
+
+        [Fact()]
+        public void Should_throw_when_given_unknown_type_of_response()
+        {
+            var exception = Record.Exception(() =>
+                Dispatch.AddResponse(ResponseAwaiterDispatchTestObjects.GetResponseMessageOfUnknownType()));
+
+            _output.AddMessageFrom(exception);
+
+            Assert.IsType<ArgumentOutOfRangeException>(exception);
         }
     }
 }

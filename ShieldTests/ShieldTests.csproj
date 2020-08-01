@@ -103,6 +103,7 @@
     <Compile Include="Commands\Parts\PartValidators\ForbiddenCharsPartValidatorTests.cs" />
     <Compile Include="Commands\TimestampTests.cs" />
     <Compile Include="Devices\DeviceHandlerContextTests.cs" />
+    <Compile Include="Extensions\IOutputHelperExtensions.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />

@@ -54,7 +54,7 @@ namespace Shield.Messaging.Protocol
                     throw new ArgumentNullException(nameof(message), $"Passed {nameof(IResponseMessage)} was null");
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(message), $"Passed {nameof(message)} type ({typeof(IResponseMessage)}) is unknown to this {nameof(ResponseAwaiterDispatch)} instance and cannot be handled.");
+                    throw new ArgumentOutOfRangeException(nameof(message), $"Passed {nameof(message)} type ({message.GetType()}) is unknown to this {nameof(ResponseAwaiterDispatch)} instance and cannot be handled.");
             }
         }
     }
