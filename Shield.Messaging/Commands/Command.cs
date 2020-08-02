@@ -40,7 +40,7 @@ namespace Shield.Messaging.Commands
 
         #region IEnumerable<IPart> implementation
 
-        public IEnumerator<IPart> GetEnumerator() => (IEnumerator<IPart>) _enumerableParts.GetEnumerator();
+        public IEnumerator<IPart> GetEnumerator() => ((IEnumerable<IPart>) _enumerableParts).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

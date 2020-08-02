@@ -7,6 +7,7 @@ using Shield.Messaging.Commands;
 using Shield.Messaging.RawData;
 using Shield.Timestamps;
 using ShieldTests.Messaging.Commands.Parts;
+using static Shield.Enums.Command;
 
 namespace ShieldTests.Messaging.Commands
 {
@@ -39,6 +40,16 @@ namespace ShieldTests.Messaging.Commands
             var commandFac = GetProperAlwaysValidCommandFactory();
 
             return commandFac.TranslateFrom(new RawCommand($"01ID*HOSTID*{Shield.GlobalConfig.DefaultTargets.ReplyTarget}*00ID*ReplyData"));
+        }
+
+        public static ICommand GetInvalidCommand()
+        {
+            var partFactory = PartFactoryTestObjects.getAllwaysInvalidPartFactory();
+            return new Command(partFactory.GetPart(PartType.ID, "INVALIDID"),
+                partFactory.GetPart(PartType.HostID, "INVALIDHOSTID"),
+                partFactory.GetPart(PartType.Target, "INVALIDTARGET"),
+                partFactory.GetPart(PartType.Order, "INVALIDORDER"), partFactory.GetPart(PartType.Data, "INVALIDDATA"),
+                TimestampFactory.Timestamp);
         }
     }
 }

@@ -33,21 +33,16 @@ namespace ShieldTests.Messaging.Protocol
         private void Setup()
         {
             var partFactory = PartFactoryTestObjects.GetAlwaysValidPartFactory();
-
-            var commandFactoryAutofacAdapter = new CommandFactoryAutoFacAdapter(
-                new Func<IPart, IPart, IPart, IPart, IPart, Timestamp, ICommand>((id, hostID, target, order, data, _) =>
-                    new Command(id, hostID, target, order, data, TimestampFactory.Timestamp)));
-            var commandFactory = new CommandFactory('*', partFactory, commandFactoryAutofacAdapter, new IdGenerator(4));
-
+            CommandFactory = CommandsTestObjects.GetProperAlwaysValidCommandFactory();
+            
             Mock<IDataStreamSplitter> splitter = new Mock<IDataStreamSplitter>();
             Mock<ICommunicationDeviceAsync> comDevice = new Mock<ICommunicationDeviceAsync>();
-            var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, commandFactory),
-                new ReplyCommandTranslator(partFactory, commandFactory),
-                new ConfirmationCommandTranslator(partFactory, commandFactory), new ErrorCommandTranslator());
+            var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, CommandFactory),
+                new ReplyCommandTranslator(partFactory, CommandFactory),
+                new ConfirmationCommandTranslator(partFactory, CommandFactory), new ErrorCommandTranslator());
 
             Mock<IDeviceHandler> handler = new Mock<IDeviceHandler>();
 
-            CommandFactory = commandFactory;
             DeviceMoq = handler;
             ResponseAwaiterDispatch = ResponseAwaiterDispatchTestObjects.GetProperResponseAwaiterDispatch();
             ProtocolHandler = new ProtocolHandlerTestWrapper(handler.Object, translator, ResponseAwaiterDispatch);
@@ -101,6 +96,17 @@ namespace ShieldTests.Messaging.Protocol
 
             Assert.True(receivedOrder.ID == receivedReply.ReplysTo);
             Assert.True(CommandsTestObjects.GetProperTestCommand_reply().Data.ToString() == receivedReply.Data);
+        }
+
+        [Fact()]
+        public void When_informed_by_DeviceHandler_about_new_received_invalid_command_raises_IncomingCommunicationErrorOccured_ErrorMessage()
+        {
+            ErrorMessage receivedErrorMsg = null;
+            ProtocolHandler.IncomingCommunicationErrorOccured += (_, error) => receivedErrorMsg = error;
+
+            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetInvalidCommand());
+
+            Assert.IsType<ErrorMessage>(receivedErrorMsg);
         }
     }
 }
