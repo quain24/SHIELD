@@ -12,6 +12,7 @@ namespace Shield.Messaging.Commands
         private Func<bool> _executeValidation;
         private List<Action> _errorStateCheckMap;
         private IPart[] _enumerableParts;
+        private ErrorState _errorState = ErrorState.Unchecked();
 
         public Command(IPart id, IPart hostID, IPart target, IPart order, IPart data, Timestamp timestamp)
         {
@@ -36,11 +37,20 @@ namespace Shield.Messaging.Commands
         public IPart Order { get; }
         public IPart Data { get; }
         public Timestamp Timestamp { get; }
-        public ErrorState ErrorState { get; internal set; }
+
+        public ErrorState ErrorState
+        {
+            get
+            {
+                _executeValidation();
+                return _errorState;
+            }
+            internal set => _errorState = value;
+        }
 
         #region IEnumerable<IPart> implementation
 
-        public IEnumerator<IPart> GetEnumerator() => ((IEnumerable<IPart>) _enumerableParts).GetEnumerator();
+        public IEnumerator<IPart> GetEnumerator() => ((IEnumerable<IPart>)_enumerableParts).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -50,11 +60,11 @@ namespace Shield.Messaging.Commands
             // ReSharper disable once ComplexConditionExpression
             _errorStateCheckMap = new List<Action>()
             {
-                () => { if (!ID?.IsValid ?? true) ErrorState = ErrorState.BadID(); },
-                () => { if (!HostID?.IsValid ?? true) ErrorState = ErrorState.BadHostID(); },
-                () => { if (!Target?.IsValid ?? true) ErrorState = ErrorState.BadTarget(); },
-                () => { if (!Order?.IsValid ?? true) ErrorState = ErrorState.BadOrder(); },
-                () => { if (!Data?.IsValid ?? true) ErrorState = ErrorState.BadDataPack(); }
+                () => { if (!ID?.IsValid ?? true) _errorState = _errorState.BadID(); },
+                () => { if (!HostID?.IsValid ?? true) _errorState = _errorState.BadHostID(); },
+                () => { if (!Target?.IsValid ?? true) _errorState = _errorState.BadTarget(); },
+                () => { if (!Order?.IsValid ?? true) _errorState = _errorState.BadOrder(); },
+                () => { if (!Data?.IsValid ?? true) _errorState = _errorState.BadDataPack(); }
             };
 
         private void SetupPartCollection(params IPart[] parts)
@@ -68,10 +78,10 @@ namespace Shield.Messaging.Commands
         {
             _errorStateCheckMap.ForEach(a => a.Invoke());
             // Still unchecked after validation = Valid
-            if (ErrorState == ErrorState.Unchecked())
-                ErrorState = ErrorState.Valid();
+            if (_errorState == ErrorState.Unchecked())
+                _errorState = _errorState.Valid();
 
-            _executeValidation = () => ErrorState == ErrorState.Valid();
+            _executeValidation = () => _errorState == _errorState.Valid();
             return _executeValidation();
         }
     }

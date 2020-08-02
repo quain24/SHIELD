@@ -107,6 +107,7 @@ namespace ShieldTests.Messaging.Protocol
             RaiseNewCommandEventOnDevice(CommandsTestObjects.GetInvalidCommand());
 
             Assert.IsType<ErrorMessage>(receivedErrorMsg);
+            Assert.True(receivedErrorMsg.ErrorState == CommandsTestObjects.GetInvalidCommand().ErrorState);
         }
     }
 }
