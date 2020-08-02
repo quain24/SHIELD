@@ -12,7 +12,7 @@ namespace Shield.Messaging.Protocol
 
             foreach (var part in command)
             {
-                data[counter] = part.GetType() + " | " + part.ToString();
+                data[counter] = part.GetType().Name + " | " + part.ToString();
                 counter++;
             }
 

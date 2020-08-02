@@ -9,6 +9,7 @@ using Shield.Timestamps;
 using ShieldTests.Messaging.Commands;
 using ShieldTests.Messaging.Commands.Parts;
 using System;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -108,6 +109,7 @@ namespace ShieldTests.Messaging.Protocol
 
             Assert.IsType<ErrorMessage>(receivedErrorMsg);
             Assert.True(receivedErrorMsg.ErrorState == CommandsTestObjects.GetInvalidCommand().ErrorState);
+            Assert.Equal(receivedErrorMsg.Data, CommandsTestObjects.GetInvalidCommand().Select(p => p.GetType().Name + " | " + p.ToString()));
         }
     }
 }
