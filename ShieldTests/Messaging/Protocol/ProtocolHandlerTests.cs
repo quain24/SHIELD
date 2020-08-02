@@ -10,6 +10,7 @@ using ShieldTests.Messaging.Commands;
 using ShieldTests.Messaging.Commands.Parts;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -43,6 +44,7 @@ namespace ShieldTests.Messaging.Protocol
                 new ConfirmationCommandTranslator(partFactory, CommandFactory), new ErrorCommandTranslator());
 
             Mock<IDeviceHandler> handler = new Mock<IDeviceHandler>();
+            handler.Setup(h => h.SendAsync(It.IsAny<ICommand>())).ReturnsAsync(true);
 
             DeviceMoq = handler;
             ResponseAwaiterDispatch = ResponseAwaiterDispatchTestObjects.GetProperResponseAwaiterDispatch();
@@ -110,6 +112,14 @@ namespace ShieldTests.Messaging.Protocol
             Assert.IsType<ErrorMessage>(receivedErrorMsg);
             Assert.True(receivedErrorMsg.ErrorState == CommandsTestObjects.GetInvalidCommand().ErrorState);
             Assert.Equal(receivedErrorMsg.Data, CommandsTestObjects.GetInvalidCommand().Select(p => p.GetType().Name + " | " + p.ToString()));
+        }
+
+        [Fact()]
+        public async Task Should_return_true_when_proper_Order_was_sent()
+        {
+            bool result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalOrder());
+
+            Assert.True(result);
         }
     }
 }

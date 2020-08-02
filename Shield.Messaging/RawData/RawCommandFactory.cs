@@ -32,13 +32,10 @@ namespace Shield.Messaging.RawData
             var rawData = new StringBuilder();
             rawData.Append(_splitter);
 
-            rawData.Append(command.ID)
-                .Append(RawPartWithSeparator(command.HostID))
-                .Append(RawPartWithSeparator(command.Target))
-                .Append(RawPartWithSeparator(command.Order));
+            foreach (var part in command)
+                if (!(part is EmptyPart))
+                    rawData.Append(RawPartWithSeparator(part));
 
-            if (!(command.Data is EmptyPart))
-                rawData.Append(RawPartWithSeparator(command.Data));
             return rawData.Append(_splitter)
                 .ToString()
                 .ToRawCommand();
