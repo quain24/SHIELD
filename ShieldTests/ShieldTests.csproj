@@ -98,25 +98,30 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\CommandFactory2Tests.cs" />
-    <Compile Include="Commands\CommandFactoryTests.cs" />
-    <Compile Include="Commands\Parts\PartValidators\ForbiddenCharsPartValidatorTests.cs" />
-    <Compile Include="Commands\TimestampTests.cs" />
+    <Compile Include="Messaging\Commands\CommandFactory2Tests.cs" />
+    <Compile Include="Messaging\Commands\CommandFactoryTests.cs" />
+    <Compile Include="Messaging\Commands\CommandsTestObjects.cs" />
+    <Compile Include="Messaging\Commands\Parts\PartFactoryTestObjects.cs" />
+    <Compile Include="Messaging\Commands\Parts\PartValidators\ForbiddenCharsPartValidatorTests.cs" />
+    <Compile Include="Messaging\Commands\TimestampTests.cs" />
     <Compile Include="Devices\DeviceHandlerContextTests.cs" />
     <Compile Include="Extensions\IOutputHelperExtensions.cs" />
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
+    <Compile Include="Messaging\DefaultProtocolValues.cs" />
+    <Compile Include="Messaging\Protocol\ProtocolHandlerTests.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />
     <None Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestCommandsClassData.cs" />
     <Compile Include="Helpers\IdGeneratorTests.cs" />
+    <Compile Include="Messaging\Protocol\ProtocolHandlerTestWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\ProtocolTestObjects.cs" />
-    <Compile Include="Protocol\ResponseAwaiterDispatchTestObjects.cs" />
-    <Compile Include="Protocol\ResponseAwaiterDispatchTests.cs" />
-    <Compile Include="Protocol\ResponseAwaiterTests.cs" />
-    <Compile Include="RawData\Class1.cs" />
-    <Compile Include="RawData\DataStreamSplitterTestData.cs" />
+    <Compile Include="Messaging\Protocol\ProtocolTestObjects.cs" />
+    <Compile Include="Messaging\Protocol\ResponseAwaiterDispatchTestObjects.cs" />
+    <Compile Include="Messaging\Protocol\ResponseAwaiterDispatchTests.cs" />
+    <Compile Include="Messaging\Protocol\ResponseAwaiterTests.cs" />
+    <Compile Include="Messaging\RawData\Class1.cs" />
+    <Compile Include="Messaging\RawData\DataStreamSplitterTestData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.COMDevice\Shield.COMDevice.csproj">
@@ -139,9 +144,7 @@
   <ItemGroup>
     <Analyzer Include="..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Messaging\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

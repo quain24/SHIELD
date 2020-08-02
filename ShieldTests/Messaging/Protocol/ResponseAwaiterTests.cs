@@ -1,13 +1,13 @@
-﻿using Shield.Messaging.Commands;
+﻿using System;
+using System.Threading.Tasks;
+using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.Protocol;
 using Shield.Timestamps;
-using System;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ShieldTests.Protocol
+namespace ShieldTests.Messaging.Protocol
 {
     public class ResponseAwaiterTests
     {

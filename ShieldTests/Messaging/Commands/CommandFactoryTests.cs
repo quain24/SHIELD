@@ -1,10 +1,10 @@
-﻿using Shield;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using Shield;
 using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.Parts.PartValidators;
-using System.Collections.Generic;
-using System.Diagnostics;
 
-namespace ShieldTests.Commands
+namespace ShieldTests.Messaging.Commands
 {
     public class CommandFactoryTests
     {

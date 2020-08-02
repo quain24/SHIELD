@@ -2,7 +2,7 @@
 using Shield.Messaging.Protocol;
 using Shield.Timestamps;
 
-namespace ShieldTests.Protocol
+namespace ShieldTests.Messaging.Protocol
 {
     public static class ProtocolTestObjects
     {

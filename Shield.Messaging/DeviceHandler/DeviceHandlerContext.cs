@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Shield.Messaging.DeviceHandler
 {
-    public class DeviceHandlerContext
+    public class DeviceHandlerContext : IDeviceHandler
     {
         private IDeviceHandlerState _currentState;
         private readonly SortedDictionary<Timestamp, ICommand> _commandBuffer = new SortedDictionary<Timestamp, ICommand>();

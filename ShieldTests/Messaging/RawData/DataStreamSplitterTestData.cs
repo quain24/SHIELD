@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Xunit;
 
-namespace ShieldTests.RawData
+namespace ShieldTests.Messaging.RawData
 {
     public class DataStreamSplitterTestData : TheoryData<List<string>, List<string>>
     {

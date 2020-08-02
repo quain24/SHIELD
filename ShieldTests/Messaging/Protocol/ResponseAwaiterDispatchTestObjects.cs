@@ -3,10 +3,16 @@ using Shield.Messaging.Commands;
 using Shield.Messaging.Protocol;
 using Shield.Timestamps;
 
-namespace ShieldTests.Protocol
+namespace ShieldTests.Messaging.Protocol
 {
     public static class ResponseAwaiterDispatchTestObjects
     {
+
+        public static ResponseAwaiterDispatch GetProperResponseAwaiterDispatch()
+        {
+            return new ResponseAwaiterDispatch(GetProperAwaitersDictionary());
+        }
+
         public static Dictionary<ResponseType, ResponseAwaiter> GetProperAwaitersDictionary()
         {
             var responseAwaiterDictionary = new Dictionary<ResponseType, ResponseAwaiter>();
@@ -16,7 +22,7 @@ namespace ShieldTests.Protocol
             return responseAwaiterDictionary;
         }
 
-        public static Dictionary<ResponseType, ResponseAwaiter> GetIAwatersDictionaryWithoutReply()
+        public static Dictionary<ResponseType, ResponseAwaiter> GetAwaitersDictionaryWithoutReply()
         {
             var output = new Dictionary<ResponseType, ResponseAwaiter>(GetProperAwaitersDictionary());
             output.Remove(ResponseType.Reply);

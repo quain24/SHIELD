@@ -2,7 +2,6 @@
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
 using System;
-using System.Collections;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -10,14 +9,15 @@ namespace Shield.Messaging.Protocol
 {
     public class ProtocolHandler
     {
-        private readonly DeviceHandlerContext _deviceHandler;
+        private readonly IDeviceHandler _deviceHandler;
         private readonly CommandTranslator _commandTranslator;
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
         public event EventHandler<Order> OrderReceived;
+
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccured;
 
-        public ProtocolHandler(DeviceHandlerContext deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
+        public ProtocolHandler(IDeviceHandler deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
             _commandTranslator = commandTranslator;
@@ -43,8 +43,8 @@ namespace Shield.Messaging.Protocol
         public IAwaitingDispatch WasOrder() => _awaiterDispatch;
 
         public IRetrievingDispatch Retrieve() => _awaiterDispatch;
-        
-        private void OnCommandReceived(object sender, ICommand command)
+
+        protected virtual void OnCommandReceived(object sender, ICommand command)
         {
             if (!command.IsValid) // protocol failure
             {
@@ -55,7 +55,7 @@ namespace Shield.Messaging.Protocol
             if (command.IsConfirmation())
                 _awaiterDispatch.AddResponse(_commandTranslator.TranslateToConfirmation(command));
 
-            if (command.IsReply())
+            else if (command.IsReply())
                 _awaiterDispatch.AddResponse(_commandTranslator.TranslateToReply(command));
             else
                 OnOrderReceived(_commandTranslator.TranslateToOrder(command));
@@ -67,5 +67,4 @@ namespace Shield.Messaging.Protocol
         protected virtual void OnCommunicationErrorOccured(ErrorMessage errorMessage) =>
             IncomingCommunicationErrorOccured?.Invoke(this, errorMessage);
     }
-
 }

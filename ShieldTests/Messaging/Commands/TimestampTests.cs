@@ -1,10 +1,9 @@
-﻿using Shield.Messaging.Commands;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using Shield.Timestamps;
 using Xunit;
 
-namespace ShieldTests.Commands
+namespace ShieldTests.Messaging.Commands
 {
     public class TimestampTests
     {

@@ -64,6 +64,7 @@
     <Compile Include="Commands\States\ErrorState.cs" />
     <Compile Include="DeviceHandler\CommandTranslator.cs" />
     <Compile Include="DeviceHandler\DeviceHandlerContext.cs" />
+    <Compile Include="DeviceHandler\IDeviceHandler.cs" />
     <Compile Include="DeviceHandler\States\ClosedState.cs" />
     <Compile Include="DeviceHandler\States\IDeviceHandlerState.cs" />
     <Compile Include="DeviceHandler\States\ListeningState.cs" />

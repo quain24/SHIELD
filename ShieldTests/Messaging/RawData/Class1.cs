@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace ShieldTests.RawData
+namespace ShieldTests.Messaging.RawData
 {
     public class Class1
     {

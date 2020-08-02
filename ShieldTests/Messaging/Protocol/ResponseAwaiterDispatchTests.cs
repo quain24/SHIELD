@@ -1,18 +1,11 @@
-﻿using Xunit;
-using Shield.Messaging.Protocol;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
+﻿using System;
 using System.Threading.Tasks;
-using Shield.Messaging.Commands;
+using Shield.Messaging.Protocol;
 using ShieldTests.Extensions;
-using ShieldTests.Protocol;
+using Xunit;
 using Xunit.Abstractions;
 
-namespace Shield.Messaging.Protocol.Tests
+namespace ShieldTests.Messaging.Protocol
 {
     public class ResponseAwaiterDispatchTests
     {
@@ -29,11 +22,9 @@ namespace Shield.Messaging.Protocol.Tests
         public Confirmation NormalConfirmation;
         public Reply NormalReply;
 
-
         public void Setup()
         {
-            
-            Dispatch = new ResponseAwaiterDispatch(ResponseAwaiterDispatchTestObjects.GetProperAwaitersDictionary());
+            Dispatch = ResponseAwaiterDispatchTestObjects.GetProperResponseAwaiterDispatch();
             NormalOrder = ProtocolTestObjects.GetNormalOrder();
             NormalConfirmation = ProtocolTestObjects.GetNormalConfirmation();
             NormalReply = ProtocolTestObjects.GetNormalReply();
@@ -43,23 +34,21 @@ namespace Shield.Messaging.Protocol.Tests
         public void Will_throw_Exception_if_is_given_null_instead_of_proper_awaiter_collection()
         {
             var exception = Record.Exception(() => new ResponseAwaiterDispatch(null));
-            
-            _output.AddMessageFrom(exception);
-            
-            Assert.IsType<ArgumentOutOfRangeException>(exception);
 
+            _output.AddMessageFrom(exception);
+
+            Assert.IsType<ArgumentOutOfRangeException>(exception);
         }
 
         [Fact()]
         public void Will_throw_if_is_given_not_complete_list_of_needed_awaiters()
         {
             var exception = Record.Exception(() =>
-                new ResponseAwaiterDispatch(ResponseAwaiterDispatchTestObjects.GetIAwatersDictionaryWithoutReply()));
+                new ResponseAwaiterDispatch(ResponseAwaiterDispatchTestObjects.GetAwaitersDictionaryWithoutReply()));
 
             _output.AddMessageFrom(exception);
 
             Assert.IsType<ArgumentOutOfRangeException>(exception);
-
         }
 
         [Fact()]
