@@ -11,6 +11,7 @@ using ShieldTests.Messaging.Commands.Parts;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Media.Animation;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -120,6 +121,34 @@ namespace ShieldTests.Messaging.Protocol
             bool result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalOrder());
 
             Assert.True(result);
+        }
+
+        [Fact()]
+        public async Task Should_return_true_when_proper_Confirmation_was_sent()
+        {
+            bool result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalConfirmation());
+
+            Assert.True(result);
+        }
+
+        [Fact()]
+        public async Task Should_return_true_when_proper_Reply_was_sent()
+        {
+            bool result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalReply());
+
+            Assert.True(result);
+        }
+
+        [Fact()]
+        public void Should_return_IAwaitingDispatch_when_WasOrder_is_called()
+        {
+            Assert.IsAssignableFrom<IAwaitingDispatch>(ProtocolHandler.WasOrder());
+        }
+
+        [Fact()]
+        public void Should_return_IRetrievingDispatch_when_Retrieve_id_called()
+        {
+            Assert.IsAssignableFrom<IRetrievingDispatch>(ProtocolHandler.Retrieve());
         }
     }
 }
