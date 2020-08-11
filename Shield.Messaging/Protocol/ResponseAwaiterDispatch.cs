@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,6 +25,7 @@ namespace Shield.Messaging.Protocol
 
         public Task<bool> ConfirmedInTimeAsync(Order order)
         {
+            Debug.WriteLine($"Generated childAwaiter for {order.ID}");
             return _responseAwaiters[ResponseType.Confirmation].GetAwaiterFor(order).HasRespondedInTimeAsync();
         }
 

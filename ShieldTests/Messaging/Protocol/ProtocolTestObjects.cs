@@ -6,22 +6,29 @@ namespace ShieldTests.Messaging.Protocol
 {
     public static class ProtocolTestObjects
     {
-
-        public static int ConfirmationTimeout = 1000;
-        public static int ReplyTimeout = 1000;
+        public static Order GetNormalOrder(string id)
+        {
+            return new Order("preciseOrder", "ARecipientMethod", id, TimestampFactory.Timestamp, "TypicalData");
+        }
         public static Order GetNormalOrder()
         {
-            return new Order("preciseOrder", "ARecipientMethod", "ID01", TimestampFactory.Timestamp, "TypicalData");
+            return GetNormalOrder("ID01");
+        }
+
+        public static Confirmation GetNormalConfirmation(string id)
+        {
+            return new Confirmation(id, ErrorState.Unchecked().Valid(), TimestampFactory.Timestamp);
         }
 
         public static Confirmation GetNormalConfirmation()
         {
-            return new Confirmation("ID01", ErrorState.Unchecked().Valid(), TimestampFactory.Timestamp);
+            return GetNormalConfirmation("ID01");
         }
 
         public static Reply GetNormalReply()
         {
             return new Reply("ID01", TimestampFactory.Timestamp, "DataFromReply");
         }
+
     }
 }

@@ -1,17 +1,13 @@
 ﻿using Moq;
 using Shield.Messaging.Commands;
-using Shield.Messaging.Commands.Parts;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Protocol;
 using Shield.Messaging.RawData;
-using Shield.Timestamps;
 using ShieldTests.Messaging.Commands;
 using ShieldTests.Messaging.Commands.Parts;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Media.Animation;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -37,7 +33,7 @@ namespace ShieldTests.Messaging.Protocol
         {
             var partFactory = PartFactoryTestObjects.GetAlwaysValidPartFactory();
             CommandFactory = CommandsTestObjects.GetProperAlwaysValidCommandFactory();
-            
+
             Mock<IDataStreamSplitter> splitter = new Mock<IDataStreamSplitter>();
             Mock<ICommunicationDeviceAsync> comDevice = new Mock<ICommunicationDeviceAsync>();
             var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, CommandFactory),

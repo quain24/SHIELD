@@ -11,7 +11,6 @@ namespace Shield.Messaging.DeviceHandler
     public class DeviceHandlerContext : IDeviceHandler
     {
         private IDeviceHandlerState _currentState;
-        private readonly SortedDictionary<Timestamp, ICommand> _commandBuffer = new SortedDictionary<Timestamp, ICommand>();
         private readonly ICommunicationDeviceAsync _device;
 
         public DeviceHandlerContext(ICommunicationDeviceAsync device, IDataStreamSplitter streamSplitter, CommandTranslator commandTranslator)
@@ -44,7 +43,6 @@ namespace Shield.Messaging.DeviceHandler
 
         private void HandleReceivedCommand(ICommand command)
         {
-            _commandBuffer.Add(command.Timestamp, command);
             OnCommandReceived(command);
         }
 

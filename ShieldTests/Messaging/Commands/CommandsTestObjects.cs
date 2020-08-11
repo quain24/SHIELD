@@ -34,6 +34,12 @@ namespace ShieldTests.Messaging.Commands
 
             return commandFac.TranslateFrom(new RawCommand($"01ID*HOSTID*{Shield.GlobalConfig.DefaultTargets.ConfirmationTarget}*00ID*Valid"));
         }
+        public static ICommand GetProperTestCommand_confirmation(string id)
+        {
+            var commandFac = GetProperAlwaysValidCommandFactory();
+
+            return commandFac.TranslateFrom(new RawCommand($"01ID*HOSTID*{Shield.GlobalConfig.DefaultTargets.ConfirmationTarget}*{id}*Valid"));
+        }
 
         public static ICommand GetProperTestCommand_reply()
         {

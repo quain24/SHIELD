@@ -16,8 +16,8 @@ namespace ShieldTests.Messaging.Protocol
         public static Dictionary<ResponseType, ResponseAwaiter> GetProperAwaitersDictionary()
         {
             var responseAwaiterDictionary = new Dictionary<ResponseType, ResponseAwaiter>();
-            responseAwaiterDictionary.Add(ResponseType.Confirmation, ResponseAwaiter.GetNewInstance(new Timeout(ProtocolTestObjects.ConfirmationTimeout)));
-            responseAwaiterDictionary.Add(ResponseType.Reply, ResponseAwaiter.GetNewInstance(new Timeout(ProtocolTestObjects.ReplyTimeout)));
+            responseAwaiterDictionary.Add(ResponseType.Confirmation, ResponseAwaiter.GetNewInstance(new Timeout(DefaultProtocolValues.ConfirmationTimeout)));
+            responseAwaiterDictionary.Add(ResponseType.Reply, ResponseAwaiter.GetNewInstance(new Timeout(DefaultProtocolValues.ReplyTimeout)));
 
             return responseAwaiterDictionary;
         }
