@@ -1,4 +1,5 @@
-﻿using Shield.Timestamps;
+﻿using System.Runtime.Remoting.Messaging;
+using Shield.Timestamps;
 
 namespace Shield.Messaging.Protocol
 {
@@ -9,6 +10,11 @@ namespace Shield.Messaging.Protocol
         private readonly string _data;
         private readonly string _id = string.Empty;
         private readonly Timestamp _timestamp;
+
+        public static Order Create(string order, string target, Timestamp timestamp, string data = "") =>
+            new Order(order, target, timestamp, data);
+        public static Order Create(string order, string target, string data = "") =>
+            new Order(order, target, Timestamp.Now, data);
 
         public Order(string order, string target, Timestamp timestamp, string data = "")
         {

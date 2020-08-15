@@ -54,7 +54,7 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public async Task Returns_true_when_order_was_replied_to_in_time()
         {
-            var result = Dispatch.RepliedToInTimeAsync(NormalOrder).ConfigureAwait(false);
+            var result = Dispatch.WasRepliedToInTimeAsync(NormalOrder).ConfigureAwait(false);
             Dispatch.AddResponse(NormalReply);
 
             Assert.True(await result);
@@ -63,7 +63,7 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public async Task Returns_true_when_order_was_confirmed_in_time()
         {
-            var result = Dispatch.ConfirmedInTimeAsync(NormalOrder).ConfigureAwait(false);
+            var result = Dispatch.WasConfirmedInTimeAsync(NormalOrder).ConfigureAwait(false);
             Dispatch.AddResponse(NormalConfirmation);
 
             Assert.True(await result);
@@ -72,7 +72,7 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public async Task Should_return_false_if_not_given_reply_to_order_in_time()
         {
-            var result = await Dispatch.RepliedToInTimeAsync(NormalOrder).ConfigureAwait(false);
+            var result = await Dispatch.WasRepliedToInTimeAsync(NormalOrder).ConfigureAwait(false);
 
             Assert.False(result);
         }
@@ -80,7 +80,7 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public async Task Should_return_false_if_not_given_confirmation_to_order_in_time()
         {
-            var result = await Dispatch.ConfirmedInTimeAsync(NormalOrder).ConfigureAwait(false);
+            var result = await Dispatch.WasConfirmedInTimeAsync(NormalOrder).ConfigureAwait(false);
 
             Assert.False(result);
         }
@@ -88,7 +88,7 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public void Should_return_proper_reply_when_asked()
         {
-            Dispatch.RepliedToInTimeAsync(NormalOrder);
+            Dispatch.WasRepliedToInTimeAsync(NormalOrder);
             Dispatch.AddResponse(NormalReply);
 
             var result = Dispatch.ReplyTo(NormalOrder);
@@ -100,7 +100,7 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public void Should_return_proper_confirmation_when_asked()
         {
-            Dispatch.ConfirmedInTimeAsync(NormalOrder);
+            Dispatch.WasConfirmedInTimeAsync(NormalOrder);
             Dispatch.AddResponse(NormalConfirmation);
 
             var result = Dispatch.ConfirmationOf(NormalOrder);

@@ -1,4 +1,6 @@
-﻿using Moq;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using Moq;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
@@ -8,6 +10,7 @@ using ShieldTests.Messaging.Commands;
 using ShieldTests.Messaging.Commands.Parts;
 using System.Linq;
 using System.Threading.Tasks;
+using Shield.Timestamps;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -28,6 +31,7 @@ namespace ShieldTests.Messaging.Protocol
         public Mock<IDeviceHandler> DeviceMoq;
         public CommandFactory CommandFactory;
         public ResponseAwaiterDispatch ResponseAwaiterDispatch;
+        public CommandTranslator Translator;
 
         private void Setup()
         {
@@ -39,6 +43,7 @@ namespace ShieldTests.Messaging.Protocol
             var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, CommandFactory),
                 new ReplyCommandTranslator(partFactory, CommandFactory),
                 new ConfirmationCommandTranslator(partFactory, CommandFactory), new ErrorCommandTranslator());
+            Translator = translator;
 
             Mock<IDeviceHandler> handler = new Mock<IDeviceHandler>();
             handler.Setup(h => h.SendAsync(It.IsAny<ICommand>())).ReturnsAsync(true);
@@ -138,13 +143,76 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public void Should_return_IAwaitingDispatch_when_WasOrder_is_called()
         {
-            Assert.IsAssignableFrom<IAwaitingDispatch>(ProtocolHandler.WasOrder());
+            Assert.IsAssignableFrom<IAwaitingDispatch>(ProtocolHandler.Order());
         }
 
         [Fact()]
         public void Should_return_IRetrievingDispatch_when_Retrieve_id_called()
         {
             Assert.IsAssignableFrom<IRetrievingDispatch>(ProtocolHandler.Retrieve());
+        }
+
+        [Fact()]
+        public async Task MessagingPipelinePerformance()
+        {
+            var data = new MessagingPipeline(null, null, Translator, ResponseAwaiterDispatch);
+
+            var a = TimestampFactory.Timestamp;
+            Debug.WriteLine(TimestampFactory.Timestamp);
+
+            for (int i = 0; i < 10000; i++)
+            {
+                data.AddICommand(CommandsTestObjects.GetProperTestCommand_confirmation("id" + i));
+                //data.AddICommand(CommandsTestObjects.GetProperTestCommand_order("id" + i));
+            }
+
+            Debug.WriteLine(TimestampFactory.Timestamp);
+            Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
+            var ll = new List<Task<bool>>();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                if(i%50 == 0)
+                    ll.Add(ResponseAwaiterDispatch.WasConfirmedInTimeAsync(ProtocolTestObjects.GetNormalOrder("id" + i)));
+            }
+
+            await Task.WhenAll(ll);
+            Debug.WriteLine(TimestampFactory.Timestamp);
+            Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
+
+            Debug.WriteLine("end");
+
+        }
+
+        [Fact()]
+        public async Task ProtocolHandlerPerformanceTest()
+        {
+            var data = ProtocolHandler;
+
+            var a = TimestampFactory.Timestamp;
+            Debug.WriteLine(TimestampFactory.Timestamp);
+
+            for (int i = 0; i < 10000; i++)
+            {
+                data.OnCommandReceived(this, CommandsTestObjects.GetProperTestCommand_confirmation("id" + i));
+                //data.AddICommand(CommandsTestObjects.GetProperTestCommand_order("id" + i));
+            }
+
+            Debug.WriteLine(TimestampFactory.Timestamp);
+            Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
+            var ll = new List<Task<bool>>();
+
+            for (int i = 0; i < 1000; i++)
+            {
+                if (i % 50 == 0)
+                    ll.Add(ProtocolHandler.Order().WasConfirmedInTimeAsync(ProtocolTestObjects.GetNormalOrder("id" + i)));
+            }
+
+            await Task.WhenAll(ll);
+            Debug.WriteLine(TimestampFactory.Timestamp);
+            Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
+            Debug.WriteLine("end");
+
         }
     }
 }

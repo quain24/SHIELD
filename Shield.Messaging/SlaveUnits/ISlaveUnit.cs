@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using Shield.Messaging.Protocol;
 
 namespace Shield.Messaging.SlaveUnits
 {
@@ -6,14 +6,10 @@ namespace Shield.Messaging.SlaveUnits
     {
         string ID { get; set; }
 
-        string GetID();
+        string Name { get; set; }
 
-        void SetID(string id);
+        bool IsConnected { get; set; }
 
-        string ReportState();
-
-        IDictionary<string, bool> GetPossibleTargets();
-
-        bool HasOrder(string order);
+        bool CanHandle(Order order);
     }
 }

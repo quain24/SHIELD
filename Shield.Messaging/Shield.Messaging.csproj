@@ -92,8 +92,11 @@
     <Compile Include="Protocol\IChildAwaiter.cs" />
     <Compile Include="Protocol\IResponseMessage.cs" />
     <Compile Include="Protocol\IRetrievingDispatch.cs" />
+    <Compile Include="Protocol\MessagingPipeline.cs" />
     <Compile Include="Protocol\Order.cs" />
     <Compile Include="Protocol\OrderCommandTranslator.cs" />
+    <Compile Include="SlaveUnits\AbstractSlaveUnit.cs" />
+    <Compile Include="SlaveUnits\SimplePopperOrderFactory.cs" />
     <Compile Include="Protocol\ProtocolHandler.cs" />
     <Compile Include="Protocol\Reply.cs" />
     <Compile Include="Protocol\ReplyCommandTranslator.cs" />
@@ -111,7 +114,9 @@
     <Compile Include="Commands\Parts\Part.cs" />
     <Compile Include="RawData\RawCommand.cs" />
     <Compile Include="RawData\RawCommandCollection.cs" />
+    <Compile Include="SlaveUnits\IPopper.cs" />
     <Compile Include="SlaveUnits\ISlaveUnit.cs" />
+    <Compile Include="SlaveUnits\SimplePopper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shield.Data\Shield.Persistence.csproj">

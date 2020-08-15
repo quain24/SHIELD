@@ -23,13 +23,12 @@ namespace Shield.Messaging.Protocol
             return ((ResponseType[])Enum.GetValues(typeof(ResponseType))).All(type => awaiters.ContainsKey(type) && !(awaiters[type] is null));
         }
 
-        public Task<bool> ConfirmedInTimeAsync(Order order)
+        public Task<bool> WasConfirmedInTimeAsync(Order order)
         {
-            Debug.WriteLine($"Generated childAwaiter for {order.ID}");
             return _responseAwaiters[ResponseType.Confirmation].GetAwaiterFor(order).HasRespondedInTimeAsync();
         }
 
-        public Task<bool> RepliedToInTimeAsync(Order order)
+        public Task<bool> WasRepliedToInTimeAsync(Order order)
         {
             return _responseAwaiters[ResponseType.Reply].GetAwaiterFor(order).HasRespondedInTimeAsync();
         }

@@ -4,7 +4,7 @@ namespace Shield.Messaging.Protocol
 {
     public interface IAwaitingDispatch
     {
-        Task<bool> ConfirmedInTimeAsync(Order order);
-        Task<bool> RepliedToInTimeAsync(Order order);
+        Task<bool> WasConfirmedInTimeAsync(Order order);
+        Task<bool> WasRepliedToInTimeAsync(Order order);
     }
 }

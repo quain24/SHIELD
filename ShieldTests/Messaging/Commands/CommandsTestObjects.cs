@@ -28,6 +28,13 @@ namespace ShieldTests.Messaging.Commands
             return commandFac.TranslateFrom(new RawCommand("00ID*HOSTID*TARGET*ORDER*DATA"));
         }
 
+        public static ICommand GetProperTestCommand_order(string id)
+        {
+            var commandFac = GetProperAlwaysValidCommandFactory();
+
+            return commandFac.TranslateFrom(new RawCommand($"{id}*HOSTID*TARGET*ORDER*DATA"));
+        }
+
         public static ICommand GetProperTestCommand_confirmation()
         {
             var commandFac = GetProperAlwaysValidCommandFactory();

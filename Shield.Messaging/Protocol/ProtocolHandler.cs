@@ -40,7 +40,7 @@ namespace Shield.Messaging.Protocol
             return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply));
         }
 
-        public IAwaitingDispatch WasOrder() => _awaiterDispatch;
+        public IAwaitingDispatch Order() => _awaiterDispatch;
 
         public IRetrievingDispatch Retrieve() => _awaiterDispatch;
 

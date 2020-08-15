@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace Shield.Timestamps
@@ -8,6 +7,8 @@ namespace Shield.Timestamps
     public sealed class Timestamp : IEquatable<Timestamp>, IComparable<Timestamp>
     {
         private readonly long _value;
+
+        public static Timestamp Now => TimestampFactory.Timestamp;
 
         public Timestamp(long value)
         {
@@ -61,7 +62,7 @@ namespace Shield.Timestamps
 
         public long Difference(Timestamp other)
         {
-            var output = _value - other._value;
+            var output = _value - other?._value ?? 0;
             return output >= 0
                 ? output
                 : output * -1;
