@@ -10,6 +10,16 @@ namespace Shield.Messaging.Protocol
         private readonly ErrorState _errors;
         private readonly Timestamp _timestamp;
 
+        public static Confirmation Create(string confirmingID, ErrorState errors, Timestamp timestamp)
+        {
+            return new Confirmation(confirmingID, errors, timestamp);
+        }
+
+        public static Confirmation Create(string confirmingID, ErrorState errors)
+        {
+            return new Confirmation(confirmingID, errors, Timestamp.Now);
+        }
+
         public Confirmation(string confirmingID, ErrorState errors, Timestamp timestamp)
         {
             _confirmingId = confirmingID ?? throw new ArgumentNullException(nameof(confirmingID), "Cannot confirm a NULL id - target unknown.");

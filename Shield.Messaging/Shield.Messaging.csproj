@@ -76,6 +76,7 @@
     <Compile Include="Commands\Timeout.cs" />
     <Compile Include="Extensions\ICommandExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Invoker\Invoker.cs" />
     <Compile Include="MasterUnit\MasterUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Commands\Parts\PartValidators\OnlyAlphanumericAllowedValidator.cs" />
