@@ -94,7 +94,7 @@ namespace ShieldTests.Messaging.Protocol
             var result = Dispatch.ReplyTo(NormalOrder);
 
             Assert.IsType<Reply>(result);
-            Assert.Equal(NormalOrder.ID, result.ReplysTo);
+            Assert.Equal(NormalOrder.ID, result.ReplyTo);
         }
 
         [Fact()]

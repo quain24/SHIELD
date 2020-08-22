@@ -13,9 +13,9 @@ namespace Shield.Messaging.Commands
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
         }
 
-        public ICommand GetCommand(IPart hostID, IPart ID, IPart target, IPart order, IPart data, Timestamp timestamp)
+        public ICommand GetCommand(IPart ID, IPart hostID, IPart target, IPart order, IPart data, Timestamp timestamp)
         {
-            return _commandFactory(hostID, ID, target, order, data, timestamp);
+            return _commandFactory(ID, hostID, target, order, data, timestamp);
         }
     }
 }

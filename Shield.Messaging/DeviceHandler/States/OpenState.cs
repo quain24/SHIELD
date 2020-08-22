@@ -45,7 +45,7 @@ namespace Shield.Messaging.DeviceHandler.States
         {
             var state = new ListeningState(_device, _streamSplitter, _commandTranslator);
             _context.SetState(state);
-            return state.Listening();
+            return state.StartListeningAsync();
         }
 
         public Task StopListeningAsync()

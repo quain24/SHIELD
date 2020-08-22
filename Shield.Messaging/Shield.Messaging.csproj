@@ -46,7 +46,6 @@
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandFactory.cs" />
     <Compile Include="Commands\CommandFactoryAutoFacAdapter.cs" />
-    <Compile Include="Commands\ConfirmationFactory.cs" />
     <Compile Include="Commands\DefaultCommandTypes.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\IdGenerator.cs" />
@@ -87,17 +86,23 @@
     <Compile Include="Protocol\CommandTranslator.cs" />
     <Compile Include="Protocol\Confirmation.cs" />
     <Compile Include="Protocol\ConfirmationCommandTranslator.cs" />
+    <Compile Include="Protocol\ConfirmationFactory.cs" />
+    <Compile Include="Protocol\EmptyDataPack.cs" />
+    <Compile Include="Protocol\IConfirmable.cs" />
+    <Compile Include="Protocol\IntDataPack.cs" />
+    <Compile Include="Protocol\OrderFactory.cs" />
+    <Compile Include="Protocol\ReplyFactory.cs" />
+    <Compile Include="Protocol\StringDataPack.cs" />
     <Compile Include="Protocol\ErrorCommandTranslator.cs" />
     <Compile Include="Protocol\ErrorMessage.cs" />
     <Compile Include="Protocol\IAwaitingDispatch.cs" />
     <Compile Include="Protocol\IChildAwaiter.cs" />
+    <Compile Include="Protocol\IDataPack.cs" />
     <Compile Include="Protocol\IResponseMessage.cs" />
     <Compile Include="Protocol\IRetrievingDispatch.cs" />
-    <Compile Include="Protocol\MessagingPipeline.cs" />
     <Compile Include="Protocol\Order.cs" />
     <Compile Include="Protocol\OrderCommandTranslator.cs" />
     <Compile Include="SlaveUnits\AbstractSlaveUnit.cs" />
-    <Compile Include="SlaveUnits\SimplePopperOrderFactory.cs" />
     <Compile Include="Protocol\ProtocolHandler.cs" />
     <Compile Include="Protocol\Reply.cs" />
     <Compile Include="Protocol\ReplyCommandTranslator.cs" />
@@ -115,7 +120,7 @@
     <Compile Include="Commands\Parts\Part.cs" />
     <Compile Include="RawData\RawCommand.cs" />
     <Compile Include="RawData\RawCommandCollection.cs" />
-    <Compile Include="SlaveUnits\IPopper.cs" />
+    <Compile Include="SlaveUnits\IAsyncPopper.cs" />
     <Compile Include="SlaveUnits\ISlaveUnit.cs" />
     <Compile Include="SlaveUnits\SimplePopper.cs" />
   </ItemGroup>

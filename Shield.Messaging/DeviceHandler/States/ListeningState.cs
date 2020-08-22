@@ -11,6 +11,7 @@ namespace Shield.Messaging.DeviceHandler.States
     {
         private DeviceHandlerContext _context;
         private Action<ICommand> _handleReceivedCommandCallback;
+        private Task _listeningTask;
         private readonly CommandTranslator _commandTranslator;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly ICommunicationDeviceAsync _device;
@@ -44,8 +45,14 @@ namespace Shield.Messaging.DeviceHandler.States
 
         public Task StartListeningAsync()
         {
-            Debug.WriteLine("DeviceContext is already listening");
-            return Task.CompletedTask;
+            if (_listeningTask?.Status == TaskStatus.Running)
+            {
+                Debug.WriteLine("DeviceContext is already listening");
+                return _listeningTask;
+            }
+
+            _listeningTask = Listening();
+            return Listening();
         }
 
         public Task StopListeningAsync()
@@ -60,7 +67,7 @@ namespace Shield.Messaging.DeviceHandler.States
             return _device.SendAsync(_commandTranslator.TranslateFrom(command).ToString());
         }
 
-        internal async Task Listening()
+        private async Task Listening()
         {
             try
             {

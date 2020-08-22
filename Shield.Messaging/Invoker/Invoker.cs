@@ -1,7 +1,7 @@
 ﻿using Shield.Messaging.Commands.States;
 using Shield.Messaging.Protocol;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -10,33 +10,58 @@ namespace Shield.Messaging.Invoker
     public class Invoker
     {
         private readonly ProtocolHandler _handler;
-        private readonly Hashtable _buffer = new Hashtable(StringComparer.InvariantCultureIgnoreCase);
+        private readonly IDictionary<string, (Delegate method, bool isGeneratingReply)> _buffer = new Dictionary<string, (Delegate callingMethod, bool isGeneratingReply)>();
 
         public Invoker(ProtocolHandler handler)
         {
             _handler = handler;
         }
 
-        public void RegisterReplyingMethod<T>(T methodCall) where T : Delegate
+        public void RegisterInvokableMethod(Func<Order, Task<Reply>> method)
         {
-            if (methodCall?.Method.ReturnType == typeof(void))
-                throw new ArgumentOutOfRangeException(nameof(methodCall), "Cannot register method without return type as a replying type.");
-            RegisterMethod(methodCall);
         }
 
-        public void RegisterMethod<T>(T methodCall) where T : Delegate
+        public void RegisterInvokableMethod(Func<Order, Reply> method)
+        {
+        }
+
+        public void RegisterInvokableMethod(Func<Task<Reply>> method)
+        {
+        }
+
+        public void RegisterInvokableMethod(Func<Task> method)
+        {
+        }
+
+        public void RegisterInvokableMethod(Action<Order> method)
+        {
+        }
+
+        public void RegisterInvokableMethod(Action method)
+        {
+        }
+
+        //public async Task NonReplyingHandler<T, U>(T order, Func<T, Task<U>> executingMethod) where T : Order where U : IConvertible
+        //{
+        //    string rawReplyData = string.Empty;
+
+        //    var d = await executingMethod.Invoke(order).ConfigureAwait(false);
+
+        //    var reply = Reply.Create(order.Target, new StringDataPack(order.Data));
+        //    await _handler.SendAsync(reply).ConfigureAwait(false);
+        //    if (await _handler.Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
+
+        //}
+
+        private void RegisterMethod<T>(T methodCall, bool isReplying) where T : Delegate
         {
             _ = methodCall ??
                 throw new ArgumentNullException(nameof(methodCall), "Passed null instead of proper delegate.");
-            if(_buffer.ContainsKey(methodCall.GetMethodInfo().Name))
-                throw new ArgumentOutOfRangeException(nameof(methodCall), $"Method {methodCall.GetMethodInfo().Name} was already registered in this {nameof(Invoker)}.");
 
-            _buffer.Add(methodCall.GetMethodInfo().Name, methodCall);
-        }
+            if (_buffer.ContainsKey(methodCall.GetMethodInfo().Name))
+                throw new ArgumentOutOfRangeException(nameof(methodCall), $"Method {methodCall.GetMethodInfo().Name} was already registered in this {nameof(Invoker)}. Overloading is not supported.");
 
-        private T GetMethodInvoker<T>(Type type) where T : Delegate
-        {
-            return _buffer[type] as T;
+            _buffer.Add(methodCall.GetMethodInfo().Name, (methodCall, isReplying));
         }
 
         public async Task Invoke(Order order)
@@ -44,7 +69,7 @@ namespace Shield.Messaging.Invoker
             _ = order ?? throw new ArgumentNullException(nameof(order),
                 "Tried to pass a null object instead of correct order for invocation.");
 
-            switch (_buffer[order.Target])
+            switch (_buffer[order.Target].method)
             {
                 case Action target:
                     InvokeRegisteredAction(target);
@@ -54,12 +79,12 @@ namespace Shield.Messaging.Invoker
                     InvokeRegisteredAction(target, order.Data);
                     break;
 
-                case Func<string, bool> target:
-                    InvokeRegisteredFunc(target, order.Data);
+                case Func<string> target:
+                    InvokeRegisteredFunc(target);
                     break;
 
                 case Func<Task<string>> target:
-                    await InvokeRegisteredFuncAsync(target, order).ConfigureAwait(false);
+                    await InvokeRegisteredFuncAsync(target).ConfigureAwait(false);
                     break;
 
                 case Func<Task> target:
@@ -70,12 +95,16 @@ namespace Shield.Messaging.Invoker
                     InvokeRegisteredFunc(target, order.Data);
                     break;
 
+                case Func<string, Task<string>> target:
+                    //await InvokeRegisteredFunc(target, order.Data);
+                    break;
+
                 case null:
                     await HandleMissingMethodAsync(order).ConfigureAwait(false);
                     break;
 
                 default:
-                    throw new ArgumentException($"Tried to invoke method that has no handler in this {nameof(Invoker)} instance.");
+                    throw new ArgumentException($"Tried to invoke method type that has no handler in this {nameof(Invoker)} instance.");
             }
         }
 
@@ -87,7 +116,7 @@ namespace Shield.Messaging.Invoker
         private async Task InvokeRegisteredFuncAsync(Func<Task<string>> target, Order order)
         {
             var replyData = await target.Invoke().ConfigureAwait(false);
-            await _handler.SendAsync(Reply.Create(order.ID, replyData)).ConfigureAwait(false);
+            //await _handler.SendAsync(Reply.Create(order.ID, new StringDataPack(replyData))).ConfigureAwait(false);
         }
 
         private Task<bool> HandleMissingMethodAsync(Order order)

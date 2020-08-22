@@ -1,4 +1,5 @@
 ﻿using Shield.Messaging.Commands;
+using System;
 
 namespace Shield.Messaging.Protocol
 {
@@ -40,5 +41,20 @@ namespace Shield.Messaging.Protocol
 
         public ErrorMessage TranslateToErrorMessage(ICommand command) =>
             _errorCommandTranslator.Translate(command);
+
+        public ICommand TranslateToCommand(IConfirmable message)
+        {
+            switch (message)
+            {
+                case Order order:
+                    return TranslateToCommand(order);
+
+                case Reply reply:
+                    return TranslateToCommand(reply);
+
+                default:
+                    throw new Exception($"Unknown base type of {nameof(IConfirmable)} passed.");
+            }
+        }
     }
 }

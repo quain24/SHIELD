@@ -2,7 +2,7 @@
 {
     public interface IRetrievingDispatch
     {
-        Confirmation ConfirmationOf(Order order);
+        Confirmation ConfirmationOf(IConfirmable message);
         Reply ReplyTo(Order order);
     }
 }

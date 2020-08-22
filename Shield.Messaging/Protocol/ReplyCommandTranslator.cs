@@ -9,24 +9,32 @@ namespace Shield.Messaging.Protocol
     {
         private readonly IPartFactory _partFactory;
         private readonly CommandFactory _commandFactory;
+        private readonly ReplyFactory _replyFactory;
 
-        public ReplyCommandTranslator(IPartFactory partFactory, CommandFactory commandFactory)
+        public ReplyCommandTranslator(IPartFactory partFactory, CommandFactory commandFactory, ReplyFactory replyFactory)
         {
             _partFactory = partFactory;
             _commandFactory = commandFactory;
+            _replyFactory = replyFactory;
         }
 
         public ICommand Translate(Reply reply)
         {
             return _commandFactory.Create(
+                _partFactory.GetPart(Command.PartType.ID, reply.ID),
                 _partFactory.GetPart(Command.PartType.Target, DefaultTargets.ReplyTarget),
-                _partFactory.GetPart(Command.PartType.Order, reply.ReplysTo),
-                _partFactory.GetPart(Command.PartType.Data, reply.Data));
+                _partFactory.GetPart(Command.PartType.Order, reply.ReplyTo),
+                string.IsNullOrEmpty(reply.Data)
+                    ? _partFactory.GetPart(Command.PartType.Empty, string.Empty)
+                    : _partFactory.GetPart(Command.PartType.Data, reply.Data));
         }
 
         public Reply Translate(ICommand replyCommand)
         {
-            return new Reply(replyCommand.Order.ToString(), replyCommand.Timestamp, replyCommand.Data.ToString());
+            return _replyFactory.Create(
+                replyCommand.Order.ToString(),
+                replyCommand.Timestamp,
+                new StringDataPack(replyCommand.Data.ToString()));
         }
     }
 }

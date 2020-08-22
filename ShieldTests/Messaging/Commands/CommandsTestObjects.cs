@@ -13,19 +13,22 @@ namespace ShieldTests.Messaging.Commands
 {
     public static class CommandsTestObjects
     {
+        private static IdGenerator _idGenerator = new IdGenerator(4);
+
         public static CommandFactory GetProperAlwaysValidCommandFactory()
         {
             var partFactory = PartFactoryTestObjects.GetAlwaysValidPartFactory();
             var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data, Timestamp) => new Command(id, hostid, target, order, data, TimestampFactory.Timestamp));
 
-            return new CommandFactory(DefaultProtocolValues.Separator, partFactory, comfacadap, new IdGenerator(DefaultProtocolValues.IDLength));
+            return new CommandFactory(DefaultProtocolValues.Separator, partFactory, comfacadap);
+            
         }
 
         public static ICommand GetProperTestCommand_order()
         {
             var commandFac = GetProperAlwaysValidCommandFactory();
 
-            return commandFac.TranslateFrom(new RawCommand("00ID*HOSTID*TARGET*ORDER*DATA"));
+            return commandFac.TranslateFrom(new RawCommand($"{_idGenerator.GetNewID()}*HOSTID*TARGET*ORDER*DATA"));
         }
 
         public static ICommand GetProperTestCommand_order(string id)
@@ -39,20 +42,28 @@ namespace ShieldTests.Messaging.Commands
         {
             var commandFac = GetProperAlwaysValidCommandFactory();
 
-            return commandFac.TranslateFrom(new RawCommand($"01ID*HOSTID*{Shield.GlobalConfig.DefaultTargets.ConfirmationTarget}*00ID*Valid"));
+            return commandFac.TranslateFrom(new RawCommand($"{_idGenerator.GetNewID()}*HOSTID*{Shield.GlobalConfig.DefaultTargets.ConfirmationTarget}*00ID*Valid"));
         }
-        public static ICommand GetProperTestCommand_confirmation(string id)
+        public static ICommand GetProperTestCommand_confirmation(string confirmId)
         {
             var commandFac = GetProperAlwaysValidCommandFactory();
 
-            return commandFac.TranslateFrom(new RawCommand($"01ID*HOSTID*{Shield.GlobalConfig.DefaultTargets.ConfirmationTarget}*{id}*Valid"));
+            return commandFac.TranslateFrom(new RawCommand($"{_idGenerator.GetNewID()}*HOSTID*{Shield.GlobalConfig.DefaultTargets.ConfirmationTarget}*{confirmId}*Valid"));
         }
 
         public static ICommand GetProperTestCommand_reply()
         {
             var commandFac = GetProperAlwaysValidCommandFactory();
 
-            return commandFac.TranslateFrom(new RawCommand($"01ID*HOSTID*{Shield.GlobalConfig.DefaultTargets.ReplyTarget}*00ID*ReplyData"));
+            return commandFac.TranslateFrom(new RawCommand($"{_idGenerator.GetNewID()}*HOSTID*{Shield.GlobalConfig.DefaultTargets.ReplyTarget}*00ID*ReplyData"));
+        }
+
+        public static ICommand GetProperTestCommand_reply(string replyToId)
+        {
+            var commandFac = GetProperAlwaysValidCommandFactory();
+            ICommand d;
+
+            return d =  commandFac.TranslateFrom(new RawCommand($"{_idGenerator.GetNewID()}*HOSTID*{Shield.GlobalConfig.DefaultTargets.ReplyTarget}*{replyToId}*ReplyData"));
         }
 
         public static ICommand GetInvalidCommand()

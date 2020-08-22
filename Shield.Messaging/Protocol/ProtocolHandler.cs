@@ -4,6 +4,7 @@ using Shield.Messaging.Extensions;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Shield.Messaging.Commands.States;
 
 namespace Shield.Messaging.Protocol
 {
@@ -25,9 +26,15 @@ namespace Shield.Messaging.Protocol
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
-        public Task<bool> SendAsync(Order order)
+        public async Task<Confirmation> SendAsync(IConfirmable order)
         {
-            return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order));
+            if(!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
+                return Confirmation.Create(order.ID, ErrorState.Unchecked().SendFailure());
+
+            if(!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
+                return Confirmation.Create(order.ID, ErrorState.Unchecked().OrderNotConfirmed());
+
+            return Retrieve().ConfirmationOf(order);
         }
 
         public Task<bool> SendAsync(Confirmation confirmation)
@@ -35,9 +42,15 @@ namespace Shield.Messaging.Protocol
             return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
         }
 
-        public Task<bool> SendAsync(Reply reply)
+        public async Task<Confirmation> SendAsync(Reply reply)
         {
-            return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply));
+            if(!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply)).ConfigureAwait(false))
+                return Confirmation.Create(reply.ReplyTo, ErrorState.Unchecked().SendFailure());
+
+            if (!await Order().WasConfirmedInTimeAsync(reply).ConfigureAwait(false))
+                return Confirmation.Create(reply.ID, ErrorState.Unchecked().OrderNotConfirmed());
+
+            return Retrieve().ConfirmationOf(reply);
         }
 
         public IAwaitingDispatch Order() => _awaiterDispatch;

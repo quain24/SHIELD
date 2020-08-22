@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,9 +22,9 @@ namespace Shield.Messaging.Protocol
             return ((ResponseType[])Enum.GetValues(typeof(ResponseType))).All(type => awaiters.ContainsKey(type) && !(awaiters[type] is null));
         }
 
-        public Task<bool> WasConfirmedInTimeAsync(Order order)
+        public Task<bool> WasConfirmedInTimeAsync(IConfirmable message)
         {
-            return _responseAwaiters[ResponseType.Confirmation].GetAwaiterFor(order).HasRespondedInTimeAsync();
+            return _responseAwaiters[ResponseType.Confirmation].GetAwaiterFor(message).HasRespondedInTimeAsync();
         }
 
         public Task<bool> WasRepliedToInTimeAsync(Order order)
@@ -33,8 +32,8 @@ namespace Shield.Messaging.Protocol
             return _responseAwaiters[ResponseType.Reply].GetAwaiterFor(order).HasRespondedInTimeAsync();
         }
 
-        public Confirmation ConfirmationOf(Order order) =>
-            _responseAwaiters[ResponseType.Confirmation].GetResponse(order) as Confirmation;
+        public Confirmation ConfirmationOf(IConfirmable message) =>
+            _responseAwaiters[ResponseType.Confirmation].GetResponse(message) as Confirmation;
 
         public Reply ReplyTo(Order order) =>
             _responseAwaiters[ResponseType.Reply].GetResponse(order) as Reply;

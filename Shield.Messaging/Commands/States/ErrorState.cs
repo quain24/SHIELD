@@ -16,7 +16,10 @@ namespace Shield.Messaging.Commands.States
             OrderDoesNotExist = 1 << 4,
             BadDataPack = 1 << 5,
             BadOrderPart = 1 << 6,
-            BadTargetPart = 1 << 7
+            BadTargetPart = 1 << 7,
+            NotConfirmed = 1 << 8,
+            NotReplied = 1 << 9,
+            NotSent = 1 << 10
         }
 
         public static ErrorState Custom(string attributes)
@@ -66,6 +69,9 @@ namespace Shield.Messaging.Commands.States
         public ErrorState TargetUnknown() => new ErrorState(Invalidate | StateRepresentation.TargetUnknown);
 
         public ErrorState OrderDoesNotExist() => new ErrorState(Invalidate | StateRepresentation.OrderDoesNotExist);
+        public ErrorState OrderNotConfirmed() => new ErrorState(Invalidate | StateRepresentation.NotConfirmed);
+        public ErrorState OrderNotReplied() => new ErrorState(Invalidate | StateRepresentation.NotReplied);
+        public ErrorState SendFailure() => new ErrorState(Invalidate | StateRepresentation.NotSent);
 
         public override string ToString()
         {

@@ -1,35 +1,29 @@
-﻿using System;
-using Shield.Timestamps;
+﻿using Shield.Timestamps;
+using System;
 
 namespace Shield.Messaging.Protocol
 {
-    public class Reply : IResponseMessage
+    public class Reply : IResponseMessage, IConfirmable
     {
-        private readonly string _replyTo;
-        private readonly Timestamp _timestamp;
-        private readonly string _data;
+        private readonly IDataPack _dataPack;
 
-        public static Reply Create(string replyTo, Timestamp timestamp, string data = "")
+        public Reply(string id, string replyTo, Timestamp timestamp, IDataPack dataPack)
         {
-            return new Reply(replyTo, timestamp, data);
+            ReplyTo = replyTo ?? throw new ArgumentNullException(nameof(replyTo), $"{nameof(Reply)} has to have a target (something to reply to).");
+            Timestamp = timestamp ?? throw new ArgumentNullException(nameof(timestamp), "Missing Timestamp.");
+            _dataPack = dataPack ?? throw new ArgumentNullException(nameof(dataPack),
+                "Cannot substitute DataPack with NULL.");
+            ID = id;
         }
 
-        public static Reply Create(string replyTo, string data = "")
-        {
-            return new Reply(replyTo, Timestamp.Now, data);
-        }
+        public string ID { get; }
 
-        public Reply(string replyTo, Timestamp timestamp, string data = "")
-        {
-            _replyTo = replyTo ?? throw new ArgumentNullException(nameof(replyTo), $"{nameof(Reply)} has to have a target (something to reply to).");
-            _timestamp = timestamp ?? throw new ArgumentNullException(nameof(timestamp), "Missing Timestamp.");
-            _data = data ?? string.Empty;
-        }
+        public string Target => ReplyTo;
 
-        public string Target => _replyTo;
+        public string ReplyTo { get; }
 
-        public string ReplysTo => _replyTo;
-        public string Data => _data;
-        public Timestamp Timestamp => _timestamp;
+        public string Data => _dataPack.GetDataInTransmittableFormat();
+
+        public Timestamp Timestamp { get; }
     }
 }

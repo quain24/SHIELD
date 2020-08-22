@@ -1,49 +1,31 @@
 ﻿using Shield.Messaging.Protocol;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Shield.Messaging.SlaveUnits
 {
     internal class SimplePopper : AbstractSlaveUnit
     {
-        private readonly ProtocolHandler _handler;
+        private readonly OrderFactory _orderFactory;
 
-        public SimplePopper(ProtocolHandler handler) : base(handler)
+        public SimplePopper(ProtocolHandler handler, OrderFactory orderFactory) : base(handler, orderFactory)
         {
-            _handler = handler;
-        }
-        protected override IEnumerable MethodsInvokableByOrders()
-        {
-            // Get table of func delegates of input data, confirmation - all incoming order processors will have the same signature
-            // Every method will have to check input data itself.
-            // Register all those methods in separate object (incoming order handler)
-            // received order -> handler checks for possible target -> invocation of target -> response - confirmation of some sort
-            // if reply is required then called method should generate one and send it;
-            // Possibly create separate replier object
+            _orderFactory = orderFactory;
         }
 
-        public async Task<bool> FlashRedDiodesAsync(int milliseconds)
+        public Order FlashRedDiodesAsync(int intervalMilliseconds)
         {
-            var order = Order.Create("fr", Name, milliseconds.ToString());
-            var (isSuccess, confirmation) = await base.TrySendAndAwaitConfirmationAsync(order).ConfigureAwait(false);
-            return isSuccess && confirmation.IsValid;
+            return _orderFactory.Create("fr", Name, new IntDataPack(intervalMilliseconds));
         }
 
-        public async Task<bool> FlashGreenDiodesAsync(int milliseconds)
+        public Order FlashGreenDiodesAsync(int intervalMilliseconds)
         {
-            var order = Order.Create("fg", Name, milliseconds.ToString());
-            var (isSuccess, confirmation) = await base.TrySendAndAwaitConfirmationAsync(order).ConfigureAwait(false);
-            return isSuccess && confirmation.IsValid;
+            return _orderFactory.Create("fg", Name, new IntDataPack(intervalMilliseconds));
         }
 
-        public async Task<bool> StartProgram()
+        public Order StartProgram()
         {
-            var order = Order.Create("start", Name);
-            var (isSuccess, confirmation) = await base.TrySendAndAwaitConfirmationAsync(order).ConfigureAwait(false);
-            return isSuccess && confirmation.IsValid;
+            return _orderFactory.Create("start", Name, new EmptyDataPack());
         }
 
         public void SetTimeLimit(int milliseconds)
@@ -56,17 +38,19 @@ namespace Shield.Messaging.SlaveUnits
             throw new NotImplementedException();
         }
 
-        public string ReportHits()
+        public async Task UpdateState()
         {
             throw new NotImplementedException();
         }
 
         // Invokable methods
 
-        private void Blink()
+        private void TurnGreenOn()
         {
-
         }
 
+        private void TurnGreenOff()
+        {
+        }
     }
 }

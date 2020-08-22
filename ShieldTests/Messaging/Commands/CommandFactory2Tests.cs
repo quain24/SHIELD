@@ -46,7 +46,7 @@ namespace ShieldTests.Messaging.Commands
 
             var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data, Timestamp) => new Command(id, hostid, target, order, data, TimestampFactory.Timestamp));
 
-            Factory = new CommandFactory('*', partFactory, comfacadap, new IdGenerator(4));
+            Factory = new CommandFactory('*', partFactory, comfacadap);
         }
 
         public CommandFactory Factory;

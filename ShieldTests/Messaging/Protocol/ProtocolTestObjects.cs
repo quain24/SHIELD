@@ -8,7 +8,7 @@ namespace ShieldTests.Messaging.Protocol
     {
         public static Order GetNormalOrder(string id)
         {
-            return new Order("preciseOrder", "ARecipientMethod", id, TimestampFactory.Timestamp, "TypicalData");
+            return new Order(id, "preciseOrder", "ARecipientMethod", TimestampFactory.Timestamp, new StringDataPack("TypicalData"));
         }
         public static Order GetNormalOrder()
         {
@@ -25,9 +25,14 @@ namespace ShieldTests.Messaging.Protocol
             return GetNormalConfirmation("ID01");
         }
 
+        public static Reply GetNormalReply(string id)
+        {
+            return new Reply(id, "ID01", TimestampFactory.Timestamp, new EmptyDataPack());
+        }
+
         public static Reply GetNormalReply()
         {
-            return new Reply("ID01", TimestampFactory.Timestamp, "DataFromReply");
+            return new Reply("ID11", "ID01", TimestampFactory.Timestamp, new EmptyDataPack());
         }
 
     }

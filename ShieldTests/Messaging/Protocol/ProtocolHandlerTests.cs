@@ -37,12 +37,16 @@ namespace ShieldTests.Messaging.Protocol
         {
             var partFactory = PartFactoryTestObjects.GetAlwaysValidPartFactory();
             CommandFactory = CommandsTestObjects.GetProperAlwaysValidCommandFactory();
+            var idGenerator = new IdGenerator(4);
+            var orderFactory = new OrderFactory(idGenerator);
+            var replyFactory = new ReplyFactory(idGenerator);
+            var confitmationFactory = new ConfirmationFactory();
 
             Mock<IDataStreamSplitter> splitter = new Mock<IDataStreamSplitter>();
             Mock<ICommunicationDeviceAsync> comDevice = new Mock<ICommunicationDeviceAsync>();
-            var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, CommandFactory),
-                new ReplyCommandTranslator(partFactory, CommandFactory),
-                new ConfirmationCommandTranslator(partFactory, CommandFactory), new ErrorCommandTranslator());
+            var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, CommandFactory, orderFactory),
+                new ReplyCommandTranslator(partFactory, CommandFactory, replyFactory),
+                new ConfirmationCommandTranslator(partFactory, CommandFactory, confitmationFactory), new ErrorCommandTranslator());
             Translator = translator;
 
             Mock<IDeviceHandler> handler = new Mock<IDeviceHandler>();
@@ -79,8 +83,8 @@ namespace ShieldTests.Messaging.Protocol
             Order receivedOrder = null;
             ProtocolHandler.OrderReceived += (_, order) => receivedOrder = order;
 
-            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_order());
-            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_confirmation());
+            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_order("ID01"));
+            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_confirmation("ID01"));
             var receivedConfirmation = ResponseAwaiterDispatch.ConfirmationOf(receivedOrder);
 
             Assert.True(receivedOrder.ID == receivedConfirmation.Confirms);
@@ -94,12 +98,12 @@ namespace ShieldTests.Messaging.Protocol
         {
             Order receivedOrder = null;
             ProtocolHandler.OrderReceived += (_, order) => receivedOrder = order;
-
-            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_order());
-            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_reply());
+            
+            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_order("ID01"));
+            RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_reply("ID01"));
             var receivedReply = ResponseAwaiterDispatch.ReplyTo(receivedOrder);
 
-            Assert.True(receivedOrder.ID == receivedReply.ReplysTo);
+            Assert.True(receivedOrder.ID == receivedReply.ReplyTo);
             Assert.True(CommandsTestObjects.GetProperTestCommand_reply().Data.ToString() == receivedReply.Data);
         }
 
@@ -117,11 +121,11 @@ namespace ShieldTests.Messaging.Protocol
         }
 
         [Fact()]
-        public async Task Should_return_true_when_proper_Order_was_sent()
+        public async Task Should_return_confirmation_when_proper_Order_was_sent()
         {
-            bool result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalOrder());
+            var result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalOrder());
 
-            Assert.True(result);
+            Assert.True(result is Confirmation);
         }
 
         [Fact()]
@@ -133,11 +137,11 @@ namespace ShieldTests.Messaging.Protocol
         }
 
         [Fact()]
-        public async Task Should_return_true_when_proper_Reply_was_sent()
+        public async Task Should_return_confirmation_when_proper_Reply_was_sent()
         {
-            bool result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalReply());
+            var result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalReply());
 
-            Assert.True(result);
+            Assert.True(result is Confirmation);
         }
 
         [Fact()]
@@ -150,38 +154,6 @@ namespace ShieldTests.Messaging.Protocol
         public void Should_return_IRetrievingDispatch_when_Retrieve_id_called()
         {
             Assert.IsAssignableFrom<IRetrievingDispatch>(ProtocolHandler.Retrieve());
-        }
-
-        [Fact()]
-        public async Task MessagingPipelinePerformance()
-        {
-            var data = new MessagingPipeline(null, null, Translator, ResponseAwaiterDispatch);
-
-            var a = TimestampFactory.Timestamp;
-            Debug.WriteLine(TimestampFactory.Timestamp);
-
-            for (int i = 0; i < 10000; i++)
-            {
-                data.AddICommand(CommandsTestObjects.GetProperTestCommand_confirmation("id" + i));
-                //data.AddICommand(CommandsTestObjects.GetProperTestCommand_order("id" + i));
-            }
-
-            Debug.WriteLine(TimestampFactory.Timestamp);
-            Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
-            var ll = new List<Task<bool>>();
-
-            for (int i = 0; i < 1000; i++)
-            {
-                if(i%50 == 0)
-                    ll.Add(ResponseAwaiterDispatch.WasConfirmedInTimeAsync(ProtocolTestObjects.GetNormalOrder("id" + i)));
-            }
-
-            await Task.WhenAll(ll);
-            Debug.WriteLine(TimestampFactory.Timestamp);
-            Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
-
-            Debug.WriteLine("end");
-
         }
 
         [Fact()]

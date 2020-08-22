@@ -22,28 +22,28 @@ namespace Shield.Messaging.Protocol
             _timeout = timeout;
         }
 
-        internal IChildAwaiter GetAwaiterFor(Order order)
+        internal IChildAwaiter GetAwaiterFor(IConfirmable message)
         {
-            if (ReplyExists(order))
-                return new AlreadyKnownChildAwaiter(!IsTimeoutExceeded(order));
+            if (ReplyExists(message))
+                return new AlreadyKnownChildAwaiter(!IsTimeoutExceeded(message));
 
-            if (IsTimeoutExceeded(order))
+            if (IsTimeoutExceeded(message))
                 return new AlreadyKnownChildAwaiter(false);
 
-            return CreateNormalAwaiterWithBufferedToken(order);
+            return CreateNormalAwaiterWithBufferedToken(message);
         }
 
-        private bool ReplyExists(Order order) => _responseBuffer.TryGetValue(order.ID, out _);
+        private bool ReplyExists(IConfirmable message) => _responseBuffer.TryGetValue(message.ID, out _);
 
-        private bool IsTimeoutExceeded(Order order) => _timeout.IsExceeded(order.Timestamp);
+        private bool IsTimeoutExceeded(IConfirmable order) => _timeout.IsExceeded(order.Timestamp);
 
-        private ChildAwaiter CreateNormalAwaiterWithBufferedToken(Order order)
+        private ChildAwaiter CreateNormalAwaiterWithBufferedToken(IConfirmable message)
         {
             var cancellationTokenSource = new CancellationTokenSource();
-            if (_tokenBuffer.TryAdd(order.ID, cancellationTokenSource))
+            if (_tokenBuffer.TryAdd(message.ID, cancellationTokenSource))
                 return new ChildAwaiter(_timeout, cancellationTokenSource.Token);
 
-            throw new Exception($"Could not create new ChildAwaiter of type for \"{order.ID}\" - Cancellation token for that ID in this instance is already used in buffer");
+            throw new Exception($"Could not create new ChildAwaiter of type for \"{message.ID}\" - Cancellation token for that ID in this instance is already used in buffer");
         }
 
         internal void AddResponse(IResponseMessage response)
@@ -66,7 +66,7 @@ namespace Shield.Messaging.Protocol
             return false;
         }
 
-        internal IResponseMessage GetResponse(Order order)
+        internal IResponseMessage GetResponse(IConfirmable order)
         {
             _responseBuffer.TryRemove(order.ID, out var response);
             return response;

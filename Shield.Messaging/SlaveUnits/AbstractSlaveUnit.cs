@@ -5,23 +5,29 @@ using System.Threading.Tasks;
 
 namespace Shield.Messaging.SlaveUnits
 {
-    public abstract class AbstractSlaveUnit
+    public abstract class AbstractSlaveUnit : ISlaveUnit
     {
         private readonly ProtocolHandler _handler;
+        private readonly OrderFactory _orderFactory;
 
-        protected AbstractSlaveUnit(ProtocolHandler handler)
+        protected AbstractSlaveUnit(ProtocolHandler handler, OrderFactory orderFactory)
         {
             _handler = handler;
+            _orderFactory = orderFactory;
         }
 
         public string ID { get; set; }
         public string Name { get; set; }
         public bool IsConnected { get; set; }
-        public State Status { private set; get; }
-
-        private Task<bool> SendAsync(Order order)
+        public bool CanHandle(Order order)
         {
-            return _handler.SendAsync(order);
+            throw new NotImplementedException();
+        }
+
+        private async Task<bool> SendAsync(Order order)
+        {
+            var d = await _handler.SendAsync(order);
+            return d.IsValid;
         }
 
         protected virtual async Task<(bool isSuccess, Confirmation confirmation)> TrySendAndAwaitConfirmationAsync(Order order)
@@ -40,17 +46,6 @@ namespace Shield.Messaging.SlaveUnits
                 return (false, null);
 
             return (true, _handler.Retrieve().ReplyTo(order));
-        }
-
-        protected abstract IEnumerable<Func<object, object>> MethodsInvokableByOrders();
-
-        public enum State
-        {
-            Inactive,
-            Sending,
-            Receiving,
-            Busy,
-            Error
         }
     }
 }

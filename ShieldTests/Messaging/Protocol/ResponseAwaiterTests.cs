@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
@@ -22,8 +24,8 @@ namespace ShieldTests.Messaging.Protocol
         }
 
         private ResponseAwaiter ResponseAwaiter { get; set; }
-        private Order StandardOrder => new Order("test", "target", "idid", TimestampFactory.Timestamp);
-        private Confirmation StandardConfirmation => new Confirmation("idid", ErrorState.Unchecked().Valid(), TimestampFactory.Timestamp);
+        private Order StandardOrder => ProtocolTestObjects.GetNormalOrder("0001");
+        private Confirmation StandardConfirmation => ProtocolTestObjects.GetNormalConfirmation("0001");
         private IResponseMessage StdConfirmationAsIResponse => StandardConfirmation;
 
         private void Setup()

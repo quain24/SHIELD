@@ -9,10 +9,12 @@ using Shield.Messaging.RawData;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Threading.Tasks;
+using Shield.Messaging.Protocol;
 using Shield.Timestamps;
 using Xunit;
 using Xunit.Abstractions;
 using static Shield.Enums.Command;
+using CommandTranslator = Shield.Messaging.DeviceHandler.CommandTranslator;
 
 namespace ShieldTests.Devices
 {
@@ -70,8 +72,8 @@ namespace ShieldTests.Devices
 
             var comfacadap = new CommandFactoryAutoFacAdapter((id, hostid, target, order, data, Timestamp) => new Command(id, hostid, target, order, data, TimestampFactory.Timestamp));
 
-            var Factory = new CommandFactory('*', partFactory, comfacadap, new IdGenerator(4));
-            var ConfirmationFactory = new ConfirmationFactory(Factory, partFactory);
+            var Factory = new CommandFactory('*', partFactory, comfacadap);
+            var ConfirmationFactory = new ConfirmationFactory();
             var Translator = new CommandTranslator(Factory, new RawCommandFactory('#', '*'));
 
             ICommunicationDeviceAsync com = new Shield.COMDevice.SerialPortAdapter(settings);

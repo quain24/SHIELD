@@ -15,7 +15,6 @@ namespace Shield.Messaging.Commands
         private readonly char _separator;
         private readonly IPartFactory _factory;
         private readonly CommandFactoryAutoFacAdapter _commandFactory;
-        private readonly IIdGenerator _idGenerator;
 
         private readonly List<PartType> _requiredParts = new List<PartType>()
         {
@@ -26,21 +25,20 @@ namespace Shield.Messaging.Commands
            PartType.Data
         };
 
-        public CommandFactory(char separator, IPartFactory factory, CommandFactoryAutoFacAdapter commandFactory, IIdGenerator idGenerator)
+        public CommandFactory(char separator, IPartFactory factory, CommandFactoryAutoFacAdapter commandFactory)
         {
             _separator = separator;
             _factory = factory;
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-            _idGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
         }
 
-        public ICommand Create(IPart targetPart, IPart orderPart, IPart dataPart = null)
+        public ICommand Create(IPart idPart, IPart targetPart, IPart orderPart, IPart dataPart)
         {
-            return new Command(_factory.GetPart(PartType.ID, _idGenerator.GetNewID()),
+            return new Command(idPart,
                                _factory.GetPart(PartType.HostID, HostSettings.HostID),
                                targetPart,
                                orderPart,
-                               dataPart ?? _factory.GetPart(PartType.Empty, string.Empty),
+                               string.IsNullOrEmpty(dataPart.Data) ? _factory.GetPart(PartType.Empty, string.Empty) : dataPart,
                                TimestampFactory.Timestamp);
         }
 
