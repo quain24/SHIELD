@@ -1,8 +1,8 @@
-﻿using Shield.Messaging.Protocol;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Shield.Messaging.Protocol;
 
-namespace Shield.Messaging.SlaveUnits
+namespace Shield.Messaging.Units.SlaveUnits
 {
     internal class SimplePopper : AbstractSlaveUnit
     {

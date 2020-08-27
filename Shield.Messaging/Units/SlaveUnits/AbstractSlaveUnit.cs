@@ -1,11 +1,10 @@
-﻿using Shield.Messaging.Protocol;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Threading.Tasks;
+using Shield.Messaging.Protocol;
 
-namespace Shield.Messaging.SlaveUnits
+namespace Shield.Messaging.Units.SlaveUnits
 {
-    public abstract class AbstractSlaveUnit : ISlaveUnit
+    public abstract class AbstractSlaveUnit
     {
         private readonly ProtocolHandler _handler;
         private readonly OrderFactory _orderFactory;

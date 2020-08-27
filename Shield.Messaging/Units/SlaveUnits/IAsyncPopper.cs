@@ -1,9 +1,9 @@
-﻿using Shield.Messaging.Protocol;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using Shield.Messaging.Protocol;
 
-namespace Shield.Messaging.SlaveUnits
+namespace Shield.Messaging.Units.SlaveUnits
 {
-    internal interface IAsyncPopper : ISlaveUnit
+    internal interface IAsyncPopper : IUnit
     {
         Task<Order> FlashRedDiodesAsync(int milliseconds);
 

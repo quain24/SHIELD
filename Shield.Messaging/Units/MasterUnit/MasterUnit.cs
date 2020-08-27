@@ -1,16 +1,16 @@
-﻿using Shield.Messaging.DeviceHandler;
-using Shield.Messaging.Protocol;
-using Shield.Messaging.SlaveUnits;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Shield.Messaging.DeviceHandler;
+using Shield.Messaging.Protocol;
+using Shield.Messaging.Units.SlaveUnits;
 
-namespace Shield.Messaging.MasterUnit
+namespace Shield.Messaging.Units.MasterUnit
 {
     public class MasterUnit
     {
         private readonly DeviceHandlerContext _devicehandler;
         private readonly IDictionary<string, Order> _orderMap;
-        private readonly Dictionary<string, ISlaveUnit> _attachedSlaveUnits = new Dictionary<string, ISlaveUnit>();
+        private readonly Dictionary<string, IUnit> _attachedSlaveUnits = new Dictionary<string, IUnit>();
 
         public MasterUnit(DeviceHandlerContext devicehandler, IDictionary<string, Order> orderMap)
         {
@@ -22,7 +22,7 @@ namespace Shield.Messaging.MasterUnit
 
         public void Close() => _devicehandler.Close();
 
-        public async Task<IDictionary<string, ISlaveUnit>> ReportAttachedSlaveUnits()
+        public async Task<IDictionary<string, IUnit>> ReportAttachedSlaveUnits()
         {
             return null; // tmp
         }
