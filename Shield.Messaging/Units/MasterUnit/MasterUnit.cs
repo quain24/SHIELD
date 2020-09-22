@@ -8,19 +8,13 @@ namespace Shield.Messaging.Units.MasterUnit
 {
     public class MasterUnit
     {
-        private readonly DeviceHandlerContext _deviceHandler;
-        private readonly OrderCommandTranslator _translator;
         private readonly Dictionary<string, IUnit> _attachedSlaveUnits = new Dictionary<string, IUnit>();
+        private readonly ProtocolHandler _handler;
 
-        public MasterUnit(DeviceHandlerContext deviceHandler, OrderCommandTranslator translator)
+        public MasterUnit(ProtocolHandler handler)
         {
-            _deviceHandler = deviceHandler;
-            _translator = translator;
+            _handler = handler;
         }
-
-        public void Open() => _deviceHandler.Open();
-
-        public void Close() => _deviceHandler.Close();
 
         public async Task<IDictionary<string, IUnit>> ReportAttachedSlaveUnits()
         {
@@ -30,6 +24,30 @@ namespace Shield.Messaging.Units.MasterUnit
 
         private async Task UpdateSlaveUnitDictionary(Order order)
         {
+        }
+
+        private async Task<bool> SendAsync(Order order)
+        {
+            var d = await _handler.SendAsync(order);
+            return d.IsValid;
+        }
+
+        protected async Task<(bool isSuccess, Confirmation confirmation)> TrySendAndAwaitConfirmationAsync(Order order)
+        {
+            if (await SendAsync(order).ConfigureAwait(false) is false ||
+                await _handler.Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false) is false)
+                return (false, null);
+
+            return (true, _handler.Retrieve().ConfirmationOf(order));
+        }
+
+        protected async Task<(bool isSuccess, Reply reply)> TrySendAndAwaitReplyAsync(Order order)
+        {
+            if (await SendAsync(order).ConfigureAwait(false) is false ||
+                await _handler.Order().WasRepliedToInTimeAsync(order).ConfigureAwait(false) is false)
+                return (false, null);
+
+            return (true, _handler.Retrieve().ReplyTo(order));
         }
     }
 }

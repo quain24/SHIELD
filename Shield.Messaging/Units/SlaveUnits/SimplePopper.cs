@@ -6,10 +6,12 @@ namespace Shield.Messaging.Units.SlaveUnits
 {
     internal class SimplePopper : AbstractSlaveUnit, IPopperAsync, IDiodeAsync
     {
+        private readonly IMasterUnit _master;
         private readonly OrderFactory _orderFactory;
 
-        public SimplePopper(ProtocolHandler handler, OrderFactory orderFactory) : base(handler, orderFactory)
+        public SimplePopper(IMasterUnit master, OrderFactory orderFactory)
         {
+            _master = master;
             _orderFactory = orderFactory;
         }
 

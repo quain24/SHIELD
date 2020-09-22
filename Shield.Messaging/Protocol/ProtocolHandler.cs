@@ -1,10 +1,10 @@
 ﻿using Shield.Messaging.Commands;
+using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Shield.Messaging.Commands.States;
 
 namespace Shield.Messaging.Protocol
 {
@@ -17,7 +17,7 @@ namespace Shield.Messaging.Protocol
         public event EventHandler<Order> OrderReceived;
 
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccurred;
-         
+
         public ProtocolHandler(IDeviceHandler deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
@@ -26,12 +26,24 @@ namespace Shield.Messaging.Protocol
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
+        public void Open()
+        {
+            if(!_deviceHandler.IsOpen)
+                _deviceHandler.Open();
+        }
+
+        public void Close()
+        {
+            if(_deviceHandler.IsOpen)
+                _deviceHandler.Close();
+        }
+
         public async Task<Confirmation> SendAsync(IConfirmable order)
         {
-            if(!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
+            if (!_deviceHandler.IsReady || !await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
                 return Confirmation.Create(order.ID, ErrorState.Unchecked().SendFailure());
 
-            if(!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
+            if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
                 return Confirmation.Create(order.ID, ErrorState.Unchecked().OrderNotConfirmed());
 
             return Retrieve().ConfirmationOf(order);
@@ -44,7 +56,7 @@ namespace Shield.Messaging.Protocol
 
         public async Task<Confirmation> SendAsync(Reply reply)
         {
-            if(!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply)).ConfigureAwait(false))
+            if (!_deviceHandler.IsReady || !await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply)).ConfigureAwait(false))
                 return Confirmation.Create(reply.ReplyTo, ErrorState.Unchecked().SendFailure());
 
             if (!await Order().WasConfirmedInTimeAsync(reply).ConfigureAwait(false))
@@ -67,7 +79,6 @@ namespace Shield.Messaging.Protocol
 
             if (command.IsConfirmation())
                 _awaiterDispatch.AddResponse(_commandTranslator.TranslateToConfirmation(command));
-
             else if (command.IsReply())
                 _awaiterDispatch.AddResponse(_commandTranslator.TranslateToReply(command));
             else
