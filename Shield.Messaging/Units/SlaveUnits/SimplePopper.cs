@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Shield.Messaging.Protocol;
+using System;
 using System.Threading.Tasks;
-using Shield.Messaging.Protocol;
 
 namespace Shield.Messaging.Units.SlaveUnits
 {
-    internal class SimplePopper : AbstractSlaveUnit
+    internal class SimplePopper : AbstractSlaveUnit, IPopperAsync, IDiodeAsync
     {
         private readonly OrderFactory _orderFactory;
 
@@ -13,44 +13,54 @@ namespace Shield.Messaging.Units.SlaveUnits
             _orderFactory = orderFactory;
         }
 
-        public Order FlashRedDiodesAsync(int intervalMilliseconds)
-        {
-            return _orderFactory.Create("fr", Name, new IntDataPack(intervalMilliseconds));
-        }
-
-        public Order FlashGreenDiodesAsync(int intervalMilliseconds)
-        {
-            return _orderFactory.Create("fg", Name, new IntDataPack(intervalMilliseconds));
-        }
-
-        public Order StartProgram()
-        {
-            return _orderFactory.Create("start", Name, new EmptyDataPack());
-        }
-
-        public void SetTimeLimit(int milliseconds)
+        public bool Reset()
         {
             throw new NotImplementedException();
         }
 
-        public void SetMaxHitNumber(int numberOfHits)
+        public void ExecuteOrder(Order order)
         {
             throw new NotImplementedException();
         }
 
-        public async Task UpdateState()
+        public Task<Order> StartProgramAsync()
         {
             throw new NotImplementedException();
         }
 
-        // Invokable methods
-
-        private void TurnGreenOn()
+        public Task<Order> SetTimeLimitAsync(int milliseconds)
         {
+            throw new NotImplementedException();
         }
 
-        private void TurnGreenOff()
+        public Task<Order> SetMaxHitNumberAsync(int numberOfHits)
         {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> ReportHitsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> FlashSingleDiodeAsync(int number, int intervalInMs, string color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> FlashAllDiodesAsync(int intervalInMs, string color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> TurnOnDiodeAsync(int number, string color)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Order> TurnOffDiodeAsync(int number)
+        {
+            throw new NotImplementedException();
         }
     }
 }

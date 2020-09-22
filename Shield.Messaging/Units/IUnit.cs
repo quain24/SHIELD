@@ -10,6 +10,8 @@ namespace Shield.Messaging.Units
 
         bool IsConnected { get; }
 
+        bool Reset();
+
         bool CanHandle(Order order);
 
         void ExecuteOrder(Order order);

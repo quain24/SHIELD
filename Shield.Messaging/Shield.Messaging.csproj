@@ -46,7 +46,6 @@
     <Compile Include="Commands\Command.cs" />
     <Compile Include="Commands\CommandFactory.cs" />
     <Compile Include="Commands\CommandFactoryAutoFacAdapter.cs" />
-    <Compile Include="Commands\DefaultCommandTypes.cs" />
     <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\IdGenerator.cs" />
     <Compile Include="Commands\IIdGenerator.cs" />
@@ -75,8 +74,6 @@
     <Compile Include="Commands\Timeout.cs" />
     <Compile Include="Extensions\ICommandExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Invoker\Invoker.cs" />
-    <Compile Include="Units\BaseUnit.cs" />
     <Compile Include="Units\IMasterUnit.cs" />
     <Compile Include="Units\MasterUnit\MasterUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -122,9 +119,9 @@
     <Compile Include="Commands\Parts\Part.cs" />
     <Compile Include="RawData\RawCommand.cs" />
     <Compile Include="RawData\RawCommandCollection.cs" />
-    <Compile Include="Units\SlaveUnits\IAsyncPopper.cs" />
+    <Compile Include="Units\IPopperAsync.cs" />
     <Compile Include="Units\IUnit.cs" />
-    <Compile Include="Units\IDiode.cs" />
+    <Compile Include="Units\IDiodeAsync.cs" />
     <Compile Include="Units\SlaveUnits\SimplePopper.cs" />
   </ItemGroup>
   <ItemGroup>

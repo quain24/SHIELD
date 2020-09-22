@@ -16,8 +16,8 @@ namespace Shield.Messaging.Protocol
 
         public event EventHandler<Order> OrderReceived;
 
-        public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccured;
-
+        public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccurred;
+         
         public ProtocolHandler(IDeviceHandler deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
@@ -61,7 +61,7 @@ namespace Shield.Messaging.Protocol
         {
             if (!command.IsValid) // protocol failure
             {
-                OnCommunicationErrorOccured(_commandTranslator.TranslateToErrorMessage(command));
+                OnCommunicationErrorOccurred(_commandTranslator.TranslateToErrorMessage(command));
                 Debug.Write($"command {command.ID} contained protocol errors ({command.ErrorState})");
             }
 
@@ -77,7 +77,7 @@ namespace Shield.Messaging.Protocol
         protected virtual void OnOrderReceived(Order order) =>
             OrderReceived?.Invoke(this, order);
 
-        protected virtual void OnCommunicationErrorOccured(ErrorMessage errorMessage) =>
-            IncomingCommunicationErrorOccured?.Invoke(this, errorMessage);
+        protected virtual void OnCommunicationErrorOccurred(ErrorMessage errorMessage) =>
+            IncomingCommunicationErrorOccurred?.Invoke(this, errorMessage);
     }
 }

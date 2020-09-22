@@ -111,7 +111,7 @@ namespace ShieldTests.Messaging.Protocol
         public void When_informed_by_DeviceHandler_about_new_received_invalid_command_raises_IncomingCommunicationErrorOccured_ErrorMessage()
         {
             ErrorMessage receivedErrorMsg = null;
-            ProtocolHandler.IncomingCommunicationErrorOccured += (_, error) => receivedErrorMsg = error;
+            ProtocolHandler.IncomingCommunicationErrorOccurred += (_, error) => receivedErrorMsg = error;
 
             RaiseNewCommandEventOnDevice(CommandsTestObjects.GetInvalidCommand());
 
