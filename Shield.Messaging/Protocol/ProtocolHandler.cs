@@ -15,7 +15,6 @@ namespace Shield.Messaging.Protocol
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
         public event EventHandler<Order> OrderReceived;
-
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccurred;
 
         public ProtocolHandler(IDeviceHandler deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
@@ -26,15 +25,21 @@ namespace Shield.Messaging.Protocol
             _deviceHandler.CommandReceived += OnCommandReceived;
         }
 
+        public bool IsOpen => _deviceHandler.IsOpen;
+        public bool IsConnected => _deviceHandler.IsConnected;
+        public bool IsReady => _deviceHandler.IsReady;
+
         public void Open()
         {
-            if(!_deviceHandler.IsOpen)
+            if (!_deviceHandler.IsOpen)
                 _deviceHandler.Open();
+            if (!_deviceHandler.IsConnected)
+                _deviceHandler.StartListeningAsync();
         }
 
         public void Close()
         {
-            if(_deviceHandler.IsOpen)
+            if (_deviceHandler.IsOpen)
                 _deviceHandler.Close();
         }
 
@@ -54,17 +59,6 @@ namespace Shield.Messaging.Protocol
             return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
         }
 
-        public async Task<Confirmation> SendAsync(Reply reply)
-        {
-            if (!_deviceHandler.IsReady || !await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(reply)).ConfigureAwait(false))
-                return Confirmation.Create(reply.ReplyTo, ErrorState.Unchecked().SendFailure());
-
-            if (!await Order().WasConfirmedInTimeAsync(reply).ConfigureAwait(false))
-                return Confirmation.Create(reply.ID, ErrorState.Unchecked().OrderNotConfirmed());
-
-            return Retrieve().ConfirmationOf(reply);
-        }
-
         public IAwaitingDispatch Order() => _awaiterDispatch;
 
         public IRetrievingDispatch Retrieve() => _awaiterDispatch;
@@ -74,7 +68,6 @@ namespace Shield.Messaging.Protocol
             if (!command.IsValid) // protocol failure
             {
                 OnCommunicationErrorOccurred(_commandTranslator.TranslateToErrorMessage(command));
-                Debug.Write($"command {command.ID} contained protocol errors ({command.ErrorState})");
             }
 
             if (command.IsConfirmation())

@@ -82,14 +82,14 @@ namespace Shield.COMDevice
         {
             if (IsConnected)
                 return;
-            StopPhysicallConnectionMonitoring();
+            StopPhysicalConnectionMonitoring();
             throw new DeviceDisconnectedException($"Internal monitor detected that {_port.PortName} has been physically disconnected!");
         }
 
         private void StartPhysicalConnectionMonitoring() =>
             _connectionMonitor.Change(DelayValue, IntervalValue);
 
-        private void StopPhysicallConnectionMonitoring() =>
+        private void StopPhysicalConnectionMonitoring() =>
             _connectionMonitor.Change(Timeout.Infinite, Timeout.Infinite);
 
         public void Open()
@@ -122,7 +122,7 @@ namespace Shield.COMDevice
         {
             return Task.Run(() =>
             {
-                StopPhysicallConnectionMonitoring();
+                StopPhysicalConnectionMonitoring();
                 DiscardInBuffer();
                 _port.Close();
             });
@@ -135,8 +135,8 @@ namespace Shield.COMDevice
 
             try
             {
-                int bytesRead = _port.Read(_buffer, 0, _buffer.Length);
-                string rawData = _encoding.GetString(_buffer, 0, bytesRead);
+                var bytesRead = _port.Read(_buffer, 0, _buffer.Length);
+                var rawData = _encoding.GetString(_buffer, 0, bytesRead);
                 OnDataReceived(rawData);
                 return rawData;
             }
@@ -147,7 +147,7 @@ namespace Shield.COMDevice
         }
 
         /// <summary>
-        /// Constantly monitors incoming communication data, filters it and generates Commands (ICommandModel)
+        /// Get all available data from serial port data stream and return a raw data string
         /// </summary>
         public async Task<string> ReceiveAsync(CancellationToken ct)
         {
@@ -157,8 +157,8 @@ namespace Shield.COMDevice
             try
             {
                 ct.ThrowIfCancellationRequested();
-                int bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
-                string rawData = _encoding.GetString(_buffer, 0, bytesRead);
+                var bytesRead = await _port.BaseStream.ReadAsync(_buffer, 0, _buffer.Length, ct).ConfigureAwait(false);
+                var rawData = _encoding.GetString(_buffer, 0, bytesRead);
                 OnDataReceived(rawData);
                 return rawData;
             }

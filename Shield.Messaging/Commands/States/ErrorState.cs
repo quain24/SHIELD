@@ -19,7 +19,8 @@ namespace Shield.Messaging.Commands.States
             BadTargetPart = 1 << 7,
             NotConfirmed = 1 << 8,
             NotReplied = 1 << 9,
-            NotSent = 1 << 10
+            NotSent = 1 << 10,
+            Disconnected = 1 << 11
         }
 
         public static ErrorState Custom(string attributes)
@@ -72,6 +73,7 @@ namespace Shield.Messaging.Commands.States
         public ErrorState OrderNotConfirmed() => new ErrorState(Invalidate | StateRepresentation.NotConfirmed);
         public ErrorState OrderNotReplied() => new ErrorState(Invalidate | StateRepresentation.NotReplied);
         public ErrorState SendFailure() => new ErrorState(Invalidate | StateRepresentation.NotSent);
+        public ErrorState DeviceDisconnected() => new ErrorState(Invalidate | StateRepresentation.Disconnected);
 
         public override string ToString()
         {
