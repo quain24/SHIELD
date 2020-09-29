@@ -11,8 +11,8 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
             MaximumLength,
             AllowOnlyAlphanumeric,
             ForbidChars,
-            AllwaysGood,
-            AllwaysBad
+            AlwaysGood,
+            AlwaysBad
         }
 
         private readonly Dictionary<ValidatorType, IPartValidator> _validators = new Dictionary<ValidatorType, IPartValidator>();
@@ -33,7 +33,7 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
         {
             _validators[ValidatorType.ForbidChars] =
                 _validators.TryGetValue(ValidatorType.ForbidChars, out var alreadyForbiddenChars)
-                ? new CompositValidator(alreadyForbiddenChars, new ForbiddenCharsValidator(forbiddenCharacters)) as IPartValidator
+                ? new CompositeValidator(alreadyForbiddenChars, new ForbiddenCharsValidator(forbiddenCharacters)) as IPartValidator
                 : new ForbiddenCharsValidator(forbiddenCharacters);
 
             return this;
@@ -45,17 +45,17 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
             return this;
         }
 
-        public IPartValidatorBuilder AllwaysValidateAsGood()
+        public IPartValidatorBuilder AlwaysValidateAsGood()
         {
             _validators.Clear();
-            _validators[ValidatorType.AllwaysGood] = AllwaysGoodValidatorSingleton.Instance;
+            _validators[ValidatorType.AlwaysGood] = AllwaysGoodValidatorSingleton.Instance;
             return this;
         }
 
-        public IPartValidatorBuilder AllwaysValidateAsBad()
+        public IPartValidatorBuilder AlwaysValidateAsBad()
         {
             _validators.Clear();
-            _validators[ValidatorType.AllwaysBad] = AllwaysBadValidatorSingleton.Instance;
+            _validators[ValidatorType.AlwaysBad] = AllwaysBadValidatorSingleton.Instance;
             return this;
         }
 
@@ -65,6 +65,6 @@ namespace Shield.Messaging.Commands.Parts.PartValidators
             return this;
         }
 
-        public IPartValidator Build() => new CompositValidator(_validators.Values.ToArray());
+        public IPartValidator Build() => new CompositeValidator(_validators.Values.ToArray());
     }
 }

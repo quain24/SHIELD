@@ -40,13 +40,13 @@ namespace ShieldTests.Messaging.Protocol
             var idGenerator = new IdGenerator(4);
             var orderFactory = new OrderFactory(idGenerator);
             var replyFactory = new ReplyFactory(idGenerator);
-            var confitmationFactory = new ConfirmationFactory();
+            var confirmationFactory = new ConfirmationFactory();
 
             Mock<IDataStreamSplitter> splitter = new Mock<IDataStreamSplitter>();
             Mock<ICommunicationDeviceAsync> comDevice = new Mock<ICommunicationDeviceAsync>();
             var translator = new CommandTranslator(new OrderCommandTranslator(partFactory, CommandFactory, orderFactory),
                 new ReplyCommandTranslator(partFactory, CommandFactory, replyFactory),
-                new ConfirmationCommandTranslator(partFactory, CommandFactory, confitmationFactory), new ErrorCommandTranslator());
+                new ConfirmationCommandTranslator(partFactory, CommandFactory, confirmationFactory), new ErrorCommandTranslator());
             Translator = translator;
 
             Mock<IDeviceHandler> handler = new Mock<IDeviceHandler>();
@@ -54,7 +54,7 @@ namespace ShieldTests.Messaging.Protocol
 
             DeviceMoq = handler;
             ResponseAwaiterDispatch = ResponseAwaiterDispatchTestObjects.GetProperResponseAwaiterDispatch();
-            ProtocolHandler = new ProtocolHandlerTestWrapper(handler.Object, translator, ResponseAwaiterDispatch);
+            ProtocolHandler = new ProtocolHandlerTestWrapper(handler.Object, confirmationFactory,  translator, ResponseAwaiterDispatch);
         }
 
         public void RaiseNewCommandEventOnDevice(ICommand command)

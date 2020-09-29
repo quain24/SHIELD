@@ -4,9 +4,9 @@
     {
         IPartValidatorBuilder AllowOnlyAlphaNumeric();
 
-        IPartValidatorBuilder AllwaysValidateAsBad();
+        IPartValidatorBuilder AlwaysValidateAsBad();
 
-        IPartValidatorBuilder AllwaysValidateAsGood();
+        IPartValidatorBuilder AlwaysValidateAsGood();
 
         IPartValidatorBuilder ForbidChars(params char[] forbiddenCharacters);
 

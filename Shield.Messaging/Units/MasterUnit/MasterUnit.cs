@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Shield.Messaging.Protocol;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Shield.Messaging.DeviceHandler;
-using Shield.Messaging.Protocol;
-using Shield.Messaging.Units.SlaveUnits;
 
 namespace Shield.Messaging.Units.MasterUnit
 {
@@ -18,18 +16,11 @@ namespace Shield.Messaging.Units.MasterUnit
 
         public async Task<IDictionary<string, IUnit>> ReportAttachedSlaveUnits()
         {
-            
             return null; // tmp
         }
 
         private async Task UpdateSlaveUnitDictionary(Order order)
         {
-        }
-
-        private async Task<bool> SendAsync(Order order)
-        {
-            var d = await _handler.SendAsync(order);
-            return d.IsValid;
         }
 
         protected async Task<(bool isSuccess, Confirmation confirmation)> TrySendAndAwaitConfirmationAsync(Order order)
@@ -48,6 +39,12 @@ namespace Shield.Messaging.Units.MasterUnit
                 return (false, null);
 
             return (true, _handler.Retrieve().ReplyTo(order));
+        }
+
+        private async Task<bool> SendAsync(Order order)
+        {
+            var confirmation = await _handler.SendAsync(order);
+            return confirmation.IsValid;
         }
     }
 }

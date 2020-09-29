@@ -1,9 +1,9 @@
-﻿using Shield.Messaging.Commands;
+﻿using Shield.Exceptions;
+using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Shield.Messaging.Protocol
@@ -11,15 +11,20 @@ namespace Shield.Messaging.Protocol
     public class ProtocolHandler
     {
         private readonly IDeviceHandler _deviceHandler;
+        private readonly ConfirmationFactory _confirmationFactory;
         private readonly CommandTranslator _commandTranslator;
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
         public event EventHandler<Order> OrderReceived;
+
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccurred;
 
-        public ProtocolHandler(IDeviceHandler deviceHandler, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
+        private Action<Order> _orderReceivedAction;
+
+        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
+            _confirmationFactory = confirmationFactory;
             _commandTranslator = commandTranslator;
             _awaiterDispatch = awaiterDispatch;
             _deviceHandler.CommandReceived += OnCommandReceived;
@@ -28,6 +33,10 @@ namespace Shield.Messaging.Protocol
         public bool IsOpen => _deviceHandler.IsOpen;
         public bool IsConnected => _deviceHandler.IsConnected;
         public bool IsReady => _deviceHandler.IsReady;
+
+        public void AddOrderReceivedHandler(Action<Order> informationDelegate) => _orderReceivedAction += informationDelegate;
+
+        public void RemoveOrderReceivedHandler(Action<Order> informationDelegate) => _orderReceivedAction -= informationDelegate;
 
         public void Open()
         {
@@ -45,18 +54,35 @@ namespace Shield.Messaging.Protocol
 
         public async Task<Confirmation> SendAsync(IConfirmable order)
         {
-            if (!_deviceHandler.IsReady || !await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
-                return Confirmation.Create(order.ID, ErrorState.Unchecked().SendFailure());
+            try
+            {
+                if (!IsReady)
+                    return _confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected());
 
-            if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
-                return Confirmation.Create(order.ID, ErrorState.Unchecked().OrderNotConfirmed());
+                if (!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
+                    return _confirmationFactory.Create(order, ErrorState.Unchecked().SendFailure());
+
+                if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
+                    return _confirmationFactory.Create(order, ErrorState.Unchecked().OrderNotConfirmed());
+            }
+            catch (DeviceDisconnectedException)
+            {
+                return _confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected());
+            }
 
             return Retrieve().ConfirmationOf(order);
         }
 
         public Task<bool> SendAsync(Confirmation confirmation)
         {
-            return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
+            try
+            {
+                return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
+            }
+            catch (DeviceDisconnectedException)
+            {
+                return Task.FromResult(false);
+            }
         }
 
         public IAwaitingDispatch Order() => _awaiterDispatch;
@@ -75,7 +101,11 @@ namespace Shield.Messaging.Protocol
             else if (command.IsReply())
                 _awaiterDispatch.AddResponse(_commandTranslator.TranslateToReply(command));
             else
-                OnOrderReceived(_commandTranslator.TranslateToOrder(command));
+            {
+                var order = _commandTranslator.TranslateToOrder(command);
+                OnOrderReceived(order);
+                _orderReceivedAction(order);
+            }
         }
 
         protected virtual void OnOrderReceived(Order order) =>

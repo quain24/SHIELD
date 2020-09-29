@@ -16,7 +16,7 @@ namespace Shield.Messaging.Protocol
             ID = id;
         }
 
-        public string ID { get; } = string.Empty;
+        public string ID { get; }
 
         public string Target { get; }
 

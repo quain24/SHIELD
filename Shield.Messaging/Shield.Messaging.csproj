@@ -57,7 +57,7 @@
     <Compile Include="Commands\Parts\PartValidators\IPartValidatorBuilder.cs" />
     <Compile Include="Commands\Parts\PartValidators\MaxLengthValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\MinLengthValidator.cs" />
-    <Compile Include="Commands\Parts\PartValidators\CompositValidator.cs" />
+    <Compile Include="Commands\Parts\PartValidators\CompositeValidator.cs" />
     <Compile Include="Commands\Parts\PartValidators\PartValidatorBuilder.cs" />
     <Compile Include="Commands\States\ErrorState.cs" />
     <Compile Include="DeviceHandler\CommandTranslator.cs" />
