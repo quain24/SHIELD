@@ -1,6 +1,7 @@
 ﻿using Shield.GlobalConfig;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
+using Shield.Messaging.Protocol.DataPacks;
 using Command = Shield.Enums.Command;
 
 namespace Shield.Messaging.Protocol

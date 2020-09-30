@@ -1,4 +1,4 @@
-﻿namespace Shield.Messaging.Protocol
+﻿namespace Shield.Messaging.Protocol.DataPacks
 {
     public interface IDataPack
     {

@@ -1,5 +1,6 @@
 ﻿using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.Parts;
+using Shield.Messaging.Protocol.DataPacks;
 using Command = Shield.Enums.Command;
 using ICommand = Shield.Messaging.Commands.ICommand;
 

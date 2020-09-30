@@ -1,6 +1,7 @@
 ﻿using Shield.Messaging.Commands;
 using Shield.Timestamps;
 using System;
+using Shield.Messaging.Protocol.DataPacks;
 
 namespace Shield.Messaging.Protocol
 {

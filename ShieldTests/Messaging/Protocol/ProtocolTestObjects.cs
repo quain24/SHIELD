@@ -1,4 +1,5 @@
 ﻿using Shield.Messaging.Commands.States;
+using Shield.Messaging.Protocol.DataPacks;
 using Shield.Messaging.Protocol;
 using Shield.Timestamps;
 

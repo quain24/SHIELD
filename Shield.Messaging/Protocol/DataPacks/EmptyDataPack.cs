@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shield.Messaging.Protocol
+namespace Shield.Messaging.Protocol.DataPacks
 {
     public class EmptyDataPack : IDataPack
     {

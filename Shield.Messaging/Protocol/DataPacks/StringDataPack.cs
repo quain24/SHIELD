@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shield.Messaging.Protocol
+namespace Shield.Messaging.Protocol.DataPacks
 {
     public class StringDataPack : IDataPack
     {
