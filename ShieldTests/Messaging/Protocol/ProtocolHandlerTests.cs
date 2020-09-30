@@ -74,7 +74,7 @@ namespace ShieldTests.Messaging.Protocol
             Assert.True(receivedOrder.ID == testCommand.ID.ToString());
             Assert.True(receivedOrder.Target == testCommand.Target.ToString());
             Assert.True(receivedOrder.ExactOrder == testCommand.Order.ToString());
-            Assert.True(receivedOrder.Data == testCommand.Data.ToString());
+            Assert.True(receivedOrder.Data.GetDataInTransmittableFormat() == testCommand.Data.ToString());
         }
 
         [Fact()]

@@ -15,11 +15,9 @@ namespace Shield.Messaging.Protocol
         private readonly CommandTranslator _commandTranslator;
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
-        public event EventHandler<Order> OrderReceived;
-
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccurred;
-
-        private Action<Order> _orderReceivedAction;
+        public event EventHandler<Order> OrderReceived;
+        private Action<Order> _orderReceivedAction = _ => { };
 
         public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {

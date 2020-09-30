@@ -5,13 +5,11 @@ namespace Shield.Messaging.Protocol
 {
     public class Order : IConfirmable
     {
-        private readonly IDataPack _dataPack;
-
         public Order(string id, string order, string target, Timestamp timestamp, IDataPack dataPack)
         {
             ExactOrder = order;
             Target = target;
-            _dataPack = dataPack ?? throw new ArgumentNullException(nameof(dataPack), "A dataPack is required, cannot replace it with null");
+            Data = dataPack ?? throw new ArgumentNullException(nameof(dataPack), "A dataPack is required, cannot replace it with null");
             Timestamp = timestamp;
             ID = id;
         }
@@ -24,6 +22,6 @@ namespace Shield.Messaging.Protocol
 
         public Timestamp Timestamp { get; }
 
-        public string Data => _dataPack.GetDataInTransmittableFormat();
+        public IDataPack Data { get; }
     }
 }
