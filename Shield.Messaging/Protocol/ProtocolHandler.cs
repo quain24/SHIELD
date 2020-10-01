@@ -72,7 +72,7 @@ namespace Shield.Messaging.Protocol
             return await SendAsync(reply).ConfigureAwait(false);
         }
 
-        public Task<bool> SendAsync(Confirmation confirmation)
+        internal Task<bool> SendAsync(Confirmation confirmation)
         {
             try
             {

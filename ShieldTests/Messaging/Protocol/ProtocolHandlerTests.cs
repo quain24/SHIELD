@@ -54,7 +54,7 @@ namespace ShieldTests.Messaging.Protocol
 
             DeviceMoq = handler;
             ResponseAwaiterDispatch = ResponseAwaiterDispatchTestObjects.GetProperResponseAwaiterDispatch();
-            ProtocolHandler = new ProtocolHandlerTestWrapper(handler.Object, confirmationFactory,  translator, ResponseAwaiterDispatch);
+            ProtocolHandler = new ProtocolHandlerTestWrapper(handler.Object, confirmationFactory, replyFactory, translator, ResponseAwaiterDispatch);
         }
 
         public void RaiseNewCommandEventOnDevice(ICommand command)

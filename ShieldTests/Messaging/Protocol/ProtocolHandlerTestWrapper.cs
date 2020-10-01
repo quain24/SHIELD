@@ -7,7 +7,7 @@ namespace ShieldTests.Messaging.Protocol
 {
     public class ProtocolHandlerTestWrapper : ProtocolHandler
     {
-        public ProtocolHandlerTestWrapper(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch) : base(deviceHandler, confirmationFactory,commandTranslator, awaiterDispatch)
+        public ProtocolHandlerTestWrapper(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, ReplyFactory replyFactory, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch) : base(deviceHandler, confirmationFactory, replyFactory,commandTranslator, awaiterDispatch)
         {
         }
 
