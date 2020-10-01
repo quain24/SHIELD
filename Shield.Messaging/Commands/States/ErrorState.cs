@@ -70,9 +70,13 @@ namespace Shield.Messaging.Commands.States
         public ErrorState TargetUnknown() => new ErrorState(Invalidate | StateRepresentation.TargetUnknown);
 
         public ErrorState OrderDoesNotExist() => new ErrorState(Invalidate | StateRepresentation.OrderDoesNotExist);
+
         public ErrorState OrderNotConfirmed() => new ErrorState(Invalidate | StateRepresentation.NotConfirmed);
+
         public ErrorState OrderNotReplied() => new ErrorState(Invalidate | StateRepresentation.NotReplied);
+
         public ErrorState SendFailure() => new ErrorState(Invalidate | StateRepresentation.NotSent);
+
         public ErrorState DeviceDisconnected() => new ErrorState(Invalidate | StateRepresentation.Disconnected);
 
         public override string ToString()

@@ -16,10 +16,13 @@ namespace Shield.Messaging.Protocol
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
         public event EventHandler<ErrorMessage> IncomingCommunicationErrorOccurred;
+
         public event EventHandler<Order> OrderReceived;
+
         private Action<Order> _orderReceivedAction = _ => { };
 
-        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
+        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory,
+            CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
             _confirmationFactory = confirmationFactory;
@@ -31,10 +34,6 @@ namespace Shield.Messaging.Protocol
         public bool IsOpen => _deviceHandler.IsOpen;
         public bool IsConnected => _deviceHandler.IsConnected;
         public bool IsReady => _deviceHandler.IsReady;
-
-        public void AddOrderReceivedHandler(Action<Order> informationDelegate) => _orderReceivedAction += informationDelegate;
-
-        public void RemoveOrderReceivedHandler(Action<Order> informationDelegate) => _orderReceivedAction -= informationDelegate;
 
         public void Open()
         {
@@ -49,6 +48,12 @@ namespace Shield.Messaging.Protocol
             if (_deviceHandler.IsOpen)
                 _deviceHandler.Close();
         }
+
+        public void AddOrderReceivedHandler(Action<Order> informationDelegate) =>
+            _orderReceivedAction += informationDelegate;
+
+        public void RemoveOrderReceivedHandler(Action<Order> informationDelegate) =>
+            _orderReceivedAction -= informationDelegate;
 
         public async Task<Confirmation> SendAsync(IConfirmable order)
         {
@@ -71,7 +76,15 @@ namespace Shield.Messaging.Protocol
             return Retrieve().ConfirmationOf(order);
         }
 
-        public Task<bool> SendAsync(Confirmation confirmation)
+        public async Task<bool> Confirm(IConfirmable message, ErrorState errors = null)
+        {
+            var state = errors ?? ErrorState.Unchecked().Valid();
+            var confirmation = _confirmationFactory.Create(message, state);
+
+            return await SendAsync(confirmation).ConfigureAwait(false);
+        }
+
+    public Task<bool> SendAsync(Confirmation confirmation)
         {
             try
             {
@@ -113,3 +126,4 @@ namespace Shield.Messaging.Protocol
             IncomingCommunicationErrorOccurred?.Invoke(this, errorMessage);
     }
 }
+
