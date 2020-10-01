@@ -3,6 +3,7 @@ using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
+using Shield.Messaging.Protocol.DataPacks;
 using System;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace Shield.Messaging.Protocol
     {
         private readonly IDeviceHandler _deviceHandler;
         private readonly ConfirmationFactory _confirmationFactory;
+        private readonly ReplyFactory _replyFactory;
         private readonly CommandTranslator _commandTranslator;
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
@@ -21,11 +23,12 @@ namespace Shield.Messaging.Protocol
 
         private Action<Order> _orderReceivedAction = _ => { };
 
-        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory,
+        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, ReplyFactory replyFactory,
             CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
             _confirmationFactory = confirmationFactory;
+            _replyFactory = replyFactory;
             _commandTranslator = commandTranslator;
             _awaiterDispatch = awaiterDispatch;
             _deviceHandler.CommandReceived += OnCommandReceived;
@@ -55,6 +58,32 @@ namespace Shield.Messaging.Protocol
         public void RemoveOrderReceivedHandler(Action<Order> informationDelegate) =>
             _orderReceivedAction -= informationDelegate;
 
+        public async Task<bool> Confirm(IConfirmable message, ErrorState errors = null)
+        {
+            var state = errors ?? ErrorState.Unchecked().Valid();
+            var confirmation = _confirmationFactory.Create(message, state);
+
+            return await SendAsync(confirmation).ConfigureAwait(false);
+        }
+
+        public async Task<Confirmation> ReplyTo(Order order, IDataPack dataPack)
+        {
+            var reply = _replyFactory.Create(order, dataPack);
+            return await SendAsync(reply).ConfigureAwait(false);
+        }
+
+        public Task<bool> SendAsync(Confirmation confirmation)
+        {
+            try
+            {
+                return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
+            }
+            catch (DeviceDisconnectedException)
+            {
+                return Task.FromResult(false);
+            }
+        }
+
         public async Task<Confirmation> SendAsync(IConfirmable order)
         {
             try
@@ -74,26 +103,6 @@ namespace Shield.Messaging.Protocol
             }
 
             return Retrieve().ConfirmationOf(order);
-        }
-
-        public async Task<bool> Confirm(IConfirmable message, ErrorState errors = null)
-        {
-            var state = errors ?? ErrorState.Unchecked().Valid();
-            var confirmation = _confirmationFactory.Create(message, state);
-
-            return await SendAsync(confirmation).ConfigureAwait(false);
-        }
-
-    public Task<bool> SendAsync(Confirmation confirmation)
-        {
-            try
-            {
-                return _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(confirmation));
-            }
-            catch (DeviceDisconnectedException)
-            {
-                return Task.FromResult(false);
-            }
         }
 
         public IAwaitingDispatch Order() => _awaiterDispatch;
@@ -126,4 +135,3 @@ namespace Shield.Messaging.Protocol
             IncomingCommunicationErrorOccurred?.Invoke(this, errorMessage);
     }
 }
-
