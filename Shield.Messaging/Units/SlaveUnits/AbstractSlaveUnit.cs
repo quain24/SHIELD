@@ -15,5 +15,6 @@ namespace Shield.Messaging.Units.SlaveUnits
         public string Name { get; set; }
         public bool IsConnected { get; protected set; }
         public abstract bool CanHandle(Order order);
+        public abstract Task HandleIncomingOrderAsync(Order order);
     }
 }

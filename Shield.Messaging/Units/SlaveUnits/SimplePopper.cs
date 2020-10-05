@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Shield.Messaging.Units.SlaveUnits
 {
-    internal class SimplePopper : AbstractSlaveUnit, IPopperAsync, IDiodeAsync
+    internal class SimplePopper : AbstractSlaveUnit
     {
         private readonly IMasterUnit _master;
         private readonly OrderFactory _orderFactory;
@@ -13,6 +13,16 @@ namespace Shield.Messaging.Units.SlaveUnits
         {
             _master = master;
             _orderFactory = orderFactory;
+        }
+
+        public override bool CanHandle(Order order)
+        {
+            return true;
+        }
+
+        public override Task HandleIncomingOrderAsync(Order order)
+        {
+            throw new NotImplementedException();
         }
 
         public bool Reset()
@@ -61,11 +71,6 @@ namespace Shield.Messaging.Units.SlaveUnits
         }
 
         public Task<Order> TurnOffDiodeAsync(int number)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool CanHandle(Order order)
         {
             throw new NotImplementedException();
         }

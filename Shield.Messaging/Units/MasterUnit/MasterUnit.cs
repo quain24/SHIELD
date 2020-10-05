@@ -13,10 +13,10 @@ namespace Shield.Messaging.Units.MasterUnit
         public MasterUnit(ProtocolHandler handler)
         {
             _handler = handler;
-            _handler.AddOrderReceivedHandler(HandleOrder);
+            _handler.AddOrderReceivedHandler(HandleIncomingOrder);
         }
 
-        private Task HandleOrder(Order order)
+        private Task HandleIncomingOrder(Order order)
         {
             return Task.CompletedTask;
         }
@@ -32,7 +32,7 @@ namespace Shield.Messaging.Units.MasterUnit
 
         public void Dispose()
         {
-            _handler?.RemoveOrderReceivedHandler(HandleOrder);
+            _handler?.RemoveOrderReceivedHandler(HandleIncomingOrder);
         }
     }
 }

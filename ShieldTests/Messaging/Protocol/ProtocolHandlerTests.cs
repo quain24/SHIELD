@@ -10,6 +10,7 @@ using ShieldTests.Messaging.Commands;
 using ShieldTests.Messaging.Commands.Parts;
 using System.Linq;
 using System.Threading.Tasks;
+using Shield.Messaging.Units.SlaveUnits;
 using Shield.Timestamps;
 using Xunit;
 using Xunit.Abstractions;
