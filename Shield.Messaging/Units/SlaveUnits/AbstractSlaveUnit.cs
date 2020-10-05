@@ -11,12 +11,9 @@ namespace Shield.Messaging.Units.SlaveUnits
         {
         }
 
-        public string ID { get; set; }
+        public string ID { get; protected set; }
         public string Name { get; set; }
-        public bool IsConnected { get; set; }
-        public bool CanHandle(Order order)
-        {
-            throw new NotImplementedException();
-        }
+        public bool IsConnected { get; protected set; }
+        public abstract bool CanHandle(Order order);
     }
 }

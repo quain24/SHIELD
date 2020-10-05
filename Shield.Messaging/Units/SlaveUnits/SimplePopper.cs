@@ -64,5 +64,10 @@ namespace Shield.Messaging.Units.SlaveUnits
         {
             throw new NotImplementedException();
         }
+
+        public override bool CanHandle(Order order)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

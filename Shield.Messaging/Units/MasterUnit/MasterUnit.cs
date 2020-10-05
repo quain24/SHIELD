@@ -1,10 +1,11 @@
-﻿using Shield.Messaging.Protocol;
+﻿using System;
+using Shield.Messaging.Protocol;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Shield.Messaging.Units.MasterUnit
 {
-    public class MasterUnit
+    public class MasterUnit : IDisposable
     {
         private readonly Dictionary<string, IUnit> _attachedSlaveUnits = new Dictionary<string, IUnit>();
         private readonly ProtocolHandler _handler;
@@ -12,6 +13,12 @@ namespace Shield.Messaging.Units.MasterUnit
         public MasterUnit(ProtocolHandler handler)
         {
             _handler = handler;
+            _handler.AddOrderReceivedHandler(HandleOrder);
+        }
+
+        private Task HandleOrder(Order order)
+        {
+            return Task.CompletedTask;
         }
 
         public async Task<IDictionary<string, IUnit>> ReportAttachedSlaveUnits()
@@ -23,28 +30,9 @@ namespace Shield.Messaging.Units.MasterUnit
         {
         }
 
-        protected async Task<(bool isSuccess, Confirmation confirmation)> TrySendAndAwaitConfirmationAsync(Order order)
+        public void Dispose()
         {
-            if (await SendAsync(order).ConfigureAwait(false) is false ||
-                await _handler.Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false) is false)
-                return (false, null);
-
-            return (true, _handler.Retrieve().ConfirmationOf(order));
-        }
-
-        protected async Task<(bool isSuccess, Reply reply)> TrySendAndAwaitReplyAsync(Order order)
-        {
-            if (await SendAsync(order).ConfigureAwait(false) is false ||
-                await _handler.Order().WasRepliedToInTimeAsync(order).ConfigureAwait(false) is false)
-                return (false, null);
-
-            return (true, _handler.Retrieve().ReplyTo(order));
-        }
-
-        private async Task<bool> SendAsync(Order order)
-        {
-            var confirmation = await _handler.SendAsync(order);
-            return confirmation.IsValid;
+            _handler?.RemoveOrderReceivedHandler(HandleOrder);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace Shield.Messaging.Protocol
 
         public event EventHandler<Order> OrderReceived;
 
-        private Action<Order> _orderReceivedAction = _ => { };
+        private Func<Order, Task> _orderReceivedAction = _ => Task.CompletedTask;
 
         public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, ReplyFactory replyFactory,
             CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
@@ -52,10 +52,10 @@ namespace Shield.Messaging.Protocol
                 _deviceHandler.Close();
         }
 
-        public void AddOrderReceivedHandler(Action<Order> informationDelegate) =>
+        public void AddOrderReceivedHandler(Func<Order, Task> informationDelegate) =>
             _orderReceivedAction += informationDelegate;
 
-        public void RemoveOrderReceivedHandler(Action<Order> informationDelegate) =>
+        public void RemoveOrderReceivedHandler(Func<Order, Task> informationDelegate) =>
             _orderReceivedAction -= informationDelegate;
 
         public async Task<bool> Confirm(IConfirmable message, ErrorState errors = null)
@@ -89,17 +89,17 @@ namespace Shield.Messaging.Protocol
             try
             {
                 if (!IsReady)
-                    return _confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected());
+                    _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected()));
 
                 if (!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
-                    return _confirmationFactory.Create(order, ErrorState.Unchecked().SendFailure());
+                    _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().SendFailure()));
 
                 if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
-                    return _confirmationFactory.Create(order, ErrorState.Unchecked().OrderNotConfirmed());
+                    _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().OrderNotConfirmed()));
             }
             catch (DeviceDisconnectedException)
             {
-                return _confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected());
+                _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected()));
             }
 
             return Retrieve().ConfirmationOf(order);
