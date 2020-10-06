@@ -25,7 +25,7 @@ namespace Shield.Messaging.Protocol
                 _partFactory.GetPart(Command.PartType.ID, order.ID),
                 _partFactory.GetPart(Command.PartType.Target, order.Target),
                 _partFactory.GetPart(Command.PartType.Order, order.ExactOrder),
-                order.Data is EmptyDataPack
+                order.Data is EmptyDataPackSingleton
                     ? _partFactory.GetPart(Command.PartType.Empty, string.Empty)
                     : _partFactory.GetPart(Command.PartType.Data, order.Data.GetDataInTransmittableFormat()));
         }

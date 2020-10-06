@@ -115,7 +115,7 @@
     <Compile Include="Protocol\Confirmation.cs" />
     <Compile Include="Protocol\ConfirmationCommandTranslator.cs" />
     <Compile Include="Protocol\ConfirmationFactory.cs" />
-    <Compile Include="Protocol\DataPacks\EmptyDataPack.cs" />
+    <Compile Include="Protocol\DataPacks\EmptyDataPackSingleton.cs" />
     <Compile Include="Protocol\IConfirmable.cs" />
     <Compile Include="Protocol\DataPacks\IntDataPack.cs" />
     <Compile Include="Protocol\OrderFactory.cs" />

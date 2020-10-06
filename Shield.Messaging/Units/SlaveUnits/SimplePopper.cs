@@ -9,7 +9,8 @@ namespace Shield.Messaging.Units.SlaveUnits
         private readonly IMasterUnit _master;
         private readonly OrderFactory _orderFactory;
 
-        public SimplePopper(IMasterUnit master, OrderFactory orderFactory)
+        public SimplePopper(string id, IMasterUnit master, OrderFactory orderFactory)
+        : base(id)
         {
             _master = master;
             _orderFactory = orderFactory;

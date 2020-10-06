@@ -4,6 +4,7 @@ using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Extensions;
 using Shield.Messaging.Protocol.DataPacks;
+using Shield.Messaging.Units.SlaveUnits;
 using System;
 using System.Threading.Tasks;
 
@@ -14,6 +15,7 @@ namespace Shield.Messaging.Protocol
         private readonly IDeviceHandler _deviceHandler;
         private readonly ConfirmationFactory _confirmationFactory;
         private readonly ReplyFactory _replyFactory;
+        private readonly OrderFactory _orderFactory;
         private readonly CommandTranslator _commandTranslator;
         private readonly ResponseAwaiterDispatch _awaiterDispatch;
 
@@ -23,12 +25,13 @@ namespace Shield.Messaging.Protocol
 
         private Func<Order, Task> _orderReceivedAction = _ => Task.CompletedTask;
 
-        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, ReplyFactory replyFactory,
+        public ProtocolHandler(IDeviceHandler deviceHandler, ConfirmationFactory confirmationFactory, ReplyFactory replyFactory, OrderFactory orderFactory,
             CommandTranslator commandTranslator, ResponseAwaiterDispatch awaiterDispatch)
         {
             _deviceHandler = deviceHandler;
             _confirmationFactory = confirmationFactory;
             _replyFactory = replyFactory;
+            _orderFactory = orderFactory;
             _commandTranslator = commandTranslator;
             _awaiterDispatch = awaiterDispatch;
             _deviceHandler.CommandReceived += OnCommandReceived;
@@ -72,6 +75,38 @@ namespace Shield.Messaging.Protocol
             return await SendAsync(reply).ConfigureAwait(false);
         }
 
+        public Task<Confirmation> SendAsync(AbstractSlaveUnit sender, string targetCommand, IDataPack data = null)
+        {
+            _ = sender ?? throw new ArgumentNullException(nameof(sender),
+                $"Unit has to be a valid child of {nameof(AbstractSlaveUnit)}.");
+            if (string.IsNullOrEmpty(targetCommand))
+                throw new ArgumentNullException(nameof(targetCommand), "Target command cannot be empty!");
+
+            var order = _orderFactory.Create(targetCommand, sender.ID, data ?? EmptyDataPackSingleton.GetInstance());
+            return SendAsync(order);
+        }
+
+        public async Task<Confirmation> SendAsync(IConfirmable order)
+        {
+            var errorState = ErrorState.Unchecked().Valid();
+            try
+            {
+                if (!IsReady)
+                    errorState = errorState.DeviceDisconnected();
+                else if (!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
+                    errorState = errorState.SendFailure();
+                else if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
+                    errorState = errorState.OrderNotConfirmed();
+            }
+            catch (DeviceDisconnectedException)
+            {
+                errorState = errorState.DeviceDisconnected();
+            }
+
+            _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, errorState));
+            return Retrieve().ConfirmationOf(order);
+        }
+
         internal Task<bool> SendAsync(Confirmation confirmation)
         {
             try
@@ -82,27 +117,6 @@ namespace Shield.Messaging.Protocol
             {
                 return Task.FromResult(false);
             }
-        }
-
-        public async Task<Confirmation> SendAsync(IConfirmable order)
-        {
-            try
-            {
-                if (!IsReady)
-                    _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected()));
-
-                if (!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
-                    _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().SendFailure()));
-
-                if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
-                    _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().OrderNotConfirmed()));
-            }
-            catch (DeviceDisconnectedException)
-            {
-                _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, ErrorState.Unchecked().DeviceDisconnected()));
-            }
-
-            return Retrieve().ConfirmationOf(order);
         }
 
         public IAwaitingDispatch Order() => _awaiterDispatch;

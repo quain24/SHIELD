@@ -28,12 +28,12 @@ namespace ShieldTests.Messaging.Protocol
 
         public static Reply GetNormalReply(string id)
         {
-            return new Reply(id, "ID01", TimestampFactory.Timestamp, new EmptyDataPack());
+            return new Reply(id, "ID01", TimestampFactory.Timestamp, EmptyDataPackSingleton.GetInstance());
         }
 
         public static Reply GetNormalReply()
         {
-            return new Reply("ID11", "ID01", TimestampFactory.Timestamp, new EmptyDataPack());
+            return new Reply("ID11", "ID01", TimestampFactory.Timestamp, EmptyDataPackSingleton.GetInstance());
         }
 
     }

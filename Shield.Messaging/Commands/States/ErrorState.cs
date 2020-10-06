@@ -54,7 +54,7 @@ namespace Shield.Messaging.Commands.States
         public static bool operator !=(ErrorState left, ErrorState right) => !(left == right);
 
         #endregion IEquatable<MessageState> implementation
-
+        
         public ErrorState Valid() => new ErrorState(StateRepresentation.Valid);
 
         public ErrorState BadID() => new ErrorState(Invalidate | StateRepresentation.BadID);
