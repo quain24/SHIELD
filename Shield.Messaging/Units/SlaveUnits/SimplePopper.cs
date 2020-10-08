@@ -9,11 +9,9 @@ namespace Shield.Messaging.Units.SlaveUnits
         private readonly IMasterUnit _master;
         private readonly OrderFactory _orderFactory;
 
-        public SimplePopper(string id, IMasterUnit master, OrderFactory orderFactory)
-        : base(id)
+        public SimplePopper(string id, ProtocolHandler handler)
+        : base(id, handler)
         {
-            _master = master;
-            _orderFactory = orderFactory;
         }
 
         public override bool CanHandle(Order order)

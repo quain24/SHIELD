@@ -69,16 +69,15 @@ namespace Shield.Messaging.Protocol
             return await SendAsync(confirmation).ConfigureAwait(false);
         }
 
-        public async Task<Confirmation> ReplyTo(Order order, IDataPack dataPack)
+        public async Task<bool> ReplyTo(Order order, IDataPack dataPack)
         {
             var reply = _replyFactory.Create(order, dataPack);
             return await SendAsync(reply).ConfigureAwait(false);
         }
 
-        public Task<Confirmation> SendAsync(AbstractSlaveUnit sender, string targetCommand, IDataPack data = null)
+        public Task<bool> SendAsync(AbstractSlaveUnit sender, string targetCommand, IDataPack data = null)
         {
-            _ = sender ?? throw new ArgumentNullException(nameof(sender),
-                $"Unit has to be a valid child of {nameof(AbstractSlaveUnit)}.");
+            _ = sender ?? throw new ArgumentNullException(nameof(sender), $"Unit has to be a valid child of {nameof(AbstractSlaveUnit)}.");
             if (string.IsNullOrEmpty(targetCommand))
                 throw new ArgumentNullException(nameof(targetCommand), "Target command cannot be empty!");
 
@@ -86,7 +85,7 @@ namespace Shield.Messaging.Protocol
             return SendAsync(order);
         }
 
-        public async Task<Confirmation> SendAsync(IConfirmable order)
+        public async Task<bool> SendAsync(IConfirmable order)
         {
             var errorState = ErrorState.Unchecked().Valid();
             try
@@ -95,16 +94,16 @@ namespace Shield.Messaging.Protocol
                     errorState = errorState.DeviceDisconnected();
                 else if (!await _deviceHandler.SendAsync(_commandTranslator.TranslateToCommand(order)).ConfigureAwait(false))
                     errorState = errorState.SendFailure();
-                else if (!await Order().WasConfirmedInTimeAsync(order).ConfigureAwait(false))
-                    errorState = errorState.OrderNotConfirmed();
             }
             catch (DeviceDisconnectedException)
             {
                 errorState = errorState.DeviceDisconnected();
             }
 
-            _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, errorState));
-            return Retrieve().ConfirmationOf(order);
+            if (errorState != ErrorState.Unchecked().Valid())
+                _awaiterDispatch.AddResponse(_confirmationFactory.Create(order, errorState));
+
+            return true;
         }
 
         internal Task<bool> SendAsync(Confirmation confirmation)
@@ -123,7 +122,7 @@ namespace Shield.Messaging.Protocol
 
         public IRetrievingDispatch Retrieve() => _awaiterDispatch;
 
-        protected virtual void OnCommandReceived(object sender, ICommand command)
+        protected virtual async void OnCommandReceived(object sender, ICommand command)
         {
             if (!command.IsValid) // protocol failure
             {
@@ -138,7 +137,7 @@ namespace Shield.Messaging.Protocol
             {
                 var order = _commandTranslator.TranslateToOrder(command);
                 OnOrderReceived(order);
-                _orderReceivedAction(order);
+                await _orderReceivedAction(order).ConfigureAwait(false);
             }
         }
 

@@ -105,11 +105,11 @@ namespace ShieldTests.Messaging.Protocol
             var receivedReply = ResponseAwaiterDispatch.ReplyTo(receivedOrder);
 
             Assert.True(receivedOrder.ID == receivedReply.ReplyTo);
-            Assert.True(CommandsTestObjects.GetProperTestCommand_reply().Data.ToString() == receivedReply.Data);
+            Assert.True(CommandsTestObjects.GetProperTestCommand_reply().Data.ToString() == receivedReply.Data.GetDataInTransmittableFormat());
         }
 
         [Fact()]
-        public void When_informed_by_DeviceHandler_about_new_received_invalid_command_raises_IncomingCommunicationErrorOccured_ErrorMessage()
+        public void When_informed_by_DeviceHandler_about_new_received_invalid_command_raises_IncomingCommunicationErrorOccurred_ErrorMessage()
         {
             ErrorMessage receivedErrorMsg = null;
             ProtocolHandler.IncomingCommunicationErrorOccurred += (_, error) => receivedErrorMsg = error;
@@ -124,9 +124,14 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public async Task Should_return_confirmation_when_proper_Order_was_sent()
         {
-            var result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalOrder());
+            var testOrder = ProtocolTestObjects.GetNormalOrder();
+            var result = await ProtocolHandler.SendAsync(testOrder);
+            var confirmation = ProtocolHandler.Retrieve().ConfirmationOf(testOrder);
 
-            Assert.True(result is Confirmation);
+            Assert.True(result);
+            Assert.IsType<Confirmation>(confirmation);
+            Assert.Equal(testOrder.ID, confirmation.Confirms);
+
         }
 
         [Fact()]
@@ -140,9 +145,13 @@ namespace ShieldTests.Messaging.Protocol
         [Fact()]
         public async Task Should_return_confirmation_when_proper_Reply_was_sent()
         {
-            var result = await ProtocolHandler.SendAsync(ProtocolTestObjects.GetNormalReply());
+            var testReply = ProtocolTestObjects.GetNormalReply();
+            var result = await ProtocolHandler.SendAsync(testReply);
+            var confirmation = ProtocolHandler.Retrieve().ConfirmationOf(testReply);
 
-            Assert.True(result is Confirmation);
+            Assert.True(result);
+            Assert.IsType<Confirmation>(confirmation);
+            Assert.Equal(testReply.ID, confirmation.Confirms);
         }
 
         [Fact()]

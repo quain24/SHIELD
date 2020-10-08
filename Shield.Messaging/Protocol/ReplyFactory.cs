@@ -38,5 +38,14 @@ namespace Shield.Messaging.Protocol
         {
             return new Reply(id, replyTo, timestamp, dataPack);
         }
+
+        public Reply Renew(Reply reply)
+        {
+            return Create(reply.ReplyTo, reply.Data);
+        }
+        public Reply Renew(Reply reply, IDataPack dataPack)
+        {
+            return Create(reply.ReplyTo, dataPack);
+        }
     }
 }

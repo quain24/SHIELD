@@ -25,9 +25,9 @@ namespace Shield.Messaging.Protocol
                 _partFactory.GetPart(Command.PartType.ID, reply.ID),
                 _partFactory.GetPart(Command.PartType.Target, DefaultTargets.ReplyTarget),
                 _partFactory.GetPart(Command.PartType.Order, reply.ReplyTo),
-                string.IsNullOrEmpty(reply.Data)
+                string.IsNullOrEmpty(reply.Data.GetDataInTransmittableFormat())
                     ? _partFactory.GetPart(Command.PartType.Empty, string.Empty)
-                    : _partFactory.GetPart(Command.PartType.Data, reply.Data));
+                    : _partFactory.GetPart(Command.PartType.Data, reply.Data.GetDataInTransmittableFormat()));
         }
 
         public Reply Translate(ICommand replyCommand)

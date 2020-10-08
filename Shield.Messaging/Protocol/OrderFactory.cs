@@ -33,5 +33,15 @@ namespace Shield.Messaging.Protocol
         {
             return new Order(id, order, target, timestamp, dataPack);
         }
+
+        public Order Renew(Order order)
+        {
+            return Create(order.ExactOrder, order.Target, order.Data);
+        }
+        
+        public Order Renew(Order order, IDataPack dataPack)
+        {
+            return Create(order.ExactOrder, order.Target, dataPack);
+        }
     }
 }
