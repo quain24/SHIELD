@@ -122,6 +122,7 @@
     <Compile Include="HardwareCom\CommandProcessing\TestData\DefaultConfigForCommandCreation.cs" />
     <Compile Include="Messaging\DefaultProtocolValues.cs" />
     <Compile Include="Messaging\Protocol\ProtocolHandlerTests.cs" />
+    <Compile Include="Messaging\Protocol\DataPacks\DataPackFactoryTests.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestErrorCommandsClassData.cs" />
     <None Include="HardwareCom\CommandProcessing\TestData\TestUnknownCommandClassData.cs" />
     <None Include="HardwareCom\RawDataProcessing\IncomingDataPreparerTests.cs" />

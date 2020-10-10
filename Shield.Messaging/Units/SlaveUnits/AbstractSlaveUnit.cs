@@ -28,13 +28,13 @@ namespace Shield.Messaging.Units.SlaveUnits
             return _handler.SendAsync(order);
         }
 
-        public virtual async Task<Confirmation> GetConfirmationOf(IConfirmable message)
+        public virtual async Task<Confirmation> GetConfirmationOfAsync(IConfirmable message)
         {
             await _handler.Order().WasConfirmedInTimeAsync(message).ConfigureAwait(false);
             return _handler.Retrieve().ConfirmationOf(message);
         }
 
-        public virtual Task<bool> ReplyTo(Order order, IDataPack replyDataPack)
+        public virtual Task<bool> ReplyToAsync(Order order, IDataPack replyDataPack)
         {
             return _handler.ReplyTo(order, replyDataPack);
         }
