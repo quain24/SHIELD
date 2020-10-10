@@ -1,17 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using Moq;
+﻿using Moq;
 using Shield.Messaging.Commands;
 using Shield.Messaging.Commands.States;
 using Shield.Messaging.DeviceHandler;
 using Shield.Messaging.Protocol;
 using Shield.Messaging.RawData;
+using Shield.Timestamps;
 using ShieldTests.Messaging.Commands;
 using ShieldTests.Messaging.Commands.Parts;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Shield.Messaging.Units.SlaveUnits;
-using Shield.Timestamps;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -22,17 +21,17 @@ namespace ShieldTests.Messaging.Protocol
     {
         private readonly ITestOutputHelper _output;
 
-        public ProtocolHandlerTests(ITestOutputHelper output)
-        {
-            _output = output;
-            Setup();
-        }
-
         public ProtocolHandlerTestWrapper ProtocolHandler;
         public Mock<IDeviceHandler> DeviceMoq;
         public CommandFactory CommandFactory;
         public ResponseAwaiterDispatch ResponseAwaiterDispatch;
         public CommandTranslator Translator;
+
+        public ProtocolHandlerTests(ITestOutputHelper output)
+        {
+            _output = output;
+            Setup();
+        }
 
         private void Setup()
         {
@@ -99,7 +98,7 @@ namespace ShieldTests.Messaging.Protocol
         {
             Order receivedOrder = null;
             ProtocolHandler.OrderReceived += (_, order) => receivedOrder = order;
-            
+
             RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_order("ID01"));
             RaiseNewCommandEventOnDevice(CommandsTestObjects.GetProperTestCommand_reply("ID01"));
             var receivedReply = ResponseAwaiterDispatch.ReplyTo(receivedOrder);
@@ -131,7 +130,6 @@ namespace ShieldTests.Messaging.Protocol
             Assert.True(result);
             Assert.IsType<Confirmation>(confirmation);
             Assert.Equal(testOrder.ID, confirmation.Confirms);
-
         }
 
         [Fact()]
@@ -194,7 +192,6 @@ namespace ShieldTests.Messaging.Protocol
             Debug.WriteLine(TimestampFactory.Timestamp);
             Debug.WriteLine(TimestampFactory.Timestamp.Difference(a));
             Debug.WriteLine("end");
-
         }
     }
 }
