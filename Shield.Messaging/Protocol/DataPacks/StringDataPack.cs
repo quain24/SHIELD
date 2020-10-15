@@ -1,18 +1,11 @@
-﻿using System;
-
-namespace Shield.Messaging.Protocol.DataPacks
+﻿namespace Shield.Messaging.Protocol.DataPacks
 {
-    public class StringDataPack : IDataPack
+    public class StringDataPack : StringArrayDataPack
     {
-        private readonly string _rawData;
-
-        public StringDataPack(string rawData)
+        public StringDataPack(string data) : base(data)
         {
-            _rawData = string.IsNullOrEmpty(rawData)
-                ? throw new ArgumentNullException(nameof(rawData), "RawData should contain data!")
-                : rawData;
         }
 
-        public string GetDataInTransmittableFormat() => _rawData;
+        public new string GetDataInTransmittableFormat() => base.GetDataInTransmittableFormat();
     }
 }

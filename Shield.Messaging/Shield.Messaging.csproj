@@ -105,6 +105,7 @@
     <Compile Include="Protocol\DataPacks\DataPackFactory.cs" />
     <Compile Include="Protocol\DataPacks\DoubleDataPack.cs" />
     <Compile Include="Protocol\DataPacks\JsonDataPack.cs" />
+    <Compile Include="Protocol\DataPacks\StringDataPack.cs" />
     <Compile Include="Units\IMasterUnit.cs" />
     <Compile Include="Units\MasterUnit\MasterUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -122,7 +123,7 @@
     <Compile Include="Protocol\DataPacks\Int32DataPack.cs" />
     <Compile Include="Protocol\OrderFactory.cs" />
     <Compile Include="Protocol\ReplyFactory.cs" />
-    <Compile Include="Protocol\DataPacks\StringDataPack.cs" />
+    <Compile Include="Protocol\DataPacks\StringArrayDataPack.cs" />
     <Compile Include="Protocol\ErrorCommandTranslator.cs" />
     <Compile Include="Protocol\ErrorMessage.cs" />
     <Compile Include="Protocol\IAwaitingDispatch.cs" />

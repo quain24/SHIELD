@@ -9,12 +9,11 @@ namespace Shield.Messaging.Protocol.DataPacks
 {
     public class DataPackFactory
     {
-        private readonly IDictionary<string, Delegate> _dataPackFactories = new Dictionary<string, Delegate>(StringComparer.InvariantCultureIgnoreCase);
-        private readonly string _dataPackSuffix = "DataPack";
+        private readonly IDictionary<Type, Delegate> _dataPackFactories = new Dictionary<Type, Delegate>();
 
         public DataPackFactory()
         {
-            CreateCompiledDataPackExpressions();
+            CreateCompiledDataPackExpressions(); 
         }
 
         private void CreateCompiledDataPackExpressions()
@@ -26,7 +25,7 @@ namespace Shield.Messaging.Protocol.DataPacks
                     continue;
 
                 var ctorParamType = ctors.First()?.GetParameters().First()?.ParameterType;
-                if(ctorParamType is null)
+                if (ctorParamType is null)
                     continue;
 
                 var ctorInfo = dataPackType.GetConstructor(new[] { ctorParamType });
@@ -37,13 +36,8 @@ namespace Shield.Messaging.Protocol.DataPacks
                 var lambda = Expression.Lambda(funcType, Expression.New(ctorInfo, parameter), parameter);
                 var dataPackCreator = lambda.Compile();
 
-                _dataPackFactories.Add(TypeName(dataPackType), dataPackCreator);
+                _dataPackFactories.Add(ctorParamType, dataPackCreator);
             }
-        }
-
-        private string TypeName(Type type)
-        {
-            return type.Name.Replace(_dataPackSuffix, "");
         }
 
         private IEnumerable<Type> AllDataPackTypesFromAssembly()
@@ -63,18 +57,38 @@ namespace Shield.Messaging.Protocol.DataPacks
             if (HasNoDataPackPreciselyForThisType(typeof(TType)))
                 return new JsonDataPack(data);
 
-            var del = _dataPackFactories[typeof(TType).Name] as Func<TType, IDataPack>;
-            return del.Invoke(data);
+            return CreateDataPack(data);
+        }
+
+        public IDataPack CreateFrom<TType>(params TType[] data)
+        {
+            if (HasNoData(data))
+                return EmptyDataPackSingleton.GetInstance();
+
+            if (HasNoDataPackPreciselyForThisType(typeof(TType[])))
+                return new JsonDataPack(data);
+
+            return CreateDataPack(data);
         }
 
         private bool HasNoData<TType>(TType data)
         {
-            return data == null || (data is string s && string.IsNullOrEmpty(s));
+            return data == null
+                   || (data is string s && string.IsNullOrEmpty(s))
+                   || (data is string[] arr && arr.All(string.IsNullOrEmpty))
+                   || (data is TType[] array && array.IsNullOrEmpty());
         }
 
         private bool HasNoDataPackPreciselyForThisType(Type type)
         {
-            return !_dataPackFactories.ContainsKey(type.Name);
+            return !_dataPackFactories.ContainsKey(type);
+        }
+
+        private IDataPack CreateDataPack<TType>(TType data)
+        {
+            var del = _dataPackFactories[typeof(TType)] as Func<TType, IDataPack>;
+            return del?.Invoke(data) ?? throw new ArgumentOutOfRangeException(nameof(data),
+                $"There is no DataPack for given data (type: {typeof(TType).Name}) and it cannot be pushed into {nameof(JsonDataPack)}.");
         }
     }
 }
