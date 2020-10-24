@@ -8,7 +8,7 @@ namespace ShieldTests.Messaging.Protocol.DataPacks
     public class DataPackFactoryTests
     {
         private readonly ITestOutputHelper _output;
-        private readonly DataPackFactory _factory = new DataPackFactory();
+        private readonly IDataPackFactory _factory = new ReflectionBasedDataPackFactory();
 
         public DataPackFactoryTests(ITestOutputHelper output)
         {
@@ -20,13 +20,13 @@ namespace ShieldTests.Messaging.Protocol.DataPacks
         {
             var output = _factory.CreateFrom("test", "ssss");
             Assert.IsType<StringArrayDataPack>(output);
-            Assert.Equal("test,ssss", output.GetDataInTransmittableFormat());
+            Assert.Equal($"test{Shield.GlobalConfig.DataPackSettings.DataPackSeparator}ssss", output.GetDataInTransmittableFormat());
         }
 
         [Fact]
         public void Given_test_string_will_return_StringDataPack()
         {
-            var output = _factory.CreateFrom("test");
+            var output = _factory.CreateFrom("data");
             Assert.IsType<StringDataPack>(output);
         }
 

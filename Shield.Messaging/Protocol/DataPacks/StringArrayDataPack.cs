@@ -15,6 +15,6 @@ namespace Shield.Messaging.Protocol.DataPacks
                 : rawData.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
         }
 
-        public string GetDataInTransmittableFormat() => string.Join(",", _rawData);
+        public string GetDataInTransmittableFormat() => string.Join(GlobalConfig.DataPackSettings.DataPackSeparator, _rawData);
     }
 }

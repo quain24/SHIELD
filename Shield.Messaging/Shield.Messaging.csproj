@@ -102,8 +102,9 @@
     <Compile Include="Commands\Timeout.cs" />
     <Compile Include="Extensions\ICommandExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Protocol\DataPacks\DataPackFactory.cs" />
+    <Compile Include="Protocol\DataPacks\ReflectionBasedDataPackFactory.cs" />
     <Compile Include="Protocol\DataPacks\DoubleDataPack.cs" />
+    <Compile Include="Protocol\DataPacks\IDataPackFactory.cs" />
     <Compile Include="Protocol\DataPacks\JsonDataPack.cs" />
     <Compile Include="Protocol\DataPacks\StringDataPack.cs" />
     <Compile Include="Units\IMasterUnit.cs" />

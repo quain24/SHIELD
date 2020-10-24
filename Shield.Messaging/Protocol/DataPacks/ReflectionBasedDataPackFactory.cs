@@ -1,42 +1,47 @@
 ﻿using Shield.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 
 namespace Shield.Messaging.Protocol.DataPacks
 {
-    public class DataPackFactory
+    public class ReflectionBasedDataPackFactory : IDataPackFactory
     {
         private readonly IDictionary<Type, Delegate> _dataPackFactories = new Dictionary<Type, Delegate>();
 
-        public DataPackFactory()
+        public ReflectionBasedDataPackFactory()
         {
-            CreateCompiledDataPackExpressions(); 
+            CreateCompiledDataPackExpressions();
         }
 
         private void CreateCompiledDataPackExpressions()
         {
             foreach (var dataPackType in AllDataPackTypesFromAssembly())
             {
-                var ctors = dataPackType?.GetConstructors();
-                if (dataPackType is null || ctors.IsNullOrEmpty())
+                if (dataPackType is null)
                     continue;
 
-                var ctorParamType = ctors.First()?.GetParameters().First()?.ParameterType;
-                if (ctorParamType is null)
-                    continue;
-
-                var ctorInfo = dataPackType.GetConstructor(new[] { ctorParamType });
+                var ctor = dataPackType.GetConstructors().First(ci => ci.GetParameters().Length == 1);
+                var ctorParamType = ctor.GetParameters()[0].ParameterType;
                 var returnType = typeof(IDataPack);
 
                 var parameter = Expression.Parameter(ctorParamType);
                 var funcType = Expression.GetFuncType(ctorParamType, returnType);
-                var lambda = Expression.Lambda(funcType, Expression.New(ctorInfo, parameter), parameter);
+                var lambda = Expression.Lambda(funcType, Expression.New(ctor, parameter), parameter);
                 var dataPackCreator = lambda.Compile();
 
-                _dataPackFactories.Add(ctorParamType, dataPackCreator);
+                try
+                {
+                    _dataPackFactories.Add(ctorParamType, dataPackCreator);
+                }
+                catch (ArgumentException e)
+                {
+                    throw new ArgumentException($"One or more DataPack classes handles the same type of input variable - {ctorParamType.Name}", e);
+                }
             }
         }
 
@@ -46,7 +51,10 @@ namespace Shield.Messaging.Protocol.DataPacks
                 .GetAssembly(typeof(IDataPack))
                 .GetTypes()
                 .Where(t =>
-                    typeof(IDataPack).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract);
+                    typeof(IDataPack).IsAssignableFrom(t) &&
+                    !t.IsAbstract &&
+                    t.IsClass &&
+                    t.GetConstructors().Any(ci => ci.GetParameters().Length == 1));
         }
 
         public IDataPack CreateFrom<TType>(TType data)

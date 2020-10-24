@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Shield.Messaging.Protocol.DataPacks;
 using Xunit;
 using Xunit.Abstractions;
 using CommandTranslator = Shield.Messaging.Protocol.CommandTranslator;
@@ -38,7 +39,8 @@ namespace ShieldTests.Messaging.Protocol
             var partFactory = PartFactoryTestObjects.GetAlwaysValidPartFactory();
             CommandFactory = CommandsTestObjects.GetProperAlwaysValidCommandFactory();
             var idGenerator = new IdGenerator(4);
-            var orderFactory = new OrderFactory(idGenerator);
+            var dataPackFactory = new ReflectionBasedDataPackFactory();
+            var orderFactory = new OrderFactory(idGenerator, dataPackFactory);
             var replyFactory = new ReplyFactory(idGenerator);
             var confirmationFactory = new ConfirmationFactory();
 
