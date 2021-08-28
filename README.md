@@ -1,4 +1,8 @@
 # SHIELD
+
+### Projekt przeszedł w 'closed-source' - dostępny kod nadal jest do wglądu i urzywania / kopiowania w obecnym stanie.
+To repozytorium nie będzie już rozwijane.
+
 ### Aplikacja zarządzająca interaktywnym oprzyrządowaniem strzelnic
 
 Shield będzie służył do kontrolowania wszystkich aktywnych urządzeń na każdej dostosowanej do potrzeb strzelnicy.
